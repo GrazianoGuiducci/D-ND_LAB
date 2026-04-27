@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>D-ND_LAB</title>
+  <meta name="description" content="An autonomous research lab for any domain you can structure.">
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked@14.1.4/marked.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; }
+    .markdown h1 { @apply text-2xl font-light mt-4 mb-2; }
+    .markdown h2 { @apply text-xl font-light mt-3 mb-2 text-slate-300; }
+    .markdown h3 { @apply text-lg font-medium mt-2 mb-1 text-slate-400; }
+    .markdown p { @apply my-2 text-slate-200; }
+    .markdown code { @apply bg-slate-800 px-1 py-0.5 rounded text-sm text-cyan-300; }
+    .markdown pre { @apply bg-slate-900 p-3 rounded my-2 overflow-x-auto text-sm; }
+    .markdown pre code { @apply bg-transparent p-0; }
+    .markdown ul { @apply list-disc list-inside my-2 pl-2; }
+    .markdown ol { @apply list-decimal list-inside my-2 pl-2; }
+    .markdown li { @apply my-1; }
+    .markdown blockquote { @apply border-l-4 border-purple-500 pl-3 my-2 text-slate-400; }
+    .markdown table { @apply my-2 border-collapse; }
+    .markdown th, .markdown td { @apply border border-slate-700 px-2 py-1 text-sm; }
+    .markdown th { @apply bg-slate-800; }
+    .scroll-fade { mask-image: linear-gradient(to bottom, black 80%, transparent 100%); }
+    @keyframes pulse-cycle { 0%,100% { opacity: 1 } 50% { opacity: 0.4 } }
+    .running { animation: pulse-cycle 1.5s ease-in-out infinite; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-200 min-h-screen" x-data="dashboard()" x-init="init()">
+
+  <!-- Header -->
+  <header class="border-b border-slate-800 bg-slate-900/50 sticky top-0 z-10 backdrop-blur">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <span class="text-xl font-light tracking-tight">D-ND_LAB</span>
+        <span class="text-xs text-slate-500 font-mono" x-text="health.version || 'connecting...'"></span>
+      </div>
+      <nav class="flex items-center gap-2 text-sm">
+        <button class="px-3 py-1 rounded hover:bg-slate-800" :class="{'bg-slate-800': view === 'home'}" @click="view = 'home'">Domains</button>
+        <template x-if="activeDomain">
+          <button class="px-3 py-1 rounded hover:bg-slate-800" :class="{'bg-slate-800': view === 'domain'}" @click="view = 'domain'" x-text="activeDomain"></button>
+        </template>
+        <a href="https://github.com/GrazianoGuiducci/D-ND_LAB" class="px-3 py-1 rounded hover:bg-slate-800 text-slate-400" target="_blank">GitHub →</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- HOME: domain picker -->
+  <main x-show="view === 'home'" class="max-w-7xl mx-auto px-4 py-8">
+    <div class="mb-8">
+      <h1 class="text-3xl font-light">An autonomous research lab</h1>
+      <p class="text-slate-400 mt-2">Pick a domain to enter, or read the architecture in <a href="https://github.com/GrazianoGuiducci/D-ND_LAB#the-16-movements" class="text-purple-400 hover:underline">the 16 movements</a>.</p>
+    </div>
+
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <template x-for="d in domains" :key="d.id">
+        <button @click="enterDomain(d.id)" class="text-left bg-slate-900 border border-slate-800 hover:border-purple-700 rounded-lg p-5 transition">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="text-xl font-medium" x-text="d.title"></h2>
+            <span class="text-xs text-slate-500 font-mono" x-text="d.version"></span>
+          </div>
+          <p class="text-sm text-slate-400 mb-4 line-clamp-2" x-text="d.description"></p>
+          <div class="flex justify-between text-xs text-slate-500 font-mono pt-3 border-t border-slate-800">
+            <span>piano: <span class="text-cyan-400" x-text="d.piano"></span></span>
+            <span><span class="text-cyan-400" x-text="d.n_tensions"></span> tensions</span>
+            <span><span class="text-cyan-400" x-text="d.n_reports"></span> reports</span>
+          </div>
+          <template x-if="d.direzione">
+            <p class="mt-3 text-xs italic text-slate-500 line-clamp-2" x-text="'→ ' + d.direzione"></p>
+          </template>
+        </button>
+      </template>
+    </div>
+  </main>
+
+  <!-- DOMAIN: seed + reports + cycle runner + chat -->
+  <main x-show="view === 'domain' && activeDomain" class="max-w-7xl mx-auto px-4 py-6 grid lg:grid-cols-3 gap-6">
+
+    <!-- Left: seed view -->
+    <section class="lg:col-span-1 bg-slate-900 border border-slate-800 rounded-lg p-5">
+      <h2 class="text-lg font-medium mb-3 flex items-center justify-between">
+        <span>Seed</span>
+        <button @click="reloadSeed()" class="text-xs text-slate-500 hover:text-slate-300">↻ refresh</button>
+      </h2>
+      <div class="space-y-2 text-sm">
+        <div><span class="text-slate-500">piano:</span> <span class="font-mono text-cyan-400" x-text="seed.piano ?? '?'"></span></div>
+        <div><span class="text-slate-500">direction:</span> <span class="text-slate-300 italic" x-text="seed.direzione || '—'"></span></div>
+      </div>
+
+      <h3 class="text-sm text-slate-400 mt-5 mb-2">Active tensions</h3>
+      <div class="space-y-2">
+        <template x-for="t in (seed.tensioni || []).slice(0, 12)" :key="t.id">
+          <div class="text-xs">
+            <div class="flex items-center justify-between font-mono mb-0.5">
+              <span class="text-slate-300" x-text="t.id"></span>
+              <span class="text-cyan-400" x-text="(t.intensità ?? t.intensita ?? '?')"></span>
+            </div>
+            <div class="bg-slate-800 rounded h-1 overflow-hidden">
+              <div class="bg-purple-500 h-full" :style="`width: ${((t.intensità ?? t.intensita ?? 0) * 100)}%`"></div>
+            </div>
+            <p class="text-slate-400 mt-1 line-clamp-2" x-text="t.claim"></p>
+          </div>
+        </template>
+      </div>
+
+      <button @click="showRunModal = true" class="w-full mt-5 px-4 py-2 rounded bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium transition">
+        ▶ Run cycle
+      </button>
+    </section>
+
+    <!-- Middle: reports list + viewer -->
+    <section class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-lg p-5 min-h-[400px]">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-lg font-medium">Reports</h2>
+        <span class="text-xs text-slate-500" x-text="reports.length + ' total'"></span>
+      </div>
+
+      <template x-if="!activeReport">
+        <ul class="space-y-2 text-sm">
+          <template x-for="r in reports.slice(0, 20)" :key="r.filename">
+            <li>
+              <button @click="openReport(r.filename)" class="w-full text-left hover:bg-slate-800 rounded p-2 transition">
+                <div class="flex items-start justify-between gap-3">
+                  <div class="flex-1 min-w-0">
+                    <div class="font-medium truncate" x-text="r.title"></div>
+                    <div class="text-xs text-slate-500 mt-0.5" x-text="r.verdict || '—'"></div>
+                  </div>
+                  <span class="text-xs text-slate-500 font-mono whitespace-nowrap" x-text="formatDate(r.mtime)"></span>
+                </div>
+              </button>
+            </li>
+          </template>
+          <template x-if="reports.length === 0">
+            <li class="text-slate-500 text-sm py-4">No reports yet — run your first cycle.</li>
+          </template>
+        </ul>
+      </template>
+
+      <template x-if="activeReport">
+        <div>
+          <button @click="activeReport = null" class="text-xs text-slate-500 hover:text-slate-300 mb-3">← back to list</button>
+          <div class="markdown" x-html="renderMarkdown(activeReport.content)"></div>
+        </div>
+      </template>
+    </section>
+
+    <!-- Right column when no chat panel; we use grid below for chat full width when open -->
+  </main>
+
+  <!-- CHAT panel (collapsible bottom sheet) -->
+  <div x-show="view === 'domain' && activeDomain" class="fixed bottom-0 left-0 right-0 z-20" x-cloak>
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="bg-slate-900 border-t border-l border-r border-slate-700 rounded-t-lg shadow-2xl"
+           :class="chatOpen ? 'h-[480px]' : 'h-12'">
+
+        <!-- Chat header (always visible) -->
+        <button @click="toggleChat()" class="w-full px-4 h-12 flex items-center justify-between text-sm hover:bg-slate-800/50 rounded-t-lg">
+          <div class="flex items-center gap-2">
+            <span class="text-purple-400">◆</span>
+            <span class="font-medium">Chat with the lab</span>
+            <span class="text-xs text-slate-500" x-text="chatMessages.length + ' messages'"></span>
+          </div>
+          <span class="text-slate-500" x-text="chatOpen ? '▾' : '▴'"></span>
+        </button>
+
+        <!-- Chat body -->
+        <div x-show="chatOpen" class="flex flex-col" style="height: calc(100% - 3rem);">
+          <div class="flex-1 overflow-y-auto px-4 py-3 space-y-3">
+            <template x-for="(m, i) in chatMessages" :key="i">
+              <div :class="m.role === 'user' ? 'pl-12' : 'pr-12'">
+                <div class="text-xs text-slate-500 mb-1" x-text="m.role"></div>
+                <div :class="m.role === 'user' ? 'bg-purple-900/40 border-purple-800' : 'bg-slate-800/50 border-slate-700'"
+                     class="border rounded-lg px-3 py-2 markdown text-sm" x-html="renderMarkdown(m.content)"></div>
+              </div>
+            </template>
+            <template x-if="chatLoading">
+              <div class="pr-12">
+                <div class="text-xs text-slate-500 mb-1">assistant</div>
+                <div class="bg-slate-800/50 border border-slate-700 rounded-lg px-3 py-2 text-sm running">thinking...</div>
+              </div>
+            </template>
+            <template x-if="chatMessages.length === 0">
+              <div class="text-slate-500 text-sm text-center py-8">
+                Ask the lab anything about its current state, decisions, or findings.<br>
+                The agent has the seed, last reports, and cimitero in context.
+              </div>
+            </template>
+          </div>
+          <form @submit.prevent="sendChat()" class="border-t border-slate-700 p-3 flex gap-2">
+            <input x-model="chatInput" :disabled="chatLoading" placeholder="Ask the lab..." class="flex-1 bg-slate-950 border border-slate-700 rounded px-3 py-2 text-sm focus:border-purple-500 outline-none">
+            <button type="submit" :disabled="chatLoading || !chatInput.trim()" class="px-4 py-2 rounded bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-sm font-medium">Send</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Run-cycle modal -->
+  <div x-show="showRunModal" x-cloak class="fixed inset-0 z-30 bg-black/70 flex items-center justify-center p-4" @click.self="showRunModal = false">
+    <div class="bg-slate-900 border border-slate-700 rounded-lg p-6 max-w-2xl w-full max-h-[90vh] flex flex-col">
+      <h2 class="text-lg font-medium mb-4">Run cycle on <span class="font-mono text-purple-400" x-text="activeDomain"></span></h2>
+
+      <template x-if="!runCycleId">
+        <div>
+          <label class="block text-sm text-slate-400 mb-2">Direction override (optional)</label>
+          <input x-model="runDirectionOverride" placeholder="leave empty for auto" class="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-sm mb-4 focus:border-purple-500 outline-none">
+          <div class="flex justify-end gap-2">
+            <button @click="showRunModal = false" class="px-4 py-2 text-sm text-slate-400 hover:text-white">Cancel</button>
+            <button @click="startCycle()" class="px-4 py-2 rounded bg-purple-600 hover:bg-purple-500 text-sm font-medium">Start cycle</button>
+          </div>
+        </div>
+      </template>
+
+      <template x-if="runCycleId">
+        <div class="flex flex-col flex-1 min-h-0">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-sm">cycle <span class="font-mono text-cyan-400" x-text="runCycleId.slice(0, 8)"></span></span>
+            <span class="text-xs px-2 py-0.5 rounded font-mono" :class="cycleStatusClass(runStatus)" x-text="runStatus"></span>
+          </div>
+          <pre class="flex-1 bg-slate-950 border border-slate-800 rounded p-3 text-xs font-mono overflow-y-auto whitespace-pre-wrap" x-text="runLog"></pre>
+          <div class="flex justify-end gap-2 mt-3">
+            <button @click="closeRunModal()" class="px-4 py-2 text-sm text-slate-400 hover:text-white" x-text="runStatus === 'running' ? 'Run in background' : 'Close'"></button>
+          </div>
+        </div>
+      </template>
+    </div>
+  </div>
+
+  <script>
+  function dashboard() {
+    return {
+      // State
+      view: 'home',
+      health: {},
+      domains: [],
+      activeDomain: null,
+      seed: {},
+      reports: [],
+      activeReport: null,
+
+      // Chat
+      chatOpen: false,
+      chatMessages: [],
+      chatInput: '',
+      chatLoading: false,
+      chatSessionId: null,
+
+      // Run modal
+      showRunModal: false,
+      runDirectionOverride: '',
+      runCycleId: null,
+      runStatus: '',
+      runLog: '',
+      runWs: null,
+
+      async init() {
+        try {
+          this.health = await fetch('/api/health').then(r => r.json());
+          this.domains = await fetch('/api/domains').then(r => r.json());
+        } catch (e) {
+          console.error('init failed', e);
+        }
+      },
+
+      async enterDomain(id) {
+        this.activeDomain = id;
+        this.view = 'domain';
+        this.activeReport = null;
+        await Promise.all([this.reloadSeed(), this.reloadReports()]);
+      },
+
+      async reloadSeed() {
+        if (!this.activeDomain) return;
+        this.seed = await fetch(`/api/domains/${this.activeDomain}/seed`).then(r => r.json());
+      },
+
+      async reloadReports() {
+        if (!this.activeDomain) return;
+        this.reports = await fetch(`/api/domains/${this.activeDomain}/reports`).then(r => r.json());
+      },
+
+      async openReport(filename) {
+        const r = await fetch(`/api/domains/${this.activeDomain}/reports/${encodeURIComponent(filename)}`).then(r => r.json());
+        this.activeReport = r;
+      },
+
+      renderMarkdown(text) {
+        if (!text) return '';
+        try {
+          return marked.parse(text, { breaks: true, gfm: true });
+        } catch (e) {
+          return `<pre>${this.escapeHtml(text)}</pre>`;
+        }
+      },
+
+      escapeHtml(s) {
+        return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+      },
+
+      formatDate(iso) {
+        try { return new Date(iso).toISOString().slice(0, 16).replace('T', ' '); }
+        catch { return iso || ''; }
+      },
+
+      // Chat
+      toggleChat() {
+        this.chatOpen = !this.chatOpen;
+      },
+
+      async sendChat() {
+        if (!this.chatInput.trim() || !this.activeDomain) return;
+        const userMsg = { role: 'user', content: this.chatInput };
+        this.chatMessages.push(userMsg);
+        this.chatInput = '';
+        this.chatLoading = true;
+        try {
+          const r = await fetch(`/api/domains/${this.activeDomain}/chat`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              messages: this.chatMessages,
+              session_id: this.chatSessionId,
+            }),
+          });
+          if (!r.ok) {
+            const err = await r.json().catch(() => ({ detail: 'unknown error' }));
+            this.chatMessages.push({
+              role: 'assistant',
+              content: `**Error:** ${err.detail || r.statusText}`,
+            });
+          } else {
+            const data = await r.json();
+            this.chatSessionId = data.session_id;
+            this.chatMessages.push({
+              role: 'assistant',
+              content: data.reply || '(empty reply)',
+            });
+          }
+        } catch (e) {
+          this.chatMessages.push({ role: 'assistant', content: `**Network error:** ${e.message}` });
+        } finally {
+          this.chatLoading = false;
+        }
+      },
+
+      // Run cycle
+      async startCycle() {
+        const r = await fetch(`/api/domains/${this.activeDomain}/run`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ direction_override: this.runDirectionOverride || null }),
+        });
+        if (!r.ok) {
+          alert(`Failed to start cycle: ${r.statusText}`);
+          return;
+        }
+        const data = await r.json();
+        this.runCycleId = data.cycle_id;
+        this.runStatus = 'running';
+        this.runLog = '';
+        this.connectCycleWs(data.cycle_id);
+      },
+
+      connectCycleWs(cycleId) {
+        const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const ws = new WebSocket(`${proto}//${location.host}/api/cycles/${cycleId}/log`);
+        this.runWs = ws;
+        ws.onmessage = (ev) => {
+          try {
+            const m = JSON.parse(ev.data);
+            if (m.type === 'log') {
+              this.runLog += m.data;
+            } else if (m.type === 'status') {
+              this.runStatus = m.status;
+              if (this.runStatus !== 'running') {
+                this.reloadSeed();
+                this.reloadReports();
+              }
+            }
+          } catch (e) { console.error(e); }
+        };
+        ws.onclose = () => {
+          if (this.runStatus === 'running') this.runStatus = 'disconnected';
+        };
+      },
+
+      closeRunModal() {
+        if (this.runWs) { try { this.runWs.close(); } catch {} }
+        this.runWs = null;
+        this.runCycleId = null;
+        this.runStatus = '';
+        this.runLog = '';
+        this.runDirectionOverride = '';
+        this.showRunModal = false;
+      },
+
+      cycleStatusClass(status) {
+        return {
+          'running': 'bg-yellow-900 text-yellow-300 running',
+          'completed': 'bg-green-900 text-green-300',
+          'failed': 'bg-red-900 text-red-300',
+        }[status] || 'bg-slate-800 text-slate-400';
+      },
+    };
+  }
+  </script>
+</body>
+</html>

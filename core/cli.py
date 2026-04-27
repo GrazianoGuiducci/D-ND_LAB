@@ -154,6 +154,30 @@ def dry_run(domain: str) -> None:
 
 
 @main.command()
+@click.option("--host", default=None, help="Bind host (default: 0.0.0.0). Override via DASHBOARD_HOST env.")
+@click.option("--port", default=None, type=int, help="Port (default: 5000). Override via DASHBOARD_PORT env.")
+def dashboard(host: str | None, port: int | None) -> None:
+    """Run the web dashboard (FastAPI + single-page UI).
+
+    Browser at http://localhost:5000 once started. Auth is disabled by
+    default (set DASHBOARD_AUTH=enabled for protected mode). Required
+    deps: fastapi, uvicorn — install with `pip install fastapi 'uvicorn[standard]'`.
+    """
+    if host:
+        import os as _os
+        _os.environ["DASHBOARD_HOST"] = host
+    if port:
+        import os as _os
+        _os.environ["DASHBOARD_PORT"] = str(port)
+    try:
+        from core import api
+        api.main()
+    except SystemExit as e:
+        click.echo(str(e), err=True)
+        sys.exit(2)
+
+
+@main.command()
 @click.option("--domain", required=True, help="Domain to benchmark.")
 @click.option("--models", required=True,
               help="Comma-separated list of model ids. Example: "

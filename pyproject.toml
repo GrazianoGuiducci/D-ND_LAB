@@ -31,6 +31,10 @@ dependencies = [
 
     # YAML config support (alternative to JSON for human-friendly configs)
     "pyyaml>=6.0",
+
+    # Dashboard (Phase 6) — optional but small enough to ship in core
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.32",
 ]
 
 [project.optional-dependencies]

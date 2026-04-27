@@ -60,6 +60,41 @@ services:
         echo "${LAB_CRON_SCHEDULE:-30 3 * * *} python -m core.cli run --domain ${LAB_DOMAIN:-physics} >> /data/cron.log 2>&1" | crontab -
         crond -f -l 2
 
+  # Web dashboard (FastAPI + single-page UI). Browser-friendly control
+  # panel + chat with the lab in interactive mode. Default profile
+  # disabled — start with --profile dashboard.
+  dashboard:
+    profiles: ["dashboard"]
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: d-nd-lab:latest
+    container_name: d-nd-lab-dashboard
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      LAB_DATA_DIR: /data
+      DASHBOARD_HOST: 0.0.0.0
+      DASHBOARD_PORT: 5000
+      # Auth: set DASHBOARD_AUTH=enabled and use port mapping below to
+      # restrict access (Phase 6 v1: localhost-only is the recommended
+      # boundary — magic-link auth lands in Phase 6 v2).
+    ports:
+      - "${DASHBOARD_PORT:-5000}:5000"
+    volumes:
+      - lab_data:/data
+      - ./domains:/app/domains:rw
+      - ./dashboard:/app/dashboard:ro
+    entrypoint: ["tini", "--"]
+    command: ["python", "-m", "core.cli", "dashboard"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/api/health', timeout=5)"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
   nginx:
     image: nginx:1.27-alpine
     container_name: d-nd-lab-nginx

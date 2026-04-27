@@ -241,18 +241,160 @@ la dashboard è la prova vivente del modello che descrive.
 | Build | Docker compose service `dashboard` | porta 3000 frontend, 5000 backend, nginx routing |
 | Deploy | docker compose up | un comando, tutto |
 
-## Stima
+## Login (auth opt-in)
 
-- **6A — mockup/wireframe (questo doc)**: done
-- **6B — backend API + WS**: 1-2 giorni
-- **6C — frontend MVP** (domain picker + seed view + reports list + run button): 2-3 giorni
-- **6D — bicono visualizer + cost charts + trajectory timeline**: 1-2 giorni
-- **6E — fork mode (3-domain parallel + convergence map)**: 2 giorni
-- **6F — Docker compose integration**: 0.5 giorni
+Auth è opt-in via `DASHBOARD_AUTH=enabled` env var. Pattern:
 
-**Totale Phase 6: 6-10 giorni di lavoro mirato.**
+- **Localhost / single user**: `DASHBOARD_AUTH=disabled` (default).
+  Nessun login, accesso libero a chi può raggiungere la porta.
+- **Esposto in rete / VPS**: `DASHBOARD_AUTH=enabled`. JWT
+  magic-link via email — utente inserisce email, riceve link,
+  sessione 30 giorni. Niente password DB.
+- **Multi-tenant hosted (Phase 7+)**: stesso meccanismo + un
+  account-id nel JWT che namespacing i `data/<account>/<domain>/`.
+- **Demo pubblica `lab.d-nd.com/dashboard`**: nessuna auth — modalità
+  read-only, niente azioni (run cycle, modify seed, chat injection).
 
-Posso anche fare versione **MVP più ridotta** in 3-4 giorni (solo schermate 1, 2, 3, 4 — niente fork mode né charts) per validare l'approccio. Fork mode + charts in Phase 6.5.
+Magic-link richiede SMTP config (env vars `SMTP_HOST`,
+`SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`). Se assenti, il login è
+disabilitato e la dashboard accetta solo localhost.
+
+## Chat panel — l'agent del lab in modalità interattiva
+
+La chat NON è un wrapper LLM generico. È **lo stesso agent** che gira
+il cycle, in modalità conversazionale. Stesso prompt context (domain
+context.md + seme + ultimi report), stesso modello, stessa adapter
+config — solo che invece di un cycle batch, fa una risposta per
+messaggio.
+
+### Why it changes the product
+
+| | Cycle agent | Chat agent |
+|---|---|---|
+| Trigger | Cron / `dndlab run` | User message |
+| Goal | Scrivere un report autonomo | Rispondere a una domanda con consapevolezza |
+| Output | `agent_<ts>.md` + bicono + seed update | Stream conversazionale + opzionale "inject as tension" |
+| Context | `agent_field_live.md` (statico) | Stesso + history conversazione + ultimi report |
+| Tools | filesystem + python_exec + bash | Read-only + side-effect tools gated da UI confirm |
+
+### Use case concreti
+
+1. **"Perché il lab ha esplorato BOUNDARY stanotte?"**
+   Chat agent legge trajectory + projector output del cycle e spiega
+   la logica della scelta — la consapevolezza retrospettiva del lab.
+
+2. **"Cosa c'è nel cimitero che ho dimenticato?"**
+   Estrae i 3 claim più recenti caduti + sostituzione strutturale.
+
+3. **"Aggiungi tensione: '...'"**
+   Valida la formulazione (struttura non opinione), chiede conferma,
+   inietta nel seme con porta + tipo + intensity.
+
+4. **"Lancia un cycle ora focalizzato su METRIC_TENSOR."**
+   Imposta direzione override, lancia cycle async, ritorna cycle_id,
+   il pannello cycle runner mostra il log streaming.
+
+5. **"Mostrami i report dove abbiamo falsificato GUE."**
+   Searches reports per verdict pattern, ritorna lista linkable.
+
+### Tools che la chat espone al modello
+
+Read-only (sempre attivi):
+- `read_report(ts)` — legge un report passato
+- `read_cimitero()` — claim falsificati
+- `read_seed()` — stato corrente
+- `read_trajectory_log(n=10)` — ultime decisioni evaluator
+- `read_evolution_report(ts)` — refiner output
+- `search_reports(query)` — full-text su tutti i report
+- `search_archive(query)` — solo dominio editorial
+
+Side-effect (gated da UI confirm):
+- `inject_tension(claim, intensity, type, porta)` — manuale, dopo
+  conferma operatore
+- `run_cycle(direction_override?)` — lancia async, ritorna cycle_id
+- `modify_seed_direction(new_direction)` — cambia direzione,
+  confidence=high required
+
+### Safety chat
+
+- `LLM_MAX_COST_USD_PER_SESSION` cap (default $1.00 — chat può
+  consumare molto se uno scrolla messaggi)
+- Rate limit: max N messaggi al minuto per session
+- History persistita in `data/<domain>/chat_sessions/<session_id>.jsonl`
+- Conferma UI obbligatoria per side-effect tools — il modello propone,
+  l'operatore approva con click
+
+### UI panel
+
+```
+┌─ Chat with the lab ─────────────────────────────────────┐
+│  Domain: physics              Session: 2026-04-27 21:12 │
+├─────────────────────────────────────────────────────────┤
+│                                                         │
+│  > Perché BOUNDARY questa notte?                        │
+│                                                         │
+│  Ha massimo discriminating power perché 8 GUE / 5       │
+│  Poisson sono già misurati — il cut è disponibile.      │
+│  TRASCENDENZA_LIMITE intensity 0.9 ma scope troppo      │
+│  ampio per il budget; il refiner della notte prima      │
+│  l'aveva segnalato come scelta alternativa per il       │
+│  ciclo seguente.                                        │
+│                                                         │
+│  > Aggiungi tensione: "convergenza primi-zeta è stata   │
+│    misurata solo in log scale — testare lineare"        │
+│                                                         │
+│  Sembra una tensione di tipo confine_inesplorato.       │
+│  Proporrei intensity 0.75, porta 'novità'.              │
+│                                                         │
+│  [✓ inject as proposed] [✎ modify] [✗ skip]             │
+│                                                         │
+├─────────────────────────────────────────────────────────┤
+│  [type your message...]                  Cost: $0.012   │
+│                                            Send: Ctrl+↵ │
+└─────────────────────────────────────────────────────────┘
+```
+
+## Stima rivista (con login + chat)
+
+| Sub-task | Giorni |
+|---|---|
+| 6A — mockup (questo doc) | done |
+| 6B — backend FastAPI + REST + WS | 2 |
+| 6C — frontend MVP (4 schermate base) | 3 |
+| 6D — chat panel + tools wiring | 2-3 |
+| 6E — auth opt-in (JWT magic-link) | 1-2 |
+| 6F — bicono visualizer + cost charts | 1-2 |
+| 6G — fork mode (parallel domains + convergence) | 2 |
+| 6H — Docker compose + demo mode | 1 |
+
+**Totale: 12-15 giorni** per la Phase 6 completa.
+
+### Strategia in due milestones
+
+**Phase 6 v1 — Core dashboard + chat (8-9 giorni)**
+6B + 6C + 6D + 6E + 6H. Niente fork mode, niente charts.
+Già rivoluzionario: dashboard usabile + chat conversazionale +
+auth + deploy ready.
+
+**Phase 6 v2 — Visualizers + Fork mode (4-6 giorni)**
+6F + 6G. Differenziatori sopra v1.
+
+### Pragmatic single-session shortcut
+
+Per shippare un MVP **in una singola sessione di sviluppo**:
+
+- Frontend: HTML single-page servito da FastAPI con Tailwind CDN
+  + Alpine.js (no build step, no React setup)
+- Backend: 1 file `core/api.py` con tutti gli endpoint REST + WS + chat
+- Docker: aggiungo service `dashboard` con port mapping
+- Auth: opt-in via env var, ma implementazione magic-link può venire
+  in 6E v2
+
+Stack semplificato sacrifica polish UI ma consegna **funzionalità reale
+oggi**: dashboard usabile via browser, lab gestibile senza terminale,
+chat funzionante, deploy via docker compose. Migrabile a React proper
+in Phase 6 v2 senza buttare nulla — gli endpoint REST + WS sono già
+stabili.
 
 ## Domande per te
 
