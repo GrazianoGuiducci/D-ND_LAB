@@ -221,9 +221,15 @@ def run_cycle(domain: str) -> CycleContext:
 # Phase 1 commits add these one by one. Until imported, MOVEMENTS[name]
 # remains None and the orchestrator skips with "not yet implemented".
 
-from core import autopsy as _autopsy  # noqa: E402, F401  (registers movement)
-from core import build_field as _build_field  # noqa: E402, F401  (registers movement)
-from core import refiner as _refiner  # noqa: E402, F401  (registers movement)
+from core import autopsy as _autopsy  # noqa: E402, F401
+from core import build_field as _build_field  # noqa: E402, F401
+from core import structural_check as _structural_check  # noqa: E402, F401
+from core import refiner as _refiner  # noqa: E402, F401
+from core import semantic_bridge as _semantic_bridge  # noqa: E402, F401
+from core import lab_graph as _lab_graph  # noqa: E402, F401
+from core import seed_integrator as _seed_integrator  # noqa: E402, F401
+from core import refresh_detector as _refresh_detector  # noqa: E402, F401
 from core import trajectory_evaluator as _trajectory_evaluator  # noqa: E402, F401
-# Future Phase 1 commits:
-#   from core import agent, validate_seed, structural_check, ...
+from core import agent as _agent  # noqa: E402, F401
+from core import io_movements as _io_movements  # noqa: E402, F401
+# All 16 movements registered.

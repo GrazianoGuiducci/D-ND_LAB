@@ -31,7 +31,7 @@
   "movements": {
     "autopsy":              { "enabled": true },
     "build_field":          { "enabled": true },
-    "agent":                { "enabled": true },
+    "agent":                { "enabled": false, "params": { "comment": "Phase 1: disabled until llm_adapter implemented (Phase 2)" } },
     "validate_seed":        { "enabled": true },
     "verify_assertions":    { "enabled": true },
     "structural_check":     { "enabled": true, "params": { "inject_meta_tensions": true } },
