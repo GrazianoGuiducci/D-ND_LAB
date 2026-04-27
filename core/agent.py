@@ -25,7 +25,7 @@ import logging
 from typing import Any
 
 from core import config as cfg
-from core import llm_adapter, paths
+from core import llm_adapter, paths, tools
 from core.lab_agent import CycleContext, register_movement
 
 logger = logging.getLogger(__name__)
@@ -61,13 +61,14 @@ def agent(ctx: CycleContext) -> None:
 
     adapter_config = llm_adapter.AdapterConfig.from_env()
 
-    # Phase 2 will plug real tools here
-    tools: list[dict[str, Any]] = params.get("tools_override", [])
+    # Default tool set: filesystem ops + python_exec + bash_exec, sandboxed
+    # to the domain's data dir + read-only access to domain dir.
+    tool_set = tools.build_default_tools(ctx.domain)
 
     result = llm_adapter.run_agent(
         system_prompt=system_prompt,
         user_message=user_message,
-        tools=tools,
+        tools=tool_set,
         config=adapter_config,
     )
 
@@ -84,10 +85,17 @@ def agent(ctx: CycleContext) -> None:
         turns=result.turns,
         stop_reason=result.stop_reason,
         tool_calls=len(result.tool_calls),
+        usage=result.usage,
+        cost_usd=result.cost_usd,
+        duration_s=result.duration_s,
     )
     logger.info(
-        "agent: %d turns, %d tool calls, report → %s",
-        result.turns, len(result.tool_calls), expected_report,
+        "agent: %d turns, %d tool calls, %d total tokens, $%s, report → %s",
+        result.turns,
+        len(result.tool_calls),
+        result.usage.get("total_tokens", 0),
+        f"{result.cost_usd:.4f}" if result.cost_usd is not None else "?",
+        expected_report,
     )
 
 
