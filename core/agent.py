@@ -65,11 +65,22 @@ def agent(ctx: CycleContext) -> None:
     # to the domain's data dir + read-only access to domain dir.
     tool_set = tools.build_default_tools(ctx.domain)
 
+    # Early stop: when the report file is written and not trivially short,
+    # the agent has achieved the cycle goal. Continuing to call tools past
+    # this point is exploration, not output — we cap it. Threshold 1 KB
+    # avoids stopping on a stub/empty file.
+    expected_report = paths.reports_dir(ctx.domain) / f"agent_{ctx.timestamp}.md"
+    min_report_bytes = int(params.get("min_report_bytes", 1024))
+
+    def report_written() -> bool:
+        return expected_report.exists() and expected_report.stat().st_size >= min_report_bytes
+
     result = llm_adapter.run_agent(
         system_prompt=system_prompt,
         user_message=user_message,
         tools=tool_set,
         config=adapter_config,
+        early_stop=report_written,
     )
 
     # Verify the agent wrote the expected report file

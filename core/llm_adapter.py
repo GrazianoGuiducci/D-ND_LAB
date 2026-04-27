@@ -96,8 +96,16 @@ def run_agent(
     user_message: str,
     tools: list[ToolEntry] | None = None,
     config: AdapterConfig | None = None,
+    early_stop: Callable[[], bool] | None = None,
 ) -> AgentResult:
     """Run the agent for one cycle. Multi-turn tool-use loop.
+
+    Args:
+        early_stop: optional callable. After each turn (post tool dispatch),
+            if early_stop() returns True, the loop terminates with the most
+            recent assistant text as final_text. Useful when the agent's
+            output is in a side-effect file (e.g. report.md) and continued
+            tool calls are wasteful exploration past the goal.
 
     Returns AgentResult with final text, traces, usage, cost.
 
@@ -193,6 +201,18 @@ def run_agent(
                 }
                 for tc in msg.tool_calls
             ]
+        # OpenRouter reasoning models (DeepSeek thinking, Anthropic extended,
+        # Gemini 3 thinking, etc.): preserve reasoning_details unmodified
+        # when sending back in multi-turn. Per OpenRouter docs:
+        # "Preserve the complete reasoning_details when passing back"
+        # https://openrouter.ai/docs/guides/best-practices/reasoning-tokens
+        reasoning_details = getattr(msg, "reasoning_details", None)
+        if reasoning_details:
+            assistant_msg["reasoning_details"] = reasoning_details
+        # Some providers also use a plain `reasoning` string field
+        reasoning = getattr(msg, "reasoning", None)
+        if reasoning and not reasoning_details:
+            assistant_msg["reasoning"] = reasoning
         messages.append(assistant_msg)
 
         if not msg.tool_calls:
@@ -230,6 +250,15 @@ def run_agent(
                 "tool_call_id": tc.id,
                 "content": str(tool_result)[:50000],
             })
+
+        # Early stop check: after dispatching this turn's tools, did the
+        # agent achieve its side-effect goal (e.g. wrote the report file)?
+        # Some agents continue to validate/explore past the goal — we let
+        # the caller decide that further turns are wasteful.
+        if early_stop and early_stop():
+            final_text = msg.content or "[completed via side-effect; no final assistant text]"
+            stop_reason = "early_stop"
+            break
     else:
         # Loop exhausted without final answer
         raise RuntimeError(f"max_turns ({config.max_turns}) reached without final answer")
