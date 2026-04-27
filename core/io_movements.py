@@ -40,13 +40,47 @@ logger = logging.getLogger(__name__)
 
 
 def validate_seed(ctx: CycleContext) -> None:
-    """Check seed integrity. If corrupted, restore from backup."""
+    """Check seed integrity. First cycle: bootstrap from domains/<d>/seed_tensions.json
+    if seed.json is absent. Subsequent cycles: integrity check + restore from
+    backup if corrupted."""
     seed_path = paths.seed_path(ctx.domain)
     backup_path = paths.seed_backup_path(ctx.domain)
 
     if not seed_path.exists():
+        # Bootstrap: try to seed from domains/<d>/seed_tensions.json
+        bootstrap_path = paths.domain_dir(ctx.domain) / "seed_tensions.json"
+        if bootstrap_path.exists():
+            try:
+                bootstrap = json.loads(bootstrap_path.read_text())
+                seed = {
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "piano": 0,  # seed_integrator will bump to 1
+                    "tensioni": bootstrap.get("tensioni", []),
+                    "direzione": bootstrap.get("direzione_iniziale", ""),
+                    "potenziale_bloccato": [],
+                    "varianza": [],
+                    "filtro": {"promosse": len(bootstrap.get("tensioni", [])), "filtrate": 0},
+                    "verifica": {},
+                    "fonti_consumate": 0,
+                    "fonti_esterne": [],
+                }
+                seed_path.parent.mkdir(parents=True, exist_ok=True)
+                seed_path.write_text(json.dumps(seed, indent=2, ensure_ascii=False))
+                ctx.seed = seed
+                ctx.metrics.setdefault("validate_seed", {}).update(
+                    status="bootstrapped",
+                    n_tensions=len(seed["tensioni"]),
+                )
+                logger.info(
+                    "validate_seed: bootstrapped from %s (%d tensions)",
+                    bootstrap_path.name, len(seed["tensioni"]),
+                )
+                return
+            except Exception as e:
+                logger.warning("bootstrap failed: %s", e)
+
         ctx.metrics.setdefault("validate_seed", {}).update(status="absent")
-        logger.info("validate_seed: no seed.json yet (first cycle)")
+        logger.info("validate_seed: no seed.json and no bootstrap source (empty cycle)")
         return
 
     try:
