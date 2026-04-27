@@ -224,5 +224,6 @@ def run_cycle(domain: str) -> CycleContext:
 from core import autopsy as _autopsy  # noqa: E402, F401  (registers movement)
 from core import build_field as _build_field  # noqa: E402, F401  (registers movement)
 from core import refiner as _refiner  # noqa: E402, F401  (registers movement)
+from core import trajectory_evaluator as _trajectory_evaluator  # noqa: E402, F401
 # Future Phase 1 commits:
 #   from core import agent, validate_seed, structural_check, ...
