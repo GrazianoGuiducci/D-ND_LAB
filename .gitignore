@@ -1,0 +1,46 @@
+# Secrets — mai committare
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+secrets/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.uv/
+dist/
+build/
+
+# Lab runtime data — cycles produce volume, non va in git
+data/
+!domains/*/seed_tensions.json
+!domains/*/config.json
+!domains/*/context.md
+!domains/*/tension_to_category.json
+
+# Reports e log nightly — vivono nel volume Docker / nginx, non nel repo
+domains/*/data/
+domains/*/reports/
+domains/*/cimitero.md
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Test artifacts
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Corpus privati (es. archivi insight operatore per Lab Editoriale)
+domains/*/corpus/
+!domains/*/corpus/.gitkeep
+!domains/*/corpus/README.md

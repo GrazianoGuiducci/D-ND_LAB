@@ -1,0 +1,61 @@
+{
+  "$schema": "../../config.schema.json",
+  "domain": "editorial",
+  "version": "0.1.0-alpha",
+  "title": "Editorial Lab",
+  "description": "Publishing-aware lab. Mines insight archives, identifies the resultant worth publishing, drafts copy through the bicono filter and non-dual-copy gate. Output: pieces that hold weight, not noise.",
+  "model": {
+    "context_file": "context.md",
+    "tension_to_category": "tension_to_category.json",
+    "seed_tensions": "seed_tensions.json"
+  },
+  "context": {
+    "data_dir": "editorial",
+    "max_turns": 25,
+    "timeout_seconds": 1200
+  },
+  "tools": [
+    {
+      "name": "filesystem",
+      "type": "builtin"
+    },
+    {
+      "name": "archive_search",
+      "type": "domain",
+      "module": "domains.editorial.tools.archive_search"
+    },
+    {
+      "name": "embedding_index",
+      "type": "domain",
+      "module": "domains.editorial.tools.embedding_index"
+    },
+    {
+      "name": "voice_check",
+      "type": "domain",
+      "module": "domains.editorial.tools.voice_check"
+    }
+  ],
+  "movements": {
+    "autopsy":              { "enabled": true },
+    "build_field":          { "enabled": true },
+    "agent":                { "enabled": true },
+    "validate_seed":        { "enabled": true },
+    "verify_assertions":    { "enabled": false, "params": { "comment": "no condensate-style assertions in editorial domain" } },
+    "structural_check":     { "enabled": true, "params": { "patterns_module": "domains.editorial.structural_patterns" } },
+    "build_lab_data":       { "enabled": true },
+    "build_graph":          { "enabled": true },
+    "sync":                 { "enabled": false },
+    "verify_endpoints":     { "enabled": false },
+    "refiner":              { "enabled": true },
+    "semantic_bridge":      { "enabled": true },
+    "refresh_detector":     { "enabled": true },
+    "seed_integrator":      { "enabled": true },
+    "trajectory_evaluator": { "enabled": true, "params": { "execute": false, "log_only": true } },
+    "notify":               { "enabled": true }
+  },
+  "notify": {
+    "webhook_url_env": "NOTIFY_WEBHOOK_URL",
+    "on_success": true,
+    "on_error": true
+  }
+}

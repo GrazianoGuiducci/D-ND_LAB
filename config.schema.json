@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/GrazianoGuiducci/D-ND_LAB/blob/main/config.schema.json",
+  "title": "D-ND_LAB Domain Configuration",
+  "description": "Schema for domains/<domain>/config.json. Validates that each lab domain provides the required scaffolding for the 13-movement orchestrator.",
+  "type": "object",
+  "required": ["domain", "version", "model", "context", "tools", "movements"],
+  "properties": {
+    "domain": {
+      "type": "string",
+      "description": "Domain identifier — must match the directory name under domains/.",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "version": {
+      "type": "string",
+      "description": "Domain config version (semver).",
+      "pattern": "^\\d+\\.\\d+\\.\\d+(-[a-z0-9.]+)?$"
+    },
+    "title": {
+      "type": "string",
+      "description": "Human-readable name (e.g. 'D-ND Physics Lab', 'Editorial Lab')."
+    },
+    "description": {
+      "type": "string",
+      "description": "What this lab studies / produces."
+    },
+    "model": {
+      "type": "object",
+      "description": "Domain-specific model knowledge (axioms, condensate, anti-patterns) injected into the agent prompt.",
+      "required": ["context_file"],
+      "properties": {
+        "context_file": {
+          "type": "string",
+          "description": "Path (relative to domain dir) to context.md — populates lab_context_template.md placeholders."
+        },
+        "tension_to_category": {
+          "type": "string",
+          "description": "Path to tension→category mapping JSON (semantic bridge target categories)."
+        },
+        "seed_tensions": {
+          "type": "string",
+          "description": "Path to seed_tensions.json — initial tensions for the first cycle."
+        }
+      }
+    },
+    "context": {
+      "type": "object",
+      "description": "Runtime context for the lab agent.",
+      "required": ["data_dir"],
+      "properties": {
+        "data_dir": {
+          "type": "string",
+          "description": "Where state/reports/seed live. Resolved relative to LAB_DATA_DIR env var."
+        },
+        "max_turns": { "type": "integer", "minimum": 5, "maximum": 100 },
+        "timeout_seconds": { "type": "integer", "minimum": 60, "maximum": 7200 }
+      }
+    },
+    "tools": {
+      "type": "array",
+      "description": "List of MCP tool servers / built-in tools the agent can call. Each entry references a tool name registered in core/tools/ or an MCP server URL.",
+      "items": {
+        "type": "object",
+        "required": ["name", "type"],
+        "properties": {
+          "name": { "type": "string" },
+          "type": { "enum": ["builtin", "mcp_server", "domain"] },
+          "endpoint": { "type": "string" },
+          "module": { "type": "string" }
+        }
+      }
+    },
+    "movements": {
+      "type": "object",
+      "description": "Per-movement configuration. Each of the 13 movements can be enabled/disabled or have domain-specific parameters.",
+      "properties": {
+        "autopsy":               { "$ref": "#/$defs/movement" },
+        "build_field":           { "$ref": "#/$defs/movement" },
+        "agent":                 { "$ref": "#/$defs/movement" },
+        "validate_seed":         { "$ref": "#/$defs/movement" },
+        "verify_assertions":     { "$ref": "#/$defs/movement" },
+        "structural_check":      { "$ref": "#/$defs/movement" },
+        "build_lab_data":        { "$ref": "#/$defs/movement" },
+        "build_graph":           { "$ref": "#/$defs/movement" },
+        "sync":                  { "$ref": "#/$defs/movement" },
+        "verify_endpoints":      { "$ref": "#/$defs/movement" },
+        "refiner":               { "$ref": "#/$defs/movement" },
+        "semantic_bridge":       { "$ref": "#/$defs/movement" },
+        "refresh_detector":      { "$ref": "#/$defs/movement" },
+        "seed_integrator":       { "$ref": "#/$defs/movement" },
+        "trajectory_evaluator":  { "$ref": "#/$defs/movement" },
+        "notify":                { "$ref": "#/$defs/movement" }
+      }
+    },
+    "notify": {
+      "type": "object",
+      "description": "Notification settings for cycle completion / errors.",
+      "properties": {
+        "webhook_url_env": { "type": "string", "default": "NOTIFY_WEBHOOK_URL" },
+        "on_success": { "type": "boolean", "default": true },
+        "on_error": { "type": "boolean", "default": true }
+      }
+    }
+  },
+  "$defs": {
+    "movement": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean", "default": true },
+        "params": { "type": "object", "additionalProperties": true }
+      }
+    }
+  }
+}
