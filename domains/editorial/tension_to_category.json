@@ -1,0 +1,28 @@
+{
+  "_meta": {
+    "domain": "editorial",
+    "format": "tension_id → list of category codes",
+    "categories": ["SRC", "ECHO", "TRANS", "IDIO", "REG_INT", "REG_EXT"],
+    "category_labels": {
+      "SRC": "Source — emerged from operator's friction/observation",
+      "ECHO": "Echo — paraphrase of received insight",
+      "TRANS": "Transferable — applies beyond operator's specific context",
+      "IDIO": "Idiosyncratic — true only in operator's configuration",
+      "REG_INT": "Register internal — language native to the system",
+      "REG_EXT": "Register external — language native to the reader"
+    },
+    "purpose": "Maps each editorial tension to the structural categories it touches. Insights crossing >=2 categories produce annotations on the corresponding pair (e.g. SRC×TRANS = the publishable quadrant)."
+  },
+  "TENSION_SOURCE_VS_ECHO":              ["SRC", "ECHO"],
+  "TENSION_TRANSFERABLE_VS_IDIO":        ["TRANS", "IDIO"],
+  "TENSION_REGISTER_DRIFT":              ["REG_INT", "REG_EXT"],
+  "TENSION_DIRECTIVE_AS_COPY":           ["SRC", "REG_INT"],
+  "TENSION_RESULTANT_NOT_VISIBLE":       ["SRC", "TRANS"],
+  "TENSION_ECHO_PRESENTED_AS_SOURCE":    ["ECHO", "SRC"],
+  "TENSION_PUBLISH_FOR_PUBLISH_SAKE":    ["ECHO"],
+  "TENSION_VOICE_DRIFT":                 ["REG_INT", "REG_EXT"],
+  "TENSION_CONVERGENCE_UNREAD":          ["SRC", "TRANS"],
+  "TENSION_BUSINESS_VS_RESEARCH_REG":    ["REG_INT", "REG_EXT"],
+  "TENSION_HEDGE_INFLATION":             ["REG_EXT"],
+  "TENSION_TAUTOLOGY_DOMINANT_FRAME":    ["ECHO"]
+}

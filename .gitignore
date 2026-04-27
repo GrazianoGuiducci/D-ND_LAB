@@ -40,7 +40,8 @@ domains/*/cimitero.md
 .coverage
 htmlcov/
 
-# Corpus privati (es. archivi insight operatore per Lab Editoriale)
-domains/*/corpus/
+# Corpus privati (es. archivi insight operatore per Lab Editoriale).
+# Use /* (not /) so exceptions for tracked placeholders work.
+domains/*/corpus/*
 !domains/*/corpus/.gitkeep
 !domains/*/corpus/README.md

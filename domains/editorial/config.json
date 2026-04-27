@@ -38,7 +38,7 @@
   "movements": {
     "autopsy":              { "enabled": true },
     "build_field":          { "enabled": true },
-    "agent":                { "enabled": true },
+    "agent":                { "enabled": true, "params": { "min_report_bytes": 800 } },
     "validate_seed":        { "enabled": true },
     "verify_assertions":    { "enabled": false, "params": { "comment": "no condensate-style assertions in editorial domain" } },
     "structural_check":     { "enabled": true, "params": { "patterns_module": "domains.editorial.structural_patterns" } },

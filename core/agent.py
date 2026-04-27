@@ -65,6 +65,32 @@ def agent(ctx: CycleContext) -> None:
     # to the domain's data dir + read-only access to domain dir.
     tool_set = tools.build_default_tools(ctx.domain)
 
+    # Domain-declared tools: each entry in config.tools with type="domain"
+    # imports its module and calls module.build(domain) to get a ToolEntry.
+    # This lets domains expose specialized tools (archive_search, voice_check,
+    # m_spectro, etc.) without polluting core.
+    for tool_decl in ctx.config.get("tools", []):
+        if tool_decl.get("type") != "domain":
+            continue
+        module_name = tool_decl.get("module")
+        if not module_name:
+            logger.warning("domain tool without module: %s", tool_decl)
+            continue
+        try:
+            import importlib
+            mod = importlib.import_module(module_name)
+            if hasattr(mod, "build"):
+                entry = mod.build(ctx.domain)
+                if entry and entry.get("schema") and entry.get("fn"):
+                    tool_set.append(entry)
+                    logger.info("loaded domain tool: %s", tool_decl.get("name"))
+            else:
+                logger.warning("domain tool module %s has no build(domain) function", module_name)
+        except ImportError as e:
+            logger.warning("domain tool %s not importable: %s", module_name, e)
+        except Exception as e:
+            logger.warning("domain tool %s build() failed: %s", module_name, e)
+
     # Early stop: when the report file is written and not trivially short,
     # the agent has achieved the cycle goal. Continuing to call tools past
     # this point is exploration, not output — we cap it. Threshold 1 KB

@@ -1,0 +1,85 @@
+{
+  "_meta": {
+    "domain": "editorial",
+    "description": "Initial editorial tensions for the first cycle. After cycle 1, seed.json supersedes this. Tensions are the lab's starting field — the agent observes which to explore based on convergence + intensity.",
+    "format": "Same schema as physics seed_tensions.json. Editorial tensions phrased as observations of the corpus, not as prescriptions."
+  },
+  "tensioni": [
+    {
+      "tipo": "contraddizione",
+      "id": "TENSION_SOURCE_VS_ECHO",
+      "claim": "Most published content (operator's archive included) is echo of received insight rather than source. The lab's first task is to discriminate. If 80%+ of corpus entries fail the source test, the editorial output should drop in volume and rise in quality.",
+      "intensita": 0.95,
+      "porta": "novità",
+      "potenziale": "alto",
+      "stato": "aperto",
+      "nota": "Source test: did the writer apply the modus and find a residue in the cut? If not, echo."
+    },
+    {
+      "tipo": "confine_inesplorato",
+      "id": "TENSION_CONVERGENCE_UNREAD",
+      "claim": "Three or more corpus entries pointing at the same concept from different angles signal an unread resultant — the unsaid synthesis between the angles. The lab's job is to surface convergences before they are written, not to write what is already converged.",
+      "intensita": 0.9,
+      "porta": "novità",
+      "potenziale": "alto",
+      "stato": "aperto"
+    },
+    {
+      "tipo": "contraddizione",
+      "id": "TENSION_DIRECTIVE_AS_COPY",
+      "claim": "Internal system directives (rules the lab follows) keep leaking into public copy as if they were the message itself. The reader sees instructions to the system, not the system's output. This is a register-confusion: REG_INT presented as REG_EXT.",
+      "intensita": 0.85,
+      "porta": "novità",
+      "potenziale": "alto",
+      "stato": "aperto",
+      "nota": "Real episode 23/04: 'Three Labs to show in operation' was a TM7 directive that became copy."
+    },
+    {
+      "tipo": "contraddizione",
+      "id": "TENSION_HEDGE_INFLATION",
+      "claim": "Apologetic hedging (modal/temporal/epistemic/comparative) inflates copy without adding signal. 'It might be useful to consider that AI could perhaps...' carries less than 'AI does X'. The lab uses non-dual-copy filter to detect and remove.",
+      "intensita": 0.85,
+      "porta": "condensato",
+      "potenziale": "alto",
+      "stato": "aperto",
+      "condensato_ref": "non-dual-copy skill"
+    },
+    {
+      "tipo": "confine_inesplorato",
+      "id": "TENSION_TRANSFERABLE_VS_IDIO",
+      "claim": "Operator's archive contains mix of transferable insights (apply across contexts) and idiosyncratic insights (true only here). Publishing idiosyncratic content as if transferable creates false-promise echoes; treating transferable as idiosyncratic withholds value. The lab tags each finding with its quadrant.",
+      "intensita": 0.8,
+      "porta": "novità",
+      "potenziale": "medio",
+      "stato": "aperto"
+    },
+    {
+      "tipo": "simmetria_sospetta",
+      "id": "TENSION_VOICE_DRIFT",
+      "claim": "Drafts that pass the modus + bicono filter still occasionally drift in voice register — sounding more academic than operator's actual voice, or more casual than operator's professional register. Voice extraction from corpus needed to anchor.",
+      "intensita": 0.7,
+      "porta": "novità",
+      "potenziale": "medio",
+      "stato": "aperto"
+    },
+    {
+      "tipo": "contraddizione",
+      "id": "TENSION_TAUTOLOGY_DOMINANT_FRAME",
+      "claim": "Editorial entries that restate the dominant frame ('AI is changing how we work', 'attention is the new currency') have no resultant. They feel safe to write because they cannot be contested, but they cannot move anything either.",
+      "intensita": 0.7,
+      "porta": "condensato",
+      "potenziale": "medio",
+      "stato": "aperto"
+    },
+    {
+      "tipo": "tensione_aperta",
+      "id": "TENSION_BUSINESS_VS_RESEARCH_REG",
+      "claim": "Lab outputs need different register for business audience (operative, ROI-aware) vs research audience (formal, falsifiable). The same insight may need two drafts. The lab decides which register to draft based on target signal.",
+      "intensita": 0.6,
+      "porta": "novità",
+      "potenziale": "medio",
+      "stato": "aperto"
+    }
+  ],
+  "direzione_iniziale": "Discriminate source from echo in the operator's archive. Surface convergences not yet written. Filter for register and hedge inflation. Output: 1 draft per cycle, source-transferable preferred, with TENSION_REMAINS verdict acceptable."
+}

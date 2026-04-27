@@ -154,6 +154,29 @@ def dry_run(domain: str) -> None:
 
 
 @main.command()
+@click.option("--domain", required=True, help="Domain to benchmark.")
+@click.option("--models", required=True,
+              help="Comma-separated list of model ids. Example: "
+                   "anthropic/claude-opus-4.7,deepseek/deepseek-v4-pro,xiaomi/mimo-v2.5-pro")
+def benchmark(domain: str, models: str) -> None:
+    """Run the same cycle across N models. Produce cost/quality table.
+
+    Phase 5+ feature — skeleton only. See core/benchmark.py for the contract.
+    For now, set LLM_MODEL in env and run `dndlab run --domain X` per model.
+    """
+    from core import benchmark as bench
+    model_list = [m.strip() for m in models.split(",") if m.strip()]
+    if not model_list:
+        click.echo("No models provided.", err=True)
+        sys.exit(2)
+    try:
+        bench.run_benchmark(domain, model_list)
+    except NotImplementedError as e:
+        click.echo(f"benchmark not yet implemented:\n  {e}", err=True)
+        sys.exit(2)
+
+
+@main.command()
 @click.option("--domain", required=True)
 @click.option("--n", default=10, help="Number of recent cycles to show.")
 def status(domain: str, n: int) -> None:
