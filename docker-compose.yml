@@ -1,8 +1,12 @@
 # D-ND_LAB — local + production deployment
-# Phase 0 scaffold. Refined in Phase 3.
 #
-# Usage:
-#   cp .env.example .env  &&  edit .env  &&  docker compose up -d
+# Quickstart:
+#   cp .env.example .env
+#   # edit .env: set LLM_API_KEY (required) + LLM_MODEL
+#   docker compose up -d --build
+#
+# View latest report:
+#   open http://localhost:8080/data/reports/
 #
 # Two services:
 #   lab    — runs the cycle on schedule (cron-mode) or one-shot (default)
@@ -13,25 +17,48 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: d-nd-lab:dev
+    image: d-nd-lab:latest
     container_name: d-nd-lab
+    restart: "no"  # default: one-shot cycle. Override to 'unless-stopped' for cron.
+    env_file:
+      - .env
+    environment:
+      # Container-internal data dir (override the user's host-side LAB_DATA_DIR
+      # because the volume is mounted at /data inside the container)
+      LAB_DATA_DIR: /data
+    volumes:
+      - lab_data:/data
+      # Mount domains read-write so users can edit configs/contexts without
+      # rebuilding the image. Comment out for production immutability.
+      - ./domains:/app/domains:rw
+
+  # Optional cron-mode service: starts cron daemon that triggers cycles on schedule.
+  # Disabled by default. Enable with --profile cron:
+  #   docker compose --profile cron up -d
+  lab-cron:
+    profiles: ["cron"]
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: d-nd-lab:latest
+    container_name: d-nd-lab-cron
     restart: unless-stopped
     env_file:
       - .env
     environment:
-      - LAB_DATA_DIR=/data
+      LAB_DATA_DIR: /data
     volumes:
       - lab_data:/data
-      # Mount domains read-write so users can edit configs/contexts without rebuilding
       - ./domains:/app/domains:rw
-    # Default CMD runs one cycle and exits. For cron mode override:
-    # command: ["python", "-m", "core.cli", "schedule", "--domain", "${LAB_DOMAIN:-physics}"]
-    healthcheck:
-      test: ["CMD", "python", "-c", "import core; print('ok')"]
-      interval: 60s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
+    # Custom command: read LAB_CRON_SCHEDULE and trigger cycles via cron daemon
+    # The lab user runs `dndlab run` on schedule; tini stays as PID 1.
+    entrypoint: ["tini", "--"]
+    command:
+      - sh
+      - -c
+      - |
+        echo "${LAB_CRON_SCHEDULE:-30 3 * * *} python -m core.cli run --domain ${LAB_DOMAIN:-physics} >> /data/cron.log 2>&1" | crontab -
+        crond -f -l 2
 
   nginx:
     image: nginx:1.27-alpine
@@ -41,11 +68,13 @@ services:
       - "${LAB_HTTP_PORT:-8080}:80"
     volumes:
       - lab_data:/usr/share/nginx/html/data:ro
-      # Custom config for autoindex on /data/reports/
       - ./docker/nginx.conf:/etc/nginx/conf.d/default.conf:ro
-    depends_on:
-      lab:
-        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
 
 volumes:
   lab_data:
