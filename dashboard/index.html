@@ -813,14 +813,44 @@
           <!-- Selector + filter chips compatto -->
           <div class="bg-slate-900 border border-slate-800 rounded-lg p-3 mb-2 flex items-center gap-2 flex-wrap" style="flex-shrink: 0">
             <span class="text-xs text-slate-400 font-medium">Report:</span>
-            <select x-model="activeReportFilename"
-                    @change="activeReportFilename ? openReport(activeReportFilename) : (activeReport = null)"
-                    class="flex-1 min-w-[200px] bg-slate-950 border border-slate-700 rounded px-2 py-1.5 text-sm text-slate-200">
-              <option value="">— scegli un report —</option>
-              <template x-for="r in filteredReports()" :key="r.filename">
-                <option :value="r.filename" x-text="`${(r.title || r.filename).slice(0,80)}${r.n_flags > 0 ? ' ⚠'+r.n_flags : ''}${r.falsifier_coherent === true ? ' ✓' : ''}${isCimitero(r) ? ' 🪦' : ''}`"></option>
-              </template>
-            </select>
+            <!-- Custom dropdown Alpine — niente <select> nativo (browser
+                 ignora styling sull'option popover, rendendo il dark theme
+                 broken al click). -->
+            <div class="relative flex-1 min-w-[200px]" @click.outside="reportsDropdownOpen = false">
+              <button @click="reportsDropdownOpen = !reportsDropdownOpen"
+                      class="w-full bg-slate-950 border border-slate-700 hover:border-purple-700 focus:border-purple-500 rounded px-3 py-1.5 text-sm text-slate-200 text-left flex items-center justify-between transition">
+                <span class="truncate" x-text="activeReportFilename
+                  ? (() => {
+                      const r = reports.find(x => x.filename === activeReportFilename);
+                      return r ? `${(r.title || r.filename).slice(0,70)}${r.n_flags > 0 ? ' ⚠'+r.n_flags : ''}${r.falsifier_coherent === true ? ' ✓' : ''}${isCimitero(r) ? ' 🪦' : ''}` : '— scegli un report —';
+                    })()
+                  : '— scegli un report —'"></span>
+                <span class="text-purple-400 text-xs ml-2 flex-shrink-0" x-text="reportsDropdownOpen ? '▴' : '▾'"></span>
+              </button>
+              <div x-show="reportsDropdownOpen" x-cloak x-transition.opacity.duration.120ms
+                   class="absolute left-0 right-0 top-full mt-1 bg-slate-900 border border-slate-700 rounded shadow-2xl z-30 max-h-[400px] overflow-y-auto">
+                <button @click="activeReportFilename = ''; activeReport = null; reportsDropdownOpen = false"
+                        class="w-full text-left px-3 py-2 text-sm text-slate-500 italic hover:bg-slate-800 transition">— scegli un report —</button>
+                <template x-for="r in filteredReports()" :key="r.filename">
+                  <button @click="activeReportFilename = r.filename; openReport(r.filename); reportsDropdownOpen = false"
+                          :class="activeReportFilename === r.filename ? 'bg-purple-900/30 text-purple-200' : 'text-slate-200 hover:bg-slate-800'"
+                          class="w-full text-left px-3 py-2 text-sm transition border-t border-slate-800">
+                    <div class="flex items-start justify-between gap-2">
+                      <span class="flex-1 truncate" x-text="(r.title || r.filename).slice(0,80)"></span>
+                      <span class="flex-shrink-0 text-xs whitespace-nowrap font-mono">
+                        <template x-if="r.n_flags > 0"><span class="text-rose-300" x-text="`⚠${r.n_flags}`"></span></template>
+                        <template x-if="r.falsifier_coherent === true"><span class="text-emerald-300"> ✓</span></template>
+                        <template x-if="isCimitero(r)"><span> 🪦</span></template>
+                      </span>
+                    </div>
+                    <div class="text-[10px] text-slate-500 font-mono mt-0.5" x-text="formatDate(r.mtime)"></div>
+                  </button>
+                </template>
+                <template x-if="filteredReports().length === 0">
+                  <div class="px-3 py-3 text-xs text-slate-500 italic">Nessun report con questo filtro.</div>
+                </template>
+              </div>
+            </div>
             <span class="text-xs text-slate-500 font-mono whitespace-nowrap" x-text="`${filteredReports().length}/${reports.length}`"></span>
             <div class="flex items-center gap-0.5 bg-slate-950 rounded p-0.5 text-[10px]">
               <button @click="reportsFilter = 'all'"
@@ -1532,6 +1562,7 @@
       reportsFilter: 'all',   // 'all' | 'flagged' | 'cimitero'
       // Restructure: select dropdown invece di list — sync con activeReport
       activeReportFilename: '',
+      reportsDropdownOpen: false,
 
       // Falsifier — fetched lazily quando il report viene aperto
       activeFalsifier: null,
