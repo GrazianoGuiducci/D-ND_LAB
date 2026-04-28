@@ -10,7 +10,52 @@
   <script src="https://cdn.jsdelivr.net/npm/cytoscape@3.30.4/dist/cytoscape.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; }
+    /* Palette d-nd.com (port da /opt/d-nd_com/styles/main.css).
+       Operatore: "importiamo la palette dei colori dal sito".
+       Slate piu' scuro + saturato, contrast piu' alto, neon accent
+       coerenti col tema dark del sito. */
+    :root {
+      --site-void: 8 8 12;
+      --site-elev-1: 18 18 22;
+      --site-elev-2: 30 30 36;
+      --site-elev-3: 50 50 58;
+      --site-text-primary: 240 240 245;
+      --site-text-body: 220 222 230;
+      --site-text-muted: 172 175 192;
+      --site-text-subtle: 148 151 168;
+      --site-border-1: 255 255 255 / 0.07;
+      --site-border-2: 255 255 255 / 0.14;
+      --site-border-3: 255 255 255 / 0.22;
+      --neon-cyan: 34 211 238;
+      --neon-emerald: 52 211 153;
+      --neon-purple: 167 139 250;
+      --neon-danger: 251 113 133;
+      --neon-amber: 251 191 36;
+      --neon-sky: 56 189 248;
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; background: rgb(var(--site-void)); color: rgb(var(--site-text-body)); }
+
+    /* Override Tailwind slate classes con valori del sito (piu' contrast +
+       saturation). Le classi continuano a funzionare ma puntano alla palette
+       site. NB: !important per battere la specificity Tailwind utility. */
+    .bg-slate-950 { background-color: rgb(var(--site-void)) !important; }
+    .bg-slate-900 { background-color: rgb(var(--site-elev-1)) !important; }
+    .bg-slate-800 { background-color: rgb(var(--site-elev-2)) !important; }
+    .bg-slate-700 { background-color: rgb(var(--site-elev-3)) !important; }
+    .border-slate-950 { border-color: rgb(var(--site-border-1)) !important; }
+    .border-slate-900 { border-color: rgb(var(--site-border-1)) !important; }
+    .border-slate-800 { border-color: rgb(var(--site-border-2)) !important; }
+    .border-slate-700 { border-color: rgb(var(--site-border-3)) !important; }
+    .text-slate-100 { color: rgb(var(--site-text-primary)) !important; }
+    .text-slate-200 { color: rgb(var(--site-text-primary)) !important; }
+    .text-slate-300 { color: rgb(var(--site-text-body)) !important; }
+    .text-slate-400 { color: rgb(var(--site-text-muted)) !important; }
+    .text-slate-500 { color: rgb(var(--site-text-subtle)) !important; }
+    .text-slate-600 { color: rgb(var(--site-text-subtle) / 0.7) !important; }
+
+    /* Body text base un filo piu' contrast — 220 invece di 200 */
+    body, .markdown p, .markdown li { color: rgb(var(--site-text-body)); }
+    h1, h2, h3, h4, h5, h6 { color: rgb(var(--site-text-primary)); }
 
     /* Themed scrollbars (operatore: "scrollbar dovrebbe essere del colore
        del tema"). Pattern dark slate per tutto il documento. */
