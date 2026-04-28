@@ -63,7 +63,57 @@
     .lab-grid.sidebar-left-closed { grid-template-columns: 40px 1fr 320px; }
     .lab-grid.sidebar-right-closed { grid-template-columns: 260px 1fr 40px; }
     .lab-grid.sidebar-left-closed.sidebar-right-closed { grid-template-columns: 40px 1fr 40px; }
-    @media (max-width: 1024px) { .lab-grid { grid-template-columns: 1fr; } }
+
+    /* v3.10 — Mobile drawer pattern. Pattern da Shell3Col.tsx (d-nd_com).
+       Sotto 1024px le sidebar escono dal flusso e tornano come overlay
+       laterali con backdrop. Peek button sui bordi. */
+    @media (max-width: 1024px) {
+      .lab-grid { grid-template-columns: 1fr; gap: 12px; }
+      .lab-grid > .lab-sidebar {
+        position: fixed; top: 0; bottom: 0;
+        width: min(320px, 88vw);
+        z-index: 90;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.55);
+        transition: transform 360ms cubic-bezier(0.4,0,0.2,1);
+        border-radius: 0;
+        padding: 14px 14px 80px 14px;
+        overflow-y: auto;
+      }
+      .lab-grid > .lab-sidebar.lab-sidebar-left { left: 0; transform: translateX(-100%); border-right: 1px solid rgb(30 41 59); }
+      .lab-grid > .lab-sidebar.lab-sidebar-right { right: 0; transform: translateX(100%); border-left: 1px solid rgb(30 41 59); }
+      .lab-grid[data-mobile-drawer="left"]  > .lab-sidebar-left  { transform: translateX(0); }
+      .lab-grid[data-mobile-drawer="right"] > .lab-sidebar-right { transform: translateX(0); }
+      /* Sidebar collapsed state (utile a desktop) non si applica a mobile */
+      .lab-grid > .lab-sidebar.collapsed { padding: 14px 14px 80px 14px; min-height: 0; }
+      .lab-grid > .lab-sidebar > .sidebar-toggle { display: none; }
+    }
+
+    .mobile-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 85; opacity: 0; pointer-events: none; transition: opacity 220ms cubic-bezier(0.4,0,0.2,1); }
+    @media (max-width: 1024px) {
+      .mobile-backdrop { display: block; }
+      .lab-grid[data-mobile-drawer] ~ .mobile-backdrop,
+      .mobile-backdrop.active { opacity: 1; pointer-events: auto; }
+    }
+
+    /* Peek edge buttons — solo mobile, scompaiono quando drawer aperto */
+    .peek-btn { display: none; position: fixed; top: 50%; transform: translateY(-50%); z-index: 70; width: 28px; height: 72px; padding: 0; background: rgba(15,23,42,.92); backdrop-filter: blur(8px); border: 1px solid rgb(30 41 59); color: #cbd5e1; cursor: pointer; align-items: center; justify-content: center; font-size: 13px; font-family: inherit; transition: all 220ms cubic-bezier(0.4,0,0.2,1); }
+    .peek-btn-left  { left: 0;  border-left: 0;  border-radius: 0 10px 10px 0; }
+    .peek-btn-right { right: 0; border-right: 0; border-radius: 10px 0 0 10px; }
+    .peek-btn:hover { background: rgba(30,41,59,1); color: #c4b5fd; }
+    @media (max-width: 1024px) { .peek-btn { display: flex; } }
+    body.drawer-open .peek-btn { opacity: 0; pointer-events: none; }
+
+    /* Mobile close button dentro drawer header */
+    .mobile-close-btn { display: none; }
+    @media (max-width: 1024px) { .mobile-close-btn { display: inline-flex; } }
+
+    /* Mobile: tab bar scrollabile su touch */
+    @media (max-width: 640px) {
+      .lab-tabs { -webkit-overflow-scrolling: touch; }
+      .lab-tab { padding: 0.5rem 0.8rem; font-size: 0.8rem; }
+      .lab-tab .tab-icon { display: none; }
+    }
+
     .lab-sidebar { background: rgb(15 23 42); border: 1px solid rgb(30 41 59); border-radius: 0.5rem; padding: 14px; position: relative; min-height: 200px; }
     .lab-sidebar.collapsed { padding: 8px 4px; min-height: auto; }
     .sidebar-toggle { position: absolute; top: 8px; background: none; border: 0; color: rgb(100 116 139); cursor: pointer; font-size: 12px; padding: 2px 6px; line-height: 1; }
@@ -117,6 +167,10 @@
     .quick-action-btn:hover { background: rgba(167,139,250,.22); border-color: rgba(167,139,250,.5); }
     @media (max-width: 640px) {
       .chat-fab.open { width: calc(100vw - 36px); height: calc(100vh - 36px); }
+    }
+    @media (max-width: 1024px) {
+      /* Quando la chat e' aperta su mobile, deve coprire i peek button (z 70) */
+      .chat-fab.open { z-index: 75; }
     }
   </style>
 </head>
@@ -180,16 +234,22 @@
       <span class="ml-auto text-xs text-slate-500 font-mono pr-2" x-text="activeDomain"></span>
     </div>
 
-    <!-- 3-col grid -->
-    <div class="lab-grid" :class="{'sidebar-left-closed': !sidebarLeftOpen, 'sidebar-right-closed': !sidebarRightOpen}">
+    <!-- 3-col grid (desktop) / mobile drawers (< 1024px) -->
+    <div class="lab-grid"
+         :class="{'sidebar-left-closed': !sidebarLeftOpen, 'sidebar-right-closed': !sidebarRightOpen}"
+         :data-mobile-drawer="mobileDrawer || null">
 
       <!-- ============ SIDEBAR CAMPO (left) ============ -->
       <aside class="lab-sidebar lab-sidebar-left" :class="!sidebarLeftOpen && 'collapsed'">
         <button @click="sidebarLeftOpen = !sidebarLeftOpen" class="sidebar-toggle" :title="sidebarLeftOpen ? 'Collassa' : 'Espandi'">
           <span x-text="sidebarLeftOpen ? '◂' : '▸'"></span>
         </button>
-        <div x-show="sidebarLeftOpen" class="pt-1">
-          <h3 class="text-xs uppercase tracking-wider text-slate-500 mb-3 mt-1">Campo</h3>
+        <!-- Su mobile, il toggle desktop e' nascosto e si usa questo close X -->
+        <div class="flex items-center justify-between mb-2" style="margin-top:-4px">
+          <h3 class="text-xs uppercase tracking-wider text-slate-500 mt-1" x-show="sidebarLeftOpen || mobileDrawer === 'left'">Campo</h3>
+          <button @click="closeMobileDrawer()" class="mobile-close-btn text-slate-400 hover:text-slate-200 px-2 py-1 rounded text-base" title="Chiudi">×</button>
+        </div>
+        <div x-show="sidebarLeftOpen || mobileDrawer === 'left'" class="pt-1">
 
           <!-- Stats -->
           <div class="space-y-0">
@@ -419,8 +479,11 @@
         <button @click="sidebarRightOpen = !sidebarRightOpen" class="sidebar-toggle" :title="sidebarRightOpen ? 'Collassa' : 'Espandi'">
           <span x-text="sidebarRightOpen ? '▸' : '◂'"></span>
         </button>
-        <div x-show="sidebarRightOpen" class="pt-1">
-          <h3 class="text-xs uppercase tracking-wider text-slate-500 mb-3 mt-1">Dettaglio</h3>
+        <div class="flex items-center justify-between mb-2" style="margin-top:-4px">
+          <button @click="closeMobileDrawer()" class="mobile-close-btn text-slate-400 hover:text-slate-200 px-2 py-1 rounded text-base" title="Chiudi">×</button>
+          <h3 class="text-xs uppercase tracking-wider text-slate-500 mt-1 ml-auto" x-show="sidebarRightOpen || mobileDrawer === 'right'">Dettaglio</h3>
+        </div>
+        <div x-show="sidebarRightOpen || mobileDrawer === 'right'" class="pt-1">
 
           <template x-if="!selectedNode">
             <p class="text-slate-500 text-xs italic py-4">Click su un nodo del grafo per vedere il dettaglio qui.</p>
@@ -461,6 +524,14 @@
       </aside>
 
     </div><!-- /lab-grid -->
+
+    <!-- v3.10 — Peek edge buttons (mobile only). Pattern Shell3Col.tsx. -->
+    <button x-show="view === 'domain'" class="peek-btn peek-btn-left" @click="openMobileDrawer('left')" :class="mobileDrawer && 'invisible'" title="Apri Campo">▸</button>
+    <button x-show="view === 'domain'" class="peek-btn peek-btn-right" @click="openMobileDrawer('right')" :class="mobileDrawer && 'invisible'" title="Apri Dettaglio">◂</button>
+
+    <!-- Backdrop (cliccabile per chiudere drawer mobile) -->
+    <div x-show="mobileDrawer" x-cloak class="mobile-backdrop active" @click="closeMobileDrawer()"></div>
+
   </main>
 
   <!-- CHAT floating bottom-right (v3.8) -->
@@ -616,6 +687,9 @@
       biconi: [],
       biconoOnlyComplete: false,
 
+      // v3.10 — mobile drawer state. null | 'left' | 'right'.
+      mobileDrawer: null,
+
       // Chat
       chatOpen: false,
       chatMessages: [],
@@ -638,6 +712,24 @@
         } catch (e) {
           console.error('init failed', e);
         }
+        // v3.10 — ESC chiude il mobile drawer; lock body scroll quando aperto.
+        // Pattern da Shell3Col.tsx (effetti useEffect).
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape' && this.mobileDrawer) this.closeMobileDrawer();
+        });
+      },
+
+      // v3.10 — mobile drawer handlers
+      openMobileDrawer(side) {
+        this.mobileDrawer = side;
+        document.body.classList.add('drawer-open');
+        // body scroll lock
+        document.body.style.overflow = 'hidden';
+      },
+      closeMobileDrawer() {
+        this.mobileDrawer = null;
+        document.body.classList.remove('drawer-open');
+        document.body.style.overflow = '';
       },
 
       async enterDomain(id) {
@@ -790,9 +882,14 @@
         this.cy.on('tap', 'node', (evt) => {
           const node = evt.target;
           this.selectedNode = node.data('full');
-          this.sidebarRightOpen = true;       // ensure detail sidebar is visible
-          // open chat panel so the user sees the context badge
-          this.chatOpen = true;
+          this.sidebarRightOpen = true;       // ensure detail sidebar is visible (desktop)
+          // su mobile apri il drawer dettaglio cosi' la card e' subito visibile
+          if (window.matchMedia('(max-width: 1024px)').matches) {
+            this.openMobileDrawer('right');
+          } else {
+            // desktop: apri anche la chat (su mobile no — prima leggere il dettaglio)
+            this.chatOpen = true;
+          }
         });
         this.cy.on('tap', (evt) => {
           if (evt.target === this.cy) this.selectedNode = null;
