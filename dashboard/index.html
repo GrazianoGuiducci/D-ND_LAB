@@ -591,7 +591,7 @@
       <section class="lab-content">
 
         <!-- TAB GRAFO -->
-        <div x-show="activeTab === 'grafo'" x-transition.opacity.duration.150ms>
+        <div x-show="activeTab === 'grafo'" x-transition.opacity.duration.150ms class="grafo-pane">
           <div class="bg-slate-900 border border-slate-800 rounded-lg p-4">
             <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
               <h2 class="text-lg font-medium flex items-center gap-2">
@@ -621,7 +621,7 @@
         </div>
 
         <!-- TAB BICONO — galleria mini-bicono per ogni report -->
-        <div x-show="activeTab === 'bicono'" x-transition.opacity.duration.150ms>
+        <div x-show="activeTab === 'bicono'" x-transition.opacity.duration.150ms class="bicono-pane">
           <div class="bg-slate-900 border border-slate-800 rounded-lg p-5">
             <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
               <div>
@@ -826,7 +826,7 @@
         </div>
 
         <!-- TAB TASSONOMIA + TRAJECTORY — due lenti sullo stesso 'grafo d'insieme' -->
-        <div x-show="activeTab === 'incrocio'" x-transition.opacity.duration.150ms>
+        <div x-show="activeTab === 'incrocio'" x-transition.opacity.duration.150ms class="tassonomia-pane">
           <div class="bg-slate-900 border border-slate-800 rounded-lg p-4">
             <!-- Sub-mode toggle -->
             <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
@@ -917,7 +917,7 @@
 
         <!-- TAB INFO/DOC — context.md del dominio + reference utili (UI fix #5).
              Sostituisce la card intro che rubava spazio in alto. -->
-        <div x-show="activeTab === 'info'" x-transition.opacity.duration.150ms>
+        <div x-show="activeTab === 'info'" x-transition.opacity.duration.150ms class="info-pane">
           <div class="bg-slate-900 border border-slate-800 rounded-lg p-6 space-y-4">
             <div>
               <h2 class="text-lg font-medium" x-text="contextIntro.title || 'Info'"></h2>
