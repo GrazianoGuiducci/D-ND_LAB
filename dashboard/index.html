@@ -127,16 +127,55 @@
     .lab-grid.sidebar-right-closed { grid-template-columns: var(--sb-left-w, 260px) 1fr 40px; }
     .lab-grid.sidebar-left-closed.sidebar-right-closed { grid-template-columns: 40px 1fr 40px; }
 
-    /* v4.1 — Resize drag handles. Position absolute sul bordo interno della
-       sidebar. Pattern dal sito (s3c-resizer). Solo desktop (mobile usa drawer). */
-    .resize-handle { position: absolute; top: 0; bottom: 0; width: 6px; cursor: col-resize; user-select: none; z-index: 5; transition: background 0.15s; }
-    .resize-handle:hover, .resize-handle.active { background: rgba(167,139,250,.18); }
-    .resize-handle::after { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 2px; height: 32px; background: rgb(71 85 105); border-radius: 1px; opacity: 0; transition: opacity 0.15s; }
-    .resize-handle:hover::after, .resize-handle.active::after { opacity: 1; }
-    .lab-sidebar-left  .resize-handle { right: -3px; }
-    .lab-sidebar-right .resize-handle { left: -3px; }
+    /* v4.1+ — Resize handles port-fedele dal sito (Shell3Col s3c-resizer).
+       12px wide hit area, sottile linea visibile sempre, grip dots su hover.
+       Auto close/reopen logic: drag verso il centro su closed riapre dopo
+       threshold; drag oltre l'open verso il bordo collassa.
+
+       In closed state (sidebar 40px), il resize handle e' DENTRO il gutter
+       e funge anche da trigger di drag-to-reopen. */
+    .resize-handle {
+      position: absolute; top: 0; bottom: 0; width: 12px;
+      cursor: col-resize; user-select: none; z-index: 5;
+      display: flex; align-items: center; justify-content: center;
+      background: transparent; touch-action: none;
+      transition: background 120ms ease;
+    }
+    .resize-handle:hover { background: rgba(34,211,238,.22); }
+    .resize-handle.active { background: rgba(34,211,238,.32); }
+    .resize-handle .rz-line {
+      width: 2px; height: 100%;
+      background: rgb(255 255 255 / 0.10);
+      transition: all 120ms ease;
+    }
+    .resize-handle:hover .rz-line,
+    .resize-handle.active .rz-line {
+      background: #22d3ee;
+      box-shadow: 0 0 10px rgb(34 211 238 / 0.45);
+    }
+    .resize-handle .rz-grip {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 22px; height: 40px;
+      border-radius: 9999px;
+      background: rgb(34 34 44);
+      border: 1px solid rgb(255 255 255 / 0.22);
+      display: flex; align-items: center; justify-content: center; gap: 2px;
+      opacity: 0; pointer-events: none;
+      transition: opacity 220ms ease;
+      box-shadow: 0 4px 14px rgb(0 0 0 / 0.4);
+    }
+    .resize-handle:hover .rz-grip,
+    .resize-handle.active .rz-grip { opacity: 1; }
+    .resize-handle .rz-grip::before,
+    .resize-handle .rz-grip::after {
+      content: ''; width: 2px; height: 16px;
+      background: rgb(170 175 190); border-radius: 1px;
+    }
+    .lab-sidebar-left  .resize-handle { right: -6px; }
+    .lab-sidebar-right .resize-handle { left: -6px; }
     @media (max-width: 1024px) { .resize-handle { display: none; } }
-    /* Body class durante drag — disable selection ovunque + cursor unico */
+
     body.resizing { cursor: col-resize; user-select: none; }
     body.resizing * { cursor: col-resize !important; }
 
@@ -261,9 +300,9 @@
 </head>
 <body class="bg-slate-950 text-slate-200 min-h-screen" x-data="dashboard()" x-init="init()">
 
-  <!-- Header -->
+  <!-- Header — full-width, no max-w container (lab UI is full-page) -->
   <header class="border-b border-slate-800 bg-slate-900/50 sticky top-0 z-10 backdrop-blur">
-    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+    <div class="px-5 py-3 flex items-center justify-between">
       <div class="flex items-center gap-3">
         <span class="text-xl font-light tracking-tight">D-ND_LAB</span>
         <span class="text-xs text-slate-500 font-mono" x-text="health.version || 'connecting...'"></span>
@@ -278,7 +317,7 @@
     </div>
   </header>
 
-  <!-- HOME: domain picker -->
+  <!-- HOME: domain picker (mantiene container — landing del prodotto) -->
   <main x-show="view === 'home'" class="max-w-7xl mx-auto px-4 py-8">
     <div class="mb-8">
       <h1 class="text-3xl font-light">An autonomous research lab</h1>
@@ -306,8 +345,8 @@
     </div>
   </main>
 
-  <!-- DOMAIN: 3-col layout (CAMPO sx · tabs/content · DETTAGLIO dx) -->
-  <main x-show="view === 'domain' && activeDomain" class="max-w-7xl mx-auto px-4 py-4 space-y-4">
+  <!-- DOMAIN: 3-col layout full-page (no container, edge-to-edge come il sito ai-lab) -->
+  <main x-show="view === 'domain' && activeDomain" class="px-4 py-3 space-y-3">
 
     <!-- v3.9 — Sezione descrittiva top (cosa accade qui).
          Letto da domains/<d>/context.md, prima sezione Identity/Chi sei.
@@ -347,7 +386,10 @@
         <button @click="sidebarLeftOpen = !sidebarLeftOpen" class="sidebar-toggle" :title="sidebarLeftOpen ? 'Collassa' : 'Espandi'">
           <span x-text="sidebarLeftOpen ? '◂' : '▸'"></span>
         </button>
-        <div x-show="sidebarLeftOpen" class="resize-handle" @mousedown="startResize($event, 'left')" title="Drag per ridimensionare"></div>
+        <div class="resize-handle" @pointerdown="startResize($event, 'left')" title="Drag per ridimensionare · Drag verso il centro per riaprire">
+          <div class="rz-line"></div>
+          <div class="rz-grip"></div>
+        </div>
         <!-- Su mobile, il toggle desktop e' nascosto e si usa questo close X -->
         <div class="flex items-center justify-between mb-2" style="margin-top:-4px">
           <h3 class="text-xs uppercase tracking-wider text-slate-500 mt-1" x-show="sidebarLeftOpen || mobileDrawer === 'left'">Campo</h3>
@@ -799,7 +841,10 @@
         <button @click="sidebarRightOpen = !sidebarRightOpen" class="sidebar-toggle" :title="sidebarRightOpen ? '▸' : '◂'">
           <span x-text="sidebarRightOpen ? '▸' : '◂'"></span>
         </button>
-        <div x-show="sidebarRightOpen" class="resize-handle" @mousedown="startResize($event, 'right')" title="Drag per ridimensionare"></div>
+        <div class="resize-handle" @pointerdown="startResize($event, 'right')" title="Drag per ridimensionare · Drag verso il centro per riaprire">
+          <div class="rz-line"></div>
+          <div class="rz-grip"></div>
+        </div>
         <div class="flex items-center justify-between mb-2" style="margin-top:-4px">
           <button @click="closeMobileDrawer()" class="mobile-close-btn text-slate-400 hover:text-slate-200 px-2 py-1 rounded text-base" title="Chiudi">×</button>
           <h3 class="text-xs uppercase tracking-wider text-slate-500 mt-1 ml-auto" x-show="sidebarRightOpen || mobileDrawer === 'right'">Dettaglio</h3>
@@ -1103,7 +1148,9 @@
       activeTab: 'grafo',
       sidebarLeftOpen: true,
       sidebarRightOpen: true,
-      showAllLabels: false,
+      // Default ON — labels sempre visibili (operatore: "si perdono i titoli durante drag")
+      // Pattern dal sito (LabGraph custom sim ha labels persistent).
+      showAllLabels: true,
 
       // v3.5 — bicono gallery state
       biconi: [],
@@ -1175,6 +1222,7 @@
         // Pattern da Shell3Col.tsx (effetti useEffect).
         document.addEventListener('keydown', (e) => {
           if (e.key === 'Escape') {
+            if (this.resizing) { this._onResizeEnd(); return; }
             if (this.graphFullscreen) { this.setGraphFullscreen(false); return; }
             if (this.mobileDrawer) { this.closeMobileDrawer(); return; }
           }
@@ -1185,37 +1233,78 @@
             this.setGraphFullscreen(!this.graphFullscreen);
           }
         });
-        // v4.1 — restore sidebar widths from localStorage
+        // v4.1 — restore sidebar widths + open state from localStorage
         try {
           const lw = parseInt(localStorage.getItem('dnd_sb_left_w') || '');
           const rw = parseInt(localStorage.getItem('dnd_sb_right_w') || '');
           if (lw && lw >= 200 && lw <= 480) this.sidebarLeftWidth = lw;
           if (rw && rw >= 200 && rw <= 480) this.sidebarRightWidth = rw;
+          const lo = localStorage.getItem('dnd_sb_left_open');
+          const ro = localStorage.getItem('dnd_sb_right_open');
+          if (lo !== null) this.sidebarLeftOpen = (lo === '1');
+          if (ro !== null) this.sidebarRightOpen = (ro === '1');
           this._applySidebarWidths();
         } catch (e) { /* storage disabled — usa default */ }
-        // v4.1 — global mousemove/mouseup handlers (delegated)
-        document.addEventListener('mousemove', (e) => this._onResizeMove(e));
-        document.addEventListener('mouseup', () => this._onResizeEnd());
+        // v4.1+ — pointer events (Shell3Col pattern, supports touch+mouse)
+        document.addEventListener('pointermove', (e) => this._onResizeMove(e));
+        document.addEventListener('pointerup', () => this._onResizeEnd());
+        document.addEventListener('pointercancel', () => this._onResizeEnd());
       },
 
-      // v4.1 — resize handlers
+      // v4.1+ — resize handlers port-fedele da Shell3Col.
+      // Costanti pattern dal sito.
+      _DRAG_REOPEN_THRESHOLD: 80,    // drag verso centro oltre questo riapre la sidebar collassata
+      _AUTO_CLOSE_UNDER: 180,        // drag sotto questo collassa la sidebar aperta
+      _GUTTER_W: 40,                 // width della sidebar quando collassata
+      _MIN_OPEN: 200,
+      _MAX_OPEN: 480,
+
       startResize(ev, side) {
         ev.preventDefault();
-        const startW = side === 'left' ? this.sidebarLeftWidth : this.sidebarRightWidth;
-        this.resizing = { side, startX: ev.clientX, startW };
+        try { ev.target.setPointerCapture?.(ev.pointerId); } catch (e) {}
+        const isOpen = side === 'left' ? this.sidebarLeftOpen : this.sidebarRightOpen;
+        const currentW = isOpen
+          ? (side === 'left' ? this.sidebarLeftWidth : this.sidebarRightWidth)
+          : this._GUTTER_W;
+        this.resizing = { side, startX: ev.clientX, startW: currentW, startState: isOpen ? 'open' : 'closed' };
         document.body.classList.add('resizing');
-        ev.target.classList.add('active');
+        ev.currentTarget.classList.add('active');
       },
 
       _onResizeMove(ev) {
         if (!this.resizing) return;
-        const { side, startX, startW } = this.resizing;
-        // Left sidebar: dragging right increases width. Right sidebar: dragging left increases width.
-        const delta = side === 'left' ? (ev.clientX - startX) : (startX - ev.clientX);
-        const newW = Math.max(200, Math.min(480, startW + delta));
-        if (side === 'left') this.sidebarLeftWidth = newW;
-        else this.sidebarRightWidth = newW;
-        this._applySidebarWidths();
+        const d = this.resizing;
+        const delta = d.side === 'left' ? (ev.clientX - d.startX) : (d.startX - ev.clientX);
+        const newW = d.startW + delta;
+
+        if (d.startState === 'closed') {
+          // Drag verso il centro: se supera la threshold, riapri
+          if (newW >= this._DRAG_REOPEN_THRESHOLD + this._GUTTER_W) {
+            const openW = Math.max(this._MIN_OPEN, Math.min(this._MAX_OPEN, newW));
+            if (d.side === 'left') {
+              this.sidebarLeftOpen = true;
+              this.sidebarLeftWidth = openW;
+            } else {
+              this.sidebarRightOpen = true;
+              this.sidebarRightWidth = openW;
+            }
+            this._applySidebarWidths();
+            // Update startState così ulteriori drag continuano in open mode
+            this.resizing = { ...d, startX: ev.clientX, startW: openW, startState: 'open' };
+          }
+        } else {
+          // Open state: drag oltre il bordo opposto collassa
+          if (newW < this._AUTO_CLOSE_UNDER) {
+            if (d.side === 'left') this.sidebarLeftOpen = false;
+            else this.sidebarRightOpen = false;
+            this.resizing = { ...d, startW: this._GUTTER_W, startState: 'closed' };
+          } else {
+            const clamped = Math.max(this._MIN_OPEN, Math.min(this._MAX_OPEN, newW));
+            if (d.side === 'left') this.sidebarLeftWidth = clamped;
+            else this.sidebarRightWidth = clamped;
+            this._applySidebarWidths();
+          }
+        }
       },
 
       _onResizeEnd() {
@@ -1223,12 +1312,12 @@
         this.resizing = null;
         document.body.classList.remove('resizing');
         document.querySelectorAll('.resize-handle.active').forEach(el => el.classList.remove('active'));
-        // Persist
         try {
           localStorage.setItem('dnd_sb_left_w', String(this.sidebarLeftWidth));
           localStorage.setItem('dnd_sb_right_w', String(this.sidebarRightWidth));
+          localStorage.setItem('dnd_sb_left_open', this.sidebarLeftOpen ? '1' : '0');
+          localStorage.setItem('dnd_sb_right_open', this.sidebarRightOpen ? '1' : '0');
         } catch (e) { /* storage disabled */ }
-        // Re-fit Cytoscape if we're on tab GRAFO (the available space changed)
         if (this.activeTab === 'grafo' && this.cy) {
           this.$nextTick(() => { this.cy.resize(); this.cy.fit(undefined, 30); });
         }
@@ -1495,23 +1584,20 @@
           maxZoom: 3,
           wheelSensitivity: 0.2,
         });
-        // Click handler — emit selection
+        // Click handler — solo sidebar dettaglio (NO chat auto-open).
+        // L'utente apre la chat dal tooltip "→ Chat" o dal fab quando vuole.
         this.cy.on('tap', 'node', (evt) => {
           const node = evt.target;
           this.selectedNode = node.data('full');
-          this.sidebarRightOpen = true;       // ensure detail sidebar is visible (desktop)
-          // su mobile apri il drawer dettaglio cosi' la card e' subito visibile
+          this.sidebarRightOpen = true;
           if (window.matchMedia('(max-width: 1024px)').matches) {
             this.openMobileDrawer('right');
-          } else {
-            // desktop: apri anche la chat (su mobile no — prima leggere il dettaglio)
-            this.chatOpen = true;
           }
         });
         this.cy.on('tap', (evt) => {
           if (evt.target === this.cy) this.selectedNode = null;
         });
-        // Hover: show label even when "Mostra tutti i nomi" is off + show tooltip
+        // Hover: show label + tooltip
         this.cy.on('mouseover', 'node', (evt) => {
           evt.target.style('text-opacity', 1);
           this.showNodeTooltip(evt.target, evt.renderedPosition || evt.target.renderedPosition());
@@ -1519,6 +1605,18 @@
         this.cy.on('mouseout', 'node', (evt) => {
           if (!evt.target.selected()) evt.target.style('text-opacity', this.showAllLabels ? 1 : 0);
           this.hideNodeTooltip();
+        });
+        // Drag persistence — Cytoscape mouseout fires quando il cursore lascia il
+        // bbox del nodo durante il drag → label flicker. Grab/free events
+        // mantengono l'opacita' a 1 durante il movimento, restore al free.
+        this.cy.on('grab', 'node', (evt) => {
+          evt.target.style('text-opacity', 1);
+          this.hideNodeTooltip();   // niente tooltip durante drag
+        });
+        this.cy.on('free', 'node', (evt) => {
+          if (!evt.target.selected() && !this.showAllLabels) {
+            evt.target.style('text-opacity', 0);
+          }
         });
       },
 
