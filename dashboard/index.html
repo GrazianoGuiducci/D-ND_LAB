@@ -599,41 +599,110 @@
           </div>
         </div>
 
-        <!-- TAB TASSONOMIA — il "grafo d'insieme" generato da seme + lab_graph -->
+        <!-- TAB TASSONOMIA + TRAJECTORY — due lenti sullo stesso 'grafo d'insieme' -->
         <div x-show="activeTab === 'incrocio'" x-transition.opacity.duration.150ms>
           <div class="bg-slate-900 border border-slate-800 rounded-lg p-4">
+            <!-- Sub-mode toggle -->
             <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
-              <div>
-                <h2 class="text-lg font-medium">Tassonomia — grafo d'insieme</h2>
-                <p class="text-xs text-slate-500" x-text="taxonomyMeta.mode === 'pillars' ? 'Pillar mode: 5 teorie Q/T/G/E/R + cluster reports/tensioni' : (taxonomyMeta.mode === 'flat' ? 'Flat mode: gruppi per tipo (no teorie nel grafo attuale)' : '...')"></p>
+              <div class="flex items-center gap-1 bg-slate-950 rounded-lg p-1">
+                <button @click="setIncrocioMode('taxonomy')"
+                        :class="incrocioMode === 'taxonomy' ? 'bg-purple-700/40 text-purple-200' : 'text-slate-400 hover:text-slate-200'"
+                        class="px-3 py-1 rounded text-xs font-medium transition">⬡ Tassonomia</button>
+                <button @click="setIncrocioMode('trajectory')"
+                        :class="incrocioMode === 'trajectory' ? 'bg-purple-700/40 text-purple-200' : 'text-slate-400 hover:text-slate-200'"
+                        class="px-3 py-1 rounded text-xs font-medium transition">↗ Trajectory</button>
               </div>
               <div class="flex items-center gap-2">
-                <span class="text-xs text-slate-500 font-mono" x-text="`${taxonomyMeta.n_groups} gruppi · ${taxonomyMeta.n_nodes} nodi · ${taxonomyMeta.n_bridges} ponti`"></span>
-                <button @click="reloadTaxonomy().then(() => renderTaxonomy())" class="text-xs text-slate-500 hover:text-slate-300">refresh</button>
+                <span x-show="incrocioMode === 'taxonomy'" class="text-xs text-slate-500 font-mono" x-text="`${taxonomyMeta.n_groups || 0} gruppi · ${taxonomyMeta.n_nodes || 0} nodi · ${taxonomyMeta.n_bridges || 0} ponti`"></span>
+                <span x-show="incrocioMode === 'trajectory'" class="text-xs text-slate-500 font-mono" x-text="`${reports.length} cicli`"></span>
+                <button @click="incrocioMode === 'taxonomy' ? reloadTaxonomy().then(() => renderTaxonomy()) : null" x-show="incrocioMode === 'taxonomy'" class="text-xs text-slate-500 hover:text-slate-300">refresh</button>
               </div>
             </div>
-            <div id="taxonomy-viz" style="width: 100%; height: 540px; background: #0d0e14; border-radius: 0.5rem;"></div>
-            <!-- Legenda gruppi -->
-            <div class="mt-3 flex flex-wrap gap-3 text-xs">
-              <template x-for="g in taxonomyData.groups || []" :key="g.id">
-                <div class="flex items-center gap-1.5">
-                  <i class="legend-dot" :style="`background:${g.color}`"></i>
-                  <span class="text-slate-300" x-text="g.label"></span>
-                  <span class="text-slate-500 font-mono" x-text="`(${g.count})`"></span>
+
+            <!-- Mode: Tassonomia -->
+            <div x-show="incrocioMode === 'taxonomy'">
+              <div class="mb-2">
+                <p class="text-xs text-slate-500" x-text="taxonomyMeta.mode === 'pillars' ? 'Pillar mode: 5 teorie Q/T/G/E/R + cluster reports/tensioni' : (taxonomyMeta.mode === 'flat' ? 'Flat mode: gruppi per tipo (no teorie nel grafo attuale)' : '...')"></p>
+              </div>
+              <div id="taxonomy-viz" style="width: 100%; height: 520px; background: #0d0e14; border-radius: 0.5rem;"></div>
+              <!-- Legenda gruppi -->
+              <div class="mt-3 flex flex-wrap gap-3 text-xs">
+                <template x-for="g in taxonomyData.groups || []" :key="g.id">
+                  <div class="flex items-center gap-1.5">
+                    <i class="legend-dot" :style="`background:${g.color}`"></i>
+                    <span class="text-slate-300" x-text="g.label"></span>
+                    <span class="text-slate-500 font-mono" x-text="`(${g.count})`"></span>
+                  </div>
+                </template>
+              </div>
+              <template x-if="taxonomyData.bridges && taxonomyData.bridges.length > 0">
+                <div class="mt-3 border-t border-slate-800 pt-3">
+                  <h4 class="text-xs uppercase tracking-wider text-slate-500 mb-2">Ponti tra gruppi</h4>
+                  <div class="flex flex-wrap gap-2">
+                    <template x-for="b in taxonomyData.bridges.slice(0, 12)" :key="`${b.source}-${b.target}`">
+                      <span class="text-xs px-2 py-1 rounded bg-slate-800 text-slate-300 font-mono" x-text="`${b.source} ↔ ${b.target} (${b.weight})`"></span>
+                    </template>
+                  </div>
                 </div>
               </template>
             </div>
-            <!-- Bridges sintetizzati -->
-            <template x-if="taxonomyData.bridges && taxonomyData.bridges.length > 0">
-              <div class="mt-3 border-t border-slate-800 pt-3">
-                <h4 class="text-xs uppercase tracking-wider text-slate-500 mb-2">Ponti tra gruppi</h4>
-                <div class="flex flex-wrap gap-2">
-                  <template x-for="b in taxonomyData.bridges.slice(0, 12)" :key="`${b.source}-${b.target}`">
-                    <span class="text-xs px-2 py-1 rounded bg-slate-800 text-slate-300 font-mono" x-text="`${b.source} ↔ ${b.target} (${b.weight})`"></span>
-                  </template>
-                </div>
+
+            <!-- Mode: Trajectory — timeline cronologico dei cicli -->
+            <div x-show="incrocioMode === 'trajectory'">
+              <div class="mb-2">
+                <p class="text-xs text-slate-500">Sequenza cronologica dei report. Colore = categoria verdict (constraint/discovery/null/refute). Altezza barra = n_flags del falsifier (verifica). Click → apri il report.</p>
               </div>
-            </template>
+
+              <template x-if="reports.length === 0">
+                <div class="text-slate-500 text-sm py-12 text-center italic">Nessun report ancora — esegui il primo ciclo.</div>
+              </template>
+
+              <template x-if="reports.length > 0">
+                <div>
+                  <!-- Timeline SVG -->
+                  <div class="bg-slate-950 rounded-lg p-4 overflow-x-auto">
+                    <svg :viewBox="`0 0 ${trajectoryViewBox().w} ${trajectoryViewBox().h}`" preserveAspectRatio="xMidYMid meet" style="width:100%; min-width: 720px; height: 240px;">
+                      <!-- Axis -->
+                      <line :x1="40" :y1="trajectoryViewBox().h - 30" :x2="trajectoryViewBox().w - 20" :y2="trajectoryViewBox().h - 30" stroke="rgba(148,163,184,.25)" stroke-width="1"/>
+                      <!-- Reports as circles + stems -->
+                      <template x-for="(p, i) in trajectoryPoints()" :key="p.filename">
+                        <g style="cursor: pointer" @click="openReportFromTrajectory(p.filename)" @mouseenter="$el.style.opacity='1'" @mouseleave="$el.style.opacity='.85'" :style="`opacity:.85`">
+                          <line :x1="p.x" :y1="trajectoryViewBox().h - 30" :x2="p.x" :y2="p.y + 8" :stroke="p.color" stroke-width="1.5" stroke-opacity="0.5"/>
+                          <circle :cx="p.x" :cy="p.y" :r="p.r" :fill="p.color" stroke="white" stroke-opacity="0.18" stroke-width="1"/>
+                          <text :x="p.x" :y="trajectoryViewBox().h - 14" text-anchor="middle" fill="#94a3b8" style="font: 9px ui-monospace, monospace" x-text="p.shortDate"></text>
+                          <title x-text="`${p.title}\n${p.verdictCategory} · ${p.n_flags} flag · ${p.shortDate}`"></title>
+                        </g>
+                      </template>
+                    </svg>
+                  </div>
+
+                  <!-- Legend categorie verdict -->
+                  <div class="mt-3 flex flex-wrap gap-3 text-xs">
+                    <div class="flex items-center gap-1.5"><i class="legend-dot" style="background:#22d3ee"></i><span class="text-slate-300">CONSTRAINT</span></div>
+                    <div class="flex items-center gap-1.5"><i class="legend-dot" style="background:#34d399"></i><span class="text-slate-300">DISCOVERY</span></div>
+                    <div class="flex items-center gap-1.5"><i class="legend-dot" style="background:#fbbf24"></i><span class="text-slate-300">PARTIAL / REFUTE</span></div>
+                    <div class="flex items-center gap-1.5"><i class="legend-dot" style="background:#94a3b8"></i><span class="text-slate-300">NULL / OTHER</span></div>
+                    <span class="text-slate-500 ml-auto italic">Altezza barra ∝ n_flags falsifier</span>
+                  </div>
+
+                  <!-- Cards lista cronologica per dettaglio testuale -->
+                  <div class="mt-4 grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                    <template x-for="p in trajectoryPoints()" :key="p.filename">
+                      <button @click="openReportFromTrajectory(p.filename)" class="text-left bg-slate-800/40 hover:bg-slate-800 rounded p-2 transition border border-slate-700/50">
+                        <div class="flex items-center justify-between text-[10px] font-mono text-slate-500">
+                          <span x-text="p.shortDate"></span>
+                          <span class="px-1.5 rounded text-[9px]" :style="`background:${p.color}30; color:${p.color}`" x-text="p.verdictCategory"></span>
+                        </div>
+                        <div class="text-xs text-slate-200 mt-1 line-clamp-2" x-text="p.title"></div>
+                        <template x-if="p.n_flags > 0">
+                          <div class="text-[10px] text-rose-400 mt-1" x-text="`⚠ ${p.n_flags} flag dal falsifier`"></div>
+                        </template>
+                      </button>
+                    </template>
+                  </div>
+                </div>
+              </template>
+            </div>
           </div>
         </div>
 
@@ -929,6 +998,9 @@
       taxonomyData: { groups: [], bridges: [], nodes: [], edges: [] },
       taxonomyMeta: {},
       cyTax: null,
+
+      // v4.6 — trajectory sub-mode
+      incrocioMode: 'taxonomy',  // 'taxonomy' | 'trajectory'
 
       // v4.4 — reports filter
       reportsOnlyFlagged: false,
@@ -1494,6 +1566,75 @@
           this.taxonomyData = { groups: [], bridges: [], nodes: [], edges: [] };
           this.taxonomyMeta = {};
         }
+      },
+
+      // v4.6 — trajectory mode
+      setIncrocioMode(mode) {
+        this.incrocioMode = mode;
+        if (mode === 'taxonomy') {
+          // re-render Cytoscape (container was hidden, may need fit/resize)
+          this.$nextTick(() => {
+            if (this.cyTax) { this.cyTax.resize(); this.cyTax.fit(undefined, 30); }
+            else this.renderTaxonomy();
+          });
+        }
+      },
+
+      // Trajectory data points — usa reports list (gia' caricato + n_flags)
+      trajectoryPoints() {
+        if (!this.reports || this.reports.length === 0) return [];
+        // Sort chronologically (oldest left → newest right)
+        const sorted = [...this.reports].sort((a, b) =>
+          new Date(a.mtime || 0).getTime() - new Date(b.mtime || 0).getTime());
+        const tMin = new Date(sorted[0].mtime).getTime();
+        const tMax = new Date(sorted[sorted.length - 1].mtime).getTime();
+        const span = Math.max(1, tMax - tMin);
+        const vb = this.trajectoryViewBox();
+        const xLeft = 40, xRight = vb.w - 20;
+        const yBase = vb.h - 30;
+        const yTop = 30;
+        // Categorize verdict
+        const categorize = (verdict) => {
+          const v = (verdict || '').toUpperCase();
+          if (v.includes('CONSTRAINT')) return { cat: 'CONSTRAINT', color: '#22d3ee' };
+          if (v.includes('DISCOVERY')) return { cat: 'DISCOVERY', color: '#34d399' };
+          if (v.includes('REFUTE') || v.includes('PARTIAL') || v.includes('FALSIFIE')) return { cat: 'PARTIAL', color: '#fbbf24' };
+          if (v.includes('NULL') || v.includes('NEGATIVE')) return { cat: 'NULL', color: '#94a3b8' };
+          return { cat: 'OTHER', color: '#94a3b8' };
+        };
+        // Max n_flags for height scaling
+        const maxFlags = Math.max(1, ...sorted.map(r => r.n_flags || 0));
+        return sorted.map(r => {
+          const t = new Date(r.mtime).getTime();
+          const x = sorted.length === 1 ? (xLeft + xRight) / 2
+                  : xLeft + ((t - tMin) / span) * (xRight - xLeft);
+          const flagsRatio = (r.n_flags || 0) / maxFlags;
+          const y = yBase - 30 - flagsRatio * (yBase - yTop - 40);
+          const r_size = 6 + flagsRatio * 6;
+          const { cat, color } = categorize(r.verdict);
+          const dt = new Date(r.mtime);
+          const shortDate = dt.toISOString().slice(5, 16).replace('T', ' ');
+          return {
+            filename: r.filename,
+            title: r.title || r.filename,
+            verdictCategory: cat,
+            color,
+            x, y, r: r_size,
+            n_flags: r.n_flags || 0,
+            shortDate,
+          };
+        });
+      },
+
+      trajectoryViewBox() {
+        // Width scales with N reports — min 720, +60 per report after first 12
+        const w = Math.max(720, 720 + Math.max(0, this.reports.length - 12) * 60);
+        return { w, h: 240 };
+      },
+
+      openReportFromTrajectory(filename) {
+        this.activeTab = 'agente';
+        this.openReport(filename);
       },
 
       renderTaxonomy() {
