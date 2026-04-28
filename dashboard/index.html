@@ -566,6 +566,7 @@
     <div class="px-5 py-2 flex items-center gap-4">
       <div class="flex items-center gap-3 flex-shrink-0">
         <span class="text-xl font-light tracking-tight">D-ND_LAB</span>
+        <span class="text-xs text-slate-500 uppercase tracking-wider hidden sm:inline">dashboard</span>
         <span class="text-xs text-slate-500 font-mono" x-text="health.version || 'connecting...'"></span>
       </div>
       <!-- Tabs inline (visibili solo in view='domain'). Su mobile (<768)
@@ -605,8 +606,8 @@
           <button class="px-3 py-1 rounded hover:bg-slate-800 font-mono text-cyan-400 text-xs" @click="view = 'domain'" x-text="activeDomain"></button>
         </template>
         <span class="text-slate-700 mx-1">·</span>
-        <a href="/" class="px-3 py-1 rounded hover:bg-slate-800 text-slate-400" title="Lab fisica · landing">Lab</a>
-        <a href="/d-nd-lab.html" class="px-3 py-1 rounded hover:bg-slate-800 text-slate-400" title="D-ND_LAB · prodotto open source">Prodotto</a>
+        <a href="/" class="px-3 py-1 rounded hover:bg-slate-800 text-slate-400" title="Lab fisica · sito di presentazione">↗ Sito</a>
+        <a href="/d-nd-lab.html" class="px-3 py-1 rounded hover:bg-slate-800 text-slate-400" title="D-ND_LAB · pagina prodotto open source">↗ Prodotto</a>
         <a href="https://github.com/GrazianoGuiducci/D-ND_LAB" class="px-3 py-1 rounded hover:bg-slate-800 text-slate-400" target="_blank" title="Repository GitHub">GitHub →</a>
       </nav>
     </div>
