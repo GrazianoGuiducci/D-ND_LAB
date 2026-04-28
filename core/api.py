@@ -288,6 +288,33 @@ async def get_report(domain: str, filename: str, request: Request) -> dict[str, 
     }
 
 
+@app.get("/api/domains/{domain}/falsifier/{filename}")
+async def get_falsifier(domain: str, filename: str, request: Request) -> dict[str, Any]:
+    """Return falsifier output for a specific cycle. Filename can be either
+    the report name (agent_<ts>.md) or the falsifier file (falsifier_<ts>.json)
+    or just the timestamp. Used by the dashboard to surface flags next to
+    the report viewer."""
+    await _check_auth(request)
+    _validate_domain(domain)
+    if "/" in filename or ".." in filename:
+        raise HTTPException(400, "invalid filename")
+    # Normalize to falsifier_<ts>.json
+    ts_match = re.search(r"(\d{8}_\d{4})", filename)
+    if not ts_match:
+        raise HTTPException(400, "could not extract timestamp from filename")
+    ts = ts_match.group(1)
+    fp = paths.domain_data_dir(domain) / "falsifier" / f"falsifier_{ts}.json"
+    if not fp.exists():
+        # Not an error — falsifier may simply not have run for this report yet
+        return {"present": False, "ts": ts}
+    try:
+        record = json.loads(fp.read_text())
+        record["present"] = True
+        return record
+    except json.JSONDecodeError as e:
+        raise HTTPException(500, f"falsifier file corrupted: {e}")
+
+
 @app.get("/api/domains/{domain}/context_intro")
 async def get_context_intro(domain: str, request: Request) -> dict[str, Any]:
     """Estrae la prima sezione 'identity' del context.md del dominio.

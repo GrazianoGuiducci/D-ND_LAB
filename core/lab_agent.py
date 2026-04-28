@@ -98,6 +98,7 @@ MOVEMENT_ORDER: list[str] = [
     "autopsy",
     "build_field",
     "agent",
+    "report_falsifier",   # NEW — asymmetric counter-pole, checks report internal coherence
     "validate_seed",
     "verify_assertions",
     "structural_check",
@@ -232,4 +233,5 @@ from core import refresh_detector as _refresh_detector  # noqa: E402, F401
 from core import trajectory_evaluator as _trajectory_evaluator  # noqa: E402, F401
 from core import agent as _agent  # noqa: E402, F401
 from core import io_movements as _io_movements  # noqa: E402, F401
-# All 16 movements registered.
+from core import report_falsifier as _report_falsifier  # noqa: E402, F401
+# 17 movements registered (added report_falsifier as asymmetric counter-pole to agent).
