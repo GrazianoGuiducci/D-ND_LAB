@@ -22,9 +22,18 @@
     .markdown ol { @apply list-decimal list-inside my-2 pl-2; }
     .markdown li { @apply my-1; }
     .markdown blockquote { @apply border-l-4 border-purple-500 pl-3 my-2 text-slate-400; }
-    .markdown table { @apply my-2 border-collapse; }
+    .markdown table { @apply my-2 border-collapse; display: block; overflow-x: auto; max-width: 100%; }
     .markdown th, .markdown td { @apply border border-slate-700 px-2 py-1 text-sm; }
     .markdown th { @apply bg-slate-800; }
+    /* Long unbreakable strings (URLs, file paths, hashes) must wrap inside
+       the viewer column. CSS Grid items default to min-width:auto which
+       lets the content push the track wider than 1fr — fix at item level. */
+    .markdown { min-width: 0; word-break: break-word; overflow-wrap: anywhere; }
+    .markdown a, .markdown code { word-break: break-all; }
+    .markdown pre { white-space: pre; max-width: 100%; }
+    .markdown img { max-width: 100%; height: auto; }
+    /* Container guard — content column must allow shrinkage below intrinsic */
+    .lab-content, .lab-content > * { min-width: 0; }
     .scroll-fade { mask-image: linear-gradient(to bottom, black 80%, transparent 100%); }
     @keyframes pulse-cycle { 0%,100% { opacity: 1 } 50% { opacity: 0.4 } }
     .running { animation: pulse-cycle 1.5s ease-in-out infinite; }
@@ -48,6 +57,9 @@
     .bicono-svg .label-text { fill: #d8dbe7; font: 10px ui-monospace, monospace; }
     .bicono-svg .label-tag { fill: #94a3b8; font: 9px ui-sans-serif, system-ui; text-transform: uppercase; letter-spacing: .04em; }
     .bicono-svg .pole-empty { stroke-dasharray: 4,3; opacity: .35; }
+    /* Detail card values must wrap — selectedNode.label/verdict possono essere lunghi */
+    .detail-card, .detail-card * { min-width: 0; word-break: break-word; overflow-wrap: anywhere; }
+    .selected-node-badge span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 200px; }
     .bicono-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap: 8px; margin-top: 10px; font-size: 12px; }
     .bicono-field { padding: 6px 8px; background: rgba(0,0,0,.2); border-left: 2px solid rgba(167,139,250,.4); border-radius: 4px; }
     .bicono-field .label { color: #c4b5fd; font-size: 10px; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 2px; }
@@ -1151,16 +1163,18 @@
         const cleaned = raw.replace(/^[-*•·]\s*/, '').replace(/\s*\([^)]*\)\s*/g, '').trim();
         // Split on common dipole separators: ' · ', ' / ', ' vs ', ' vs. ', ' versus '
         const parts = cleaned.split(/\s+(?:·|\/|vs\.?|versus)\s+/i);
-        const left = (parts[0] || '').trim().slice(0, 22) || null;
-        const right = (parts[1] || '').trim().slice(0, 22) || null;
+        // Aggressive truncation: SVG text in a 60px-radius zone fits ~14 chars at 10px font.
+        // Full text comes through nei `bicono-fields` cards sotto la SVG.
+        const left = (parts[0] || '').trim().slice(0, 14) || null;
+        const right = (parts[1] || '').trim().slice(0, 14) || null;
         return { left, right, leftEmpty: !left, rightEmpty: !right };
       },
 
       biconoSingularShort() {
         const s = this.activeReport?.bicono?.singular || '';
         if (!s) return '—';
-        // Take the first phrase before period or em-dash
-        return s.split(/[.—–]/)[0].trim().slice(0, 24);
+        // Take first word boundary before period/em-dash; cap shorter for the inner circle
+        return s.split(/[.—–]/)[0].trim().slice(0, 14);
       },
 
       async reloadSeed() {
