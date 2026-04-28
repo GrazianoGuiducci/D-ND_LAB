@@ -369,7 +369,7 @@
     /* Tab bar — desktop: inline buttons. Mobile (<768): dropdown nativo. */
     .lab-tabs { display: flex; align-items: center; gap: 0; border-bottom: 1px solid rgb(30 41 59); overflow-x: auto; }
     .lab-tabs-mobile { display: none; max-width: 240px; }
-    @media (max-width: 768px) {
+    @media (max-width: 1024px) {
       .lab-tabs { display: none !important; }
       .lab-tabs-mobile { display: block; }
     }
@@ -526,19 +526,19 @@
 
           <!-- Stats -->
           <div class="space-y-0">
-            <div class="stat-row"><span class="text-slate-400">teorie</span><span class="stat-num" x-text="campoStats().teorie"></span></div>
-            <div class="stat-row"><span class="text-slate-400">ponti</span><span class="stat-num" x-text="campoStats().ponti"></span></div>
-            <div class="stat-row"><span class="text-slate-400">vuoti</span><span class="stat-num" x-text="campoStats().vuoti"></span></div>
-            <div class="stat-row"><span class="text-slate-400">scoperte</span><span class="stat-num" x-text="campoStats().scoperte"></span></div>
-            <div class="stat-row"><span class="text-slate-400">cicli</span><span class="stat-num" x-text="campoStats().cicli"></span></div>
+            <div class="stat-row" title="Teorie del modello (Q quantum · T topology · G geometry · E entropy · R representation). Le 5 colonne dell'incrocio TQGE+R."><span class="text-slate-400">teorie</span><span class="stat-num" x-text="campoStats().teorie"></span></div>
+            <div class="stat-row" title="Ponti tra teorie: connessioni stabilite via reports. Ogni ponte e' una pair (es. TxQ, GxR) con costante condivisa o dipolo verificato."><span class="text-slate-400">ponti</span><span class="stat-num" x-text="campoStats().ponti"></span></div>
+            <div class="stat-row" title="Pair senza ponte: il cuore della ricerca. Dove il lab non sa ancora come due teorie si toccano."><span class="text-slate-400">vuoti</span><span class="stat-num" x-text="campoStats().vuoti"></span></div>
+            <div class="stat-row" title="Scoperte cristallizzate: claim sopravvissuti al confine epistemico (det=−1) o falsificate ed entrate nel cimitero (A5)."><span class="text-slate-400">scoperte</span><span class="stat-num" x-text="campoStats().scoperte"></span></div>
+            <div class="stat-row" title="Numero totale di cicli notturni eseguiti dall'agente per questo dominio. Ogni ciclo = 17 movements."><span class="text-slate-400">cicli</span><span class="stat-num" x-text="campoStats().cicli"></span></div>
           </div>
 
           <!-- Freschezza -->
           <h4 class="text-xs uppercase tracking-wider text-slate-500 mt-5 mb-2">Freschezza</h4>
           <div class="space-y-0">
-            <div class="stat-row"><span class="text-slate-400">oggi</span><span class="stat-num text-green-400" x-text="freshnessStats().today"></span></div>
-            <div class="stat-row"><span class="text-slate-400">fresche (7d)</span><span class="stat-num text-cyan-400" x-text="freshnessStats().fresh"></span></div>
-            <div class="stat-row"><span class="text-slate-400">ghost urgenti</span><span class="stat-num text-amber-400" x-text="freshnessStats().ghosts"></span></div>
+            <div class="stat-row" title="Reports prodotti nelle ultime 24 ore."><span class="text-slate-400">oggi</span><span class="stat-num text-green-400" x-text="freshnessStats().today"></span></div>
+            <div class="stat-row" title="Reports prodotti negli ultimi 7 giorni."><span class="text-slate-400">fresche (7d)</span><span class="stat-num text-cyan-400" x-text="freshnessStats().fresh"></span></div>
+            <div class="stat-row" title="Tensioni 'ghost' ad alta urgenza: candidate non ancora processate dal ciclo. Pressione operativa sul lab."><span class="text-slate-400">ghost urgenti</span><span class="stat-num text-amber-400" x-text="freshnessStats().ghosts"></span></div>
             <div class="stat-row cursor-pointer hover:bg-slate-800/40 -mx-1 px-1 rounded" @click="activeTab = 'agente'; reportsFilter = 'cimitero'" title="Apri il cimitero in Agente">
               <span class="text-slate-400">🪦 cimitero</span>
               <span class="stat-num text-slate-300" x-text="cimiteroCount()"></span>
@@ -570,11 +570,11 @@
           <!-- Legenda -->
           <h4 class="text-xs uppercase tracking-wider text-slate-500 mt-5 mb-2">Legenda</h4>
           <div class="space-y-1.5 text-xs text-slate-400">
-            <div class="flex items-center gap-2"><i class="legend-dot" style="background:#22d3ee"></i> tensione</div>
-            <div class="flex items-center gap-2"><i class="legend-dot" style="background:#a78bfa"></i> report</div>
-            <div class="flex items-center gap-2"><i class="legend-dot" style="background:#34d399"></i> teoria</div>
-            <div class="flex items-center gap-2"><i class="legend-dot" style="background:#fbbf24"></i> ghost</div>
-            <div class="flex items-center gap-2"><i class="legend-dot" style="background:#f472b6"></i> scoperta</div>
+            <div class="flex items-center gap-2" title="Tensione: claim aperto che il lab vuole verificare. Pressione che spinge il prossimo ciclo."><i class="legend-dot" style="background:#22d3ee"></i> tensione</div>
+            <div class="flex items-center gap-2" title="Report: output di un ciclo agente. Contiene verdict + bicono + flag dal counter-pole."><i class="legend-dot" style="background:#a78bfa"></i> report</div>
+            <div class="flex items-center gap-2" title="Teoria: una delle 5 colonne pillar (Q/T/G/E/R)."><i class="legend-dot" style="background:#34d399"></i> teoria</div>
+            <div class="flex items-center gap-2" title="Ghost: tensione candidata, non ancora attivata. Lab decide se promuoverla o farla decadere."><i class="legend-dot" style="background:#fbbf24"></i> ghost</div>
+            <div class="flex items-center gap-2" title="Scoperta: claim cristallizzato (sopravvissuto al falsifier) o falsificato (entra nel cimitero, A5)."><i class="legend-dot" style="background:#f472b6"></i> scoperta</div>
           </div>
 
           <!-- Label toggle -->
