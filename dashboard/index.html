@@ -10,16 +10,7 @@
   <script src="https://cdn.jsdelivr.net/npm/cytoscape@3.30.4/dist/cytoscape.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
   <style>
-    /* Layout root: 100vh flex-column. Header fisso, main fill,
-       overflow gestito internamente (sidebars + AGENTE cols). NIENTE
-       page scroll quando view='domain'. La home invece scrolla. */
-    html, body { height: 100%; overflow: hidden; }
-    body { display: flex; flex-direction: column; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; }
-    body.home-mode { overflow: auto; }                          /* home picker scrollabile */
-    body.home-mode .domain-main { display: none !important; }
-    body:not(.home-mode) .home-main { display: none !important; }
-    .domain-main { flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 12px 16px; }
-    header.app-header { flex-shrink: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; }
     .markdown h1 { @apply text-2xl font-light mt-4 mb-2; }
     .markdown h2 { @apply text-xl font-light mt-3 mb-2 text-slate-300; }
     .markdown h3 { @apply text-lg font-medium mt-2 mb-1 text-slate-400; }
@@ -41,44 +32,20 @@
     .markdown a, .markdown code { word-break: break-all; }
     .markdown pre { white-space: pre; max-width: 100%; }
     .markdown img { max-width: 100%; height: auto; }
-    /* Content column — flex column dentro lab-grid stretched.
-       Ogni tab pane (x-show div) flex:1 quando attivo. */
+    /* Container guard — content column must allow shrinkage below intrinsic.
+       All descendants inherit min-width:0 to prevent any nested grid from
+       pushing the parent track wider than 1fr (mobile especially). */
     .lab-content {
       min-width: 0;
-      min-height: 0;
+      height: calc(100vh - 100px);     /* match sidebar visible area */
       display: flex;
       flex-direction: column;
-      overflow: hidden;
     }
     .lab-content * { min-width: 0; }
-    .lab-content > [x-show] {
-      flex: 1; min-height: 0;
-      display: flex; flex-direction: column;
-    }
-    /* Per ogni tab pane il primo child (wrapper card o agente-grid) fill */
-    .lab-content > [x-show] > div:first-child,
-    .lab-content > [x-show] > .agente-grid {
-      flex: 1; min-height: 0;
-    }
-    /* Tabs scrollabili (Bicono/Tassonomia/Info): wrapper card scrolla.
-       AGENTE no — ha le sue colonne con scroll proprio. GRAFO no — ha
-       il viz Cytoscape che riempie. */
-    .lab-content > [x-show]:not(.agente-pane):not(.grafo-pane) > div:first-child {
-      overflow-y: auto;
-      overflow-x: hidden;
-      scrollbar-width: thin;
-    }
-    /* GRAFO pane: graph viz riempie spazio dentro wrapper card */
-    .grafo-pane > div:first-child { display: flex; flex-direction: column; }
-    .grafo-pane .graph-viz-wrap {
-      flex: 1; min-height: 0;
-      display: flex; flex-direction: column;
-    }
-    .grafo-pane .graph-viz-wrap > #graph-viz {
-      flex: 1; height: auto; min-height: 360px;
-    }
-    /* AGENTE: agente-grid e' il primo child di agente-pane, gia' flex */
-    .agente-pane > .agente-grid { display: grid; align-items: stretch; }
+    /* Tab pane: ogni x-show toggle e' un figlio di lab-content. Quando
+       attivo, deve riempire l'altezza disponibile. */
+    .lab-content > [x-show] { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+    .lab-content > [x-show] > div:first-child { flex: 1; min-height: 0; }
     .scroll-fade { mask-image: linear-gradient(to bottom, black 80%, transparent 100%); }
     @keyframes pulse-cycle { 0%,100% { opacity: 1 } 50% { opacity: 0.4 } }
     .running { animation: pulse-cycle 1.5s ease-in-out infinite; }
@@ -186,18 +153,8 @@
        vanilla CSS grid, senza React. Le sidebar collassano a 40px tramite
        classi sidebar-left-closed / sidebar-right-closed, gestite dall'Alpine state. */
     /* CSS vars guidano i width — drag handle li aggiorna, valori
-       persistiti in localStorage. Range: 200..480px, default 260/320.
-       align-items: stretch + flex:1 height parent (.domain-main) → tutte
-       le colonne riempiono full viewport. */
-    .lab-grid {
-      display: grid;
-      grid-template-columns: var(--sb-left-w, 260px) 1fr var(--sb-right-w, 320px);
-      gap: 12px;
-      align-items: stretch;
-      flex: 1;
-      min-height: 0;
-    }
-    .domain-main > .lab-tabs { flex-shrink: 0; margin-bottom: 12px; }
+       persistiti in localStorage. Range: 200..480px, default 260/320. */
+    .lab-grid { display: grid; grid-template-columns: var(--sb-left-w, 260px) 1fr var(--sb-right-w, 320px); gap: 16px; align-items: start; }
     .lab-grid.sidebar-left-closed { grid-template-columns: 40px 1fr var(--sb-right-w, 320px); }
     .lab-grid.sidebar-right-closed { grid-template-columns: var(--sb-left-w, 260px) 1fr 40px; }
     .lab-grid.sidebar-left-closed.sidebar-right-closed { grid-template-columns: 40px 1fr 40px; }
@@ -343,18 +300,21 @@
       .lab-tab .tab-icon { display: none; }
     }
 
-    /* Sidebar: stretch del grid row (no piu' sticky/calc, e' il body che
-       e' 100vh + main flex:1, quindi lab-grid riempie e sidebars stretch).
-       overflow-x hidden + overflow-y auto per scroll interno indipendente. */
+    /* Sidebar: sticky top + altezza FISSA piena viewport. Operatore
+       (28/04): "le sidebar dovrebbero essere sempre fino in fondo".
+       Cambio chiave: height (non max-height) → la sidebar e' sempre
+       tall come la viewport, indipendentemente dal content. */
     .lab-sidebar {
       background: rgb(15 23 42);
       border: 1px solid rgb(30 41 59);
       border-radius: 0.5rem;
       padding: 14px;
+      position: sticky;
+      top: 12px;
+      height: calc(100vh - 24px);
       overflow-y: auto;
       overflow-x: hidden;
       scrollbar-width: thin;
-      min-height: 0;
     }
     /* Collapsed: full-height clickable area per riaprire (operatore:
        "aprirsi quando chiuse con click su tutta l'altezza") */
@@ -455,10 +415,10 @@
     }
   </style>
 </head>
-<body class="bg-slate-950 text-slate-200" :class="view === 'home' ? 'home-mode' : ''" x-data="dashboard()" x-init="init()">
+<body class="bg-slate-950 text-slate-200 min-h-screen" x-data="dashboard()" x-init="init()">
 
-  <!-- Header — flex-shrink 0 dentro body flex column -->
-  <header class="app-header border-b border-slate-800 bg-slate-900/50 z-10 backdrop-blur">
+  <!-- Header — full-width, no max-w container (lab UI is full-page) -->
+  <header class="border-b border-slate-800 bg-slate-900/50 sticky top-0 z-10 backdrop-blur">
     <div class="px-5 py-3 flex items-center justify-between">
       <div class="flex items-center gap-3">
         <span class="text-xl font-light tracking-tight">D-ND_LAB</span>
@@ -475,7 +435,7 @@
   </header>
 
   <!-- HOME: domain picker (mantiene container — landing del prodotto) -->
-  <main class="home-main max-w-7xl mx-auto px-4 py-8">
+  <main x-show="view === 'home'" class="max-w-7xl mx-auto px-4 py-8">
     <div class="mb-8">
       <h1 class="text-3xl font-light">An autonomous research lab</h1>
       <p class="text-slate-400 mt-2">Pick a domain to enter, or read the architecture in <a href="https://github.com/GrazianoGuiducci/D-ND_LAB#the-16-movements" class="text-purple-400 hover:underline">the 16 movements</a>.</p>
@@ -502,8 +462,8 @@
     </div>
   </main>
 
-  <!-- DOMAIN: full-page flex column, no body scroll. Tab bar fissa + lab-grid fill. -->
-  <main class="domain-main">
+  <!-- DOMAIN: 3-col layout full-page (no container, edge-to-edge come il sito ai-lab) -->
+  <main x-show="view === 'domain' && activeDomain" class="px-4 py-3 space-y-3">
 
     <!-- Tab bar — pattern da /opt/d-nd_com/components/LabGraph.tsx:216 -->
     <div class="lab-tabs">
@@ -609,7 +569,7 @@
       <section class="lab-content">
 
         <!-- TAB GRAFO -->
-        <div x-show="activeTab === 'grafo'" x-transition.opacity.duration.150ms class="grafo-pane">
+        <div x-show="activeTab === 'grafo'" x-transition.opacity.duration.150ms>
           <div class="bg-slate-900 border border-slate-800 rounded-lg p-4">
             <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
               <h2 class="text-lg font-medium flex items-center gap-2">
@@ -639,7 +599,7 @@
         </div>
 
         <!-- TAB BICONO — galleria mini-bicono per ogni report -->
-        <div x-show="activeTab === 'bicono'" x-transition.opacity.duration.150ms class="bicono-pane">
+        <div x-show="activeTab === 'bicono'" x-transition.opacity.duration.150ms>
           <div class="bg-slate-900 border border-slate-800 rounded-lg p-5">
             <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
               <div>
@@ -881,7 +841,7 @@
         </div>
 
         <!-- TAB TASSONOMIA + TRAJECTORY — due lenti sullo stesso 'grafo d'insieme' -->
-        <div x-show="activeTab === 'incrocio'" x-transition.opacity.duration.150ms class="tassonomia-pane">
+        <div x-show="activeTab === 'incrocio'" x-transition.opacity.duration.150ms>
           <div class="bg-slate-900 border border-slate-800 rounded-lg p-4">
             <!-- Sub-mode toggle -->
             <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
@@ -989,7 +949,7 @@
 
         <!-- TAB INFO/DOC — context.md del dominio + reference utili (UI fix #5).
              Sostituisce la card intro che rubava spazio in alto. -->
-        <div x-show="activeTab === 'info'" x-transition.opacity.duration.150ms class="info-pane">
+        <div x-show="activeTab === 'info'" x-transition.opacity.duration.150ms>
           <div class="bg-slate-900 border border-slate-800 rounded-lg p-6 space-y-4">
             <div>
               <h2 class="text-lg font-medium" x-text="contextIntro.title || 'Info'"></h2>
