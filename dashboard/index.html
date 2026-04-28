@@ -279,10 +279,10 @@
       .lab-tab .tab-icon { display: none; }
     }
 
-    /* Sidebar: sticky top sotto l'header, full-viewport height con scroll
-       interno indipendente. Fix operatore: "la sidebar di destra non e' a
-       tutto viewport". overflow-x hidden per evitare scrollbar orizzontale
-       da contenuto interno (chip lunghi, label etc.). */
+    /* Sidebar: sticky top + altezza FISSA piena viewport. Operatore
+       (28/04): "le sidebar dovrebbero essere sempre fino in fondo".
+       Cambio chiave: height (non max-height) → la sidebar e' sempre
+       tall come la viewport, indipendentemente dal content. */
     .lab-sidebar {
       background: rgb(15 23 42);
       border: 1px solid rgb(30 41 59);
@@ -290,14 +290,21 @@
       padding: 14px;
       position: sticky;
       top: 12px;
-      max-height: calc(100vh - 24px);
+      height: calc(100vh - 24px);
       overflow-y: auto;
       overflow-x: hidden;
       scrollbar-width: thin;
     }
+    /* Collapsed: full-height clickable area per riaprire (operatore:
+       "aprirsi quando chiuse con click su tutta l'altezza") */
     .lab-sidebar.collapsed {
       padding: 8px 4px;
       overflow: hidden;
+      cursor: pointer;
+    }
+    .lab-sidebar.collapsed:hover {
+      background: rgb(20 28 48);
+      border-color: rgb(51 65 85);
     }
     /* Scrollbar styling più discreto */
     .lab-sidebar::-webkit-scrollbar, .agente-col::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -455,6 +462,7 @@
       <!-- ============ SIDEBAR CAMPO (left) ============ -->
       <aside class="lab-sidebar lab-sidebar-left"
              :class="!sidebarLeftOpen && 'collapsed'"
+             @click="onSidebarClick($event, 'left')"
              @mouseenter="!sidebarLeftOpen && showSidebarTip('left', $event)"
              @mouseleave="hideSidebarTip()">
         <button @click="sidebarLeftOpen = !sidebarLeftOpen" class="sidebar-toggle" :title="sidebarLeftOpen ? 'Collassa' : 'Espandi'">
@@ -982,6 +990,7 @@
       <!-- ============ SIDEBAR DETTAGLIO (right) ============ -->
       <aside class="lab-sidebar lab-sidebar-right"
              :class="!sidebarRightOpen && 'collapsed'"
+             @click="onSidebarClick($event, 'right')"
              @mouseenter="!sidebarRightOpen && showSidebarTip('right', $event)"
              @mouseleave="hideSidebarTip()">
         <button @click="sidebarRightOpen = !sidebarRightOpen" class="sidebar-toggle" :title="sidebarRightOpen ? '▸' : '◂'">
@@ -1416,6 +1425,22 @@
         try {
           const aw = parseInt(localStorage.getItem('dnd_agent_list_w') || '');
           if (aw && aw >= 200 && aw <= 520) this.agentListWidth = aw;
+        } catch (e) {}
+      },
+
+      // UI fix #13 — click su sidebar collassata apre. Skip se il click e'
+      // sul resize handle o sul toggle chevron (hanno gia' i loro handler).
+      onSidebarClick(ev, side) {
+        const isOpen = side === 'left' ? this.sidebarLeftOpen : this.sidebarRightOpen;
+        if (isOpen) return;
+        if (ev.target.closest('.resize-handle')) return;
+        if (ev.target.closest('.sidebar-toggle')) return;
+        if (ev.target.closest('.mobile-close-btn')) return;
+        if (side === 'left') this.sidebarLeftOpen = true;
+        else this.sidebarRightOpen = true;
+        // Persist
+        try {
+          localStorage.setItem(side === 'left' ? 'dnd_sb_left_open' : 'dnd_sb_right_open', '1');
         } catch (e) {}
       },
 
