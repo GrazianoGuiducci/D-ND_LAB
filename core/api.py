@@ -288,6 +288,47 @@ async def get_report(domain: str, filename: str, request: Request) -> dict[str, 
     }
 
 
+@app.get("/api/domains/{domain}/context_intro")
+async def get_context_intro(domain: str, request: Request) -> dict[str, Any]:
+    """Estrae la prima sezione 'identity' del context.md del dominio.
+    Usato dalla sezione descrittiva top della dashboard ('cosa accade qui').
+    Heuristic: cerca '## Identity' / '## Chi sei' / '## Identita'; se assente,
+    prende il primo paragrafo dopo il titolo H1 (non blockquote)."""
+    await _check_auth(request)
+    _validate_domain(domain)
+    ctx_path = paths.domain_context_path(domain)
+    if not ctx_path.exists():
+        return {"intro": "", "title": ""}
+    text = ctx_path.read_text(errors="replace")
+    title_m = re.search(r"^#\s+(.+)$", text, re.MULTILINE)
+    title = title_m.group(1).strip() if title_m else domain
+    # Try ## Identity / ## Chi sei / ## Identita / ## Identità sections first
+    section_m = re.search(
+        r"^##\s+(?:Identity|Chi\s+sei|Identità?|Identità|About|Cosa\s+e['’]?)[^\n]*\n+([\s\S]+?)(?=\n##\s|\Z)",
+        text, re.MULTILINE | re.IGNORECASE,
+    )
+    if section_m:
+        intro = section_m.group(1)
+    else:
+        # Fallback: paragraph after title, skipping blockquotes
+        body = text[title_m.end():] if title_m else text
+        # Skip blockquotes (lines starting with >)
+        lines = body.split("\n")
+        cleaned = [l for l in lines if not l.strip().startswith(">")]
+        # Take until first ## or first blank line cluster
+        intro_lines: list[str] = []
+        for l in cleaned:
+            if l.strip().startswith("##"):
+                break
+            intro_lines.append(l)
+        intro = "\n".join(intro_lines)
+    # Strip leading/trailing whitespace and limit length for top section
+    intro = intro.strip()
+    if len(intro) > 1200:
+        intro = intro[:1200].rsplit(" ", 1)[0] + "…"
+    return {"title": title, "intro": intro}
+
+
 @app.get("/api/domains/{domain}/biconi")
 async def list_biconi(domain: str, request: Request, limit: int = 50) -> list[dict[str, Any]]:
     """Return parsed bicono summary for every report. Used by the BICONO

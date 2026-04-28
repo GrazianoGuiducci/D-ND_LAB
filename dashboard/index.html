@@ -224,6 +224,21 @@
   <!-- DOMAIN: 3-col layout (CAMPO sx · tabs/content · DETTAGLIO dx) -->
   <main x-show="view === 'domain' && activeDomain" class="max-w-7xl mx-auto px-4 py-4 space-y-4">
 
+    <!-- v3.9 — Sezione descrittiva top (cosa accade qui).
+         Letto da domains/<d>/context.md, prima sezione Identity/Chi sei.
+         Espandibile (default collapsed dopo il primo paragrafo). -->
+    <template x-if="contextIntro.intro">
+      <section class="bg-slate-900/60 border border-slate-800 rounded-lg px-5 py-4">
+        <div class="flex items-start justify-between gap-3 mb-2">
+          <h2 class="text-base font-medium text-purple-300" x-text="contextIntro.title || 'Cosa accade qui'"></h2>
+          <button @click="contextExpanded = !contextExpanded" class="text-xs text-slate-500 hover:text-slate-300 whitespace-nowrap">
+            <span x-text="contextExpanded ? '↑ comprimi' : '↓ espandi'"></span>
+          </button>
+        </div>
+        <div class="markdown text-sm text-slate-300" :class="contextExpanded ? '' : 'line-clamp-3'" x-html="renderMarkdown(contextIntro.intro)"></div>
+      </section>
+    </template>
+
     <!-- Tab bar — pattern da /opt/d-nd_com/components/LabGraph.tsx:216 -->
     <div class="lab-tabs">
       <template x-for="tab in TABS" :key="tab.id">
@@ -690,6 +705,10 @@
       // v3.10 — mobile drawer state. null | 'left' | 'right'.
       mobileDrawer: null,
 
+      // v3.9 — context intro per la sezione descrittiva top
+      contextIntro: { title: '', intro: '' },
+      contextExpanded: false,
+
       // Chat
       chatOpen: false,
       chatMessages: [],
@@ -737,9 +756,28 @@
         this.view = 'domain';
         this.activeReport = null;
         this.selectedNode = null;
-        await Promise.all([this.reloadSeed(), this.reloadReports(), this.reloadGraph()]);
+        this.biconi = [];                                      // v3.5 — reset bicono cache cross-domain
+        this.contextIntro = { title: '', intro: '' };          // v3.9 — reset
+        this.contextExpanded = false;
+        await Promise.all([
+          this.reloadSeed(),
+          this.reloadReports(),
+          this.reloadGraph(),
+          this.reloadContextIntro(),                           // v3.9 — fetch identity section
+        ]);
         // wait next tick so the #graph-viz container is in the DOM (x-show=true)
         this.$nextTick(() => this.renderGraph());
+      },
+
+      // v3.9 — fetch + cache context intro per il dominio attivo
+      async reloadContextIntro() {
+        if (!this.activeDomain) return;
+        try {
+          this.contextIntro = await fetch(`/api/domains/${this.activeDomain}/context_intro`).then(r => r.json());
+        } catch (e) {
+          console.error('context intro load failed', e);
+          this.contextIntro = { title: '', intro: '' };
+        }
       },
 
       async reloadGraph() {
