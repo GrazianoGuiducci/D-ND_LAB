@@ -92,10 +92,25 @@
        Riprende il pattern di /opt/d-nd_com/components/Shell3Col.tsx in
        vanilla CSS grid, senza React. Le sidebar collassano a 40px tramite
        classi sidebar-left-closed / sidebar-right-closed, gestite dall'Alpine state. */
-    .lab-grid { display: grid; grid-template-columns: 260px 1fr 320px; gap: 16px; align-items: start; }
-    .lab-grid.sidebar-left-closed { grid-template-columns: 40px 1fr 320px; }
-    .lab-grid.sidebar-right-closed { grid-template-columns: 260px 1fr 40px; }
+    /* CSS vars guidano i width — drag handle li aggiorna, valori
+       persistiti in localStorage. Range: 200..480px, default 260/320. */
+    .lab-grid { display: grid; grid-template-columns: var(--sb-left-w, 260px) 1fr var(--sb-right-w, 320px); gap: 16px; align-items: start; }
+    .lab-grid.sidebar-left-closed { grid-template-columns: 40px 1fr var(--sb-right-w, 320px); }
+    .lab-grid.sidebar-right-closed { grid-template-columns: var(--sb-left-w, 260px) 1fr 40px; }
     .lab-grid.sidebar-left-closed.sidebar-right-closed { grid-template-columns: 40px 1fr 40px; }
+
+    /* v4.1 — Resize drag handles. Position absolute sul bordo interno della
+       sidebar. Pattern dal sito (s3c-resizer). Solo desktop (mobile usa drawer). */
+    .resize-handle { position: absolute; top: 0; bottom: 0; width: 6px; cursor: col-resize; user-select: none; z-index: 5; transition: background 0.15s; }
+    .resize-handle:hover, .resize-handle.active { background: rgba(167,139,250,.18); }
+    .resize-handle::after { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 2px; height: 32px; background: rgb(71 85 105); border-radius: 1px; opacity: 0; transition: opacity 0.15s; }
+    .resize-handle:hover::after, .resize-handle.active::after { opacity: 1; }
+    .lab-sidebar-left  .resize-handle { right: -3px; }
+    .lab-sidebar-right .resize-handle { left: -3px; }
+    @media (max-width: 1024px) { .resize-handle { display: none; } }
+    /* Body class durante drag — disable selection ovunque + cursor unico */
+    body.resizing { cursor: col-resize; user-select: none; }
+    body.resizing * { cursor: col-resize !important; }
 
     /* v3.10 — Mobile drawer pattern. Pattern da Shell3Col.tsx (d-nd_com).
        Sotto 1024px le sidebar escono dal flusso e tornano come overlay
@@ -292,6 +307,7 @@
         <button @click="sidebarLeftOpen = !sidebarLeftOpen" class="sidebar-toggle" :title="sidebarLeftOpen ? 'Collassa' : 'Espandi'">
           <span x-text="sidebarLeftOpen ? '◂' : '▸'"></span>
         </button>
+        <div x-show="sidebarLeftOpen" class="resize-handle" @mousedown="startResize($event, 'left')" title="Drag per ridimensionare"></div>
         <!-- Su mobile, il toggle desktop e' nascosto e si usa questo close X -->
         <div class="flex items-center justify-between mb-2" style="margin-top:-4px">
           <h3 class="text-xs uppercase tracking-wider text-slate-500 mt-1" x-show="sidebarLeftOpen || mobileDrawer === 'left'">Campo</h3>
@@ -552,9 +568,10 @@
 
       <!-- ============ SIDEBAR DETTAGLIO (right) ============ -->
       <aside class="lab-sidebar lab-sidebar-right" :class="!sidebarRightOpen && 'collapsed'">
-        <button @click="sidebarRightOpen = !sidebarRightOpen" class="sidebar-toggle" :title="sidebarRightOpen ? 'Collassa' : 'Espandi'">
+        <button @click="sidebarRightOpen = !sidebarRightOpen" class="sidebar-toggle" :title="sidebarRightOpen ? '▸' : '◂'">
           <span x-text="sidebarRightOpen ? '▸' : '◂'"></span>
         </button>
+        <div x-show="sidebarRightOpen" class="resize-handle" @mousedown="startResize($event, 'right')" title="Drag per ridimensionare"></div>
         <div class="flex items-center justify-between mb-2" style="margin-top:-4px">
           <button @click="closeMobileDrawer()" class="mobile-close-btn text-slate-400 hover:text-slate-200 px-2 py-1 rounded text-base" title="Chiudi">×</button>
           <h3 class="text-xs uppercase tracking-wider text-slate-500 mt-1 ml-auto" x-show="sidebarRightOpen || mobileDrawer === 'right'">Dettaglio</h3>
@@ -769,6 +786,11 @@
       // v3.10 — mobile drawer state. null | 'left' | 'right'.
       mobileDrawer: null,
 
+      // v4.1 — resize state (drag tracking)
+      resizing: null,                       // null | {side, startX, startW}
+      sidebarLeftWidth: 260,
+      sidebarRightWidth: 320,
+
       // v3.9 — context intro per la sezione descrittiva top
       contextIntro: { title: '', intro: '' },
       contextExpanded: false,
@@ -800,6 +822,59 @@
         document.addEventListener('keydown', (e) => {
           if (e.key === 'Escape' && this.mobileDrawer) this.closeMobileDrawer();
         });
+        // v4.1 — restore sidebar widths from localStorage
+        try {
+          const lw = parseInt(localStorage.getItem('dnd_sb_left_w') || '');
+          const rw = parseInt(localStorage.getItem('dnd_sb_right_w') || '');
+          if (lw && lw >= 200 && lw <= 480) this.sidebarLeftWidth = lw;
+          if (rw && rw >= 200 && rw <= 480) this.sidebarRightWidth = rw;
+          this._applySidebarWidths();
+        } catch (e) { /* storage disabled — usa default */ }
+        // v4.1 — global mousemove/mouseup handlers (delegated)
+        document.addEventListener('mousemove', (e) => this._onResizeMove(e));
+        document.addEventListener('mouseup', () => this._onResizeEnd());
+      },
+
+      // v4.1 — resize handlers
+      startResize(ev, side) {
+        ev.preventDefault();
+        const startW = side === 'left' ? this.sidebarLeftWidth : this.sidebarRightWidth;
+        this.resizing = { side, startX: ev.clientX, startW };
+        document.body.classList.add('resizing');
+        ev.target.classList.add('active');
+      },
+
+      _onResizeMove(ev) {
+        if (!this.resizing) return;
+        const { side, startX, startW } = this.resizing;
+        // Left sidebar: dragging right increases width. Right sidebar: dragging left increases width.
+        const delta = side === 'left' ? (ev.clientX - startX) : (startX - ev.clientX);
+        const newW = Math.max(200, Math.min(480, startW + delta));
+        if (side === 'left') this.sidebarLeftWidth = newW;
+        else this.sidebarRightWidth = newW;
+        this._applySidebarWidths();
+      },
+
+      _onResizeEnd() {
+        if (!this.resizing) return;
+        this.resizing = null;
+        document.body.classList.remove('resizing');
+        document.querySelectorAll('.resize-handle.active').forEach(el => el.classList.remove('active'));
+        // Persist
+        try {
+          localStorage.setItem('dnd_sb_left_w', String(this.sidebarLeftWidth));
+          localStorage.setItem('dnd_sb_right_w', String(this.sidebarRightWidth));
+        } catch (e) { /* storage disabled */ }
+        // Re-fit Cytoscape if we're on tab GRAFO (the available space changed)
+        if (this.activeTab === 'grafo' && this.cy) {
+          this.$nextTick(() => { this.cy.resize(); this.cy.fit(undefined, 30); });
+        }
+      },
+
+      _applySidebarWidths() {
+        const root = document.documentElement;
+        root.style.setProperty('--sb-left-w', this.sidebarLeftWidth + 'px');
+        root.style.setProperty('--sb-right-w', this.sidebarRightWidth + 'px');
       },
 
       // v3.10 — mobile drawer handlers
