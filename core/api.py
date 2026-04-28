@@ -288,6 +288,34 @@ async def get_report(domain: str, filename: str, request: Request) -> dict[str, 
     }
 
 
+@app.get("/api/domains/{domain}/biconi")
+async def list_biconi(domain: str, request: Request, limit: int = 50) -> list[dict[str, Any]]:
+    """Return parsed bicono summary for every report. Used by the BICONO
+    tab to render a mini-bicono gallery without N round-trips. Reports
+    without a parseable bicono are returned with bicono=None so the
+    frontend can show 'incompleto' state."""
+    await _check_auth(request)
+    _validate_domain(domain)
+    from core import semantic_bridge as sb
+    reports_dir = paths.reports_dir(domain)
+    if not reports_dir.exists():
+        return []
+    out: list[dict[str, Any]] = []
+    for f in sorted(reports_dir.glob("agent_*.md"), key=lambda p: p.stat().st_mtime, reverse=True)[:limit]:
+        try:
+            text = f.read_text(errors="replace")
+        except Exception:
+            continue
+        title_m = re.search(r"^#\s+(.+)$", text, re.MULTILINE)
+        out.append({
+            "filename": f.name,
+            "title": (title_m.group(1).strip() if title_m else f.name)[:200],
+            "bicono": sb._extract_bicono(text),
+            "mtime": datetime.fromtimestamp(f.stat().st_mtime, tz=timezone.utc).isoformat(),
+        })
+    return out
+
+
 @app.get("/api/domains/{domain}/trajectory")
 async def get_trajectory(domain: str, request: Request, limit: int = 20) -> list[dict[str, Any]]:
     await _check_auth(request)

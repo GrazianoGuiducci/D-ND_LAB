@@ -236,12 +236,59 @@
           </div>
         </div>
 
-        <!-- TAB BICONO -->
+        <!-- TAB BICONO — galleria mini-bicono per ogni report -->
         <div x-show="activeTab === 'bicono'" x-transition.opacity.duration.150ms>
-          <div class="bg-slate-900 border border-slate-800 rounded-lg p-6">
-            <h2 class="text-lg font-medium mb-2">Bicono — galleria delle scoperte</h2>
-            <p class="text-xs text-slate-500 mb-4">Ogni report con bicono completo (4 poli parsati) appare come mini-bicono. Click → vai al report.</p>
-            <div class="text-slate-500 text-sm py-12 text-center italic">In arrivo (v3.5)</div>
+          <div class="bg-slate-900 border border-slate-800 rounded-lg p-5">
+            <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
+              <div>
+                <h2 class="text-lg font-medium">Bicono — galleria delle scoperte</h2>
+                <p class="text-xs text-slate-500">Ogni report compila i propri 4 poli (radici · singolare · invariante · campo). Click → apri in Agente.</p>
+              </div>
+              <label class="flex items-center gap-2 text-xs text-slate-400">
+                <input type="checkbox" x-model="biconoOnlyComplete">
+                <span>Solo bicono completi</span>
+              </label>
+            </div>
+
+            <template x-if="biconi.length === 0">
+              <div class="text-slate-500 text-sm py-12 text-center italic">Nessun report ancora — esegui un ciclo per popolare la galleria.</div>
+            </template>
+
+            <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <template x-for="b in filteredBiconi()" :key="b.filename">
+                <button @click="openBiconoCard(b)" class="text-left bicono-card hover:border-purple-500 transition cursor-pointer w-full" style="border-color: rgba(167,139,250,.18)">
+                  <div class="text-xs font-mono text-slate-500 mb-2 flex items-center justify-between">
+                    <span class="truncate flex-1" x-text="b.filename"></span>
+                    <span class="text-slate-600 ml-2" x-text="formatDate(b.mtime)"></span>
+                  </div>
+                  <div class="text-sm text-slate-200 line-clamp-2 mb-3 font-medium" x-text="b.title || '(no title)'"></div>
+
+                  <template x-if="b.bicono">
+                    <svg viewBox="0 0 200 110" class="bicono-svg" preserveAspectRatio="xMidYMid meet" style="max-height:90px">
+                      <line class="axis" x1="14" y1="55" x2="186" y2="55"></line>
+                      <circle :class="biconoCardPoles(b).leftEmpty ? 'root-circle pole-empty' : 'root-circle'" cx="40" cy="55" r="22"></circle>
+                      <text class="label-text" x="40" y="58" text-anchor="middle" style="font-size:8px" :style="biconoCardPoles(b).leftEmpty ? 'opacity:.4' : ''" x-text="biconoCardPoles(b).left || '—'"></text>
+                      <circle class="singular-circle" cx="100" cy="55" r="14"></circle>
+                      <text class="label-text" x="100" y="58" text-anchor="middle" style="font-size:8px" :style="!b.bicono.singular ? 'opacity:.4' : ''" x-text="biconoCardSingular(b)"></text>
+                      <circle :class="biconoCardPoles(b).rightEmpty ? 'root-circle pole-empty' : 'root-circle'" cx="160" cy="55" r="22"></circle>
+                      <text class="label-text" x="160" y="58" text-anchor="middle" style="font-size:8px" :style="biconoCardPoles(b).rightEmpty ? 'opacity:.4' : ''" x-text="biconoCardPoles(b).right || '—'"></text>
+                      <path class="invariant-arc" d="M 18,55 Q 100,8 182,55" :style="!b.bicono.invariant ? 'opacity:.2' : ''"></path>
+                    </svg>
+                  </template>
+
+                  <template x-if="!b.bicono">
+                    <div class="text-xs text-slate-500 italic py-3 text-center border border-dashed border-slate-700 rounded">bicono assente o non parsabile</div>
+                  </template>
+
+                  <div class="mt-2 flex gap-1.5 flex-wrap">
+                    <span class="chip" :class="b.bicono?.roots ? '' : 'chip-empty'" style="opacity: 1" :style="!b.bicono?.roots && 'opacity:.35'">R</span>
+                    <span class="chip" :class="b.bicono?.singular ? '' : 'chip-empty'" :style="!b.bicono?.singular && 'opacity:.35'">S</span>
+                    <span class="chip" :class="b.bicono?.invariant ? '' : 'chip-empty'" :style="!b.bicono?.invariant && 'opacity:.35'">I</span>
+                    <span class="chip" :class="b.bicono?.field ? '' : 'chip-empty'" :style="!b.bicono?.field && 'opacity:.35'">F</span>
+                  </div>
+                </button>
+              </template>
+            </div>
           </div>
         </div>
 
@@ -513,6 +560,10 @@
       sidebarRightOpen: true,
       showAllLabels: false,
 
+      // v3.5 — bicono gallery state
+      biconi: [],
+      biconoOnlyComplete: false,
+
       // Chat
       chatOpen: false,
       chatMessages: [],
@@ -760,7 +811,50 @@
               this.cy.fit(undefined, 30);
             }
           });
+        } else if (id === 'bicono' && this.biconi.length === 0) {
+          // Lazy fetch — solo al primo accesso al tab
+          this.reloadBiconi();
         }
+      },
+
+      // v3.5 — galleria bicono
+      async reloadBiconi() {
+        if (!this.activeDomain) return;
+        try {
+          this.biconi = await fetch(`/api/domains/${this.activeDomain}/biconi`).then(r => r.json());
+        } catch (e) {
+          console.error('biconi load failed', e);
+          this.biconi = [];
+        }
+      },
+
+      filteredBiconi() {
+        if (!this.biconoOnlyComplete) return this.biconi;
+        return this.biconi.filter(b => b.bicono && b.bicono.roots && b.bicono.singular && b.bicono.invariant && b.bicono.field);
+      },
+
+      // Mini-bicono pole parsing — riusa la logica di biconoPoles ma su un
+      // bicono passato esplicitamente (per la gallery che itera N report).
+      biconoCardPoles(b) {
+        const raw = b?.bicono?.roots || '';
+        if (!raw) return { left: null, right: null, leftEmpty: true, rightEmpty: true };
+        const cleaned = raw.replace(/^[-*•·]\s*/, '').replace(/\s*\([^)]*\)\s*/g, '').trim();
+        const parts = cleaned.split(/\s+(?:·|\/|vs\.?|versus)\s+/i);
+        const left = (parts[0] || '').trim().slice(0, 14) || null;
+        const right = (parts[1] || '').trim().slice(0, 14) || null;
+        return { left, right, leftEmpty: !left, rightEmpty: !right };
+      },
+
+      biconoCardSingular(b) {
+        const s = b?.bicono?.singular || '';
+        if (!s) return '—';
+        return s.split(/[.—–]/)[0].trim().slice(0, 14);
+      },
+
+      // Click su mini-bicono → switcha a tab AGENTE con quel report aperto
+      async openBiconoCard(b) {
+        this.activeTab = 'agente';
+        await this.openReport(b.filename);
       },
 
       // v3 — toggle "Mostra tutti i nomi". Hover handlers sono gia' wired in
