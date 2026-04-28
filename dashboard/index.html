@@ -968,6 +968,38 @@
             <div class="text-[10px] uppercase tracking-wider text-slate-500 mb-1" x-text="m.role === 'user' ? 'tu' : 'lab'"></div>
             <div :class="m.role === 'user' ? 'bg-purple-900/30 border-purple-800/60' : 'bg-slate-800/50 border-slate-700'"
                  class="border rounded-lg px-3 py-2 markdown text-sm" x-html="renderMarkdown(m.content)"></div>
+            <!-- v5 — tool trace (collapsed, mostra cosa il chat agent ha letto) -->
+            <template x-if="m.tool_trace && m.tool_trace.length > 0">
+              <details class="mt-1 text-[10px] text-slate-500">
+                <summary class="cursor-pointer hover:text-slate-300">🔧 <span x-text="`${m.tool_trace.length} tool call`"></span></summary>
+                <div class="mt-1 pl-3 space-y-0.5">
+                  <template x-for="(t, k) in m.tool_trace" :key="k">
+                    <div class="font-mono">→ <span class="text-slate-400" x-text="t.name"></span><span x-show="Object.keys(t.args).length > 0" x-text="`(${JSON.stringify(t.args).slice(0,80)})`"></span></div>
+                  </template>
+                </div>
+              </details>
+            </template>
+            <!-- v5 — pending action proposals (richiedono UI confirm) -->
+            <template x-if="m.pending_actions && m.pending_actions.length > 0">
+              <div class="mt-2 space-y-2">
+                <template x-for="(a, k) in m.pending_actions" :key="k">
+                  <div class="border border-amber-700/50 bg-amber-950/20 rounded p-2 text-xs">
+                    <div class="text-amber-300 font-medium mb-1" x-text="a.type === 'propose_inject_tension' ? '⚡ Inject tension' : (a.type === 'propose_run_cycle' ? '▶ Run cycle' : a.type)"></div>
+                    <pre class="text-slate-300 whitespace-pre-wrap text-[10px] mb-2" x-text="JSON.stringify(a.args, null, 2)"></pre>
+                    <div class="flex gap-2" x-show="!a.confirmed && !a.declined">
+                      <button @click="confirmAction(m, k)" class="text-xs px-3 py-1 rounded bg-amber-700 hover:bg-amber-600 text-white">Conferma</button>
+                      <button @click="declineAction(m, k)" class="text-xs px-3 py-1 rounded bg-slate-700 hover:bg-slate-600 text-slate-300">Annulla</button>
+                    </div>
+                    <template x-if="a.confirmed">
+                      <div class="text-[10px] text-emerald-400" x-text="`✓ ${a.result || 'eseguito'}`"></div>
+                    </template>
+                    <template x-if="a.declined">
+                      <div class="text-[10px] text-slate-500">— annullato</div>
+                    </template>
+                  </div>
+                </template>
+              </div>
+            </template>
           </div>
         </template>
         <template x-if="chatLoading">
@@ -2152,6 +2184,68 @@
         this.sendChat();
       },
 
+      // v5 — confirm/decline pending actions dal chat agent
+      async confirmAction(message, idx) {
+        const action = message.pending_actions[idx];
+        if (!action || action.confirmed || action.declined) return;
+        try {
+          let resp;
+          if (action.type === 'propose_inject_tension') {
+            const args = action.args || {};
+            resp = await fetch(`/api/domains/${this.activeDomain}/inject_tension`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                id: args.tension_id,
+                claim: args.claim,
+                intensita: typeof args.intensity === 'number' ? args.intensity : 0.5,
+                tipo: 'manuale',
+              }),
+            });
+          } else if (action.type === 'propose_run_cycle') {
+            const args = action.args || {};
+            resp = await fetch(`/api/domains/${this.activeDomain}/run`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                direction_override: args.direction_override || null,
+              }),
+            });
+          } else {
+            action.declined = true;
+            action.result = 'unknown action';
+            return;
+          }
+          if (!resp.ok) {
+            const err = await resp.json().catch(() => ({}));
+            action.declined = true;
+            action.result = `errore: ${err.detail || resp.statusText}`;
+            return;
+          }
+          const data = await resp.json();
+          action.confirmed = true;
+          if (action.type === 'propose_inject_tension') {
+            action.result = `tension '${data.tension?.id}' aggiunta (${data.n_tensions} totali)`;
+            this.reloadSeed();
+          } else if (action.type === 'propose_run_cycle') {
+            action.result = `cycle ${data.cycle_id?.slice(0, 8)} avviato`;
+            this.runCycleId = data.cycle_id;
+            this.runStatus = 'running';
+            this.runLog = '';
+            this.showRunModal = true;
+            this.connectCycleWs(data.cycle_id);
+          }
+        } catch (e) {
+          action.declined = true;
+          action.result = `errore: ${e.message}`;
+        }
+      },
+
+      declineAction(message, idx) {
+        const action = message.pending_actions[idx];
+        if (action) action.declined = true;
+      },
+
       async sendChat() {
         if (!this.chatInput.trim() || !this.activeDomain) return;
         const userMsg = { role: 'user', content: this.chatInput };
@@ -2180,6 +2274,8 @@
             this.chatMessages.push({
               role: 'assistant',
               content: data.reply || '(empty reply)',
+              tool_trace: data.tool_trace || [],
+              pending_actions: (data.pending_actions || []).map(a => ({...a, confirmed: false, declined: false, result: null})),
             });
           }
         } catch (e) {

@@ -34,7 +34,7 @@ import time
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 try:
     from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, Request
@@ -739,12 +739,16 @@ async def cycle_log_ws(websocket: WebSocket, cycle_id: str) -> None:
 
 @app.post("/api/domains/{domain}/chat")
 async def chat_endpoint(domain: str, body: ChatRequest, request: Request) -> dict[str, Any]:
-    """Single-shot chat. The agent has read-only context awareness:
-    domain context.md + current seed + last reports + cimitero. Tools
-    that mutate state are NOT called from here — they go through their
-    own gated endpoints (e.g. /inject_tension) after UI confirmation.
+    """Multi-turn chat con tools (Phase 6 v5).
 
-    Phase 6 v1: single-shot non-streaming. Phase 6 v2 may add SSE for streaming.
+    Tools categorizzati:
+      - READ tools (eseguiti server-side immediatamente, risultato torna al
+        modello che continua il ragionamento): list_reports, read_report,
+        read_falsifier, read_seed_tension, list_cimitero.
+      - PROPOSAL tools (NON eseguiti — ritornano una pending_action che il
+        frontend renderizza come confirm card; user click → endpoint dedicato):
+        propose_inject_tension, propose_run_cycle. Pattern: il chat agent
+        descrive cosa farebbe, l'operatore conferma esplicitamente.
     """
     await _check_auth(request)
     _check_demo_writes(request)
@@ -752,11 +756,8 @@ async def chat_endpoint(domain: str, body: ChatRequest, request: Request) -> dic
 
     from core import llm_adapter
 
-    # Build system prompt: domain context + lab state snapshot
     system_prompt = _build_chat_system_prompt(domain)
 
-    # If the user selected a graph node, inject it as additional context
-    # so the agent's reply is anchored to that specific point.
     if body.context_node:
         node = body.context_node
         node_md = (
@@ -765,7 +766,6 @@ async def chat_endpoint(domain: str, body: ChatRequest, request: Request) -> dic
             f"- type: `{node.get('type', '?')}`\n"
             f"- label: {node.get('label', '?')}\n"
         )
-        # Include any extra fields present (claim, verdict, intensity, ...)
         for key in ("claim", "verdict", "intensity", "stato", "porta", "title"):
             if node.get(key):
                 node_md += f"- {key}: {str(node[key])[:300]}\n"
@@ -776,13 +776,22 @@ async def chat_endpoint(domain: str, body: ChatRequest, request: Request) -> dic
         )
         system_prompt += node_md
 
-    # Map ChatMessage list to OpenAI message format
+    # Augment system prompt with chat tools usage hint
+    system_prompt += (
+        "\n\n## TOOLS AVAILABLE\n"
+        "You have read tools (list_reports, read_report, read_falsifier, "
+        "read_seed_tension, list_cimitero) — call them when the user asks "
+        "about specific reports, flags, or tensions. Don't guess; lookup.\n"
+        "You also have PROPOSAL tools (propose_inject_tension, propose_run_cycle): "
+        "calling them does NOT execute the action — it returns a structured "
+        "proposal the user must confirm via the UI. Use them when the user "
+        "explicitly asks to add a tension or run a cycle.\n"
+    )
+
     user_messages = [{"role": m.role, "content": m.content} for m in body.messages]
 
-    # Single-shot call (no tools — Phase 6 v1)
     config = llm_adapter.AdapterConfig.from_env()
-    config.max_turns = 1  # chat is single-shot per request
-    config.timeout_seconds = 120
+    config.timeout_seconds = 240
     try:
         config.validate()
     except ValueError as e:
@@ -794,30 +803,299 @@ async def chat_endpoint(domain: str, body: ChatRequest, request: Request) -> dic
         raise HTTPException(503, "openai package not installed")
 
     client = openai.OpenAI(base_url=config.base_url, api_key=config.api_key)
+    schemas, fn_map, mutation_names = _chat_tools(domain)
+
     messages = [{"role": "system", "content": system_prompt}, *user_messages]
+    pending_actions: list[dict[str, Any]] = []
+    tool_trace: list[dict[str, Any]] = []
+    cumulative_usage = {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
 
-    try:
-        response = client.chat.completions.create(
-            model=config.model,
-            messages=messages,
-            timeout=config.timeout_seconds,
-        )
-    except openai.APIError as e:
-        raise HTTPException(502, f"LLM API error: {e}")
+    final_text = ""
+    max_iterations = 6  # safety cap
+    for _ in range(max_iterations):
+        try:
+            response = client.chat.completions.create(
+                model=config.model,
+                messages=messages,
+                tools=schemas if schemas else None,
+                timeout=config.timeout_seconds,
+            )
+        except openai.APIError as e:
+            raise HTTPException(502, f"LLM API error: {e}")
 
-    msg = response.choices[0].message
-    usage = response.usage
+        choice = response.choices[0]
+        msg = choice.message
+        if response.usage:
+            cumulative_usage["prompt_tokens"] += response.usage.prompt_tokens
+            cumulative_usage["completion_tokens"] += response.usage.completion_tokens
+            cumulative_usage["total_tokens"] += response.usage.total_tokens
+
+        tool_calls = msg.tool_calls or []
+        if not tool_calls:
+            final_text = msg.content or ""
+            break
+
+        # Append assistant message with tool calls (must precede tool messages)
+        messages.append({
+            "role": "assistant",
+            "content": msg.content or "",
+            "tool_calls": [
+                {
+                    "id": tc.id,
+                    "type": "function",
+                    "function": {"name": tc.function.name, "arguments": tc.function.arguments},
+                } for tc in tool_calls
+            ],
+        })
+
+        # Dispatch each tool call
+        for tc in tool_calls:
+            name = tc.function.name
+            try:
+                args = json.loads(tc.function.arguments or "{}")
+            except json.JSONDecodeError:
+                args = {}
+            tool_trace.append({"name": name, "args": args})
+
+            if name in mutation_names:
+                # Proposal — register as pending_action, return placeholder to LLM
+                action = {"type": name, "args": args, "tool_call_id": tc.id}
+                pending_actions.append(action)
+                tool_result = json.dumps({
+                    "ok": True,
+                    "status": "proposed",
+                    "note": "User must confirm in UI before this executes.",
+                })
+            else:
+                fn = fn_map.get(name)
+                if not fn:
+                    tool_result = json.dumps({"error": f"unknown tool {name}"})
+                else:
+                    try:
+                        tool_result = fn(**args)
+                    except Exception as e:
+                        tool_result = json.dumps({"error": str(e)[:200]})
+            messages.append({
+                "role": "tool",
+                "tool_call_id": tc.id,
+                "content": tool_result,
+            })
+
+        # If we collected mutation proposals, stop the loop — frontend handles them
+        if pending_actions:
+            # One more LLM turn to give a coherent final answer mentioning the proposals
+            try:
+                response = client.chat.completions.create(
+                    model=config.model,
+                    messages=messages,
+                    timeout=config.timeout_seconds,
+                )
+                final_text = response.choices[0].message.content or ""
+                if response.usage:
+                    cumulative_usage["prompt_tokens"] += response.usage.prompt_tokens
+                    cumulative_usage["completion_tokens"] += response.usage.completion_tokens
+                    cumulative_usage["total_tokens"] += response.usage.total_tokens
+            except openai.APIError:
+                final_text = "Proposta pronta — conferma via UI."
+            break
 
     return {
         "session_id": body.session_id or uuid.uuid4().hex[:12],
-        "reply": msg.content or "",
-        "usage": {
-            "prompt_tokens": usage.prompt_tokens if usage else 0,
-            "completion_tokens": usage.completion_tokens if usage else 0,
-            "total_tokens": usage.total_tokens if usage else 0,
-        },
+        "reply": final_text,
+        "tool_trace": tool_trace,
+        "pending_actions": pending_actions,
+        "usage": cumulative_usage,
         "model": config.model,
     }
+
+
+# ─── Chat tools (Phase 6 v5) ───────────────────────────────────────
+
+
+def _chat_tools(domain: str) -> tuple[list[dict[str, Any]], dict[str, Callable], set[str]]:
+    """Return (schemas, fn_map, mutation_names) for chat tool dispatch.
+    fn_map contains only read-tool callables. Mutation tools are returned
+    as PROPOSALS by the chat endpoint loop (no execution server-side)."""
+
+    def list_reports(limit: int = 10) -> str:
+        reports_dir = paths.reports_dir(domain)
+        if not reports_dir.exists():
+            return json.dumps([])
+        out = []
+        for f in sorted(reports_dir.glob("agent_*.md"),
+                        key=lambda p: p.stat().st_mtime, reverse=True)[:limit]:
+            try:
+                text = f.read_text(errors="replace")
+            except Exception:
+                continue
+            title_m = re.search(r"^#\s+(.+)$", text, re.MULTILINE)
+            verdict_m = re.search(r"##\s*Verdict[^\n]*\n([^\n]+)", text)
+            out.append({
+                "filename": f.name,
+                "title": (title_m.group(1).strip() if title_m else f.name)[:200],
+                "verdict": (verdict_m.group(1).strip() if verdict_m else "")[:200],
+                "mtime": datetime.fromtimestamp(f.stat().st_mtime, tz=timezone.utc).isoformat(),
+            })
+        return json.dumps(out, ensure_ascii=False)
+
+    def read_report(filename: str) -> str:
+        if "/" in filename or ".." in filename:
+            return json.dumps({"error": "invalid filename"})
+        fp = paths.reports_dir(domain) / filename
+        if not fp.exists():
+            return json.dumps({"error": "not found"})
+        try:
+            content = fp.read_text(errors="replace")
+        except Exception as e:
+            return json.dumps({"error": str(e)})
+        if len(content) > 8000:
+            content = content[:8000] + "\n…[truncated]"
+        return content
+
+    def read_falsifier(filename: str) -> str:
+        if "/" in filename or ".." in filename:
+            return json.dumps({"error": "invalid filename"})
+        ts_match = re.search(r"(\d{8}_\d{4})", filename)
+        if not ts_match:
+            return json.dumps({"error": "could not extract timestamp"})
+        ts = ts_match.group(1)
+        fp = paths.domain_data_dir(domain) / "falsifier" / f"falsifier_{ts}.json"
+        if not fp.exists():
+            return json.dumps({"present": False, "ts": ts, "note": "falsifier not run for this report"})
+        try:
+            return fp.read_text(errors="replace")
+        except Exception as e:
+            return json.dumps({"error": str(e)})
+
+    def read_seed_tension(tension_id: str) -> str:
+        seed = _read_json_safe(paths.seed_path(domain), {})
+        for t in seed.get("tensioni", []) or []:
+            if isinstance(t, dict) and t.get("id") == tension_id:
+                return json.dumps(t, ensure_ascii=False)
+        return json.dumps({"error": f"tension {tension_id} not found"})
+
+    def list_cimitero(limit: int = 20) -> str:
+        """Reports che il falsifier ha incoerentificato O verdict negativi."""
+        reports_dir = paths.reports_dir(domain)
+        falsifier_dir = paths.domain_data_dir(domain) / "falsifier"
+        out = []
+        if not reports_dir.exists():
+            return json.dumps([])
+        for f in sorted(reports_dir.glob("agent_*.md"),
+                        key=lambda p: p.stat().st_mtime, reverse=True):
+            try:
+                text = f.read_text(errors="replace")
+            except Exception:
+                continue
+            verdict_m = re.search(r"##\s*Verdict[^\n]*\n([^\n]+)", text)
+            verdict = (verdict_m.group(1).strip() if verdict_m else "").upper()
+            is_negative_verdict = any(k in verdict for k in
+                ("REFUTE", "FALSIFY", "FALSIFIED", "NULL_RESULT", "NEGATIVE"))
+            falsifier_incoherent = False
+            n_flags = 0
+            ts_match = re.search(r"agent_(\d{8}_\d{4})", f.name)
+            if ts_match and falsifier_dir.exists():
+                fp = falsifier_dir / f"falsifier_{ts_match.group(1)}.json"
+                if fp.exists():
+                    try:
+                        rec = json.loads(fp.read_text())
+                        n_flags = len(rec.get("flags") or [])
+                        if rec.get("coherent") is False:
+                            falsifier_incoherent = True
+                    except Exception:
+                        pass
+            if is_negative_verdict or falsifier_incoherent or n_flags > 0:
+                title_m = re.search(r"^#\s+(.+)$", text, re.MULTILINE)
+                out.append({
+                    "filename": f.name,
+                    "title": (title_m.group(1).strip() if title_m else f.name)[:200],
+                    "verdict": (verdict_m.group(1).strip() if verdict_m else "")[:200],
+                    "n_flags": n_flags,
+                    "incoherent": falsifier_incoherent,
+                })
+            if len(out) >= limit:
+                break
+        return json.dumps(out, ensure_ascii=False)
+
+    fn_map = {
+        "list_reports": list_reports,
+        "read_report": read_report,
+        "read_falsifier": read_falsifier,
+        "read_seed_tension": read_seed_tension,
+        "list_cimitero": list_cimitero,
+    }
+
+    schemas = [
+        {"type": "function", "function": {
+            "name": "list_reports",
+            "description": "List recent reports of this lab domain with title + verdict + mtime.",
+            "parameters": {
+                "type": "object",
+                "properties": {"limit": {"type": "integer", "default": 10}},
+            },
+        }},
+        {"type": "function", "function": {
+            "name": "read_report",
+            "description": "Read full markdown content of a report by filename (e.g. 'agent_20260427_2005.md').",
+            "parameters": {
+                "type": "object",
+                "properties": {"filename": {"type": "string"}},
+                "required": ["filename"],
+            },
+        }},
+        {"type": "function", "function": {
+            "name": "read_falsifier",
+            "description": "Read the falsifier output (counter-pole flags) for a report. Accepts report filename or timestamp.",
+            "parameters": {
+                "type": "object",
+                "properties": {"filename": {"type": "string"}},
+                "required": ["filename"],
+            },
+        }},
+        {"type": "function", "function": {
+            "name": "read_seed_tension",
+            "description": "Get full detail of a tension in the current seed by id.",
+            "parameters": {
+                "type": "object",
+                "properties": {"tension_id": {"type": "string"}},
+                "required": ["tension_id"],
+            },
+        }},
+        {"type": "function", "function": {
+            "name": "list_cimitero",
+            "description": "List reports in the cimitero (falsifier-incoherent OR negative verdict OR ≥1 flag from counter-pole).",
+            "parameters": {
+                "type": "object",
+                "properties": {"limit": {"type": "integer", "default": 20}},
+            },
+        }},
+        # PROPOSAL tools — DO NOT execute, return a pending action
+        {"type": "function", "function": {
+            "name": "propose_inject_tension",
+            "description": "PROPOSE adding a new tension to the seed. Does NOT execute — returns a proposal the user must confirm in UI.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "tension_id": {"type": "string", "description": "Uppercase id, e.g. 'NEW_BOUNDARY'"},
+                    "claim": {"type": "string", "description": "The tension claim (one sentence)"},
+                    "intensity": {"type": "number", "description": "0.0..1.0", "default": 0.5},
+                },
+                "required": ["tension_id", "claim"],
+            },
+        }},
+        {"type": "function", "function": {
+            "name": "propose_run_cycle",
+            "description": "PROPOSE running a new cycle. Does NOT execute — returns a proposal.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "direction_override": {"type": "string", "description": "Optional override of the seed direction"},
+                },
+            },
+        }},
+    ]
+    mutation_names = {"propose_inject_tension", "propose_run_cycle"}
+    return schemas, fn_map, mutation_names
 
 
 def _build_chat_system_prompt(domain: str) -> str:
