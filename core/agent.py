@@ -63,7 +63,9 @@ def agent(ctx: CycleContext) -> None:
 
     # Default tool set: filesystem ops + python_exec + bash_exec, sandboxed
     # to the domain's data dir + read-only access to domain dir.
-    tool_set = tools.build_default_tools(ctx.domain)
+    # cycle_ts triggers auto-persistence of run_python/run_bash calls to
+    # data/{domain}/artifacts/{cycle_ts}/ — read by the falsifier movement.
+    tool_set = tools.build_default_tools(ctx.domain, cycle_ts=ctx.timestamp)
 
     # Domain-declared tools: each entry in config.tools with type="domain"
     # imports its module and calls module.build(domain) to get a ToolEntry.

@@ -16,13 +16,23 @@ Safety contract:
 
 Phase 2.5 will replace these with MCP server processes for proper
 isolation. The schemas stay the same (OpenAI format = MCP tool format).
+
+Artifact persistence (added 2026-04-28):
+  When cycle_ts is provided, every run_python / run_bash call is auto-
+  persisted as data/{domain}/artifacts/{cycle_ts}/call_<NNN>.json with
+  full code + stdout + stderr + exit code. This lets the report_falsifier
+  movement cross-check report claims against the actual computation
+  trace without changing the agent prompt (option 3 of the
+  diagnose/2026-04-28 plan).
 """
 
 from __future__ import annotations
 
+import json
 import logging
 import os
 import subprocess
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -35,7 +45,7 @@ logger = logging.getLogger(__name__)
 MAX_OUTPUT_BYTES = 50_000  # 50KB cap on tool result content
 
 
-def build_default_tools(domain: str) -> list[ToolEntry]:
+def build_default_tools(domain: str, cycle_ts: str | None = None) -> list[ToolEntry]:
     """Build the standard set of tools for a lab agent cycle.
 
     The sandbox roots are:
@@ -45,7 +55,7 @@ def build_default_tools(domain: str) -> list[ToolEntry]:
 
     Anything outside these paths is rejected.
     """
-    sandbox = _Sandbox(domain)
+    sandbox = _Sandbox(domain, cycle_ts=cycle_ts)
 
     def read_file(path: str) -> str:
         return sandbox.read_file(path)
@@ -165,13 +175,26 @@ def build_default_tools(domain: str) -> list[ToolEntry]:
 
 
 class _Sandbox:
-    """Path allowlist + safe subprocess execution for the agent."""
+    """Path allowlist + safe subprocess execution for the agent.
 
-    def __init__(self, domain: str):
+    cycle_ts: when provided, every run_python/run_bash call is captured
+    to data/{domain}/artifacts/{cycle_ts}/call_<NNN>.json so the
+    report_falsifier can later cross-check report claims against actual
+    numerical outputs. None disables persistence (e.g., for tests).
+    """
+
+    def __init__(self, domain: str, cycle_ts: str | None = None):
         self.domain = domain
         self.data_root = paths.domain_data_dir(domain).resolve()
         self.domain_root = paths.domain_dir(domain).resolve()
         self.data_root.mkdir(parents=True, exist_ok=True)
+        self.cycle_ts = cycle_ts
+        self.artifact_idx = 0
+        if cycle_ts:
+            self.artifact_dir = self.data_root / "artifacts" / cycle_ts
+            self.artifact_dir.mkdir(parents=True, exist_ok=True)
+        else:
+            self.artifact_dir = None
 
     def _resolve(self, path: str, must_be_writable: bool = False) -> Path:
         """Resolve path against data_root, then domain_root if read-only."""
@@ -254,6 +277,8 @@ class _Sandbox:
         return self._run_subprocess(
             ["python3", "-c", code],
             timeout_s=min(timeout_s, 600),
+            kind="python",
+            source=code,
         )
 
     def run_bash(self, command: str, timeout_s: int = 60) -> str:
@@ -263,9 +288,18 @@ class _Sandbox:
         return self._run_subprocess(
             ["bash", "-c", command],
             timeout_s=min(timeout_s, 600),
+            kind="bash",
+            source=command,
         )
 
-    def _run_subprocess(self, argv: list[str], timeout_s: int) -> str:
+    def _run_subprocess(
+        self,
+        argv: list[str],
+        timeout_s: int,
+        kind: str = "subprocess",
+        source: str = "",
+    ) -> str:
+        t0 = datetime.now(timezone.utc)
         try:
             result = subprocess.run(
                 argv,
@@ -275,20 +309,46 @@ class _Sandbox:
                 timeout=timeout_s,
                 env=self._safe_env(),
             )
+            stdout = result.stdout or ""
+            stderr = result.stderr or ""
+            exit_code = result.returncode
+            err_kind = None
         except subprocess.TimeoutExpired:
-            return f"ERROR: timeout after {timeout_s}s"
+            stdout, stderr, exit_code, err_kind = "", "", -1, f"timeout after {timeout_s}s"
         except FileNotFoundError as e:
-            return f"ERROR: command not found: {e}"
+            stdout, stderr, exit_code, err_kind = "", "", -1, f"command not found: {e}"
         except Exception as e:
-            return f"ERROR: subprocess failed: {e}"
+            stdout, stderr, exit_code, err_kind = "", "", -1, f"subprocess failed: {e}"
 
-        out = (result.stdout or "")
-        err = (result.stderr or "")
-        body = out
-        if err:
-            body += f"\n--- stderr ---\n{err}"
-        if result.returncode != 0:
-            body += f"\n--- exit code: {result.returncode} ---"
+        # Persist artifact (option 3 of the diagnose plan: no prompt change,
+        # tool layer captures full computation trace). Best-effort — if
+        # persistence fails we still return the body to the agent.
+        if self.artifact_dir is not None:
+            try:
+                self.artifact_idx += 1
+                t1 = datetime.now(timezone.utc)
+                artifact = {
+                    "kind": kind,
+                    "ts": t0.isoformat(),
+                    "duration_ms": int((t1 - t0).total_seconds() * 1000),
+                    "source": source,
+                    "stdout": stdout,
+                    "stderr": stderr,
+                    "exit_code": exit_code,
+                    "error": err_kind,
+                }
+                out_path = self.artifact_dir / f"call_{self.artifact_idx:03d}_{kind}.json"
+                out_path.write_text(json.dumps(artifact, ensure_ascii=False, indent=2))
+            except Exception as e:
+                logger.warning("artifact persistence failed: %s", e)
+
+        if err_kind:
+            return f"ERROR: {err_kind}"
+        body = stdout
+        if stderr:
+            body += f"\n--- stderr ---\n{stderr}"
+        if exit_code != 0:
+            body += f"\n--- exit code: {exit_code} ---"
         if len(body.encode()) > MAX_OUTPUT_BYTES:
             body = body[:MAX_OUTPUT_BYTES] + "\n[... truncated]"
         return body

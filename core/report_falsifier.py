@@ -264,6 +264,15 @@ def _collect_data_excerpts(
         if p.exists():
             candidates.add(p.resolve())
 
+    # Computation trace from this cycle — auto-persisted by the tools layer
+    # (see core/tools.py _Sandbox._run_subprocess). This is the empirical
+    # substrate the falsifier needs to detect contradictions between report
+    # claims and actual computed values.
+    artifact_dir = domain_data / "artifacts" / ctx.timestamp
+    if artifact_dir.exists() and artifact_dir.is_dir():
+        for p in sorted(artifact_dir.glob("call_*.json")):
+            candidates.add(p.resolve())
+
     if not candidates:
         return []
 
