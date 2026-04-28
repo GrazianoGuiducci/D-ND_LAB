@@ -11,6 +11,15 @@
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; }
+
+    /* Themed scrollbars (operatore: "scrollbar dovrebbe essere del colore
+       del tema"). Pattern dark slate per tutto il documento. */
+    * { scrollbar-color: rgba(148,163,184,.25) rgba(15,23,42,.4); scrollbar-width: thin; }
+    *::-webkit-scrollbar { width: 8px; height: 8px; }
+    *::-webkit-scrollbar-track { background: rgba(15,23,42,.4); }
+    *::-webkit-scrollbar-thumb { background: rgba(148,163,184,.25); border-radius: 4px; }
+    *::-webkit-scrollbar-thumb:hover { background: rgba(167,139,250,.45); }
+    *::-webkit-scrollbar-corner { background: transparent; }
     .markdown h1 { @apply text-2xl font-light mt-4 mb-2; }
     .markdown h2 { @apply text-xl font-light mt-3 mb-2 text-slate-300; }
     .markdown h3 { @apply text-lg font-medium mt-2 mb-1 text-slate-400; }
@@ -191,10 +200,17 @@
     }
     .agente-resize { position: relative; }
     @media (max-width: 1024px) {
-      .agente-grid { grid-template-columns: 1fr !important; }
+      /* Mobile: stack list (auto height) + viewer (fills resto, scroll interno).
+         agente-pane mantiene flex:1 dal layout root → l'altezza e' bounded
+         dal lab-content. Page non scrolla. */
+      .agente-grid {
+        grid-template-columns: 1fr !important;
+        grid-template-rows: auto 1fr !important;   /* list auto, viewer fills */
+      }
       .agente-resize { display: none; }
-      .agente-pane { flex: none; height: auto; }
-      .agente-col { max-height: 60vh; height: auto; }
+      .agente-col { height: auto; }
+      .agente-grid > aside.agente-col { max-height: 35vh; }   /* list cap */
+      .agente-grid > section.agente-col { min-height: 0; }    /* viewer fills row */
     }
 
     /* v4.1+ — Resize handles port-fedele dal sito (Shell3Col s3c-resizer).
@@ -361,8 +377,13 @@
     .stat-row .stat-num { font-family: ui-monospace, monospace; color: rgb(34 211 238); font-size: 13px; }
     .legend-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
 
-    /* Tab bar */
+    /* Tab bar — desktop: inline buttons. Mobile (<768): dropdown nativo. */
     .lab-tabs { display: flex; align-items: center; gap: 0; border-bottom: 1px solid rgb(30 41 59); overflow-x: auto; }
+    .lab-tabs-mobile { display: none; max-width: 240px; }
+    @media (max-width: 768px) {
+      .lab-tabs { display: none !important; }
+      .lab-tabs-mobile { display: block; }
+    }
     .lab-tab { padding: 0.6rem 1.2rem; font-size: 0.875rem; font-weight: 500; border-bottom: 2px solid transparent; transition: all 0.15s; white-space: nowrap; color: #94a3b8; background: none; border-left: 0; border-right: 0; border-top: 0; cursor: pointer; }
     .lab-tab:hover { color: #cbd5e1; }
     .lab-tab.active { color: #c4b5fd; border-bottom-color: #a78bfa; }
@@ -430,7 +451,8 @@
         <span class="text-xl font-light tracking-tight">D-ND_LAB</span>
         <span class="text-xs text-slate-500 font-mono" x-text="health.version || 'connecting...'"></span>
       </div>
-      <!-- Tabs inline (visibili solo in view='domain') -->
+      <!-- Tabs inline (visibili solo in view='domain'). Su mobile (<768)
+           diventa dropdown nativa per non occupare 5 pulsanti orizzontali. -->
       <nav class="lab-tabs flex-1" x-show="view === 'domain' && activeDomain">
         <template x-for="tab in TABS" :key="tab.id">
           <button class="lab-tab" :class="activeTab === tab.id && 'active'" @click="setActiveTab(tab.id)">
@@ -438,6 +460,13 @@
           </button>
         </template>
       </nav>
+      <select class="lab-tabs-mobile flex-1 bg-slate-900 border border-slate-700 rounded text-slate-200 text-sm px-2 py-1.5"
+              x-show="view === 'domain' && activeDomain"
+              x-model="activeTab" @change="setActiveTab(activeTab)">
+        <template x-for="tab in TABS" :key="tab.id">
+          <option :value="tab.id" x-text="tab.label"></option>
+        </template>
+      </select>
       <nav class="flex items-center gap-2 text-sm flex-shrink-0">
         <button class="px-3 py-1 rounded hover:bg-slate-800" :class="{'bg-slate-800': view === 'home'}" @click="view = 'home'">Domains</button>
         <template x-if="activeDomain">
@@ -1098,24 +1127,24 @@
          x-data>
       <template x-if="hoverNode">
         <div>
-          <span class="nt-type" :class="`chip-type-${hoverNode.type}`" x-text="hoverNode.type || '?'"></span>
-          <div class="nt-title" x-text="hoverNode.label || hoverNode.id"></div>
+          <span class="nt-type" :class="`chip-type-${hoverNode?.type}`" x-text="hoverNode?.type || '?'"></span>
+          <div class="nt-title" x-text="hoverNode?.label || hoverNode?.id"></div>
           <div class="nt-meta">
-            <template x-if="hoverNode.intensity !== undefined && hoverNode.intensity !== null">
-              <span x-text="`intensity ${(hoverNode.intensity*100).toFixed(0)}%`"></span>
+            <template x-if="hoverNode?.intensity !== undefined && hoverNode?.intensity !== null">
+              <span x-text="`intensity ${((hoverNode?.intensity||0)*100).toFixed(0)}%`"></span>
             </template>
-            <template x-if="hoverNode.maturity">
-              <span x-text="` · ${hoverNode.maturity}`"></span>
+            <template x-if="hoverNode?.maturity">
+              <span x-text="` · ${hoverNode?.maturity}`"></span>
             </template>
-            <template x-if="hoverNode.mtime">
-              <span x-text="` · ${formatDate(hoverNode.mtime)}`"></span>
+            <template x-if="hoverNode?.mtime">
+              <span x-text="` · ${formatDate(hoverNode?.mtime)}`"></span>
             </template>
           </div>
-          <template x-if="hoverNode.verdict">
-            <div class="nt-verdict" x-text="hoverNode.verdict"></div>
+          <template x-if="hoverNode?.verdict">
+            <div class="nt-verdict" x-text="hoverNode?.verdict || ''"></div>
           </template>
           <div class="nt-actions">
-            <template x-if="hoverNode.type === 'report' && (hoverNode.file || hoverNode.filename)">
+            <template x-if="hoverNode?.type === 'report' && (hoverNode?.file || hoverNode?.filename)">
               <button class="nt-action" @click="openReportFromHover()">→ Apri</button>
             </template>
             <button class="nt-action" @click="zoomToHover()">→ Esplora</button>
