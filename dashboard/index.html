@@ -361,6 +361,10 @@
             <div class="stat-row"><span class="text-slate-400">oggi</span><span class="stat-num text-green-400" x-text="freshnessStats().today"></span></div>
             <div class="stat-row"><span class="text-slate-400">fresche (7d)</span><span class="stat-num text-cyan-400" x-text="freshnessStats().fresh"></span></div>
             <div class="stat-row"><span class="text-slate-400">ghost urgenti</span><span class="stat-num text-amber-400" x-text="freshnessStats().ghosts"></span></div>
+            <div class="stat-row cursor-pointer hover:bg-slate-800/40 -mx-1 px-1 rounded" @click="activeTab = 'agente'; reportsFilter = 'cimitero'" title="Apri il cimitero in Agente">
+              <span class="text-slate-400">🪦 cimitero</span>
+              <span class="stat-num text-slate-300" x-text="cimiteroCount()"></span>
+            </div>
           </div>
 
           <!-- Legenda -->
@@ -479,11 +483,26 @@
                 <h3 class="text-sm font-medium">Reports</h3>
                 <span class="text-xs text-slate-500" x-text="`${filteredReports().length}/${reports.length}`"></span>
               </div>
-              <!-- v4.4 — filter toggle -->
-              <label class="flex items-center gap-2 mb-2 px-1 text-[11px] text-slate-400 cursor-pointer">
-                <input type="checkbox" x-model="reportsOnlyFlagged">
-                <span>Solo report flagged dal falsifier</span>
-              </label>
+              <!-- v4.4/v4.7 — segmented filter: tutti / flagged / cimitero -->
+              <div class="flex items-center gap-1 bg-slate-950 rounded p-0.5 mb-2 text-[10px]">
+                <button @click="reportsFilter = 'all'"
+                        :class="reportsFilter === 'all' ? 'bg-slate-700 text-slate-100' : 'text-slate-400 hover:text-slate-200'"
+                        class="flex-1 px-2 py-1 rounded transition">Tutti</button>
+                <button @click="reportsFilter = 'flagged'"
+                        :class="reportsFilter === 'flagged' ? 'bg-rose-900/40 text-rose-200' : 'text-slate-400 hover:text-slate-200'"
+                        class="flex-1 px-2 py-1 rounded transition">⚠ Flagged</button>
+                <button @click="reportsFilter = 'cimitero'"
+                        :class="reportsFilter === 'cimitero' ? 'bg-slate-700/70 text-slate-100' : 'text-slate-400 hover:text-slate-200'"
+                        class="flex-1 px-2 py-1 rounded transition" title="Reports falsificati o flagged — A5 ciclo autopoietico">🪦 Cimitero</button>
+              </div>
+
+              <!-- v4.7 — info card quando il cimitero e' attivo -->
+              <template x-if="reportsFilter === 'cimitero'">
+                <div class="mb-2 p-2 bg-slate-800/40 border border-slate-700 rounded text-[10px] text-slate-400 italic">
+                  Il cimitero non perde — alimenta il prossimo ciclo (A5).
+                  Reports qui: verdict di falsificazione, falsifier coherent=false, o ≥1 flag dal counter-pole.
+                </div>
+              </template>
               <ul class="space-y-1">
                 <template x-for="r in filteredReports()" :key="r.filename">
                   <li>
@@ -492,6 +511,9 @@
                             class="w-full text-left rounded p-2 transition border">
                       <div class="flex items-start justify-between gap-1.5">
                         <div class="text-xs font-medium text-slate-200 truncate flex-1" x-text="r.title"></div>
+                        <template x-if="isCimitero(r)">
+                          <span class="text-[10px] whitespace-nowrap" title="Nel cimitero">🪦</span>
+                        </template>
                         <template x-if="r.n_flags > 0">
                           <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-rose-900/40 text-rose-300 whitespace-nowrap" :title="`${r.n_flags} flag dal falsifier`" x-text="`⚠ ${r.n_flags}`"></span>
                         </template>
@@ -1002,8 +1024,8 @@
       // v4.6 — trajectory sub-mode
       incrocioMode: 'taxonomy',  // 'taxonomy' | 'trajectory'
 
-      // v4.4 — reports filter
-      reportsOnlyFlagged: false,
+      // v4.4/v4.7 — reports filter mode
+      reportsFilter: 'all',   // 'all' | 'flagged' | 'cimitero'
 
       // Falsifier — fetched lazily quando il report viene aperto
       activeFalsifier: null,
@@ -1795,10 +1817,27 @@
         return this.biconi.filter(b => b.bicono && b.bicono.roots && b.bicono.singular && b.bicono.invariant && b.bicono.field);
       },
 
-      // v4.4 — reports filter
+      // v4.4/v4.7 — reports filter
       filteredReports() {
-        if (!this.reportsOnlyFlagged) return this.reports;
-        return this.reports.filter(r => (r.n_flags || 0) > 0);
+        if (this.reportsFilter === 'all') return this.reports;
+        if (this.reportsFilter === 'flagged') return this.reports.filter(r => (r.n_flags || 0) > 0);
+        if (this.reportsFilter === 'cimitero') return this.reports.filter(r => this.isCimitero(r));
+        return this.reports;
+      },
+
+      // v4.7 — Cimitero predicate: il report e' falsificato o ha flag concreti.
+      // Pattern A5 (ciclo autopoietico: tensioni → cristallizzazione → cimitero → R+1).
+      // Cio' che non sopravvive al confine vive qui — non scompare, alimenta il
+      // prossimo ciclo come compost.
+      isCimitero(r) {
+        if (r.falsifier_coherent === false) return true;
+        if ((r.n_flags || 0) > 0) return true;
+        const v = (r.verdict || '').toUpperCase();
+        return v.includes('REFUTE') || v.includes('FALSIFY') || v.includes('FALSIFIED') || v.includes('NULL_RESULT') || v.includes('NEGATIVE');
+      },
+
+      cimiteroCount() {
+        return this.reports.filter(r => this.isCimitero(r)).length;
       },
 
       // Mini-bicono pole parsing — riusa la logica di biconoPoles ma su un
