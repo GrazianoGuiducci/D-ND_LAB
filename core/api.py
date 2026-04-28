@@ -239,6 +239,7 @@ async def list_reports(domain: str, request: Request, limit: int = 50) -> list[d
     reports_dir = paths.reports_dir(domain)
     if not reports_dir.exists():
         return []
+    falsifier_dir = paths.domain_data_dir(domain) / "falsifier"
     out = []
     for f in sorted(reports_dir.glob("agent_*.md"), key=lambda p: p.stat().st_mtime, reverse=True)[:limit]:
         try:
@@ -247,12 +248,28 @@ async def list_reports(domain: str, request: Request, limit: int = 50) -> list[d
             continue
         title_m = re.search(r"^#\s+(.+)$", text, re.MULTILINE)
         verdict_m = re.search(r"##\s*Verdict[^\n]*\n([^\n]+)", text)
+        # v4.4 — annota con falsifier outcome se esiste, per badge nel list.
+        # Cheap read: solo i campi che ci servono.
+        n_flags = 0
+        falsifier_coherent = None
+        ts_match = re.search(r"agent_(\d{8}_\d{4})", f.name)
+        if ts_match and falsifier_dir.exists():
+            fp = falsifier_dir / f"falsifier_{ts_match.group(1)}.json"
+            if fp.exists():
+                try:
+                    rec = json.loads(fp.read_text())
+                    n_flags = len(rec.get("flags", []) or [])
+                    falsifier_coherent = rec.get("coherent")
+                except Exception:
+                    pass
         out.append({
             "filename": f.name,
             "title": (title_m.group(1).strip() if title_m else f.name)[:200],
             "verdict": (verdict_m.group(1).strip() if verdict_m else "")[:200],
             "size": f.stat().st_size,
             "mtime": datetime.fromtimestamp(f.stat().st_mtime, tz=timezone.utc).isoformat(),
+            "n_flags": n_flags,
+            "falsifier_coherent": falsifier_coherent,
         })
     return out
 
