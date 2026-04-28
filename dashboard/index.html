@@ -66,12 +66,14 @@
        flex-shrink + viewer flex:1). */
     .lab-content > [x-show] { flex: 1; min-height: 0; display: flex; flex-direction: column; }
     .grafo-pane > div:first-child { flex: 1; min-height: 0; }
-    /* Info / Bicono / Tassonomia panes: scroll interno al pane stesso
-       (NON sul first-child — quello rende la rule incerta sotto x-show).
-       Combinato con body.no-body-scroll: il pane scrolla, il body no. */
+    /* Info / Bicono / Tassonomia panes: scroll interno con max-height
+       esplicita (la flex chain attraverso lab-content > [x-show] non
+       propaga l'altezza ai pane sotto x-show in modo affidabile).
+       max-height = stessa formula delle sidebars per coerenza. */
     .info-pane,
     .bicono-pane,
     .tassonomia-pane {
+      max-height: calc(100vh - 80px);
       overflow-y: auto !important;
       overflow-x: hidden;
       scrollbar-width: thin;
