@@ -66,13 +66,15 @@
        flex-shrink + viewer flex:1). */
     .lab-content > [x-show] { flex: 1; min-height: 0; display: flex; flex-direction: column; }
     .grafo-pane > div:first-child { flex: 1; min-height: 0; }
-    /* Info / Bicono / Tassonomia panes: scroll interno al pane stesso
-       (NON sul first-child — quello rende la rule incerta sotto x-show).
-       Combinato con body.no-body-scroll: il pane scrolla, il body no. */
-    .info-pane,
-    .bicono-pane,
-    .tassonomia-pane {
-      overflow-y: auto !important;
+    /* Info / Bicono / Tassonomia panes: il wrapper card e' il first-child;
+       diventa flex:1 con scroll interno proprio cosi' il content lungo
+       (Info docs, gallery bicono, taxonomy graph) non sfora la viewport.
+       Sidebars sx/dx scrollano indipendentemente — niente page scroll. */
+    .info-pane > div:first-child,
+    .bicono-pane > div:first-child,
+    .tassonomia-pane > div:first-child {
+      flex: 1; min-height: 0;
+      overflow-y: auto;
       overflow-x: hidden;
       scrollbar-width: thin;
     }
