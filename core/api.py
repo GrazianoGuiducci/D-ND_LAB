@@ -152,6 +152,7 @@ class ChatMessage(BaseModel):
 class ChatRequest(BaseModel):
     messages: list[ChatMessage]
     session_id: str | None = None
+    context_node: dict[str, Any] | None = None  # selected graph node, if any
 
 
 class InjectTensionRequest(BaseModel):
@@ -265,9 +266,23 @@ async def get_report(domain: str, filename: str, request: Request) -> dict[str, 
     fp = paths.reports_dir(domain) / filename
     if not fp.exists():
         raise HTTPException(404, "report not found")
+    content = fp.read_text(errors="replace")
+
+    # Parse bicono (4 fields) and verdict from the report markdown.
+    # Reuses the existing parser in semantic_bridge so the dashboard
+    # bicono visualization renders the SAME structure the lab uses
+    # internally — no duplicated regex.
+    from core import semantic_bridge as sb
+    bicono = sb._extract_bicono(content)
+    verdict_m = re.search(r"##\s*Verdict[^\n]*\n([^\n]+)", content)
+    title_m = re.search(r"^#\s+(.+)$", content, re.MULTILINE)
+
     return {
         "filename": filename,
-        "content": fp.read_text(errors="replace"),
+        "content": content,
+        "title": (title_m.group(1).strip() if title_m else "")[:200],
+        "verdict": (verdict_m.group(1).strip() if verdict_m else "")[:200],
+        "bicono": bicono,  # may be None if absent or unparseable
         "size": fp.stat().st_size,
         "mtime": datetime.fromtimestamp(fp.stat().st_mtime, tz=timezone.utc).isoformat(),
     }
@@ -303,6 +318,18 @@ async def get_cost(domain: str, request: Request) -> dict[str, Any]:
         "n_cycles": data.get("cicli_totali", 0),
         "history": [],  # Phase 6 v2: parse per-cycle costs
     }
+
+
+@app.get("/api/domains/{domain}/lab_graph")
+async def get_lab_graph(domain: str, request: Request) -> dict[str, Any]:
+    """Knowledge graph (nodes + edges + stats) produced by build_graph
+    movement. Used by the dashboard graph visualization."""
+    await _check_auth(request)
+    _validate_domain(domain)
+    p = paths.lab_graph_path(domain)
+    if not p.exists():
+        return {"graph": {"nodes": [], "edges": []}, "stats": {}, "domain": domain}
+    return _read_json_safe(p, {"graph": {"nodes": [], "edges": []}, "stats": {}, "domain": domain})
 
 
 @app.get("/api/domains/{domain}/cimitero")
@@ -407,6 +434,27 @@ async def chat_endpoint(domain: str, body: ChatRequest, request: Request) -> dic
 
     # Build system prompt: domain context + lab state snapshot
     system_prompt = _build_chat_system_prompt(domain)
+
+    # If the user selected a graph node, inject it as additional context
+    # so the agent's reply is anchored to that specific point.
+    if body.context_node:
+        node = body.context_node
+        node_md = (
+            f"\n\n## CURRENT FOCUS — graph node selected by the user\n"
+            f"- id: `{node.get('id', '?')}`\n"
+            f"- type: `{node.get('type', '?')}`\n"
+            f"- label: {node.get('label', '?')}\n"
+        )
+        # Include any extra fields present (claim, verdict, intensity, ...)
+        for key in ("claim", "verdict", "intensity", "stato", "porta", "title"):
+            if node.get(key):
+                node_md += f"- {key}: {str(node[key])[:300]}\n"
+        node_md += (
+            "\nThe user's question is most likely about this node. Answer in "
+            "context of it; cite the corresponding report or seed entry if "
+            "relevant; if the question is broader, expand from there.\n"
+        )
+        system_prompt += node_md
 
     # Map ChatMessage list to OpenAI message format
     user_messages = [{"role": m.role, "content": m.content} for m in body.messages]

@@ -7,6 +7,7 @@
   <meta name="description" content="An autonomous research lab for any domain you can structure.">
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked@14.1.4/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/cytoscape@3.30.4/dist/cytoscape.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; }
@@ -27,6 +28,33 @@
     .scroll-fade { mask-image: linear-gradient(to bottom, black 80%, transparent 100%); }
     @keyframes pulse-cycle { 0%,100% { opacity: 1 } 50% { opacity: 0.4 } }
     .running { animation: pulse-cycle 1.5s ease-in-out infinite; }
+    /* Graph viz hero */
+    #graph-viz { width: 100%; height: 480px; background: #0d0e14; border-radius: 0.5rem; }
+    .graph-legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 11px; color: #94a3b8; padding: 8px 0; }
+    .graph-legend span { display: inline-flex; align-items: center; gap: 6px; }
+    .graph-legend i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+    .selected-node-badge { display: inline-flex; align-items: center; gap: 6px; padding: 2px 8px; background: rgba(167,139,250,.18); color: #c4b5fd; border-radius: 999px; font-size: 11px; font-family: ui-monospace, monospace; }
+    .selected-node-badge button { background: none; border: 0; color: inherit; cursor: pointer; opacity: .6; }
+    .selected-node-badge button:hover { opacity: 1; }
+    /* Bicono dinamico — SVG dipolo singolare-duale, ogni report compila i propri 4 poli.
+       Niente fallback statici (es. 'vuoto/pieno'): se il campo manca, il polo resta vuoto
+       e segnalato come incompleto — la dashboard non inventa terminologia. */
+    .bicono-card { background: linear-gradient(180deg, rgba(167,139,250,.06) 0%, rgba(34,211,238,.04) 100%); border: 1px solid rgba(167,139,250,.18); border-radius: 0.5rem; padding: 14px; }
+    .bicono-card h4 { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: #c4b5fd; margin: 0 0 8px; font-weight: 600; }
+    .bicono-svg { width: 100%; height: auto; max-height: 180px; }
+    .bicono-svg .axis { stroke: rgba(148,163,184,.25); stroke-width: 1; }
+    .bicono-svg .root-circle { fill: rgba(255,255,255,.04); stroke: rgba(167,139,250,.45); stroke-width: 1.5; }
+    .bicono-svg .singular-circle { fill: rgba(167,139,250,.16); stroke: #a78bfa; stroke-width: 1.5; }
+    .bicono-svg .invariant-arc { fill: none; stroke: #22d3ee; stroke-width: 1.2; stroke-dasharray: 3,3; opacity: .8; }
+    .bicono-svg .label-text { fill: #d8dbe7; font: 10px ui-monospace, monospace; }
+    .bicono-svg .label-tag { fill: #94a3b8; font: 9px ui-sans-serif, system-ui; text-transform: uppercase; letter-spacing: .04em; }
+    .bicono-svg .pole-empty { stroke-dasharray: 4,3; opacity: .35; }
+    .bicono-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap: 8px; margin-top: 10px; font-size: 12px; }
+    .bicono-field { padding: 6px 8px; background: rgba(0,0,0,.2); border-left: 2px solid rgba(167,139,250,.4); border-radius: 4px; }
+    .bicono-field .label { color: #c4b5fd; font-size: 10px; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 2px; }
+    .bicono-field .value { color: #d8dbe7; }
+    .bicono-field.empty { opacity: .4; border-left-color: rgba(148,163,184,.3); }
+    .bicono-field.empty .value::after { content: '— assente nel report'; color: #64748b; font-style: italic; }
   </style>
 </head>
 <body class="bg-slate-950 text-slate-200 min-h-screen" x-data="dashboard()" x-init="init()">
@@ -76,9 +104,39 @@
     </div>
   </main>
 
-  <!-- DOMAIN: seed + reports + cycle runner + chat -->
-  <main x-show="view === 'domain' && activeDomain" class="max-w-7xl mx-auto px-4 py-6 grid lg:grid-cols-3 gap-6">
+  <!-- DOMAIN: graph hero + seed + reports + cycle runner + chat -->
+  <main x-show="view === 'domain' && activeDomain" class="max-w-7xl mx-auto px-4 py-6 space-y-6">
 
+    <!-- Graph hero — knowledge map of the domain -->
+    <section class="bg-slate-900 border border-slate-800 rounded-lg p-4">
+      <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
+        <h2 class="text-lg font-medium flex items-center gap-2">
+          <span>Knowledge graph</span>
+          <span class="text-xs text-slate-500 font-mono" x-show="graphStats.n_nodes !== undefined" x-text="`${graphStats.n_nodes ?? 0} nodes · ${graphStats.n_edges ?? 0} edges`"></span>
+        </h2>
+        <div class="flex items-center gap-2">
+          <template x-if="selectedNode">
+            <span class="selected-node-badge">
+              <span x-text="`◉ ${selectedNode.label || selectedNode.id}`"></span>
+              <button @click="clearSelection()" title="Deseleziona">×</button>
+            </span>
+          </template>
+          <button @click="resetGraphLayout()" class="text-xs px-2 py-1 rounded bg-slate-800 hover:bg-slate-700">↻ relayout</button>
+          <button @click="reloadGraph()" class="text-xs text-slate-500 hover:text-slate-300">refresh</button>
+        </div>
+      </div>
+      <div id="graph-viz"></div>
+      <div class="graph-legend">
+        <span><i style="background:#22d3ee"></i> tensione</span>
+        <span><i style="background:#a78bfa"></i> report</span>
+        <span><i style="background:#34d399"></i> teoria</span>
+        <span><i style="background:#fbbf24"></i> ghost</span>
+        <span><i style="background:#f472b6"></i> scoperta</span>
+        <span class="text-slate-500 ml-auto italic">Click su un nodo per fare domande contestuali nella chat</span>
+      </div>
+    </section>
+
+    <div class="grid lg:grid-cols-3 gap-6">
     <!-- Left: seed view -->
     <section class="lg:col-span-1 bg-slate-900 border border-slate-800 rounded-lg p-5">
       <h2 class="text-lg font-medium mb-3 flex items-center justify-between">
@@ -142,12 +200,60 @@
       <template x-if="activeReport">
         <div>
           <button @click="activeReport = null" class="text-xs text-slate-500 hover:text-slate-300 mb-3">← back to list</button>
+
+          <!-- Bicono dinamico (visualizer) — appare solo se il report contiene la sezione bicono -->
+          <template x-if="activeReport.bicono">
+            <div class="bicono-card mb-4">
+              <h4>Bicono della scoperta</h4>
+              <div class="grid md:grid-cols-2 gap-4 items-center">
+                <svg viewBox="0 0 280 180" class="bicono-svg" preserveAspectRatio="xMidYMid meet">
+                  <!-- horizontal axis through center -->
+                  <line class="axis" x1="20" y1="90" x2="260" y2="90"></line>
+                  <!-- left root (radice negativa) -->
+                  <circle :class="biconoPoles().leftEmpty ? 'root-circle pole-empty' : 'root-circle'" cx="60" cy="90" r="34"></circle>
+                  <text class="label-tag" x="60" y="148" text-anchor="middle">root</text>
+                  <text class="label-text" x="60" y="94" text-anchor="middle" :style="biconoPoles().leftEmpty ? 'opacity:.4' : ''" x-text="biconoPoles().left || '—'"></text>
+                  <!-- singular center -->
+                  <circle class="singular-circle" cx="140" cy="90" r="22"></circle>
+                  <text class="label-tag" x="140" y="148" text-anchor="middle">singular</text>
+                  <text class="label-text" x="140" y="94" text-anchor="middle" :style="!activeReport.bicono.singular ? 'opacity:.4' : ''" x-text="biconoSingularShort()"></text>
+                  <!-- right root (radice positiva) -->
+                  <circle :class="biconoPoles().rightEmpty ? 'root-circle pole-empty' : 'root-circle'" cx="220" cy="90" r="34"></circle>
+                  <text class="label-tag" x="220" y="148" text-anchor="middle">root</text>
+                  <text class="label-text" x="220" y="94" text-anchor="middle" :style="biconoPoles().rightEmpty ? 'opacity:.4' : ''" x-text="biconoPoles().right || '—'"></text>
+                  <!-- invariant arc — top arch through left and right -->
+                  <path class="invariant-arc" d="M 26,90 Q 140,10 254,90" :style="!activeReport.bicono.invariant ? 'opacity:.2' : ''"></path>
+                  <text class="label-tag" x="140" y="20" text-anchor="middle">invariant of passage</text>
+                </svg>
+                <div class="bicono-fields">
+                  <div class="bicono-field" :class="!activeReport.bicono.roots && 'empty'">
+                    <div class="label">two roots</div>
+                    <div class="value" x-text="activeReport.bicono.roots || ''"></div>
+                  </div>
+                  <div class="bicono-field" :class="!activeReport.bicono.singular && 'empty'">
+                    <div class="label">singular</div>
+                    <div class="value" x-text="activeReport.bicono.singular || ''"></div>
+                  </div>
+                  <div class="bicono-field" :class="!activeReport.bicono.invariant && 'empty'">
+                    <div class="label">invariant of passage</div>
+                    <div class="value" x-text="activeReport.bicono.invariant || ''"></div>
+                  </div>
+                  <div class="bicono-field" :class="!activeReport.bicono.field && 'empty'">
+                    <div class="label">field of possibility</div>
+                    <div class="value" x-text="activeReport.bicono.field || ''"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </template>
+
           <div class="markdown" x-html="renderMarkdown(activeReport.content)"></div>
         </div>
       </template>
     </section>
 
     <!-- Right column when no chat panel; we use grid below for chat full width when open -->
+    </div><!-- /grid -->
   </main>
 
   <!-- CHAT panel (collapsible bottom sheet) -->
@@ -230,6 +336,22 @@
   </div>
 
   <script>
+  // Pair colors from /opt/d-nd_com/components/diagrams/BiconoLab.tsx — kept
+  // in sync so visualization stays coherent with the public site.
+  const PAIR_COLOR = {
+    'TxQ':'#34d399','QxT':'#34d399','GxQ':'#a78bfa','QxG':'#a78bfa',
+    'ExQ':'#fbbf24','QxE':'#fbbf24','ExT':'#f472b6','TxE':'#f472b6',
+    'GxT':'#22d3ee','TxG':'#22d3ee','GxE':'#818cf8','ExG':'#818cf8',
+    'QxR':'#fb7185','RxQ':'#fb7185','TxR':'#2dd4bf','RxT':'#2dd4bf',
+    'GxR':'#fde047','RxG':'#fde047','ExR':'#c084fc','RxE':'#c084fc',
+  };
+  const NODE_TYPE_COLOR = {
+    tensione: '#22d3ee', report: '#a78bfa', teoria: '#34d399',
+    ghost: '#fbbf24', scoperta: '#f472b6', ponte: '#818cf8',
+    vuoto: '#fb7185',
+  };
+  const NODE_TYPE_DEFAULT = '#94a3b8';
+
   function dashboard() {
     return {
       // State
@@ -240,6 +362,12 @@
       seed: {},
       reports: [],
       activeReport: null,
+
+      // Graph
+      cy: null,                 // Cytoscape instance
+      graphData: null,
+      graphStats: {},
+      selectedNode: null,
 
       // Chat
       chatOpen: false,
@@ -269,7 +397,154 @@
         this.activeDomain = id;
         this.view = 'domain';
         this.activeReport = null;
-        await Promise.all([this.reloadSeed(), this.reloadReports()]);
+        this.selectedNode = null;
+        await Promise.all([this.reloadSeed(), this.reloadReports(), this.reloadGraph()]);
+        // wait next tick so the #graph-viz container is in the DOM (x-show=true)
+        this.$nextTick(() => this.renderGraph());
+      },
+
+      async reloadGraph() {
+        if (!this.activeDomain) return;
+        try {
+          this.graphData = await fetch(`/api/domains/${this.activeDomain}/lab_graph`).then(r => r.json());
+          this.graphStats = this.graphData.stats || {};
+        } catch (e) {
+          console.error('graph load failed', e);
+          this.graphData = { graph: { nodes: [], edges: [] }, stats: {} };
+          this.graphStats = {};
+        }
+      },
+
+      renderGraph() {
+        const container = document.getElementById('graph-viz');
+        if (!container || !this.graphData) return;
+        // Destroy previous instance if present
+        if (this.cy) { try { this.cy.destroy(); } catch (e) {} this.cy = null; }
+        const nodes = (this.graphData.graph?.nodes || []).map(n => ({
+          data: {
+            id: n.id,
+            label: (n.label || n.id || '').slice(0, 60),
+            type: n.type || 'unknown',
+            full: n,
+          },
+        }));
+        const edges = (this.graphData.graph?.edges || []).map((e, i) => ({
+          data: {
+            id: e.id || `e${i}`,
+            source: e.source,
+            target: e.target,
+            type: e.type || 'rel',
+          },
+        }));
+        if (nodes.length === 0) {
+          container.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#64748b;font-size:14px">Graph is empty — run a cycle to populate it.</div>';
+          return;
+        }
+        this.cy = cytoscape({
+          container,
+          elements: { nodes, edges },
+          style: [
+            {
+              selector: 'node',
+              style: {
+                'background-color': (ele) => NODE_TYPE_COLOR[ele.data('type')] || NODE_TYPE_DEFAULT,
+                'border-width': 1,
+                'border-color': 'rgba(255,255,255,.15)',
+                'label': 'data(label)',
+                'color': '#cbd5e1',
+                'font-size': 9,
+                'font-family': 'ui-monospace, monospace',
+                'text-wrap': 'wrap',
+                'text-max-width': 120,
+                'text-valign': 'bottom',
+                'text-margin-y': 4,
+                'width': 14,
+                'height': 14,
+              },
+            },
+            {
+              selector: 'node:selected',
+              style: {
+                'border-color': '#a78bfa',
+                'border-width': 3,
+                'width': 20,
+                'height': 20,
+              },
+            },
+            {
+              selector: 'edge',
+              style: {
+                'width': 1,
+                'line-color': 'rgba(148,163,184,.25)',
+                'target-arrow-color': 'rgba(148,163,184,.4)',
+                'target-arrow-shape': 'triangle',
+                'arrow-scale': 0.6,
+                'curve-style': 'bezier',
+              },
+            },
+            {
+              selector: 'edge:selected',
+              style: {
+                'line-color': '#a78bfa',
+                'width': 2,
+              },
+            },
+          ],
+          layout: {
+            name: 'cose',
+            animate: false,
+            nodeRepulsion: 8000,
+            idealEdgeLength: 80,
+            padding: 30,
+          },
+          minZoom: 0.3,
+          maxZoom: 3,
+          wheelSensitivity: 0.2,
+        });
+        // Click handler — emit selection
+        this.cy.on('tap', 'node', (evt) => {
+          const node = evt.target;
+          this.selectedNode = node.data('full');
+          // open chat panel so the user sees the context badge
+          this.chatOpen = true;
+        });
+        this.cy.on('tap', (evt) => {
+          // tap on background (not a node) — clear selection
+          if (evt.target === this.cy) this.selectedNode = null;
+        });
+      },
+
+      resetGraphLayout() {
+        if (!this.cy) return;
+        this.cy.layout({ name: 'cose', animate: true, nodeRepulsion: 8000, idealEdgeLength: 80, padding: 30 }).run();
+      },
+
+      clearSelection() {
+        this.selectedNode = null;
+        if (this.cy) this.cy.elements().unselect();
+      },
+
+      // Bicono — parse the "two roots" string into left/right poles.
+      // Mirrors parseRadici() from /opt/d-nd_com/components/diagrams/BiconoLab.tsx
+      // so the visualizer stays coherent with the public site. NO static
+      // fallback (vuoto/pieno/etc.) — if a pole is missing, mark empty.
+      biconoPoles() {
+        const raw = this.activeReport?.bicono?.roots || '';
+        if (!raw) return { left: null, right: null, leftEmpty: true, rightEmpty: true };
+        // Strip leading bullet and trailing parenthetical comments
+        const cleaned = raw.replace(/^[-*•·]\s*/, '').replace(/\s*\([^)]*\)\s*/g, '').trim();
+        // Split on common dipole separators: ' · ', ' / ', ' vs ', ' vs. ', ' versus '
+        const parts = cleaned.split(/\s+(?:·|\/|vs\.?|versus)\s+/i);
+        const left = (parts[0] || '').trim().slice(0, 22) || null;
+        const right = (parts[1] || '').trim().slice(0, 22) || null;
+        return { left, right, leftEmpty: !left, rightEmpty: !right };
+      },
+
+      biconoSingularShort() {
+        const s = this.activeReport?.bicono?.singular || '';
+        if (!s) return '—';
+        // Take the first phrase before period or em-dash
+        return s.split(/[.—–]/)[0].trim().slice(0, 24);
       },
 
       async reloadSeed() {
@@ -323,6 +598,7 @@
             body: JSON.stringify({
               messages: this.chatMessages,
               session_id: this.chatSessionId,
+              context_node: this.selectedNode || null,
             }),
           });
           if (!r.ok) {
