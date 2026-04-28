@@ -97,6 +97,27 @@
     /* Tab GRAFO container — prima era inline nel dashboard, ora dentro tab pane.
        Resize a viewport visibile per evitare clip nei layout ristretti. */
     #graph-viz { width: 100%; height: 540px; background: #0d0e14; border-radius: 0.5rem; }
+
+    /* v3.8 — Chat floating bottom-right (THIA-style, vedi /opt/d-nd_com).
+       Stato chiuso: bolla circolare 56px. Stato aperto: pannello 380x540 con
+       ombra. Al di sopra del run-cycle modal? No: z-20 lascia il modal davanti
+       (z-30) quando l'utente lancia un cycle. */
+    .chat-fab { position: fixed; bottom: 18px; right: 18px; z-index: 20; }
+    .chat-fab.open { width: 380px; height: 580px; }
+    .chat-fab .fab-bubble { width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%); box-shadow: 0 8px 24px rgba(124,58,237,.45); display: flex; align-items: center; justify-content: center; cursor: pointer; border: 0; color: white; font-size: 22px; transition: transform 0.15s; }
+    .chat-fab .fab-bubble:hover { transform: scale(1.05); }
+    .chat-fab .fab-bubble .badge-count { position: absolute; top: -4px; right: -4px; background: #f472b6; color: #18181b; font-size: 10px; font-weight: 700; border-radius: 999px; padding: 1px 6px; }
+    .chat-panel { width: 100%; height: 100%; background: rgb(15 23 42); border: 1px solid rgb(51 65 85); border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,.5); display: flex; flex-direction: column; overflow: hidden; }
+    .chat-panel-header { background: linear-gradient(180deg, rgba(167,139,250,.12) 0%, rgba(15,23,42,1) 100%); padding: 12px 14px; border-bottom: 1px solid rgb(30 41 59); display: flex; align-items: center; justify-content: space-between; }
+    .chat-panel-header .title { font-size: 14px; font-weight: 600; color: #c4b5fd; display: flex; align-items: center; gap: 8px; }
+    .chat-panel-header button { background: none; border: 0; color: rgb(148 163 184); cursor: pointer; padding: 4px 8px; border-radius: 4px; font-size: 18px; line-height: 1; }
+    .chat-panel-header button:hover { background: rgb(30 41 59); color: #cbd5e1; }
+    .quick-actions { padding: 12px; border-bottom: 1px solid rgb(30 41 59); display: flex; flex-wrap: wrap; gap: 6px; background: rgba(0,0,0,.18); }
+    .quick-action-btn { font-size: 11px; padding: 6px 10px; border-radius: 999px; background: rgba(167,139,250,.12); color: #c4b5fd; border: 1px solid rgba(167,139,250,.25); cursor: pointer; transition: all 0.15s; }
+    .quick-action-btn:hover { background: rgba(167,139,250,.22); border-color: rgba(167,139,250,.5); }
+    @media (max-width: 640px) {
+      .chat-fab.open { width: calc(100vw - 36px); height: calc(100vh - 36px); }
+    }
   </style>
 </head>
 <body class="bg-slate-950 text-slate-200 min-h-screen" x-data="dashboard()" x-init="init()">
@@ -292,83 +313,93 @@
           </div>
         </div>
 
-        <!-- TAB AGENTE — reports list + viewer -->
+        <!-- TAB AGENTE — 2-col: reports list (sx) + viewer (dx). Sempre entrambi
+             visibili; il viewer mostra empty-state quando nessun report e' aperto. -->
         <div x-show="activeTab === 'agente'" x-transition.opacity.duration.150ms>
-          <div class="bg-slate-900 border border-slate-800 rounded-lg p-5 min-h-[500px]">
-            <div class="flex items-center justify-between mb-3">
-              <h2 class="text-lg font-medium">Reports</h2>
-              <span class="text-xs text-slate-500" x-text="reports.length + ' total'"></span>
-            </div>
+          <div class="grid lg:grid-cols-[280px_1fr] gap-4">
 
-            <template x-if="!activeReport">
-              <ul class="space-y-2 text-sm">
-                <template x-for="r in reports.slice(0, 20)" :key="r.filename">
+            <!-- Lista report (sx) -->
+            <aside class="bg-slate-900 border border-slate-800 rounded-lg p-3 max-h-[700px] overflow-y-auto">
+              <div class="flex items-center justify-between mb-2 px-1">
+                <h3 class="text-sm font-medium">Reports</h3>
+                <span class="text-xs text-slate-500" x-text="reports.length + ' tot'"></span>
+              </div>
+              <ul class="space-y-1">
+                <template x-for="r in reports" :key="r.filename">
                   <li>
-                    <button @click="openReport(r.filename)" class="w-full text-left hover:bg-slate-800 rounded p-2 transition">
-                      <div class="flex items-start justify-between gap-3">
-                        <div class="flex-1 min-w-0">
-                          <div class="font-medium truncate" x-text="r.title"></div>
-                          <div class="text-xs text-slate-500 mt-0.5" x-text="r.verdict || '—'"></div>
-                        </div>
-                        <span class="text-xs text-slate-500 font-mono whitespace-nowrap" x-text="formatDate(r.mtime)"></span>
-                      </div>
+                    <button @click="openReport(r.filename)"
+                            :class="activeReport?.filename === r.filename ? 'bg-purple-900/30 border-purple-700' : 'border-transparent hover:bg-slate-800'"
+                            class="w-full text-left rounded p-2 transition border">
+                      <div class="text-xs font-medium text-slate-200 truncate" x-text="r.title"></div>
+                      <div class="text-[10px] text-slate-500 mt-0.5 font-mono" x-text="formatDate(r.mtime)"></div>
+                      <div class="text-[10px] text-slate-500 mt-0.5 line-clamp-2" x-text="r.verdict || ''"></div>
                     </button>
                   </li>
                 </template>
                 <template x-if="reports.length === 0">
-                  <li class="text-slate-500 text-sm py-4">No reports yet — run your first cycle.</li>
+                  <li class="text-slate-500 text-xs py-4 px-2 italic">No reports yet — run your first cycle.</li>
                 </template>
               </ul>
-            </template>
+            </aside>
 
-            <template x-if="activeReport">
-              <div>
-                <button @click="activeReport = null" class="text-xs text-slate-500 hover:text-slate-300 mb-3">← back to list</button>
+            <!-- Viewer (dx) -->
+            <section class="bg-slate-900 border border-slate-800 rounded-lg p-5 min-h-[500px]">
+              <template x-if="!activeReport">
+                <div class="text-slate-500 text-sm py-16 text-center italic">Click su un report per aprirlo qui.</div>
+              </template>
 
-                <!-- Bicono dinamico (visualizer) — appare solo se il report contiene la sezione bicono -->
-                <template x-if="activeReport.bicono">
-                  <div class="bicono-card mb-4">
-                    <h4>Bicono della scoperta</h4>
-                    <div class="grid md:grid-cols-2 gap-4 items-center">
-                      <svg viewBox="0 0 280 180" class="bicono-svg" preserveAspectRatio="xMidYMid meet">
-                        <line class="axis" x1="20" y1="90" x2="260" y2="90"></line>
-                        <circle :class="biconoPoles().leftEmpty ? 'root-circle pole-empty' : 'root-circle'" cx="60" cy="90" r="34"></circle>
-                        <text class="label-tag" x="60" y="148" text-anchor="middle">root</text>
-                        <text class="label-text" x="60" y="94" text-anchor="middle" :style="biconoPoles().leftEmpty ? 'opacity:.4' : ''" x-text="biconoPoles().left || '—'"></text>
-                        <circle class="singular-circle" cx="140" cy="90" r="22"></circle>
-                        <text class="label-tag" x="140" y="148" text-anchor="middle">singular</text>
-                        <text class="label-text" x="140" y="94" text-anchor="middle" :style="!activeReport.bicono.singular ? 'opacity:.4' : ''" x-text="biconoSingularShort()"></text>
-                        <circle :class="biconoPoles().rightEmpty ? 'root-circle pole-empty' : 'root-circle'" cx="220" cy="90" r="34"></circle>
-                        <text class="label-tag" x="220" y="148" text-anchor="middle">root</text>
-                        <text class="label-text" x="220" y="94" text-anchor="middle" :style="biconoPoles().rightEmpty ? 'opacity:.4' : ''" x-text="biconoPoles().right || '—'"></text>
-                        <path class="invariant-arc" d="M 26,90 Q 140,10 254,90" :style="!activeReport.bicono.invariant ? 'opacity:.2' : ''"></path>
-                        <text class="label-tag" x="140" y="20" text-anchor="middle">invariant of passage</text>
-                      </svg>
-                      <div class="bicono-fields">
-                        <div class="bicono-field" :class="!activeReport.bicono.roots && 'empty'">
-                          <div class="label">two roots</div>
-                          <div class="value" x-text="activeReport.bicono.roots || ''"></div>
-                        </div>
-                        <div class="bicono-field" :class="!activeReport.bicono.singular && 'empty'">
-                          <div class="label">singular</div>
-                          <div class="value" x-text="activeReport.bicono.singular || ''"></div>
-                        </div>
-                        <div class="bicono-field" :class="!activeReport.bicono.invariant && 'empty'">
-                          <div class="label">invariant of passage</div>
-                          <div class="value" x-text="activeReport.bicono.invariant || ''"></div>
-                        </div>
-                        <div class="bicono-field" :class="!activeReport.bicono.field && 'empty'">
-                          <div class="label">field of possibility</div>
-                          <div class="value" x-text="activeReport.bicono.field || ''"></div>
+              <template x-if="activeReport">
+                <div>
+                  <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
+                    <div class="text-xs font-mono text-slate-500" x-text="activeReport.filename"></div>
+                    <button @click="activeReport = null" class="text-xs text-slate-500 hover:text-slate-300">close</button>
+                  </div>
+
+                  <template x-if="activeReport.bicono">
+                    <div class="bicono-card mb-4">
+                      <h4>Bicono della scoperta</h4>
+                      <div class="grid md:grid-cols-2 gap-4 items-center">
+                        <svg viewBox="0 0 280 180" class="bicono-svg" preserveAspectRatio="xMidYMid meet">
+                          <line class="axis" x1="20" y1="90" x2="260" y2="90"></line>
+                          <circle :class="biconoPoles().leftEmpty ? 'root-circle pole-empty' : 'root-circle'" cx="60" cy="90" r="34"></circle>
+                          <text class="label-tag" x="60" y="148" text-anchor="middle">root</text>
+                          <text class="label-text" x="60" y="94" text-anchor="middle" :style="biconoPoles().leftEmpty ? 'opacity:.4' : ''" x-text="biconoPoles().left || '—'"></text>
+                          <circle class="singular-circle" cx="140" cy="90" r="22"></circle>
+                          <text class="label-tag" x="140" y="148" text-anchor="middle">singular</text>
+                          <text class="label-text" x="140" y="94" text-anchor="middle" :style="!activeReport.bicono.singular ? 'opacity:.4' : ''" x-text="biconoSingularShort()"></text>
+                          <circle :class="biconoPoles().rightEmpty ? 'root-circle pole-empty' : 'root-circle'" cx="220" cy="90" r="34"></circle>
+                          <text class="label-tag" x="220" y="148" text-anchor="middle">root</text>
+                          <text class="label-text" x="220" y="94" text-anchor="middle" :style="biconoPoles().rightEmpty ? 'opacity:.4' : ''" x-text="biconoPoles().right || '—'"></text>
+                          <path class="invariant-arc" d="M 26,90 Q 140,10 254,90" :style="!activeReport.bicono.invariant ? 'opacity:.2' : ''"></path>
+                          <text class="label-tag" x="140" y="20" text-anchor="middle">invariant of passage</text>
+                        </svg>
+                        <div class="bicono-fields">
+                          <div class="bicono-field" :class="!activeReport.bicono.roots && 'empty'">
+                            <div class="label">two roots</div>
+                            <div class="value" x-text="activeReport.bicono.roots || ''"></div>
+                          </div>
+                          <div class="bicono-field" :class="!activeReport.bicono.singular && 'empty'">
+                            <div class="label">singular</div>
+                            <div class="value" x-text="activeReport.bicono.singular || ''"></div>
+                          </div>
+                          <div class="bicono-field" :class="!activeReport.bicono.invariant && 'empty'">
+                            <div class="label">invariant of passage</div>
+                            <div class="value" x-text="activeReport.bicono.invariant || ''"></div>
+                          </div>
+                          <div class="bicono-field" :class="!activeReport.bicono.field && 'empty'">
+                            <div class="label">field of possibility</div>
+                            <div class="value" x-text="activeReport.bicono.field || ''"></div>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                </template>
+                  </template>
 
-                <div class="markdown" x-html="renderMarkdown(activeReport.content)"></div>
-              </div>
-            </template>
+                  <div class="markdown" x-html="renderMarkdown(activeReport.content)"></div>
+                </div>
+              </template>
+            </section>
+
           </div>
         </div>
 
@@ -432,51 +463,72 @@
     </div><!-- /lab-grid -->
   </main>
 
-  <!-- CHAT panel (collapsible bottom sheet) -->
-  <div x-show="view === 'domain' && activeDomain" class="fixed bottom-0 left-0 right-0 z-20" x-cloak>
-    <div class="max-w-7xl mx-auto px-4">
-      <div class="bg-slate-900 border-t border-l border-r border-slate-700 rounded-t-lg shadow-2xl"
-           :class="chatOpen ? 'h-[480px]' : 'h-12'">
+  <!-- CHAT floating bottom-right (v3.8) -->
+  <div x-show="view === 'domain' && activeDomain" x-cloak class="chat-fab" :class="chatOpen && 'open'">
 
-        <!-- Chat header (always visible) -->
-        <button @click="toggleChat()" class="w-full px-4 h-12 flex items-center justify-between text-sm hover:bg-slate-800/50 rounded-t-lg">
-          <div class="flex items-center gap-2">
-            <span class="text-purple-400">◆</span>
-            <span class="font-medium">Chat with the lab</span>
-            <span class="text-xs text-slate-500" x-text="chatMessages.length + ' messages'"></span>
-          </div>
-          <span class="text-slate-500" x-text="chatOpen ? '▾' : '▴'"></span>
-        </button>
+    <!-- Closed state: floating bubble -->
+    <button x-show="!chatOpen" @click="chatOpen = true" class="fab-bubble" title="Chat con il lab">
+      <span style="position:relative">
+        <span>◆</span>
+        <template x-if="chatMessages.length > 0">
+          <span class="badge-count" x-text="chatMessages.length"></span>
+        </template>
+      </span>
+    </button>
 
-        <!-- Chat body -->
-        <div x-show="chatOpen" class="flex flex-col" style="height: calc(100% - 3rem);">
-          <div class="flex-1 overflow-y-auto px-4 py-3 space-y-3">
-            <template x-for="(m, i) in chatMessages" :key="i">
-              <div :class="m.role === 'user' ? 'pl-12' : 'pr-12'">
-                <div class="text-xs text-slate-500 mb-1" x-text="m.role"></div>
-                <div :class="m.role === 'user' ? 'bg-purple-900/40 border-purple-800' : 'bg-slate-800/50 border-slate-700'"
-                     class="border rounded-lg px-3 py-2 markdown text-sm" x-html="renderMarkdown(m.content)"></div>
-              </div>
-            </template>
-            <template x-if="chatLoading">
-              <div class="pr-12">
-                <div class="text-xs text-slate-500 mb-1">assistant</div>
-                <div class="bg-slate-800/50 border border-slate-700 rounded-lg px-3 py-2 text-sm running">thinking...</div>
-              </div>
-            </template>
-            <template x-if="chatMessages.length === 0">
-              <div class="text-slate-500 text-sm text-center py-8">
-                Ask the lab anything about its current state, decisions, or findings.<br>
-                The agent has the seed, last reports, and cimitero in context.
-              </div>
-            </template>
-          </div>
-          <form @submit.prevent="sendChat()" class="border-t border-slate-700 p-3 flex gap-2">
-            <input x-model="chatInput" :disabled="chatLoading" placeholder="Ask the lab..." class="flex-1 bg-slate-950 border border-slate-700 rounded px-3 py-2 text-sm focus:border-purple-500 outline-none">
-            <button type="submit" :disabled="chatLoading || !chatInput.trim()" class="px-4 py-2 rounded bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-sm font-medium">Send</button>
-          </form>
+    <!-- Open state: panel -->
+    <div x-show="chatOpen" class="chat-panel">
+      <div class="chat-panel-header">
+        <div class="title">
+          <span>◆</span>
+          <span>Chat con il lab</span>
+          <template x-if="selectedNode">
+            <span class="selected-node-badge ml-2" style="font-size: 9px">
+              <span x-text="`◉ ${(selectedNode.label || selectedNode.id || '').slice(0,18)}`"></span>
+              <button @click.stop="clearSelection()">×</button>
+            </span>
+          </template>
         </div>
+        <button @click="chatOpen = false" title="Chiudi">×</button>
       </div>
+
+      <!-- Quick actions — visibili solo quando la chat e' vuota -->
+      <template x-if="chatMessages.length === 0">
+        <div class="quick-actions">
+          <template x-for="qa in quickActions()" :key="qa">
+            <button class="quick-action-btn" @click="useQuickAction(qa)" x-text="qa"></button>
+          </template>
+        </div>
+      </template>
+
+      <!-- Messages -->
+      <div class="flex-1 overflow-y-auto px-3 py-3 space-y-3" style="min-height:0">
+        <template x-for="(m, i) in chatMessages" :key="i">
+          <div :class="m.role === 'user' ? 'pl-6' : 'pr-6'">
+            <div class="text-[10px] uppercase tracking-wider text-slate-500 mb-1" x-text="m.role === 'user' ? 'tu' : 'lab'"></div>
+            <div :class="m.role === 'user' ? 'bg-purple-900/30 border-purple-800/60' : 'bg-slate-800/50 border-slate-700'"
+                 class="border rounded-lg px-3 py-2 markdown text-sm" x-html="renderMarkdown(m.content)"></div>
+          </div>
+        </template>
+        <template x-if="chatLoading">
+          <div class="pr-6">
+            <div class="text-[10px] uppercase tracking-wider text-slate-500 mb-1">lab</div>
+            <div class="bg-slate-800/50 border border-slate-700 rounded-lg px-3 py-2 text-sm running">thinking...</div>
+          </div>
+        </template>
+        <template x-if="chatMessages.length === 0 && !chatLoading">
+          <div class="text-slate-500 text-xs text-center py-3 italic">
+            Il lab ha seed, last reports e cimitero in contesto.<br>
+            Click su un nodo del grafo per domande mirate.
+          </div>
+        </template>
+      </div>
+
+      <!-- Input -->
+      <form @submit.prevent="sendChat()" class="border-t border-slate-700 p-2 flex gap-2 bg-slate-950/40">
+        <input x-model="chatInput" :disabled="chatLoading" placeholder="Chiedi al lab…" class="flex-1 bg-slate-950 border border-slate-700 rounded px-3 py-2 text-xs focus:border-purple-500 outline-none">
+        <button type="submit" :disabled="chatLoading || !chatInput.trim()" class="px-3 py-2 rounded bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-xs font-medium">Send</button>
+      </form>
     </div>
   </div>
 
@@ -960,6 +1012,38 @@
       // Chat
       toggleChat() {
         this.chatOpen = !this.chatOpen;
+      },
+
+      // v3.8 — quick actions per dominio. Restituisce 3-4 prompt suggeriti
+      // adattati al tipo di lab (physics vs editorial vs altro). Per ora
+      // hardcoded per i due domini esistenti; in futuro potrebbero leggere
+      // da domains/<d>/quick_actions.json.
+      quickActions() {
+        if (this.activeDomain === 'physics') {
+          return [
+            "Spiega l'ultimo report",
+            "Cosa c'è nel cimitero?",
+            "Quale tensione è prioritaria?",
+            "Quali ponti tra teorie esistono?",
+          ];
+        }
+        if (this.activeDomain === 'editorial') {
+          return [
+            "Quali pezzi sono pronti?",
+            "Cosa è stato falsificato?",
+            "Quale direzione editoriale?",
+          ];
+        }
+        return [
+          "Stato del lab",
+          "Spiega l'ultimo report",
+          "Cosa serve adesso?",
+        ];
+      },
+
+      useQuickAction(prompt) {
+        this.chatInput = prompt;
+        this.sendChat();
       },
 
       async sendChat() {
