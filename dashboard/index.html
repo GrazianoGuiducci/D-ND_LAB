@@ -294,11 +294,13 @@
     .mobile-close-btn { display: none; }
     @media (max-width: 1024px) { .mobile-close-btn { display: inline-flex; } }
 
-    /* Mobile: tab bar scrollabile su touch */
-    @media (max-width: 640px) {
+    /* Mobile/tablet: tab bar compatta — evita scroll orizzontale sul header
+       quando viewport stretto (tabs + nav + title eccedono lo spazio). */
+    @media (max-width: 1024px) {
       .lab-tabs { -webkit-overflow-scrolling: touch; }
-      .lab-tab { padding: 0.5rem 0.8rem; font-size: 0.8rem; }
+      .lab-tab { padding: 0.4rem 0.7rem; font-size: 0.78rem; }
       .lab-tab .tab-icon { display: none; }
+      .agente-grid { gap: 8px !important; }   /* margine tra list e viewer ridotto */
     }
 
     /* Sidebar: sticky top + altezza FISSA piena viewport. Operatore
