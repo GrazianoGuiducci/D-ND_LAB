@@ -366,6 +366,42 @@
     .stat-row .stat-num { font-family: ui-monospace, monospace; color: rgb(34 211 238); font-size: 13px; }
     .legend-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
 
+    /* Stat tooltip rich — pattern dal sito d-nd.com/ai-lab (LabGraph statTipsRich
+       + HoverPopover). Struttura: eyebrow title (mono uppercase) · body
+       (descrizione) · logic (dato dinamico/regola). Single instance, position
+       fixed, JS-positioned on hover. */
+    .stat-tip {
+      position: fixed; z-index: 70;
+      min-width: 260px; max-width: 340px;
+      background: rgb(16 16 22);
+      border: 1px solid rgb(255 255 255 / 0.14);
+      border-radius: 10px;
+      padding: 12px 14px;
+      box-shadow: 0 12px 34px rgb(0 0 0 / 0.55);
+      opacity: 0; visibility: hidden; pointer-events: none;
+      transition: opacity 180ms cubic-bezier(0.25,0.1,0.25,1);
+      font-size: 0.85rem; line-height: 1.5;
+      color: rgb(215 218 230);
+    }
+    .stat-tip.visible { opacity: 1; visibility: visible; }
+    .stat-tip .st-title {
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+      font-size: 0.7rem; letter-spacing: 0.14em; text-transform: uppercase;
+      color: rgb(170 175 190);
+      margin: 0 0 0.4rem;
+    }
+    .stat-tip .st-body {
+      font-size: 0.85rem; color: rgb(241 245 249);
+      margin-bottom: 0.5rem;
+    }
+    .stat-tip .st-logic {
+      font-size: 0.78rem; color: rgb(148 163 184);
+      padding-top: 0.4rem;
+      border-top: 1px solid rgb(255 255 255 / 0.08);
+      font-style: italic;
+    }
+    @media (max-width: 1024px) { .stat-tip { display: none !important; } }
+
     /* Tab bar — desktop: inline buttons. Mobile (<768): dropdown nativo. */
     .lab-tabs { display: flex; align-items: center; gap: 0; border-bottom: 1px solid rgb(30 41 59); overflow-x: auto; }
     .lab-tabs-mobile { display: none; max-width: 240px; }
@@ -526,20 +562,20 @@
 
           <!-- Stats -->
           <div class="space-y-0">
-            <div class="stat-row" title="Teorie del modello (Q quantum · T topology · G geometry · E entropy · R representation). Le 5 colonne dell'incrocio TQGE+R."><span class="text-slate-400">teorie</span><span class="stat-num" x-text="campoStats().teorie"></span></div>
-            <div class="stat-row" title="Ponti tra teorie: connessioni stabilite via reports. Ogni ponte e' una pair (es. TxQ, GxR) con costante condivisa o dipolo verificato."><span class="text-slate-400">ponti</span><span class="stat-num" x-text="campoStats().ponti"></span></div>
-            <div class="stat-row" title="Pair senza ponte: il cuore della ricerca. Dove il lab non sa ancora come due teorie si toccano."><span class="text-slate-400">vuoti</span><span class="stat-num" x-text="campoStats().vuoti"></span></div>
-            <div class="stat-row" title="Scoperte cristallizzate: claim sopravvissuti al confine epistemico (det=−1) o falsificate ed entrate nel cimitero (A5)."><span class="text-slate-400">scoperte</span><span class="stat-num" x-text="campoStats().scoperte"></span></div>
-            <div class="stat-row" title="Numero totale di cicli notturni eseguiti dall'agente per questo dominio. Ogni ciclo = 17 movements."><span class="text-slate-400">cicli</span><span class="stat-num" x-text="campoStats().cicli"></span></div>
+            <div class="stat-row" @mouseenter="showStatTip('teorie', $event)" @mouseleave="hideStatTip()"><span class="text-slate-400">teorie</span><span class="stat-num" x-text="campoStats().teorie"></span></div>
+            <div class="stat-row" @mouseenter="showStatTip('ponti', $event)" @mouseleave="hideStatTip()"><span class="text-slate-400">ponti</span><span class="stat-num" x-text="campoStats().ponti"></span></div>
+            <div class="stat-row" @mouseenter="showStatTip('vuoti', $event)" @mouseleave="hideStatTip()"><span class="text-slate-400">vuoti</span><span class="stat-num" x-text="campoStats().vuoti"></span></div>
+            <div class="stat-row" @mouseenter="showStatTip('scoperte', $event)" @mouseleave="hideStatTip()"><span class="text-slate-400">scoperte</span><span class="stat-num" x-text="campoStats().scoperte"></span></div>
+            <div class="stat-row" @mouseenter="showStatTip('cicli', $event)" @mouseleave="hideStatTip()"><span class="text-slate-400">cicli</span><span class="stat-num" x-text="campoStats().cicli"></span></div>
           </div>
 
           <!-- Freschezza -->
           <h4 class="text-xs uppercase tracking-wider text-slate-500 mt-5 mb-2">Freschezza</h4>
           <div class="space-y-0">
-            <div class="stat-row" title="Reports prodotti nelle ultime 24 ore."><span class="text-slate-400">oggi</span><span class="stat-num text-green-400" x-text="freshnessStats().today"></span></div>
-            <div class="stat-row" title="Reports prodotti negli ultimi 7 giorni."><span class="text-slate-400">fresche (7d)</span><span class="stat-num text-cyan-400" x-text="freshnessStats().fresh"></span></div>
-            <div class="stat-row" title="Tensioni 'ghost' ad alta urgenza: candidate non ancora processate dal ciclo. Pressione operativa sul lab."><span class="text-slate-400">ghost urgenti</span><span class="stat-num text-amber-400" x-text="freshnessStats().ghosts"></span></div>
-            <div class="stat-row cursor-pointer hover:bg-slate-800/40 -mx-1 px-1 rounded" @click="activeTab = 'agente'; reportsFilter = 'cimitero'" title="Apri il cimitero in Agente">
+            <div class="stat-row" @mouseenter="showStatTip('oggi', $event)" @mouseleave="hideStatTip()"><span class="text-slate-400">oggi</span><span class="stat-num text-green-400" x-text="freshnessStats().today"></span></div>
+            <div class="stat-row" @mouseenter="showStatTip('fresche', $event)" @mouseleave="hideStatTip()"><span class="text-slate-400">fresche (7d)</span><span class="stat-num text-cyan-400" x-text="freshnessStats().fresh"></span></div>
+            <div class="stat-row" @mouseenter="showStatTip('ghost', $event)" @mouseleave="hideStatTip()"><span class="text-slate-400">ghost urgenti</span><span class="stat-num text-amber-400" x-text="freshnessStats().ghosts"></span></div>
+            <div class="stat-row cursor-pointer hover:bg-slate-800/40 -mx-1 px-1 rounded" @click="activeTab = 'agente'; reportsFilter = 'cimitero'" @mouseenter="showStatTip('cimitero', $event)" @mouseleave="hideStatTip()">
               <span class="text-slate-400">🪦 cimitero</span>
               <span class="stat-num text-slate-300" x-text="cimiteroCount()"></span>
             </div>
@@ -570,11 +606,11 @@
           <!-- Legenda -->
           <h4 class="text-xs uppercase tracking-wider text-slate-500 mt-5 mb-2">Legenda</h4>
           <div class="space-y-1.5 text-xs text-slate-400">
-            <div class="flex items-center gap-2" title="Tensione: claim aperto che il lab vuole verificare. Pressione che spinge il prossimo ciclo."><i class="legend-dot" style="background:#22d3ee"></i> tensione</div>
-            <div class="flex items-center gap-2" title="Report: output di un ciclo agente. Contiene verdict + bicono + flag dal counter-pole."><i class="legend-dot" style="background:#a78bfa"></i> report</div>
-            <div class="flex items-center gap-2" title="Teoria: una delle 5 colonne pillar (Q/T/G/E/R)."><i class="legend-dot" style="background:#34d399"></i> teoria</div>
-            <div class="flex items-center gap-2" title="Ghost: tensione candidata, non ancora attivata. Lab decide se promuoverla o farla decadere."><i class="legend-dot" style="background:#fbbf24"></i> ghost</div>
-            <div class="flex items-center gap-2" title="Scoperta: claim cristallizzato (sopravvissuto al falsifier) o falsificato (entra nel cimitero, A5)."><i class="legend-dot" style="background:#f472b6"></i> scoperta</div>
+            <div class="flex items-center gap-2" @mouseenter="showStatTip('legend_tensione', $event)" @mouseleave="hideStatTip()"><i class="legend-dot" style="background:#22d3ee"></i> tensione</div>
+            <div class="flex items-center gap-2" @mouseenter="showStatTip('legend_report', $event)" @mouseleave="hideStatTip()"><i class="legend-dot" style="background:#a78bfa"></i> report</div>
+            <div class="flex items-center gap-2" @mouseenter="showStatTip('legend_teoria', $event)" @mouseleave="hideStatTip()"><i class="legend-dot" style="background:#34d399"></i> teoria</div>
+            <div class="flex items-center gap-2" @mouseenter="showStatTip('legend_ghost', $event)" @mouseleave="hideStatTip()"><i class="legend-dot" style="background:#fbbf24"></i> ghost</div>
+            <div class="flex items-center gap-2" @mouseenter="showStatTip('legend_scoperta', $event)" @mouseleave="hideStatTip()"><i class="legend-dot" style="background:#f472b6"></i> scoperta</div>
           </div>
 
           <!-- Label toggle -->
@@ -1044,6 +1080,19 @@
     <!-- Backdrop (cliccabile per chiudere drawer mobile) -->
     <div x-show="mobileDrawer" x-cloak class="mobile-backdrop active" @click="closeMobileDrawer()"></div>
 
+    <!-- Stat tooltip rich — pattern dal sito d-nd.com/ai-lab.
+         Single instance, contenuto popolato da showStatTip() su hover
+         dei .stat-row[data-tip]. -->
+    <div id="stat-tip" class="stat-tip"
+         @mouseenter="cancelStatTipHide()"
+         @mouseleave="hideStatTip()">
+      <div class="st-title" x-text="statTipContent?.title || ''"></div>
+      <div class="st-body" x-text="statTipContent?.body || ''"></div>
+      <template x-if="statTipContent?.logic">
+        <div class="st-logic" x-text="statTipContent.logic"></div>
+      </template>
+    </div>
+
     <!-- v4.3 — Sidebar peek tooltip (closed-state preview). Single instance. -->
     <div id="sidebar-tip" class="sidebar-tip">
       <template x-if="sidebarTipSide === 'left'">
@@ -1263,6 +1312,78 @@
   };
   const NODE_TYPE_DEFAULT = '#94a3b8';
 
+  // Stat tips rich — pattern dal sito (LabGraph.tsx statTipsRich).
+  // Adattato al contesto D-ND_LAB (lab portatile, dominio-agnostico).
+  // Logic e' una funzione che riceve lo state Alpine e ritorna stringa
+  // (per dati dinamici). Body e' descrizione fissa.
+  const STAT_TIPS = {
+    teorie: {
+      title: 'Teorie · pilastri',
+      body: 'I 5 pilastri Q/T/G/E/R nel modello D-ND. Per il dominio physics: Quantum, Topology, Geometry, Entropy, Representation. Per altri domini la tassonomia si adatta al seme.',
+      logic: (s) => `Nel grafo attuale: ${s.campoStats().teorie} teorie. Quando appariranno, saranno hub di gradi alti.`,
+    },
+    ponti: {
+      title: 'Ponti · cross-teoria',
+      body: 'Connessioni stabilite tra coppie di teorie. Ogni ponte e\' un fenomeno o una costante condivisa che unisce due pillar.',
+      logic: (s) => `Attualmente: ${s.campoStats().ponti} ponti. Esempi nel dominio physics: temperatura Hawking (T↔G), atomo idrogeno (Q↔E), eq. Dirac (Q↔R).`,
+    },
+    vuoti: {
+      title: 'Vuoti · ponti mancanti',
+      body: 'Pair senza ponte stabilito. Il cuore della ricerca: dove il lab non sa ancora come due teorie si toccano.',
+      logic: (s) => `Attualmente: ${s.campoStats().vuoti} vuoto/i. Il lab scava qui la maggior parte delle notti — dove c\'e\' silenzio cresce il segnale.`,
+    },
+    scoperte: {
+      title: 'Scoperte · misurate',
+      body: 'Claim cristallizzati: misurazioni con null baseline che hanno superato il falsifier (counter-pole). Non ipotesi — dati che hanno tenuto.',
+      logic: (s) => `Attualmente: ${s.campoStats().scoperte} scoperte. Principio C2 (dubbio strutturale): coincidenza numerica non e\' mai prova. Sopravvive solo cio\' che resiste al confine.`,
+    },
+    cicli: {
+      title: 'Cicli · pipeline autonoma',
+      body: 'Cicli notturni completati dal lab agente. Ogni ciclo esegue 17 movements: autopsy → build_field → agent → report_falsifier → ... → notify.',
+      logic: (s) => `Eseguiti finora: ${s.campoStats().cicli}. Cron 03:30 UTC sul VPS. Pipeline det=−1: producer + counter-pole + refiner.`,
+    },
+    oggi: {
+      title: 'Oggi · ultime 24h',
+      body: 'Reports prodotti nelle ultime 24 ore.',
+      logic: (s) => `Attualmente: ${s.freshnessStats().today}. Si azzera a mezzanotte UTC.`,
+    },
+    fresche: {
+      title: 'Fresche · ultimi 7 giorni',
+      body: 'Reports degli ultimi 7 giorni. Finestra scorrevole, ricalcolata ogni request.',
+      logic: (s) => `Attualmente: ${s.freshnessStats().fresh}. Dopo 7gg → archive sliding window.`,
+    },
+    ghost: {
+      title: 'Ghost urgenti · prossime scoperte',
+      body: 'Connessioni mature che il graph ha intuito ma non ancora cristallizzato. Tensioni candidate ad alta urgenza.',
+      logic: (s) => `Attualmente: ${s.freshnessStats().ghosts}. Alta urgenza = molte teorie condivise + nodi freschi + centrality alta. Le "prossime scoperte probabili".`,
+    },
+    cimitero: {
+      title: 'Cimitero · A5',
+      body: 'Reports falsificati o flagged dal counter-pole. Cio\' che non sopravvive non scompare — alimenta il prossimo ciclo come compost (A5 ciclo autopoietico).',
+      logic: (s) => `Attualmente: ${s.cimiteroCount()} reports. Click per aprirli filtrati nella tab Agente.`,
+    },
+    legend_tensione: {
+      title: 'Tensione',
+      body: 'Claim aperto che il lab vuole verificare. Pressione che spinge il prossimo ciclo. Color cyan.',
+    },
+    legend_report: {
+      title: 'Report',
+      body: 'Output di un ciclo agente: verdict + bicono (4 poli) + flag dal counter-pole. Color purple.',
+    },
+    legend_teoria: {
+      title: 'Teoria',
+      body: 'Una delle 5 colonne pillar (Q/T/G/E/R). Hub del grafo. Color emerald.',
+    },
+    legend_ghost: {
+      title: 'Ghost',
+      body: 'Tensione candidata, non ancora attivata. Lab decide se promuoverla o farla decadere. Color amber.',
+    },
+    legend_scoperta: {
+      title: 'Scoperta',
+      body: 'Claim cristallizzato (sopravvissuto) o falsificato (cimitero). Endpoint di un percorso di tensione. Color rose.',
+    },
+  };
+
   // v3 — tab definitions, mirrors LabGraph.tsx:216 activeTab values.
   // v4.11 — INCROCIO ora ospita il taxonomic graph.
   // UI fix #5 — Info tab al posto della card intro (operatore: "ruba spazio").
@@ -1345,6 +1466,10 @@
       // v4.3 — sidebar closed-state tooltip
       sidebarTipSide: null,                 // null | 'left' | 'right'
       _sidebarTipHideTimer: null,
+
+      // Stat tooltip rich (sidebar campo items hover)
+      statTipContent: null,
+      _statTipHideTimer: null,
 
       // v3.9 — context intro per la sezione descrittiva top
       contextIntro: { title: '', intro: '' },
@@ -1930,6 +2055,50 @@
           if (tip) tip.classList.remove('visible');
           this.sidebarTipSide = null;
         }, 120);
+      },
+
+      // Stat tooltip rich — pattern dal sito (HoverPopover via portale).
+      showStatTip(key, ev) {
+        if (window.matchMedia('(max-width: 1024px)').matches) return;
+        if (this._statTipHideTimer) { clearTimeout(this._statTipHideTimer); this._statTipHideTimer = null; }
+        const def = STAT_TIPS[key];
+        if (!def) return;
+        const logic = typeof def.logic === 'function' ? def.logic(this) : def.logic;
+        this.statTipContent = { title: def.title, body: def.body, logic };
+        const anchor = ev?.currentTarget;
+        if (!anchor) return;
+        this.$nextTick(() => {
+          const tip = document.getElementById('stat-tip');
+          if (!tip) return;
+          const rect = anchor.getBoundingClientRect();
+          // Position to the right of the anchor (sidebar campo a sx)
+          let x = rect.right + 10;
+          let y = rect.top;
+          // Clamp to viewport
+          const tipW = tip.offsetWidth || 300;
+          const tipH = tip.offsetHeight || 100;
+          if (x + tipW > window.innerWidth - 12) x = rect.left - tipW - 10;
+          if (y + tipH > window.innerHeight - 12) y = window.innerHeight - tipH - 12;
+          if (y < 12) y = 12;
+          tip.style.left = x + 'px';
+          tip.style.top = y + 'px';
+          tip.classList.add('visible');
+        });
+      },
+
+      hideStatTip() {
+        this._statTipHideTimer = setTimeout(() => {
+          const tip = document.getElementById('stat-tip');
+          if (tip) tip.classList.remove('visible');
+          this.statTipContent = null;
+        }, 120);
+      },
+
+      cancelStatTipHide() {
+        if (this._statTipHideTimer) {
+          clearTimeout(this._statTipHideTimer);
+          this._statTipHideTimer = null;
+        }
       },
 
       // Helper — truncate with ellipsis (used per i label nodi)
