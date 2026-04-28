@@ -35,9 +35,11 @@
     .markdown th, .markdown td { @apply border border-slate-700 px-2 py-1 text-sm; }
     .markdown th { @apply bg-slate-800; }
     /* Long unbreakable strings (URLs, file paths, hashes) must wrap inside
-       the viewer column. CSS Grid items default to min-width:auto which
-       lets the content push the track wider than 1fr — fix at item level. */
-    .markdown { min-width: 0; word-break: break-word; overflow-wrap: anywhere; }
+       the viewer column. NB: `overflow-wrap: anywhere` rompe carattere-per-
+       carattere quando colonna stretta (bug visibile in column da 30px).
+       Uso `break-word` che spezza solo a word boundary, eccetto per
+       URL/code che richiedono break-all. */
+    .markdown { min-width: 0; overflow-wrap: break-word; }
     .markdown a, .markdown code { word-break: break-all; }
     .markdown pre { white-space: pre; max-width: 100%; }
     .markdown img { max-width: 100%; height: auto; }
@@ -69,7 +71,7 @@
        Niente fallback statici (es. 'vuoto/pieno'): se il campo manca, il polo resta vuoto
        e segnalato come incompleto — la dashboard non inventa terminologia. */
     .bicono-card { background: linear-gradient(180deg, rgba(167,139,250,.06) 0%, rgba(34,211,238,.04) 100%); border: 1px solid rgba(167,139,250,.18); border-radius: 0.5rem; padding: 14px; overflow: hidden; }
-    .bicono-card, .bicono-card *, .bicono-card > .grid { min-width: 0; word-break: break-word; overflow-wrap: anywhere; }
+    .bicono-card, .bicono-card *, .bicono-card > .grid { min-width: 0; overflow-wrap: break-word; }
     .bicono-card svg.bicono-svg { word-break: normal; }                                /* SVG non deve break */
     .bicono-card h4 { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: #c4b5fd; margin: 0 0 8px; font-weight: 600; }
     .bicono-svg { width: 100%; height: auto; max-height: 180px; }
@@ -81,7 +83,7 @@
     .bicono-svg .label-tag { fill: #94a3b8; font: 9px ui-sans-serif, system-ui; text-transform: uppercase; letter-spacing: .04em; }
     .bicono-svg .pole-empty { stroke-dasharray: 4,3; opacity: .35; }
     /* Detail card values must wrap — selectedNode.label/verdict possono essere lunghi */
-    .detail-card, .detail-card * { min-width: 0; word-break: break-word; overflow-wrap: anywhere; }
+    .detail-card, .detail-card * { min-width: 0; overflow-wrap: break-word; }
     .selected-node-badge span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 200px; }
     .bicono-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(200px,100%),1fr)); gap: 8px; margin-top: 10px; font-size: 12px; min-width: 0; }
     .bicono-field { padding: 6px 8px; background: rgba(0,0,0,.2); border-left: 2px solid rgba(167,139,250,.4); border-radius: 4px; }
@@ -138,7 +140,7 @@
     /* Falsifier card (report viewer) — flag asimmetrici dal counter-pole.
        Color severity: high=rose, medium=amber, low=slate. */
     .falsifier-card { border: 1px solid rgba(251,113,133,.25); background: linear-gradient(180deg, rgba(251,113,133,.06) 0%, rgba(15,23,42,1) 100%); border-radius: 0.5rem; padding: 14px; margin-bottom: 14px; overflow: hidden; }
-    .falsifier-card, .falsifier-card * { min-width: 0; word-break: break-word; overflow-wrap: anywhere; }
+    .falsifier-card, .falsifier-card * { min-width: 0; overflow-wrap: break-word; }
     .falsifier-card.coherent { border-color: rgba(52,211,153,.3); background: linear-gradient(180deg, rgba(52,211,153,.06) 0%, rgba(15,23,42,1) 100%); }
     .falsifier-card.unverifiable { border-color: rgba(148,163,184,.3); background: linear-gradient(180deg, rgba(148,163,184,.06) 0%, rgba(15,23,42,1) 100%); }
     .falsifier-card h4 { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; margin: 0 0 6px; font-weight: 600; }
@@ -168,49 +170,21 @@
     .lab-grid.sidebar-right-closed { grid-template-columns: var(--sb-left-w, 260px) 1fr 40px; }
     .lab-grid.sidebar-left-closed.sidebar-right-closed { grid-template-columns: 40px 1fr 40px; }
 
-    /* UI fix #10+#14 — AGENTE pane fill viewport (operatore: "non e' tutta
-       larga e alta"). Catena heights:
-         lab-content height calc(100vh-24px) [flex col]
-         → agente-pane flex 1 [flex col]
-         → agente-grid flex 1 [grid] (height esplicita)
-         → agente-col height 100% (stretch grid row)
-       Ogni colonna ha overflow-y interno: list scroll + viewer scroll
-       indipendenti (operatore: "scroll indipendenti per non perdere
-       contenuti da confrontare"). */
+    /* AGENTE single-column layout (operatore: "spostiamo come nell'immagine 3").
+       Selector + viewer stack vertical. Selector flex-shrink 0,
+       viewer flex 1 con scroll interno. Niente piu' sub-grid. */
     .agente-pane {
       flex: 1;
       min-height: 0;
       display: flex;
       flex-direction: column;
     }
-    .agente-grid {
+    .agente-viewer {
       flex: 1;
-      display: grid;
-      grid-template-columns: 280px 1fr;
-      gap: 12px;
-      align-items: stretch;
-      min-height: 0;
-    }
-    .agente-col {
-      height: 100%;
       min-height: 0;
       overflow-y: auto;
       overflow-x: hidden;
       scrollbar-width: thin;
-    }
-    .agente-resize { position: relative; }
-    @media (max-width: 1024px) {
-      /* Mobile: stack list (auto height) + viewer (fills resto, scroll interno).
-         agente-pane mantiene flex:1 dal layout root → l'altezza e' bounded
-         dal lab-content. Page non scrolla. */
-      .agente-grid {
-        grid-template-columns: 1fr !important;
-        grid-template-rows: auto 1fr !important;   /* list auto, viewer fills */
-      }
-      .agente-resize { display: none; }
-      .agente-col { height: auto; }
-      .agente-grid > aside.agente-col { max-height: 35vh; }   /* list cap */
-      .agente-grid > section.agente-col { min-height: 0; }    /* viewer fills row */
     }
 
     /* v4.1+ — Resize handles port-fedele dal sito (Shell3Col s3c-resizer).
@@ -687,73 +661,43 @@
           </div>
         </div>
 
-        <!-- TAB AGENTE — 2-col: reports list (sx) + viewer (dx). Layout fisso
-             280px + 1fr (rimosso resize bar interno per non avere "4 colonne"
-             visive con sidebar campo+dettaglio aperte). -->
+        <!-- TAB AGENTE — single column viewer (operatore: "spostiamo come
+             nell'immagine 3" = no piu' sub-grid interno).
+             Lista report → select dropdown compatto in alto (~60px), il
+             viewer occupa tutto il resto. Stesso pattern delle altre tab. -->
         <div x-show="activeTab === 'agente'" x-transition.opacity.duration.150ms class="agente-pane">
-          <div class="agente-grid">
 
-            <!-- Lista report (sx) — scroll proprio -->
-            <aside class="agente-col bg-slate-900 border border-slate-800 rounded-lg p-3">
-              <div class="flex items-center justify-between mb-2 px-1">
-                <h3 class="text-sm font-medium">Reports</h3>
-                <span class="text-xs text-slate-500" x-text="`${filteredReports().length}/${reports.length}`"></span>
-              </div>
-              <!-- v4.4/v4.7 — segmented filter: tutti / flagged / cimitero -->
-              <div class="flex items-center gap-1 bg-slate-950 rounded p-0.5 mb-2 text-[10px]">
-                <button @click="reportsFilter = 'all'"
-                        :class="reportsFilter === 'all' ? 'bg-slate-700 text-slate-100' : 'text-slate-400 hover:text-slate-200'"
-                        class="flex-1 px-2 py-1 rounded transition">Tutti</button>
-                <button @click="reportsFilter = 'flagged'"
-                        :class="reportsFilter === 'flagged' ? 'bg-rose-900/40 text-rose-200' : 'text-slate-400 hover:text-slate-200'"
-                        class="flex-1 px-2 py-1 rounded transition">⚠ Flagged</button>
-                <button @click="reportsFilter = 'cimitero'"
-                        :class="reportsFilter === 'cimitero' ? 'bg-slate-700/70 text-slate-100' : 'text-slate-400 hover:text-slate-200'"
-                        class="flex-1 px-2 py-1 rounded transition" title="Reports falsificati o flagged — A5 ciclo autopoietico">🪦 Cimitero</button>
-              </div>
-
-              <!-- v4.7 — info card quando il cimitero e' attivo -->
-              <template x-if="reportsFilter === 'cimitero'">
-                <div class="mb-2 p-2 bg-slate-800/40 border border-slate-700 rounded text-[10px] text-slate-400 italic">
-                  Il cimitero non perde — alimenta il prossimo ciclo (A5).
-                  Reports qui: verdict di falsificazione, falsifier coherent=false, o ≥1 flag dal counter-pole.
-                </div>
+          <!-- Selector + filter chips compatto -->
+          <div class="bg-slate-900 border border-slate-800 rounded-lg p-3 mb-2 flex items-center gap-2 flex-wrap" style="flex-shrink: 0">
+            <span class="text-xs text-slate-400 font-medium">Report:</span>
+            <select x-model="activeReportFilename"
+                    @change="activeReportFilename ? openReport(activeReportFilename) : (activeReport = null)"
+                    class="flex-1 min-w-[200px] bg-slate-950 border border-slate-700 rounded px-2 py-1.5 text-sm text-slate-200">
+              <option value="">— scegli un report —</option>
+              <template x-for="r in filteredReports()" :key="r.filename">
+                <option :value="r.filename" x-text="`${(r.title || r.filename).slice(0,80)}${r.n_flags > 0 ? ' ⚠'+r.n_flags : ''}${r.falsifier_coherent === true ? ' ✓' : ''}${isCimitero(r) ? ' 🪦' : ''}`"></option>
               </template>
-              <ul class="space-y-1">
-                <template x-for="r in filteredReports()" :key="r.filename">
-                  <li>
-                    <button @click="openReport(r.filename)"
-                            :class="activeReport?.filename === r.filename ? 'bg-purple-900/30 border-purple-700' : 'border-transparent hover:bg-slate-800'"
-                            class="w-full text-left rounded p-2 transition border">
-                      <div class="flex items-start justify-between gap-1.5">
-                        <div class="text-xs font-medium text-slate-200 truncate flex-1" x-text="r.title"></div>
-                        <template x-if="isCimitero(r)">
-                          <span class="text-[10px] whitespace-nowrap" title="Nel cimitero">🪦</span>
-                        </template>
-                        <template x-if="r.n_flags > 0">
-                          <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-rose-900/40 text-rose-300 whitespace-nowrap" :title="`${r.n_flags} flag dal falsifier`" x-text="`⚠ ${r.n_flags}`"></span>
-                        </template>
-                        <template x-if="r.falsifier_coherent === true">
-                          <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-emerald-900/40 text-emerald-300 whitespace-nowrap" title="Falsifier: coerente">✓</span>
-                        </template>
-                      </div>
-                      <div class="text-[10px] text-slate-500 mt-0.5 font-mono" x-text="formatDate(r.mtime)"></div>
-                      <div class="text-[10px] text-slate-500 mt-0.5 line-clamp-2" x-text="r.verdict || ''"></div>
-                    </button>
-                  </li>
-                </template>
-                <template x-if="filteredReports().length === 0">
-                  <li class="text-slate-500 text-xs py-4 px-2 italic" x-text="reports.length === 0 ? 'No reports yet — run your first cycle.' : 'Nessun report matching il filtro.'"></li>
-                </template>
-              </ul>
-            </aside>
+            </select>
+            <span class="text-xs text-slate-500 font-mono whitespace-nowrap" x-text="`${filteredReports().length}/${reports.length}`"></span>
+            <div class="flex items-center gap-0.5 bg-slate-950 rounded p-0.5 text-[10px]">
+              <button @click="reportsFilter = 'all'"
+                      :class="reportsFilter === 'all' ? 'bg-slate-700 text-slate-100' : 'text-slate-400 hover:text-slate-200'"
+                      class="px-2 py-1 rounded transition" title="Tutti">Tutti</button>
+              <button @click="reportsFilter = 'flagged'"
+                      :class="reportsFilter === 'flagged' ? 'bg-rose-900/40 text-rose-200' : 'text-slate-400 hover:text-slate-200'"
+                      class="px-2 py-1 rounded transition" title="Flagged dal falsifier">⚠</button>
+              <button @click="reportsFilter = 'cimitero'"
+                      :class="reportsFilter === 'cimitero' ? 'bg-slate-700/70 text-slate-100' : 'text-slate-400 hover:text-slate-200'"
+                      class="px-2 py-1 rounded transition" title="Cimitero — A5 ciclo autopoietico">🪦</button>
+            </div>
+          </div>
 
-            <!-- Viewer (dx) — scroll proprio -->
-            <section class="agente-col bg-slate-900 border border-slate-800 rounded-lg p-5">
+          <!-- Viewer single column — riempie il resto, scroll interno -->
+          <section class="agente-viewer bg-slate-900 border border-slate-800 rounded-lg p-5">
               <template x-if="!activeReport">
                 <div class="h-full flex flex-col items-center justify-center text-center text-slate-500 py-12">
                   <div class="text-3xl text-slate-700 mb-3">⊙</div>
-                  <div class="text-sm">Seleziona un report dalla lista a sinistra</div>
+                  <div class="text-sm">Seleziona un report dal menu in alto</div>
                   <div class="text-xs text-slate-600 mt-2 italic">Bicono · falsifier · ToC + markdown content</div>
                 </div>
               </template>
@@ -864,7 +808,6 @@
               </template>
             </section>
 
-          </div>
         </div>
 
         <!-- TAB TASSONOMIA + TRAJECTORY — due lenti sullo stesso 'grafo d'insieme' -->
@@ -1359,6 +1302,8 @@
 
       // v4.4/v4.7 — reports filter mode
       reportsFilter: 'all',   // 'all' | 'flagged' | 'cimitero'
+      // Restructure: select dropdown invece di list — sync con activeReport
+      activeReportFilename: '',
 
       // Falsifier — fetched lazily quando il report viene aperto
       activeFalsifier: null,
@@ -2454,12 +2399,7 @@
       async openReport(filename) {
         const r = await fetch(`/api/domains/${this.activeDomain}/reports/${encodeURIComponent(filename)}`).then(r => r.json());
         this.activeReport = r;
-        // UI fix #7 — quando si apre un report nel tab AGENTE, auto-collapse
-        // sidebar DETTAGLIO (e' ridondante: il viewer mostra gia' tutto).
-        // Evita il problema "4 colonne". L'utente puo' riaprirla manualmente.
-        if (this.activeTab === 'agente' && window.matchMedia('(min-width: 1025px)').matches) {
-          this.sidebarRightOpen = false;
-        }
+        this.activeReportFilename = filename;
         // Fetch falsifier output (may not exist for older reports)
         this.activeFalsifier = null;
         try {
