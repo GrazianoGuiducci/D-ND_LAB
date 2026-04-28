@@ -55,6 +55,27 @@
     .bicono-field.empty { opacity: .4; border-left-color: rgba(148,163,184,.3); }
     .bicono-field.empty .value::after { content: '— assente nel report'; color: #64748b; font-style: italic; }
 
+    /* Falsifier card (report viewer) — flag asimmetrici dal counter-pole.
+       Color severity: high=rose, medium=amber, low=slate. */
+    .falsifier-card { border: 1px solid rgba(251,113,133,.25); background: linear-gradient(180deg, rgba(251,113,133,.06) 0%, rgba(15,23,42,1) 100%); border-radius: 0.5rem; padding: 14px; margin-bottom: 14px; }
+    .falsifier-card.coherent { border-color: rgba(52,211,153,.3); background: linear-gradient(180deg, rgba(52,211,153,.06) 0%, rgba(15,23,42,1) 100%); }
+    .falsifier-card.unverifiable { border-color: rgba(148,163,184,.3); background: linear-gradient(180deg, rgba(148,163,184,.06) 0%, rgba(15,23,42,1) 100%); }
+    .falsifier-card h4 { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; margin: 0 0 6px; font-weight: 600; }
+    .falsifier-card.coherent h4 { color: #6ee7b7; }
+    .falsifier-card.unverifiable h4 { color: #cbd5e1; }
+    .falsifier-card:not(.coherent):not(.unverifiable) h4 { color: #fda4af; }
+    .falsifier-flag { padding: 8px 10px; background: rgba(0,0,0,.22); border-left: 2px solid; border-radius: 4px; margin-top: 8px; font-size: 12px; }
+    .falsifier-flag.high   { border-left-color: #fb7185; }
+    .falsifier-flag.medium { border-left-color: #fbbf24; }
+    .falsifier-flag.low    { border-left-color: #94a3b8; }
+    .falsifier-flag .lens-label { display: inline-block; padding: 1px 6px; font-size: 10px; font-family: ui-monospace, monospace; background: rgba(255,255,255,.06); color: #cbd5e1; border-radius: 3px; margin-right: 6px; }
+    .falsifier-flag .severity-label { display: inline-block; padding: 1px 6px; font-size: 10px; font-family: ui-monospace, monospace; border-radius: 3px; }
+    .falsifier-flag.high   .severity-label { background: rgba(251,113,133,.2); color: #fda4af; }
+    .falsifier-flag.medium .severity-label { background: rgba(251,191,36,.18); color: #fcd34d; }
+    .falsifier-flag.low    .severity-label { background: rgba(148,163,184,.18); color: #cbd5e1; }
+    .falsifier-flag .field-label { color: #94a3b8; font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; margin-top: 4px; }
+    .falsifier-flag .field-value { color: #d8dbe7; font-size: 12px; }
+
     /* v3 — Shell 3-col layout (CAMPO sx · content · DETTAGLIO dx).
        Riprende il pattern di /opt/d-nd_com/components/Shell3Col.tsx in
        vanilla CSS grid, senza React. Le sidebar collassano a 40px tramite
@@ -430,6 +451,34 @@
                     <button @click="activeReport = null" class="text-xs text-slate-500 hover:text-slate-300">close</button>
                   </div>
 
+                  <!-- Falsifier card — flag dal counter-pole, mostrato sopra il bicono -->
+                  <template x-if="activeFalsifier && activeFalsifier.present">
+                    <div class="falsifier-card"
+                         :class="activeFalsifier.coherent === true ? 'coherent' : (activeFalsifier.coherent === null ? 'unverifiable' : '')">
+                      <h4>
+                        <span x-show="activeFalsifier.coherent === true">✓ Falsifier — coerente</span>
+                        <span x-show="activeFalsifier.coherent === null">∅ Falsifier — non verificabile</span>
+                        <span x-show="activeFalsifier.coherent === false" x-text="`⚠ Falsifier — ${activeFalsifier.flags.length} flag`"></span>
+                      </h4>
+                      <p class="text-xs text-slate-300 italic mb-1" x-text="activeFalsifier.summary"></p>
+                      <div class="text-[10px] text-slate-500 font-mono" x-text="`model: ${activeFalsifier.model || '?'}`"></div>
+                      <template x-for="(flag, i) in activeFalsifier.flags" :key="i">
+                        <div class="falsifier-flag" :class="flag.severity">
+                          <div class="mb-1">
+                            <span class="lens-label" x-text="`L${flag.lens}`"></span>
+                            <span class="severity-label" x-text="flag.severity"></span>
+                          </div>
+                          <div class="field-label">claim</div>
+                          <div class="field-value" x-text="flag.claim"></div>
+                          <div class="field-label">evidence</div>
+                          <div class="field-value" x-text="flag.evidence"></div>
+                          <div class="field-label">suggestion</div>
+                          <div class="field-value" x-text="flag.suggestion"></div>
+                        </div>
+                      </template>
+                    </div>
+                  </template>
+
                   <template x-if="activeReport.bicono">
                     <div class="bicono-card mb-4">
                       <h4>Bicono della scoperta</h4>
@@ -701,6 +750,9 @@
       // v3.5 — bicono gallery state
       biconi: [],
       biconoOnlyComplete: false,
+
+      // Falsifier — fetched lazily quando il report viene aperto
+      activeFalsifier: null,
 
       // v3.10 — mobile drawer state. null | 'left' | 'right'.
       mobileDrawer: null,
@@ -1124,6 +1176,14 @@
       async openReport(filename) {
         const r = await fetch(`/api/domains/${this.activeDomain}/reports/${encodeURIComponent(filename)}`).then(r => r.json());
         this.activeReport = r;
+        // Fetch falsifier output (may not exist for older reports)
+        this.activeFalsifier = null;
+        try {
+          const f = await fetch(`/api/domains/${this.activeDomain}/falsifier/${encodeURIComponent(filename)}`).then(r => r.json());
+          this.activeFalsifier = f;
+        } catch (e) {
+          // fail silently — older reports won't have falsifier output
+        }
       },
 
       renderMarkdown(text) {
