@@ -1,0 +1,28 @@
+[Unit]
+Description=D-ND_LAB dashboard (FastAPI + uvicorn)
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/D-ND_LAB
+# Note: NOT using EnvironmentFile=/opt/D-ND_LAB/.env because systemd's
+# EnvironmentFile= always overrides Environment= regardless of order
+# (documented behavior). The .env file targets Docker (/data path);
+# this systemd service runs on host and needs /opt/D-ND_LAB/data.
+# In DEMO_MODE the dashboard is read-only — POST endpoints (run_cycle,
+# chat, inject_tension) are blocked, so LLM_API_KEY is not needed.
+Environment="PATH=/opt/D-ND_LAB/.venv/bin:/usr/local/bin:/usr/bin:/bin"
+Environment="LAB_DATA_DIR=/opt/D-ND_LAB/data"
+Environment="DASHBOARD_HOST=127.0.0.1"
+Environment="DASHBOARD_PORT=5050"
+Environment="DASHBOARD_DEMO_MODE=true"
+ExecStart=/opt/D-ND_LAB/.venv/bin/python -m core.api
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

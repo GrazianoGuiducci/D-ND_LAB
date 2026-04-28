@@ -1,0 +1,38 @@
+# Nginx config snippet to expose the D-ND_LAB dashboard at
+# https://your-domain.com/dashboard/ as a public read-only demo.
+#
+# Add these two location blocks to your existing server { ... }
+# section (BEFORE the catch-all `location /` so the proxy wins).
+# Reload nginx after: nginx -t && systemctl reload nginx.
+#
+# WebSocket support is enabled (Connection upgrade headers) so
+# /api/cycles/<id>/log streams real-time cycle logs. Long timeouts
+# (1800s) accommodate slow cycle runs.
+
+# D-ND_LAB dashboard — frontend (single-page HTML) + static assets
+location /dashboard/ {
+    proxy_pass http://127.0.0.1:5050/;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+    proxy_read_timeout 1800s;
+    proxy_send_timeout 1800s;
+}
+
+# D-ND_LAB API — REST + WebSocket
+location /api/ {
+    proxy_pass http://127.0.0.1:5050/api/;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+    proxy_read_timeout 1800s;
+    proxy_send_timeout 1800s;
+}
