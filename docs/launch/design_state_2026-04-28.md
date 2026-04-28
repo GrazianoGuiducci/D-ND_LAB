@@ -97,6 +97,8 @@
 ### BICONO
 - [ ] Filter per pair non implementato (richiede tag pair nei report → escalation operatore se necessario)
 - [ ] Bicono trajectory (come evolve nel tempo) non implementato
+- [ ] **Bicono attuale è label-visualizer, non logic-visualizer** — operatore (28/04 sera): "il diagramma del bicono fornisce la logica emergente del ciclo? No". Diagramma SVG strutturalmente invariante (3 cerchi + arco identici per ogni report), solo le 4 label cambiano. Per renderlo emergente serve refactor dinamico: cerchi proporzionali al peso semantico, arc adattivo all'invariante, link visivi alle tensioni d'origine.
+- [ ] **Per-domain UI variants**: operatore: "ogni dominio dovrebbe avere una UI studiata per il tipo di esperimento". Quando portiamo un nuovo dominio (operativo, finanziario, ecc.), il bicono e l'intera UI dei tab si specializzano per il tipo di esperimento — non un visualizer universale, ma componenti per-dominio configurabili via `domains/<d>/ui.json` o equivalente.
 
 ### TASSONOMIA
 - [ ] In flat mode (no teoria), il grafo è banale (solo 2 gruppi) — utile solo quando teoria nodes appariranno

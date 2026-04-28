@@ -65,6 +65,45 @@
     body, .markdown p, .markdown li { color: rgb(220 222 230); }
     h1, h2, h3, h4, h5, h6 { color: rgb(240 240 245); }
 
+    /* Custom <select> per matching tema dark — operatore: "il selettore
+       dei Reports e' basilare e non coerente con lo stile". Default browser
+       con bianco/system arrow rotto. Pattern: appearance:none + custom SVG
+       chevron + dark bg + focus ring purple. */
+    select {
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      background-color: rgb(var(--site-elev-1));
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path fill='%23a78bfa' d='M3 4.5l3 3 3-3' stroke='%23a78bfa' stroke-width='1.2' stroke-linecap='round' stroke-linejoin='round' fill='none'/></svg>");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      background-size: 12px;
+      padding-right: 32px !important;
+      border: 1px solid rgb(var(--site-border-2));
+      color: rgb(var(--site-text-body));
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      cursor: pointer;
+      transition: border-color 120ms, box-shadow 120ms;
+    }
+    select:hover {
+      border-color: rgb(var(--neon-purple) / 0.5);
+    }
+    select:focus {
+      outline: none;
+      border-color: rgb(var(--neon-purple));
+      box-shadow: 0 0 0 3px rgb(var(--neon-purple) / 0.18);
+    }
+    select option {
+      background-color: rgb(var(--site-elev-1));
+      color: rgb(var(--site-text-body));
+      padding: 8px 12px;
+    }
+    select option:hover, select option:checked {
+      background-color: rgb(var(--neon-purple) / 0.18);
+    }
+    /* Disabled state se serve */
+    select:disabled { opacity: 0.5; cursor: not-allowed; }
+
     /* Themed scrollbars (operatore: "scrollbar dovrebbe essere del colore
        del tema"). Pattern dark slate per tutto il documento. */
     * { scrollbar-color: rgba(148,163,184,.25) rgba(15,23,42,.4); scrollbar-width: thin; }
