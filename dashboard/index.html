@@ -562,13 +562,30 @@
       renderGraph() {
         const container = document.getElementById('graph-viz');
         if (!container || !this.graphData) return;
-        // Destroy previous instance if present
         if (this.cy) { try { this.cy.destroy(); } catch (e) {} this.cy = null; }
+
+        // Compute theory letter (Q/T/G/E/R) when type=teoria. Defensive: works
+        // anche se l'id non e' nel formato atteso (preleva prima lettera maiuscola).
+        const teoriaLetter = (n) => {
+          const src = (n.id || n.label || '').toString();
+          const m = src.match(/[QTGER]/);
+          return m ? m[0] : (src[0] || '?').toUpperCase();
+        };
+
         const nodes = (this.graphData.graph?.nodes || []).map(n => ({
           data: {
             id: n.id,
-            label: (n.label || n.id || '').slice(0, 60),
+            // Truncate 30 chars + ellipsis (era 60 — leggibilita' nel cluster)
+            label: this._truncate(n.label || n.id || '', 30),
             type: n.type || 'unknown',
+            // Theory letter when applicable, otherwise empty (controlled by selector)
+            letter: n.type === 'teoria' ? teoriaLetter(n) : '',
+            // Intensity-driven sizing: tensione ad alta intensita' = nodo piu' grande.
+            // Range: 12 (low) → 24 (high). Default 14 quando non specificato.
+            size: n.type === 'teoria' ? 42
+                : n.type === 'tensione' ? Math.round(12 + (n.intensity || 0) * 12)
+                : n.type === 'report' ? 14
+                : 14,
             full: n,
           },
         }));
@@ -588,6 +605,7 @@
           container,
           elements: { nodes, edges },
           style: [
+            // Default node style — label as bottom caption (truncated 30)
             {
               selector: 'node',
               style: {
@@ -599,20 +617,42 @@
                 'font-size': 9,
                 'font-family': 'ui-monospace, monospace',
                 'text-wrap': 'wrap',
-                'text-max-width': 120,
+                'text-max-width': 110,
                 'text-valign': 'bottom',
                 'text-margin-y': 4,
-                'width': 14,
-                'height': 14,
+                'text-opacity': this.showAllLabels ? 1 : 0,
+                'width':  'data(size)',
+                'height': 'data(size)',
               },
+            },
+            // Theory nodes — cerchio grande con LETTERA centrale (Q/T/G/E/R)
+            // Pattern dal sito d-nd.com/ai-lab dove le teorie sono i 5 nodi-pilastro.
+            {
+              selector: 'node[type = "teoria"]',
+              style: {
+                'label': 'data(letter)',
+                'color': '#ffffff',
+                'font-size': 18,
+                'font-weight': 700,
+                'font-family': 'ui-sans-serif, system-ui',
+                'text-valign': 'center',
+                'text-halign': 'center',
+                'text-margin-y': 0,
+                'text-opacity': 1,
+                'border-width': 2,
+                'border-color': 'rgba(255,255,255,.35)',
+              },
+            },
+            {
+              selector: 'node:hover',
+              style: { 'text-opacity': 1 },
             },
             {
               selector: 'node:selected',
               style: {
                 'border-color': '#a78bfa',
                 'border-width': 3,
-                'width': 20,
-                'height': 20,
+                'text-opacity': 1,
               },
             },
             {
@@ -628,18 +668,16 @@
             },
             {
               selector: 'edge:selected',
-              style: {
-                'line-color': '#a78bfa',
-                'width': 2,
-              },
+              style: { 'line-color': '#a78bfa', 'width': 2 },
             },
           ],
           layout: {
             name: 'cose',
             animate: false,
-            nodeRepulsion: 8000,
-            idealEdgeLength: 80,
-            padding: 30,
+            nodeRepulsion: 9000,
+            idealEdgeLength: 90,
+            padding: 40,
+            fit: true,                 // auto-fit on initial layout
           },
           minZoom: 0.3,
           maxZoom: 3,
@@ -649,13 +687,24 @@
         this.cy.on('tap', 'node', (evt) => {
           const node = evt.target;
           this.selectedNode = node.data('full');
+          this.sidebarRightOpen = true;       // ensure detail sidebar is visible
           // open chat panel so the user sees the context badge
           this.chatOpen = true;
         });
         this.cy.on('tap', (evt) => {
-          // tap on background (not a node) — clear selection
           if (evt.target === this.cy) this.selectedNode = null;
         });
+        // Hover: show label even when "Mostra tutti i nomi" is off
+        this.cy.on('mouseover', 'node', (evt) => evt.target.style('text-opacity', 1));
+        this.cy.on('mouseout', 'node', (evt) => {
+          if (!evt.target.selected()) evt.target.style('text-opacity', this.showAllLabels ? 1 : 0);
+        });
+      },
+
+      // Helper — truncate with ellipsis (used per i label nodi)
+      _truncate(s, n) {
+        s = String(s || '');
+        return s.length > n ? s.slice(0, n - 1) + '…' : s;
       },
 
       resetGraphLayout() {
@@ -714,26 +763,25 @@
         }
       },
 
-      // v3 — toggle "Mostra tutti i nomi" — quando off, label visibili solo su hover/select
+      // v3 — toggle "Mostra tutti i nomi". Hover handlers sono gia' wired in
+      // renderGraph; qui basta forzare lo style pass su tutti i nodi non-teoria.
       updateGraphLabels() {
         if (!this.cy) return;
         const opacity = this.showAllLabels ? 1 : 0;
-        this.cy.style()
-          .selector('node').style({ 'text-opacity': opacity })
-          .selector('node:selected').style({ 'text-opacity': 1 })
-          .update();
-        // hover style — show label on mouseover anche con toggle off
-        this.cy.on('mouseover', 'node', (evt) => evt.target.style('text-opacity', 1));
-        this.cy.on('mouseout', 'node', (evt) => {
-          if (!evt.target.selected()) evt.target.style('text-opacity', this.showAllLabels ? 1 : 0);
+        this.cy.nodes().forEach((n) => {
+          if (n.data('type') !== 'teoria' && !n.selected()) {
+            n.style('text-opacity', opacity);
+          }
         });
       },
 
       // v3 — actions sulla card dettaglio
       selectedNodeFilename() {
         if (!this.selectedNode) return null;
-        // Il build_graph movement marca i report con il filename in `id` o in `data.filename`
-        return this.selectedNode.filename || (this.selectedNode.id?.startsWith('agent_') ? this.selectedNode.id + '.md' : null);
+        // build_graph emette `file` per i report; fallback su `filename` se mai cambiasse
+        return this.selectedNode.file
+            || this.selectedNode.filename
+            || (this.selectedNode.id?.startsWith('agent_') ? this.selectedNode.id + '.md' : null);
       },
 
       openReportFromNode() {
