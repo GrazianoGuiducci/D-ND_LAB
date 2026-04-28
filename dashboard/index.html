@@ -28,8 +28,7 @@
     .scroll-fade { mask-image: linear-gradient(to bottom, black 80%, transparent 100%); }
     @keyframes pulse-cycle { 0%,100% { opacity: 1 } 50% { opacity: 0.4 } }
     .running { animation: pulse-cycle 1.5s ease-in-out infinite; }
-    /* Graph viz hero */
-    #graph-viz { width: 100%; height: 480px; background: #0d0e14; border-radius: 0.5rem; }
+    /* Graph viz hero — moved into tab GRAFO in v3 */
     .graph-legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 11px; color: #94a3b8; padding: 8px 0; }
     .graph-legend span { display: inline-flex; align-items: center; gap: 6px; }
     .graph-legend i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
@@ -55,6 +54,49 @@
     .bicono-field .value { color: #d8dbe7; }
     .bicono-field.empty { opacity: .4; border-left-color: rgba(148,163,184,.3); }
     .bicono-field.empty .value::after { content: '— assente nel report'; color: #64748b; font-style: italic; }
+
+    /* v3 — Shell 3-col layout (CAMPO sx · content · DETTAGLIO dx).
+       Riprende il pattern di /opt/d-nd_com/components/Shell3Col.tsx in
+       vanilla CSS grid, senza React. Le sidebar collassano a 40px tramite
+       classi sidebar-left-closed / sidebar-right-closed, gestite dall'Alpine state. */
+    .lab-grid { display: grid; grid-template-columns: 260px 1fr 320px; gap: 16px; align-items: start; }
+    .lab-grid.sidebar-left-closed { grid-template-columns: 40px 1fr 320px; }
+    .lab-grid.sidebar-right-closed { grid-template-columns: 260px 1fr 40px; }
+    .lab-grid.sidebar-left-closed.sidebar-right-closed { grid-template-columns: 40px 1fr 40px; }
+    @media (max-width: 1024px) { .lab-grid { grid-template-columns: 1fr; } }
+    .lab-sidebar { background: rgb(15 23 42); border: 1px solid rgb(30 41 59); border-radius: 0.5rem; padding: 14px; position: relative; min-height: 200px; }
+    .lab-sidebar.collapsed { padding: 8px 4px; min-height: auto; }
+    .sidebar-toggle { position: absolute; top: 8px; background: none; border: 0; color: rgb(100 116 139); cursor: pointer; font-size: 12px; padding: 2px 6px; line-height: 1; }
+    .lab-sidebar-left .sidebar-toggle { right: 6px; }
+    .lab-sidebar-right .sidebar-toggle { left: 6px; }
+    .sidebar-toggle:hover { color: #cbd5e1; }
+    .stat-row { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1px solid rgb(30 41 59 / 0.5); padding: 4px 0; font-size: 13px; }
+    .stat-row .stat-num { font-family: ui-monospace, monospace; color: rgb(34 211 238); font-size: 13px; }
+    .legend-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+
+    /* Tab bar */
+    .lab-tabs { display: flex; align-items: center; gap: 0; border-bottom: 1px solid rgb(30 41 59); overflow-x: auto; }
+    .lab-tab { padding: 0.6rem 1.2rem; font-size: 0.875rem; font-weight: 500; border-bottom: 2px solid transparent; transition: all 0.15s; white-space: nowrap; color: #94a3b8; background: none; border-left: 0; border-right: 0; border-top: 0; cursor: pointer; }
+    .lab-tab:hover { color: #cbd5e1; }
+    .lab-tab.active { color: #c4b5fd; border-bottom-color: #a78bfa; }
+    .lab-tab .tab-icon { display: inline-block; margin-right: 6px; opacity: .7; }
+
+    /* Chips (sidebar dettaglio) */
+    .chip { display: inline-block; padding: 1px 7px; font-size: 10px; font-family: ui-monospace, monospace; background: rgba(167,139,250,.18); color: #c4b5fd; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.04em; }
+    .chip-type-tensione { background: rgba(34,211,238,.18); color: #67e8f9; }
+    .chip-type-report { background: rgba(167,139,250,.18); color: #c4b5fd; }
+    .chip-type-teoria { background: rgba(52,211,153,.18); color: #6ee7b7; }
+    .chip-type-ghost { background: rgba(251,191,36,.18); color: #fcd34d; }
+    .chip-type-scoperta { background: rgba(244,114,182,.18); color: #f9a8d4; }
+    .chip-maturity { background: rgba(34,211,238,.18); color: #67e8f9; }
+    .chip-date { background: rgba(148,163,184,.18); color: #cbd5e1; text-transform: none; letter-spacing: 0; }
+    .detail-card { padding: 10px; background: rgba(0,0,0,.22); border-radius: 6px; border: 1px solid rgba(148,163,184,.12); }
+    .detail-action { display: block; width: 100%; text-align: left; font-size: 12px; padding: 6px 10px; border-radius: 4px; background: rgb(30 41 59); transition: background 0.15s; cursor: pointer; border: 0; }
+    .detail-action:hover { background: rgb(51 65 85); }
+
+    /* Tab GRAFO container — prima era inline nel dashboard, ora dentro tab pane.
+       Resize a viewport visibile per evitare clip nei layout ristretti. */
+    #graph-viz { width: 100%; height: 540px; background: #0d0e14; border-radius: 0.5rem; }
   </style>
 </head>
 <body class="bg-slate-950 text-slate-200 min-h-screen" x-data="dashboard()" x-init="init()">
@@ -104,156 +146,243 @@
     </div>
   </main>
 
-  <!-- DOMAIN: graph hero + seed + reports + cycle runner + chat -->
-  <main x-show="view === 'domain' && activeDomain" class="max-w-7xl mx-auto px-4 py-6 space-y-6">
+  <!-- DOMAIN: 3-col layout (CAMPO sx · tabs/content · DETTAGLIO dx) -->
+  <main x-show="view === 'domain' && activeDomain" class="max-w-7xl mx-auto px-4 py-4 space-y-4">
 
-    <!-- Graph hero — knowledge map of the domain -->
-    <section class="bg-slate-900 border border-slate-800 rounded-lg p-4">
-      <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
-        <h2 class="text-lg font-medium flex items-center gap-2">
-          <span>Knowledge graph</span>
-          <span class="text-xs text-slate-500 font-mono" x-show="graphStats.n_nodes !== undefined" x-text="`${graphStats.n_nodes ?? 0} nodes · ${graphStats.n_edges ?? 0} edges`"></span>
-        </h2>
-        <div class="flex items-center gap-2">
-          <template x-if="selectedNode">
-            <span class="selected-node-badge">
-              <span x-text="`◉ ${selectedNode.label || selectedNode.id}`"></span>
-              <button @click="clearSelection()" title="Deseleziona">×</button>
-            </span>
-          </template>
-          <button @click="resetGraphLayout()" class="text-xs px-2 py-1 rounded bg-slate-800 hover:bg-slate-700">↻ relayout</button>
-          <button @click="reloadGraph()" class="text-xs text-slate-500 hover:text-slate-300">refresh</button>
-        </div>
-      </div>
-      <div id="graph-viz"></div>
-      <div class="graph-legend">
-        <span><i style="background:#22d3ee"></i> tensione</span>
-        <span><i style="background:#a78bfa"></i> report</span>
-        <span><i style="background:#34d399"></i> teoria</span>
-        <span><i style="background:#fbbf24"></i> ghost</span>
-        <span><i style="background:#f472b6"></i> scoperta</span>
-        <span class="text-slate-500 ml-auto italic">Click su un nodo per fare domande contestuali nella chat</span>
-      </div>
-    </section>
-
-    <div class="grid lg:grid-cols-3 gap-6">
-    <!-- Left: seed view -->
-    <section class="lg:col-span-1 bg-slate-900 border border-slate-800 rounded-lg p-5">
-      <h2 class="text-lg font-medium mb-3 flex items-center justify-between">
-        <span>Seed</span>
-        <button @click="reloadSeed()" class="text-xs text-slate-500 hover:text-slate-300">↻ refresh</button>
-      </h2>
-      <div class="space-y-2 text-sm">
-        <div><span class="text-slate-500">piano:</span> <span class="font-mono text-cyan-400" x-text="seed.piano ?? '?'"></span></div>
-        <div><span class="text-slate-500">direction:</span> <span class="text-slate-300 italic" x-text="seed.direzione || '—'"></span></div>
-      </div>
-
-      <h3 class="text-sm text-slate-400 mt-5 mb-2">Active tensions</h3>
-      <div class="space-y-2">
-        <template x-for="t in (seed.tensioni || []).slice(0, 12)" :key="t.id">
-          <div class="text-xs">
-            <div class="flex items-center justify-between font-mono mb-0.5">
-              <span class="text-slate-300" x-text="t.id"></span>
-              <span class="text-cyan-400" x-text="(t.intensità ?? t.intensita ?? '?')"></span>
-            </div>
-            <div class="bg-slate-800 rounded h-1 overflow-hidden">
-              <div class="bg-purple-500 h-full" :style="`width: ${((t.intensità ?? t.intensita ?? 0) * 100)}%`"></div>
-            </div>
-            <p class="text-slate-400 mt-1 line-clamp-2" x-text="t.claim"></p>
-          </div>
-        </template>
-      </div>
-
-      <button @click="showRunModal = true" class="w-full mt-5 px-4 py-2 rounded bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium transition">
-        ▶ Run cycle
-      </button>
-    </section>
-
-    <!-- Middle: reports list + viewer -->
-    <section class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-lg p-5 min-h-[400px]">
-      <div class="flex items-center justify-between mb-3">
-        <h2 class="text-lg font-medium">Reports</h2>
-        <span class="text-xs text-slate-500" x-text="reports.length + ' total'"></span>
-      </div>
-
-      <template x-if="!activeReport">
-        <ul class="space-y-2 text-sm">
-          <template x-for="r in reports.slice(0, 20)" :key="r.filename">
-            <li>
-              <button @click="openReport(r.filename)" class="w-full text-left hover:bg-slate-800 rounded p-2 transition">
-                <div class="flex items-start justify-between gap-3">
-                  <div class="flex-1 min-w-0">
-                    <div class="font-medium truncate" x-text="r.title"></div>
-                    <div class="text-xs text-slate-500 mt-0.5" x-text="r.verdict || '—'"></div>
-                  </div>
-                  <span class="text-xs text-slate-500 font-mono whitespace-nowrap" x-text="formatDate(r.mtime)"></span>
-                </div>
-              </button>
-            </li>
-          </template>
-          <template x-if="reports.length === 0">
-            <li class="text-slate-500 text-sm py-4">No reports yet — run your first cycle.</li>
-          </template>
-        </ul>
+    <!-- Tab bar — pattern da /opt/d-nd_com/components/LabGraph.tsx:216 -->
+    <div class="lab-tabs">
+      <template x-for="tab in TABS" :key="tab.id">
+        <button class="lab-tab" :class="activeTab === tab.id && 'active'" @click="setActiveTab(tab.id)">
+          <span class="tab-icon" x-text="tab.icon"></span><span x-text="tab.label"></span>
+        </button>
       </template>
+      <span class="ml-auto text-xs text-slate-500 font-mono pr-2" x-text="activeDomain"></span>
+    </div>
 
-      <template x-if="activeReport">
-        <div>
-          <button @click="activeReport = null" class="text-xs text-slate-500 hover:text-slate-300 mb-3">← back to list</button>
+    <!-- 3-col grid -->
+    <div class="lab-grid" :class="{'sidebar-left-closed': !sidebarLeftOpen, 'sidebar-right-closed': !sidebarRightOpen}">
 
-          <!-- Bicono dinamico (visualizer) — appare solo se il report contiene la sezione bicono -->
-          <template x-if="activeReport.bicono">
-            <div class="bicono-card mb-4">
-              <h4>Bicono della scoperta</h4>
-              <div class="grid md:grid-cols-2 gap-4 items-center">
-                <svg viewBox="0 0 280 180" class="bicono-svg" preserveAspectRatio="xMidYMid meet">
-                  <!-- horizontal axis through center -->
-                  <line class="axis" x1="20" y1="90" x2="260" y2="90"></line>
-                  <!-- left root (radice negativa) -->
-                  <circle :class="biconoPoles().leftEmpty ? 'root-circle pole-empty' : 'root-circle'" cx="60" cy="90" r="34"></circle>
-                  <text class="label-tag" x="60" y="148" text-anchor="middle">root</text>
-                  <text class="label-text" x="60" y="94" text-anchor="middle" :style="biconoPoles().leftEmpty ? 'opacity:.4' : ''" x-text="biconoPoles().left || '—'"></text>
-                  <!-- singular center -->
-                  <circle class="singular-circle" cx="140" cy="90" r="22"></circle>
-                  <text class="label-tag" x="140" y="148" text-anchor="middle">singular</text>
-                  <text class="label-text" x="140" y="94" text-anchor="middle" :style="!activeReport.bicono.singular ? 'opacity:.4' : ''" x-text="biconoSingularShort()"></text>
-                  <!-- right root (radice positiva) -->
-                  <circle :class="biconoPoles().rightEmpty ? 'root-circle pole-empty' : 'root-circle'" cx="220" cy="90" r="34"></circle>
-                  <text class="label-tag" x="220" y="148" text-anchor="middle">root</text>
-                  <text class="label-text" x="220" y="94" text-anchor="middle" :style="biconoPoles().rightEmpty ? 'opacity:.4' : ''" x-text="biconoPoles().right || '—'"></text>
-                  <!-- invariant arc — top arch through left and right -->
-                  <path class="invariant-arc" d="M 26,90 Q 140,10 254,90" :style="!activeReport.bicono.invariant ? 'opacity:.2' : ''"></path>
-                  <text class="label-tag" x="140" y="20" text-anchor="middle">invariant of passage</text>
-                </svg>
-                <div class="bicono-fields">
-                  <div class="bicono-field" :class="!activeReport.bicono.roots && 'empty'">
-                    <div class="label">two roots</div>
-                    <div class="value" x-text="activeReport.bicono.roots || ''"></div>
+      <!-- ============ SIDEBAR CAMPO (left) ============ -->
+      <aside class="lab-sidebar lab-sidebar-left" :class="!sidebarLeftOpen && 'collapsed'">
+        <button @click="sidebarLeftOpen = !sidebarLeftOpen" class="sidebar-toggle" :title="sidebarLeftOpen ? 'Collassa' : 'Espandi'">
+          <span x-text="sidebarLeftOpen ? '◂' : '▸'"></span>
+        </button>
+        <div x-show="sidebarLeftOpen" class="pt-1">
+          <h3 class="text-xs uppercase tracking-wider text-slate-500 mb-3 mt-1">Campo</h3>
+
+          <!-- Stats -->
+          <div class="space-y-0">
+            <div class="stat-row"><span class="text-slate-400">teorie</span><span class="stat-num" x-text="campoStats().teorie"></span></div>
+            <div class="stat-row"><span class="text-slate-400">ponti</span><span class="stat-num" x-text="campoStats().ponti"></span></div>
+            <div class="stat-row"><span class="text-slate-400">vuoti</span><span class="stat-num" x-text="campoStats().vuoti"></span></div>
+            <div class="stat-row"><span class="text-slate-400">scoperte</span><span class="stat-num" x-text="campoStats().scoperte"></span></div>
+            <div class="stat-row"><span class="text-slate-400">cicli</span><span class="stat-num" x-text="campoStats().cicli"></span></div>
+          </div>
+
+          <!-- Freschezza -->
+          <h4 class="text-xs uppercase tracking-wider text-slate-500 mt-5 mb-2">Freschezza</h4>
+          <div class="space-y-0">
+            <div class="stat-row"><span class="text-slate-400">oggi</span><span class="stat-num text-green-400" x-text="freshnessStats().today"></span></div>
+            <div class="stat-row"><span class="text-slate-400">fresche (7d)</span><span class="stat-num text-cyan-400" x-text="freshnessStats().fresh"></span></div>
+            <div class="stat-row"><span class="text-slate-400">ghost urgenti</span><span class="stat-num text-amber-400" x-text="freshnessStats().ghosts"></span></div>
+          </div>
+
+          <!-- Legenda -->
+          <h4 class="text-xs uppercase tracking-wider text-slate-500 mt-5 mb-2">Legenda</h4>
+          <div class="space-y-1.5 text-xs text-slate-400">
+            <div class="flex items-center gap-2"><i class="legend-dot" style="background:#22d3ee"></i> tensione</div>
+            <div class="flex items-center gap-2"><i class="legend-dot" style="background:#a78bfa"></i> report</div>
+            <div class="flex items-center gap-2"><i class="legend-dot" style="background:#34d399"></i> teoria</div>
+            <div class="flex items-center gap-2"><i class="legend-dot" style="background:#fbbf24"></i> ghost</div>
+            <div class="flex items-center gap-2"><i class="legend-dot" style="background:#f472b6"></i> scoperta</div>
+          </div>
+
+          <!-- Label toggle -->
+          <label class="flex items-center gap-2 mt-5 text-xs text-slate-400 cursor-pointer">
+            <input type="checkbox" x-model="showAllLabels" @change="updateGraphLabels()">
+            <span>Mostra tutti i nomi</span>
+          </label>
+
+          <button @click="showRunModal = true" class="w-full mt-5 px-3 py-2 rounded bg-purple-600 hover:bg-purple-500 text-white text-xs font-medium transition">▶ Run cycle</button>
+        </div>
+      </aside>
+
+      <!-- ============ CONTENT (center) — tab panes ============ -->
+      <section class="lab-content min-h-[600px]">
+
+        <!-- TAB GRAFO -->
+        <div x-show="activeTab === 'grafo'" x-transition.opacity.duration.150ms>
+          <div class="bg-slate-900 border border-slate-800 rounded-lg p-4">
+            <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
+              <h2 class="text-lg font-medium flex items-center gap-2">
+                <span>Knowledge graph</span>
+                <span class="text-xs text-slate-500 font-mono" x-show="graphStats.n_nodes !== undefined" x-text="`${graphStats.n_nodes ?? 0} nodes · ${graphStats.n_edges ?? 0} edges`"></span>
+              </h2>
+              <div class="flex items-center gap-2">
+                <template x-if="selectedNode">
+                  <span class="selected-node-badge">
+                    <span x-text="`◉ ${(selectedNode.label || selectedNode.id || '').slice(0,40)}`"></span>
+                    <button @click="clearSelection()" title="Deseleziona">×</button>
+                  </span>
+                </template>
+                <button @click="resetGraphLayout()" class="text-xs px-2 py-1 rounded bg-slate-800 hover:bg-slate-700">↻ relayout</button>
+                <button @click="reloadGraph().then(() => renderGraph())" class="text-xs text-slate-500 hover:text-slate-300">refresh</button>
+              </div>
+            </div>
+            <div id="graph-viz"></div>
+            <div class="graph-legend">
+              <span class="text-slate-500 italic">Click su un nodo → contesto chat + dettaglio destra</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB BICONO -->
+        <div x-show="activeTab === 'bicono'" x-transition.opacity.duration.150ms>
+          <div class="bg-slate-900 border border-slate-800 rounded-lg p-6">
+            <h2 class="text-lg font-medium mb-2">Bicono — galleria delle scoperte</h2>
+            <p class="text-xs text-slate-500 mb-4">Ogni report con bicono completo (4 poli parsati) appare come mini-bicono. Click → vai al report.</p>
+            <div class="text-slate-500 text-sm py-12 text-center italic">In arrivo (v3.5)</div>
+          </div>
+        </div>
+
+        <!-- TAB AGENTE — reports list + viewer -->
+        <div x-show="activeTab === 'agente'" x-transition.opacity.duration.150ms>
+          <div class="bg-slate-900 border border-slate-800 rounded-lg p-5 min-h-[500px]">
+            <div class="flex items-center justify-between mb-3">
+              <h2 class="text-lg font-medium">Reports</h2>
+              <span class="text-xs text-slate-500" x-text="reports.length + ' total'"></span>
+            </div>
+
+            <template x-if="!activeReport">
+              <ul class="space-y-2 text-sm">
+                <template x-for="r in reports.slice(0, 20)" :key="r.filename">
+                  <li>
+                    <button @click="openReport(r.filename)" class="w-full text-left hover:bg-slate-800 rounded p-2 transition">
+                      <div class="flex items-start justify-between gap-3">
+                        <div class="flex-1 min-w-0">
+                          <div class="font-medium truncate" x-text="r.title"></div>
+                          <div class="text-xs text-slate-500 mt-0.5" x-text="r.verdict || '—'"></div>
+                        </div>
+                        <span class="text-xs text-slate-500 font-mono whitespace-nowrap" x-text="formatDate(r.mtime)"></span>
+                      </div>
+                    </button>
+                  </li>
+                </template>
+                <template x-if="reports.length === 0">
+                  <li class="text-slate-500 text-sm py-4">No reports yet — run your first cycle.</li>
+                </template>
+              </ul>
+            </template>
+
+            <template x-if="activeReport">
+              <div>
+                <button @click="activeReport = null" class="text-xs text-slate-500 hover:text-slate-300 mb-3">← back to list</button>
+
+                <!-- Bicono dinamico (visualizer) — appare solo se il report contiene la sezione bicono -->
+                <template x-if="activeReport.bicono">
+                  <div class="bicono-card mb-4">
+                    <h4>Bicono della scoperta</h4>
+                    <div class="grid md:grid-cols-2 gap-4 items-center">
+                      <svg viewBox="0 0 280 180" class="bicono-svg" preserveAspectRatio="xMidYMid meet">
+                        <line class="axis" x1="20" y1="90" x2="260" y2="90"></line>
+                        <circle :class="biconoPoles().leftEmpty ? 'root-circle pole-empty' : 'root-circle'" cx="60" cy="90" r="34"></circle>
+                        <text class="label-tag" x="60" y="148" text-anchor="middle">root</text>
+                        <text class="label-text" x="60" y="94" text-anchor="middle" :style="biconoPoles().leftEmpty ? 'opacity:.4' : ''" x-text="biconoPoles().left || '—'"></text>
+                        <circle class="singular-circle" cx="140" cy="90" r="22"></circle>
+                        <text class="label-tag" x="140" y="148" text-anchor="middle">singular</text>
+                        <text class="label-text" x="140" y="94" text-anchor="middle" :style="!activeReport.bicono.singular ? 'opacity:.4' : ''" x-text="biconoSingularShort()"></text>
+                        <circle :class="biconoPoles().rightEmpty ? 'root-circle pole-empty' : 'root-circle'" cx="220" cy="90" r="34"></circle>
+                        <text class="label-tag" x="220" y="148" text-anchor="middle">root</text>
+                        <text class="label-text" x="220" y="94" text-anchor="middle" :style="biconoPoles().rightEmpty ? 'opacity:.4' : ''" x-text="biconoPoles().right || '—'"></text>
+                        <path class="invariant-arc" d="M 26,90 Q 140,10 254,90" :style="!activeReport.bicono.invariant ? 'opacity:.2' : ''"></path>
+                        <text class="label-tag" x="140" y="20" text-anchor="middle">invariant of passage</text>
+                      </svg>
+                      <div class="bicono-fields">
+                        <div class="bicono-field" :class="!activeReport.bicono.roots && 'empty'">
+                          <div class="label">two roots</div>
+                          <div class="value" x-text="activeReport.bicono.roots || ''"></div>
+                        </div>
+                        <div class="bicono-field" :class="!activeReport.bicono.singular && 'empty'">
+                          <div class="label">singular</div>
+                          <div class="value" x-text="activeReport.bicono.singular || ''"></div>
+                        </div>
+                        <div class="bicono-field" :class="!activeReport.bicono.invariant && 'empty'">
+                          <div class="label">invariant of passage</div>
+                          <div class="value" x-text="activeReport.bicono.invariant || ''"></div>
+                        </div>
+                        <div class="bicono-field" :class="!activeReport.bicono.field && 'empty'">
+                          <div class="label">field of possibility</div>
+                          <div class="value" x-text="activeReport.bicono.field || ''"></div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div class="bicono-field" :class="!activeReport.bicono.singular && 'empty'">
-                    <div class="label">singular</div>
-                    <div class="value" x-text="activeReport.bicono.singular || ''"></div>
-                  </div>
-                  <div class="bicono-field" :class="!activeReport.bicono.invariant && 'empty'">
-                    <div class="label">invariant of passage</div>
-                    <div class="value" x-text="activeReport.bicono.invariant || ''"></div>
-                  </div>
-                  <div class="bicono-field" :class="!activeReport.bicono.field && 'empty'">
-                    <div class="label">field of possibility</div>
-                    <div class="value" x-text="activeReport.bicono.field || ''"></div>
-                  </div>
-                </div>
+                </template>
+
+                <div class="markdown" x-html="renderMarkdown(activeReport.content)"></div>
+              </div>
+            </template>
+          </div>
+        </div>
+
+        <!-- TAB INCROCIO TEORIE -->
+        <div x-show="activeTab === 'incrocio'" x-transition.opacity.duration.150ms>
+          <div class="bg-slate-900 border border-slate-800 rounded-lg p-6">
+            <h2 class="text-lg font-medium mb-2">Incrocio teorie</h2>
+            <p class="text-xs text-slate-500 mb-4">Tabella delle 10 pair TQGE+R con costante / dipolo / ponte / insights del lab.</p>
+            <div class="text-slate-500 text-sm py-12 text-center italic">In arrivo (Phase 6 v4)</div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ============ SIDEBAR DETTAGLIO (right) ============ -->
+      <aside class="lab-sidebar lab-sidebar-right" :class="!sidebarRightOpen && 'collapsed'">
+        <button @click="sidebarRightOpen = !sidebarRightOpen" class="sidebar-toggle" :title="sidebarRightOpen ? 'Collassa' : 'Espandi'">
+          <span x-text="sidebarRightOpen ? '▸' : '◂'"></span>
+        </button>
+        <div x-show="sidebarRightOpen" class="pt-1">
+          <h3 class="text-xs uppercase tracking-wider text-slate-500 mb-3 mt-1">Dettaglio</h3>
+
+          <template x-if="!selectedNode">
+            <p class="text-slate-500 text-xs italic py-4">Click su un nodo del grafo per vedere il dettaglio qui.</p>
+          </template>
+
+          <template x-if="selectedNode">
+            <div class="detail-card space-y-3">
+              <div class="flex flex-wrap gap-1">
+                <span class="chip" :class="`chip-type-${selectedNode.type}`" x-text="selectedNode.type || '?'"></span>
+                <template x-if="selectedNode.maturity">
+                  <span class="chip chip-maturity" x-text="selectedNode.maturity"></span>
+                </template>
+                <template x-if="selectedNode.mtime || selectedNode.timestamp">
+                  <span class="chip chip-date" x-text="formatDate(selectedNode.mtime || selectedNode.timestamp)"></span>
+                </template>
+              </div>
+              <div class="text-sm text-slate-200 line-clamp-3" x-text="selectedNode.label || selectedNode.id"></div>
+              <template x-if="selectedNode.verdict">
+                <p class="text-xs text-slate-400 italic line-clamp-3 border-l-2 border-purple-700 pl-2" x-text="selectedNode.verdict"></p>
+              </template>
+              <div class="space-y-1.5">
+                <template x-if="selectedNode.type === 'report' && selectedNodeFilename()">
+                  <button @click="openReportFromNode()" class="detail-action text-purple-300">→ Apri report in Agente</button>
+                </template>
+                <button @click="zoomToSelectedNode()" class="detail-action text-cyan-300">→ Esplora nel grafo</button>
+                <button @click="askAboutSelectedNode()" class="detail-action text-slate-300">→ Chiedi alla chat</button>
               </div>
             </div>
           </template>
 
-          <div class="markdown" x-html="renderMarkdown(activeReport.content)"></div>
+          <!-- Seed quick view (sotto al dettaglio nodo) -->
+          <h4 class="text-xs uppercase tracking-wider text-slate-500 mt-5 mb-2">Seed</h4>
+          <div class="text-xs space-y-1 text-slate-400">
+            <div><span class="text-slate-500">piano:</span> <span class="font-mono text-cyan-400" x-text="seed.piano ?? '?'"></span></div>
+            <div class="italic line-clamp-3" x-text="seed.direzione || '—'"></div>
+          </div>
         </div>
-      </template>
-    </section>
+      </aside>
 
-    <!-- Right column when no chat panel; we use grid below for chat full width when open -->
-    </div><!-- /grid -->
+    </div><!-- /lab-grid -->
   </main>
 
   <!-- CHAT panel (collapsible bottom sheet) -->
@@ -352,6 +481,14 @@
   };
   const NODE_TYPE_DEFAULT = '#94a3b8';
 
+  // v3 — tab definitions, mirrors LabGraph.tsx:216 activeTab values
+  const TABS = [
+    { id: 'grafo',    icon: '⬢', label: 'Grafo' },
+    { id: 'bicono',   icon: '◇', label: 'Bicono' },
+    { id: 'agente',   icon: '⊙', label: 'Agente' },
+    { id: 'incrocio', icon: '✕', label: 'Incrocio teorie' },
+  ];
+
   function dashboard() {
     return {
       // State
@@ -368,6 +505,13 @@
       graphData: null,
       graphStats: {},
       selectedNode: null,
+
+      // v3 — tabs + sidebars
+      TABS: TABS,
+      activeTab: 'grafo',
+      sidebarLeftOpen: true,
+      sidebarRightOpen: true,
+      showAllLabels: false,
 
       // Chat
       chatOpen: false,
@@ -522,6 +666,97 @@
       clearSelection() {
         this.selectedNode = null;
         if (this.cy) this.cy.elements().unselect();
+      },
+
+      // v3 — sidebar CAMPO stats. Pulled from graphStats (server-computed
+      // via build_graph movement) + reports list. Source of truth: lab_graph.json.
+      campoStats() {
+        const s = this.graphStats || {};
+        const byType = s.by_type || {};
+        return {
+          teorie: byType.teoria || 0,
+          ponti: byType.ponte || s.ponti || 0,
+          vuoti: byType.vuoto || s.vuoti || 0,
+          scoperte: byType.scoperta || s.scoperte || 0,
+          cicli: this.reports.length,
+        };
+      },
+
+      // v3 — freschezza dei report. 'oggi' = <24h, 'fresche' = <7d.
+      // Ghost urgenti = stat server-side dal build_graph (ghost ad alta urgenza).
+      freshnessStats() {
+        const now = Date.now();
+        const day = 86400000;
+        let today = 0, fresh = 0;
+        for (const r of this.reports) {
+          const t = r.mtime ? new Date(r.mtime).getTime() : 0;
+          if (!t) continue;
+          const dt = now - t;
+          if (dt < day) today++;
+          if (dt < 7 * day) fresh++;
+        }
+        return { today, fresh, ghosts: this.graphStats?.ghost_high_urgency || 0 };
+      },
+
+      // v3 — tab navigation (Cytoscape needs re-render when tab GRAFO becomes visible)
+      setActiveTab(id) {
+        this.activeTab = id;
+        if (id === 'grafo') {
+          this.$nextTick(() => {
+            // re-render only if cy is destroyed or graph not yet drawn in this tab pane
+            if (!this.cy || !document.getElementById('graph-viz')?.querySelector('canvas')) {
+              this.renderGraph();
+            } else {
+              this.cy.resize();
+              this.cy.fit(undefined, 30);
+            }
+          });
+        }
+      },
+
+      // v3 — toggle "Mostra tutti i nomi" — quando off, label visibili solo su hover/select
+      updateGraphLabels() {
+        if (!this.cy) return;
+        const opacity = this.showAllLabels ? 1 : 0;
+        this.cy.style()
+          .selector('node').style({ 'text-opacity': opacity })
+          .selector('node:selected').style({ 'text-opacity': 1 })
+          .update();
+        // hover style — show label on mouseover anche con toggle off
+        this.cy.on('mouseover', 'node', (evt) => evt.target.style('text-opacity', 1));
+        this.cy.on('mouseout', 'node', (evt) => {
+          if (!evt.target.selected()) evt.target.style('text-opacity', this.showAllLabels ? 1 : 0);
+        });
+      },
+
+      // v3 — actions sulla card dettaglio
+      selectedNodeFilename() {
+        if (!this.selectedNode) return null;
+        // Il build_graph movement marca i report con il filename in `id` o in `data.filename`
+        return this.selectedNode.filename || (this.selectedNode.id?.startsWith('agent_') ? this.selectedNode.id + '.md' : null);
+      },
+
+      openReportFromNode() {
+        const fn = this.selectedNodeFilename();
+        if (!fn) return;
+        this.activeTab = 'agente';
+        this.openReport(fn);
+      },
+
+      zoomToSelectedNode() {
+        if (!this.selectedNode || !this.cy) return;
+        this.activeTab = 'grafo';
+        this.$nextTick(() => {
+          const node = this.cy.getElementById(this.selectedNode.id);
+          if (node && node.length) {
+            this.cy.animate({ fit: { eles: node, padding: 200 }, duration: 400 });
+            node.select();
+          }
+        });
+      },
+
+      askAboutSelectedNode() {
+        this.chatOpen = true;
       },
 
       // Bicono — parse the "two roots" string into left/right poles.
