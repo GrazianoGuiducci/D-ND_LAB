@@ -67,6 +67,19 @@
     .bicono-field.empty { opacity: .4; border-left-color: rgba(148,163,184,.3); }
     .bicono-field.empty .value::after { content: '— assente nel report'; color: #64748b; font-style: italic; }
 
+    /* v4.2 — Dynamic tooltip per nodi grafo. Pattern HoverPopover del sito,
+       riadattato in vanilla CSS. Single instance, positioned by JS. */
+    .node-tooltip { position: fixed; z-index: 60; pointer-events: auto; opacity: 0; visibility: hidden; transition: opacity 120ms cubic-bezier(0.4,0,0.2,1); max-width: 280px; min-width: 200px; background: rgb(15 23 42); border: 1px solid rgb(51 65 85); border-radius: 8px; padding: 10px 12px; box-shadow: 0 8px 24px rgba(0,0,0,.5); font-size: 12px; }
+    .node-tooltip.visible { opacity: 1; visibility: visible; }
+    .node-tooltip .nt-type { display: inline-block; padding: 1px 6px; font-size: 10px; font-family: ui-monospace, monospace; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 6px; }
+    .node-tooltip .nt-title { color: #d8dbe7; font-weight: 500; line-height: 1.3; margin-bottom: 4px; }
+    .node-tooltip .nt-meta { color: #94a3b8; font-size: 11px; line-height: 1.4; margin-bottom: 6px; }
+    .node-tooltip .nt-verdict { color: #cbd5e1; font-size: 11px; font-style: italic; line-height: 1.35; padding: 4px 0; border-top: 1px solid rgb(30 41 59); border-bottom: 1px solid rgb(30 41 59); margin: 6px 0; max-height: 50px; overflow: hidden; }
+    .node-tooltip .nt-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+    .node-tooltip .nt-action { font-size: 10px; padding: 3px 8px; border-radius: 4px; background: rgb(30 41 59); color: #cbd5e1; border: 0; cursor: pointer; transition: background 0.12s; }
+    .node-tooltip .nt-action:hover { background: rgb(51 65 85); color: #c4b5fd; }
+    @media (max-width: 1024px) { .node-tooltip { display: none; } }
+
     /* Falsifier card (report viewer) — flag asimmetrici dal counter-pole.
        Color severity: high=rose, medium=amber, low=slate. */
     .falsifier-card { border: 1px solid rgba(251,113,133,.25); background: linear-gradient(180deg, rgba(251,113,133,.06) 0%, rgba(15,23,42,1) 100%); border-radius: 0.5rem; padding: 14px; margin-bottom: 14px; }
@@ -625,6 +638,40 @@
     <!-- Backdrop (cliccabile per chiudere drawer mobile) -->
     <div x-show="mobileDrawer" x-cloak class="mobile-backdrop active" @click="closeMobileDrawer()"></div>
 
+    <!-- v4.2 — Dynamic node tooltip (single instance, mostrata da renderGraph hover) -->
+    <div id="node-tooltip" class="node-tooltip"
+         @mouseenter="cancelTooltipHide()"
+         @mouseleave="hideNodeTooltip()"
+         x-data>
+      <template x-if="hoverNode">
+        <div>
+          <span class="nt-type" :class="`chip-type-${hoverNode.type}`" x-text="hoverNode.type || '?'"></span>
+          <div class="nt-title" x-text="hoverNode.label || hoverNode.id"></div>
+          <div class="nt-meta">
+            <template x-if="hoverNode.intensity !== undefined && hoverNode.intensity !== null">
+              <span x-text="`intensity ${(hoverNode.intensity*100).toFixed(0)}%`"></span>
+            </template>
+            <template x-if="hoverNode.maturity">
+              <span x-text="` · ${hoverNode.maturity}`"></span>
+            </template>
+            <template x-if="hoverNode.mtime">
+              <span x-text="` · ${formatDate(hoverNode.mtime)}`"></span>
+            </template>
+          </div>
+          <template x-if="hoverNode.verdict">
+            <div class="nt-verdict" x-text="hoverNode.verdict"></div>
+          </template>
+          <div class="nt-actions">
+            <template x-if="hoverNode.type === 'report' && (hoverNode.file || hoverNode.filename)">
+              <button class="nt-action" @click="openReportFromHover()">→ Apri</button>
+            </template>
+            <button class="nt-action" @click="zoomToHover()">→ Esplora</button>
+            <button class="nt-action" @click="askAboutHover()">→ Chat</button>
+          </div>
+        </div>
+      </template>
+    </div>
+
   </main>
 
   <!-- CHAT floating bottom-right (v3.8) -->
@@ -790,6 +837,10 @@
       resizing: null,                       // null | {side, startX, startW}
       sidebarLeftWidth: 260,
       sidebarRightWidth: 320,
+
+      // v4.2 — dynamic node tooltip
+      hoverNode: null,
+      _tooltipHideTimer: null,
 
       // v3.9 — context intro per la sezione descrittiva top
       contextIntro: { title: '', intro: '' },
@@ -1071,11 +1122,86 @@
         this.cy.on('tap', (evt) => {
           if (evt.target === this.cy) this.selectedNode = null;
         });
-        // Hover: show label even when "Mostra tutti i nomi" is off
-        this.cy.on('mouseover', 'node', (evt) => evt.target.style('text-opacity', 1));
+        // Hover: show label even when "Mostra tutti i nomi" is off + show tooltip
+        this.cy.on('mouseover', 'node', (evt) => {
+          evt.target.style('text-opacity', 1);
+          this.showNodeTooltip(evt.target, evt.renderedPosition || evt.target.renderedPosition());
+        });
         this.cy.on('mouseout', 'node', (evt) => {
           if (!evt.target.selected()) evt.target.style('text-opacity', this.showAllLabels ? 1 : 0);
+          this.hideNodeTooltip();
         });
+      },
+
+      // v4.2 — node tooltip handlers. Posizionato relativo al rendered point del nodo
+      // sullo schermo (cy.relativePosition + container offset).
+      showNodeTooltip(cyNode, renderedPos) {
+        if (window.matchMedia('(max-width: 1024px)').matches) return;  // mobile usa drawer
+        this.cancelTooltipHide();
+        this.hoverNode = cyNode.data('full');
+        this.$nextTick(() => {
+          const tip = document.getElementById('node-tooltip');
+          const container = document.getElementById('graph-viz');
+          if (!tip || !container) return;
+          const rect = container.getBoundingClientRect();
+          // renderedPosition is relative to the cy container; convert to viewport coords
+          let x = rect.left + (renderedPos?.x || 0) + 14;   // +14 to clear node radius
+          let y = rect.top + (renderedPos?.y || 0) + 14;
+          // Clamp to viewport so the tip never overflows
+          const tw = tip.offsetWidth || 240;
+          const th = tip.offsetHeight || 120;
+          if (x + tw > window.innerWidth - 12) x = window.innerWidth - tw - 12;
+          if (y + th > window.innerHeight - 12) y = rect.top + (renderedPos?.y || 0) - th - 14;
+          if (x < 12) x = 12;
+          if (y < 12) y = 12;
+          tip.style.left = x + 'px';
+          tip.style.top = y + 'px';
+          tip.classList.add('visible');
+        });
+      },
+
+      hideNodeTooltip() {
+        // Delay so the user can move into the tooltip to click an action
+        this.cancelTooltipHide();
+        this._tooltipHideTimer = setTimeout(() => {
+          const tip = document.getElementById('node-tooltip');
+          if (tip) tip.classList.remove('visible');
+          this.hoverNode = null;
+        }, 200);
+      },
+
+      cancelTooltipHide() {
+        if (this._tooltipHideTimer) {
+          clearTimeout(this._tooltipHideTimer);
+          this._tooltipHideTimer = null;
+        }
+      },
+
+      openReportFromHover() {
+        if (!this.hoverNode) return;
+        const fn = this.hoverNode.file || this.hoverNode.filename;
+        if (!fn) return;
+        this.activeTab = 'agente';
+        this.openReport(fn);
+        this.hideNodeTooltip();
+      },
+
+      zoomToHover() {
+        if (!this.hoverNode || !this.cy) return;
+        const node = this.cy.getElementById(this.hoverNode.id);
+        if (node && node.length) {
+          this.cy.animate({ fit: { eles: node, padding: 200 }, duration: 400 });
+          node.select();
+          this.selectedNode = this.hoverNode;
+          this.sidebarRightOpen = true;
+        }
+        this.hideNodeTooltip();
+      },
+
+      askAboutHover() {
+        this.selectedNode = this.hoverNode;
+        this.chatOpen = true;
+        this.hideNodeTooltip();
       },
 
       // Helper — truncate with ellipsis (used per i label nodi)
