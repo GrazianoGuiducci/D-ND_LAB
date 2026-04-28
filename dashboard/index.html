@@ -149,6 +149,32 @@
     .lab-grid.sidebar-right-closed { grid-template-columns: var(--sb-left-w, 260px) 1fr 40px; }
     .lab-grid.sidebar-left-closed.sidebar-right-closed { grid-template-columns: 40px 1fr 40px; }
 
+    /* UI fix #10 — AGENTE pane: scroll indipendente list/viewer.
+       Pane = max viewport height; ogni col ha overflow-y interno.
+       Resizable list column con CSS var. */
+    .agente-pane {
+      height: calc(100vh - 200px);
+      min-height: 480px;
+    }
+    .agente-grid {
+      display: grid;
+      gap: 0;
+      height: 100%;
+      align-items: stretch;
+    }
+    .agente-col {
+      min-height: 0;
+      overflow-y: auto;
+      scrollbar-width: thin;
+    }
+    .agente-resize { position: relative; }    /* inline resize, non absolute */
+    @media (max-width: 1024px) {
+      .agente-grid { grid-template-columns: 1fr !important; }   /* mobile single col */
+      .agente-resize { display: none; }
+      .agente-pane { height: auto; }
+      .agente-col { max-height: 60vh; }
+    }
+
     /* v4.1+ — Resize handles port-fedele dal sito (Shell3Col s3c-resizer).
        12px wide hit area, sottile linea visibile sempre, grip dots su hover.
        Auto close/reopen logic: drag verso il centro su closed riapre dopo
@@ -166,14 +192,16 @@
     .resize-handle:hover { background: rgba(34,211,238,.22); }
     .resize-handle.active { background: rgba(34,211,238,.32); }
     .resize-handle .rz-line {
-      width: 2px; height: 100%;
-      background: rgb(255 255 255 / 0.10);
+      width: 2px; height: 60%;
+      background: rgb(34 211 238 / 0.4);   /* cyan visibile sempre */
+      border-radius: 1px;
       transition: all 120ms ease;
     }
     .resize-handle:hover .rz-line,
     .resize-handle.active .rz-line {
       background: #22d3ee;
-      box-shadow: 0 0 10px rgb(34 211 238 / 0.45);
+      height: 100%;
+      box-shadow: 0 0 10px rgb(34 211 238 / 0.55);
     }
     .resize-handle .rz-grip {
       position: absolute; top: 50%; left: 50%;
@@ -251,8 +279,40 @@
       .lab-tab .tab-icon { display: none; }
     }
 
-    .lab-sidebar { background: rgb(15 23 42); border: 1px solid rgb(30 41 59); border-radius: 0.5rem; padding: 14px; position: relative; min-height: 200px; }
-    .lab-sidebar.collapsed { padding: 8px 4px; min-height: auto; }
+    /* Sidebar: sticky top sotto l'header, full-viewport height con scroll
+       interno indipendente. Fix operatore: "la sidebar di destra non e' a
+       tutto viewport". */
+    .lab-sidebar {
+      background: rgb(15 23 42);
+      border: 1px solid rgb(30 41 59);
+      border-radius: 0.5rem;
+      padding: 14px;
+      position: sticky;
+      top: 12px;
+      max-height: calc(100vh - 24px);
+      overflow-y: auto;
+      scrollbar-width: thin;
+    }
+    .lab-sidebar.collapsed {
+      padding: 8px 4px;
+      overflow: hidden;
+    }
+    /* UI fix #8 — titoli verticali su sidebar collassate (vertical-rl writing) */
+    .lab-sidebar.collapsed .sb-title-vertical {
+      display: block;
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+      color: rgb(148 163 184);
+      margin: 24px auto 0;
+      width: 24px;
+      text-align: center;
+      user-select: none;
+    }
+    .lab-sidebar:not(.collapsed) .sb-title-vertical { display: none; }
     .sidebar-toggle { position: absolute; top: 8px; background: none; border: 0; color: rgb(100 116 139); cursor: pointer; font-size: 12px; padding: 2px 6px; line-height: 1; }
     .lab-sidebar-left .sidebar-toggle { right: 6px; }
     .lab-sidebar-right .sidebar-toggle { left: 6px; }
@@ -397,6 +457,8 @@
           <div class="rz-line"></div>
           <div class="rz-grip"></div>
         </div>
+        <!-- v#8 — title verticale visible solo quando collapsed -->
+        <div class="sb-title-vertical">CAMPO</div>
         <!-- Su mobile, il toggle desktop e' nascosto e si usa questo close X -->
         <div class="flex items-center justify-between mb-2" style="margin-top:-4px">
           <h3 class="text-xs uppercase tracking-wider text-slate-500 mt-1" x-show="sidebarLeftOpen || mobileDrawer === 'left'">Campo</h3>
@@ -557,12 +619,13 @@
         </div>
 
         <!-- TAB AGENTE — 2-col: reports list (sx) + viewer (dx). Sempre entrambi
-             visibili; il viewer mostra empty-state quando nessun report e' aperto. -->
-        <div x-show="activeTab === 'agente'" x-transition.opacity.duration.150ms>
-          <div class="grid lg:grid-cols-[280px_1fr] gap-4">
+             visibili; il viewer mostra empty-state quando nessun report e' aperto.
+             UI fix #10 — scroll indipendente list/viewer + colonna lista resizable. -->
+        <div x-show="activeTab === 'agente'" x-transition.opacity.duration.150ms class="agente-pane">
+          <div class="agente-grid" :style="`grid-template-columns: ${agentListWidth}px 12px 1fr`">
 
-            <!-- Lista report (sx) -->
-            <aside class="bg-slate-900 border border-slate-800 rounded-lg p-3 max-h-[700px] overflow-y-auto">
+            <!-- Lista report (sx) — scroll proprio -->
+            <aside class="agente-col bg-slate-900 border border-slate-800 rounded-lg p-3">
               <div class="flex items-center justify-between mb-2 px-1">
                 <h3 class="text-sm font-medium">Reports</h3>
                 <span class="text-xs text-slate-500" x-text="`${filteredReports().length}/${reports.length}`"></span>
@@ -616,8 +679,14 @@
               </ul>
             </aside>
 
-            <!-- Viewer (dx) -->
-            <section class="bg-slate-900 border border-slate-800 rounded-lg p-5 min-h-[500px]">
+            <!-- Resize handle tra lista e viewer (UI fix #10) -->
+            <div class="resize-handle agente-resize" @pointerdown="startAgentResize($event)" title="Drag per ridimensionare la lista">
+              <div class="rz-line"></div>
+              <div class="rz-grip"></div>
+            </div>
+
+            <!-- Viewer (dx) — scroll proprio -->
+            <section class="agente-col bg-slate-900 border border-slate-800 rounded-lg p-5">
               <template x-if="!activeReport">
                 <div class="text-slate-500 text-sm py-16 text-center italic">Click su un report per aprirlo qui.</div>
               </template>
@@ -911,6 +980,8 @@
           <div class="rz-line"></div>
           <div class="rz-grip"></div>
         </div>
+        <!-- v#8 — title verticale visible solo quando collapsed -->
+        <div class="sb-title-vertical">DETTAGLIO</div>
         <div class="flex items-center justify-between mb-2" style="margin-top:-4px">
           <button @click="closeMobileDrawer()" class="mobile-close-btn text-slate-400 hover:text-slate-200 px-2 py-1 rounded text-base" title="Chiudi">×</button>
           <h3 class="text-xs uppercase tracking-wider text-slate-500 mt-1 ml-auto" x-show="sidebarRightOpen || mobileDrawer === 'right'">Dettaglio</h3>
@@ -1252,6 +1323,10 @@
       sidebarLeftWidth: 260,
       sidebarRightWidth: 320,
 
+      // UI fix #10 — agente list resize
+      agentResizing: null,
+      agentListWidth: 280,
+
       // v4.2 — dynamic node tooltip
       hoverNode: null,
       _tooltipHideTimer: null,
@@ -1314,9 +1389,23 @@
           this._applySidebarWidths();
         } catch (e) { /* storage disabled — usa default */ }
         // v4.1+ — pointer events (Shell3Col pattern, supports touch+mouse)
-        document.addEventListener('pointermove', (e) => this._onResizeMove(e));
-        document.addEventListener('pointerup', () => this._onResizeEnd());
-        document.addEventListener('pointercancel', () => this._onResizeEnd());
+        document.addEventListener('pointermove', (e) => {
+          this._onResizeMove(e);
+          this._onAgentResizeMove(e);
+        });
+        document.addEventListener('pointerup', () => {
+          this._onResizeEnd();
+          this._onAgentResizeEnd();
+        });
+        document.addEventListener('pointercancel', () => {
+          this._onResizeEnd();
+          this._onAgentResizeEnd();
+        });
+        // Restore agent list width
+        try {
+          const aw = parseInt(localStorage.getItem('dnd_agent_list_w') || '');
+          if (aw && aw >= 200 && aw <= 520) this.agentListWidth = aw;
+        } catch (e) {}
       },
 
       // v4.1+ — resize handlers port-fedele da Shell3Col.
@@ -1395,6 +1484,28 @@
         const root = document.documentElement;
         root.style.setProperty('--sb-left-w', this.sidebarLeftWidth + 'px');
         root.style.setProperty('--sb-right-w', this.sidebarRightWidth + 'px');
+      },
+
+      // UI fix #10 — agent list column resize (clamp 200..480)
+      startAgentResize(ev) {
+        ev.preventDefault();
+        try { ev.target.setPointerCapture?.(ev.pointerId); } catch (e) {}
+        this.agentResizing = { startX: ev.clientX, startW: this.agentListWidth };
+        document.body.classList.add('resizing');
+        ev.currentTarget.classList.add('active');
+      },
+      _onAgentResizeMove(ev) {
+        if (!this.agentResizing) return;
+        const delta = ev.clientX - this.agentResizing.startX;
+        const newW = Math.max(200, Math.min(520, this.agentResizing.startW + delta));
+        this.agentListWidth = newW;
+      },
+      _onAgentResizeEnd() {
+        if (!this.agentResizing) return;
+        this.agentResizing = null;
+        document.body.classList.remove('resizing');
+        document.querySelectorAll('.agente-resize.active').forEach(el => el.classList.remove('active'));
+        try { localStorage.setItem('dnd_agent_list_w', String(this.agentListWidth)); } catch (e) {}
       },
 
       // v3.10 — mobile drawer handlers
