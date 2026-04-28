@@ -281,7 +281,8 @@
 
     /* Sidebar: sticky top sotto l'header, full-viewport height con scroll
        interno indipendente. Fix operatore: "la sidebar di destra non e' a
-       tutto viewport". */
+       tutto viewport". overflow-x hidden per evitare scrollbar orizzontale
+       da contenuto interno (chip lunghi, label etc.). */
     .lab-sidebar {
       background: rgb(15 23 42);
       border: 1px solid rgb(30 41 59);
@@ -291,12 +292,18 @@
       top: 12px;
       max-height: calc(100vh - 24px);
       overflow-y: auto;
+      overflow-x: hidden;
       scrollbar-width: thin;
     }
     .lab-sidebar.collapsed {
       padding: 8px 4px;
       overflow: hidden;
     }
+    /* Scrollbar styling più discreto */
+    .lab-sidebar::-webkit-scrollbar, .agente-col::-webkit-scrollbar { width: 6px; height: 6px; }
+    .lab-sidebar::-webkit-scrollbar-thumb, .agente-col::-webkit-scrollbar-thumb { background: rgba(148,163,184,.18); border-radius: 3px; }
+    .lab-sidebar::-webkit-scrollbar-thumb:hover, .agente-col::-webkit-scrollbar-thumb:hover { background: rgba(148,163,184,.35); }
+    .lab-sidebar::-webkit-scrollbar-track, .agente-col::-webkit-scrollbar-track { background: transparent; }
     /* UI fix #8 — titoli verticali su sidebar collassate (vertical-rl writing) */
     .lab-sidebar.collapsed .sb-title-vertical {
       display: block;
@@ -688,7 +695,11 @@
             <!-- Viewer (dx) — scroll proprio -->
             <section class="agente-col bg-slate-900 border border-slate-800 rounded-lg p-5">
               <template x-if="!activeReport">
-                <div class="text-slate-500 text-sm py-16 text-center italic">Click su un report per aprirlo qui.</div>
+                <div class="h-full flex flex-col items-center justify-center text-center text-slate-500 py-12">
+                  <div class="text-3xl text-slate-700 mb-3">⊙</div>
+                  <div class="text-sm">Seleziona un report dalla lista a sinistra</div>
+                  <div class="text-xs text-slate-600 mt-2 italic">Bicono · falsifier · ToC + markdown content</div>
+                </div>
               </template>
 
               <template x-if="activeReport">
