@@ -35,7 +35,17 @@
     /* Container guard — content column must allow shrinkage below intrinsic.
        All descendants inherit min-width:0 to prevent any nested grid from
        pushing the parent track wider than 1fr (mobile especially). */
-    .lab-content, .lab-content * { min-width: 0; }
+    .lab-content {
+      min-width: 0;
+      height: calc(100vh - 100px);     /* match sidebar visible area */
+      display: flex;
+      flex-direction: column;
+    }
+    .lab-content * { min-width: 0; }
+    /* Tab pane: ogni x-show toggle e' un figlio di lab-content. Quando
+       attivo, deve riempire l'altezza disponibile. */
+    .lab-content > [x-show] { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+    .lab-content > [x-show] > div:first-child { flex: 1; min-height: 0; }
     .scroll-fade { mask-image: linear-gradient(to bottom, black 80%, transparent 100%); }
     @keyframes pulse-cycle { 0%,100% { opacity: 1 } 50% { opacity: 0.4 } }
     .running { animation: pulse-cycle 1.5s ease-in-out infinite; }
@@ -149,30 +159,41 @@
     .lab-grid.sidebar-right-closed { grid-template-columns: var(--sb-left-w, 260px) 1fr 40px; }
     .lab-grid.sidebar-left-closed.sidebar-right-closed { grid-template-columns: 40px 1fr 40px; }
 
-    /* UI fix #10 — AGENTE pane: scroll indipendente list/viewer.
-       Pane = max viewport height; ogni col ha overflow-y interno.
-       Resizable list column con CSS var. */
+    /* UI fix #10+#14 — AGENTE pane fill viewport (operatore: "non e' tutta
+       larga e alta"). Catena heights:
+         lab-content height calc(100vh-24px) [flex col]
+         → agente-pane flex 1 [flex col]
+         → agente-grid flex 1 [grid] (height esplicita)
+         → agente-col height 100% (stretch grid row)
+       Ogni colonna ha overflow-y interno: list scroll + viewer scroll
+       indipendenti (operatore: "scroll indipendenti per non perdere
+       contenuti da confrontare"). */
     .agente-pane {
-      height: calc(100vh - 200px);
-      min-height: 480px;
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
     }
     .agente-grid {
+      flex: 1;
       display: grid;
       gap: 0;
-      height: 100%;
       align-items: stretch;
+      min-height: 0;
     }
     .agente-col {
+      height: 100%;
       min-height: 0;
       overflow-y: auto;
+      overflow-x: hidden;
       scrollbar-width: thin;
     }
-    .agente-resize { position: relative; }    /* inline resize, non absolute */
+    .agente-resize { position: relative; }
     @media (max-width: 1024px) {
-      .agente-grid { grid-template-columns: 1fr !important; }   /* mobile single col */
+      .agente-grid { grid-template-columns: 1fr !important; }
       .agente-resize { display: none; }
-      .agente-pane { height: auto; }
-      .agente-col { max-height: 60vh; }
+      .agente-pane { flex: none; height: auto; }
+      .agente-col { max-height: 60vh; height: auto; }
     }
 
     /* v4.1+ — Resize handles port-fedele dal sito (Shell3Col s3c-resizer).
@@ -545,7 +566,7 @@
       </aside>
 
       <!-- ============ CONTENT (center) — tab panes ============ -->
-      <section class="lab-content min-h-[600px]">
+      <section class="lab-content">
 
         <!-- TAB GRAFO -->
         <div x-show="activeTab === 'grafo'" x-transition.opacity.duration.150ms>
