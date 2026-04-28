@@ -32,8 +32,10 @@
     .markdown a, .markdown code { word-break: break-all; }
     .markdown pre { white-space: pre; max-width: 100%; }
     .markdown img { max-width: 100%; height: auto; }
-    /* Container guard — content column must allow shrinkage below intrinsic */
-    .lab-content, .lab-content > * { min-width: 0; }
+    /* Container guard — content column must allow shrinkage below intrinsic.
+       All descendants inherit min-width:0 to prevent any nested grid from
+       pushing the parent track wider than 1fr (mobile especially). */
+    .lab-content, .lab-content * { min-width: 0; }
     .scroll-fade { mask-image: linear-gradient(to bottom, black 80%, transparent 100%); }
     @keyframes pulse-cycle { 0%,100% { opacity: 1 } 50% { opacity: 0.4 } }
     .running { animation: pulse-cycle 1.5s ease-in-out infinite; }
@@ -47,7 +49,9 @@
     /* Bicono dinamico — SVG dipolo singolare-duale, ogni report compila i propri 4 poli.
        Niente fallback statici (es. 'vuoto/pieno'): se il campo manca, il polo resta vuoto
        e segnalato come incompleto — la dashboard non inventa terminologia. */
-    .bicono-card { background: linear-gradient(180deg, rgba(167,139,250,.06) 0%, rgba(34,211,238,.04) 100%); border: 1px solid rgba(167,139,250,.18); border-radius: 0.5rem; padding: 14px; }
+    .bicono-card { background: linear-gradient(180deg, rgba(167,139,250,.06) 0%, rgba(34,211,238,.04) 100%); border: 1px solid rgba(167,139,250,.18); border-radius: 0.5rem; padding: 14px; overflow: hidden; }
+    .bicono-card, .bicono-card *, .bicono-card > .grid { min-width: 0; word-break: break-word; overflow-wrap: anywhere; }
+    .bicono-card svg.bicono-svg { word-break: normal; }                                /* SVG non deve break */
     .bicono-card h4 { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: #c4b5fd; margin: 0 0 8px; font-weight: 600; }
     .bicono-svg { width: 100%; height: auto; max-height: 180px; }
     .bicono-svg .axis { stroke: rgba(148,163,184,.25); stroke-width: 1; }
@@ -60,7 +64,7 @@
     /* Detail card values must wrap — selectedNode.label/verdict possono essere lunghi */
     .detail-card, .detail-card * { min-width: 0; word-break: break-word; overflow-wrap: anywhere; }
     .selected-node-badge span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 200px; }
-    .bicono-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap: 8px; margin-top: 10px; font-size: 12px; }
+    .bicono-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(200px,100%),1fr)); gap: 8px; margin-top: 10px; font-size: 12px; min-width: 0; }
     .bicono-field { padding: 6px 8px; background: rgba(0,0,0,.2); border-left: 2px solid rgba(167,139,250,.4); border-radius: 4px; }
     .bicono-field .label { color: #c4b5fd; font-size: 10px; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 2px; }
     .bicono-field .value { color: #d8dbe7; }
@@ -92,7 +96,8 @@
 
     /* Falsifier card (report viewer) — flag asimmetrici dal counter-pole.
        Color severity: high=rose, medium=amber, low=slate. */
-    .falsifier-card { border: 1px solid rgba(251,113,133,.25); background: linear-gradient(180deg, rgba(251,113,133,.06) 0%, rgba(15,23,42,1) 100%); border-radius: 0.5rem; padding: 14px; margin-bottom: 14px; }
+    .falsifier-card { border: 1px solid rgba(251,113,133,.25); background: linear-gradient(180deg, rgba(251,113,133,.06) 0%, rgba(15,23,42,1) 100%); border-radius: 0.5rem; padding: 14px; margin-bottom: 14px; overflow: hidden; }
+    .falsifier-card, .falsifier-card * { min-width: 0; word-break: break-word; overflow-wrap: anywhere; }
     .falsifier-card.coherent { border-color: rgba(52,211,153,.3); background: linear-gradient(180deg, rgba(52,211,153,.06) 0%, rgba(15,23,42,1) 100%); }
     .falsifier-card.unverifiable { border-color: rgba(148,163,184,.3); background: linear-gradient(180deg, rgba(148,163,184,.06) 0%, rgba(15,23,42,1) 100%); }
     .falsifier-card h4 { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; margin: 0 0 6px; font-weight: 600; }
