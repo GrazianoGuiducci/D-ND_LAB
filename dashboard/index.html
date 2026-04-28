@@ -376,6 +376,28 @@
             </div>
           </div>
 
+          <!-- v4.8 — Counter-pole (falsifier per-lens summary) -->
+          <template x-if="falsifierSummary.n_total_flags > 0">
+            <div>
+              <h4 class="text-xs uppercase tracking-wider text-slate-500 mt-5 mb-2">Counter-pole</h4>
+              <div class="text-[10px] text-slate-500 mb-2" x-text="`${falsifierSummary.n_total_flags} flag su ${falsifierSummary.n_reports_checked} report`"></div>
+              <div class="space-y-1">
+                <template x-for="lens in ['L1','L2','L3','L4','L5']" :key="lens">
+                  <div class="flex items-center justify-between gap-1.5 text-[11px]">
+                    <span class="font-mono text-slate-500" x-text="lens"></span>
+                    <span class="text-slate-300 truncate flex-1" x-text="falsifierSummary.lens_labels?.[lens] || ''"></span>
+                    <span class="font-mono text-rose-300" x-text="falsifierSummary.by_lens?.[lens] || 0"></span>
+                  </div>
+                </template>
+              </div>
+              <div class="flex gap-1 mt-2 text-[9px]">
+                <span class="px-1.5 rounded bg-rose-900/30 text-rose-300" x-text="`high ${falsifierSummary.by_severity?.high || 0}`"></span>
+                <span class="px-1.5 rounded bg-amber-900/30 text-amber-300" x-text="`med ${falsifierSummary.by_severity?.medium || 0}`"></span>
+                <span class="px-1.5 rounded bg-slate-800 text-slate-400" x-text="`low ${falsifierSummary.by_severity?.low || 0}`"></span>
+              </div>
+            </div>
+          </template>
+
           <!-- Legenda -->
           <h4 class="text-xs uppercase tracking-wider text-slate-500 mt-5 mb-2">Legenda</h4>
           <div class="space-y-1.5 text-xs text-slate-400">
@@ -587,16 +609,26 @@
                       <div class="text-[10px] text-slate-500 font-mono" x-text="`model: ${activeFalsifier.model || '?'}`"></div>
                       <template x-for="(flag, i) in activeFalsifier.flags" :key="i">
                         <div class="falsifier-flag" :class="flag.severity">
-                          <div class="mb-1">
-                            <span class="lens-label" x-text="`L${flag.lens}`"></span>
+                          <div class="mb-2 flex items-center gap-2 flex-wrap">
+                            <span class="lens-label" x-text="`L${flag.lens}`" :title="falsifierSummary.lens_labels?.[`L${flag.lens}`] || ''"></span>
                             <span class="severity-label" x-text="flag.severity"></span>
+                            <span class="text-[10px] text-slate-500 italic" x-text="falsifierSummary.lens_labels?.[`L${flag.lens}`] || ''"></span>
                           </div>
-                          <div class="field-label">claim</div>
-                          <div class="field-value" x-text="flag.claim"></div>
-                          <div class="field-label">evidence</div>
-                          <div class="field-value" x-text="flag.evidence"></div>
-                          <div class="field-label">suggestion</div>
-                          <div class="field-value" x-text="flag.suggestion"></div>
+                          <!-- v4.8 — diff view: claim ↔ evidence side-by-side -->
+                          <div class="grid sm:grid-cols-2 gap-2 mb-2">
+                            <div class="bg-rose-950/30 border-l-2 border-rose-700/50 p-2 rounded">
+                              <div class="field-label text-rose-300">claim del report</div>
+                              <div class="field-value" x-text="flag.claim"></div>
+                            </div>
+                            <div class="bg-emerald-950/30 border-l-2 border-emerald-700/50 p-2 rounded">
+                              <div class="field-label text-emerald-300">evidence dei dati</div>
+                              <div class="field-value" x-text="flag.evidence"></div>
+                            </div>
+                          </div>
+                          <div class="bg-slate-800/40 border-l-2 border-purple-700/50 p-2 rounded">
+                            <div class="field-label text-purple-300">→ suggestion (next cycle)</div>
+                            <div class="field-value" x-text="flag.suggestion"></div>
+                          </div>
                         </div>
                       </template>
                     </div>
@@ -1062,6 +1094,9 @@
       // Falsifier — fetched lazily quando il report viene aperto
       activeFalsifier: null,
 
+      // v4.8 — falsifier summary aggregato (campo sidebar counter-pole)
+      falsifierSummary: { n_total_flags: 0, n_reports_checked: 0, by_lens: {}, by_severity: {}, lens_labels: {} },
+
       // v3.10 — mobile drawer state. null | 'left' | 'right'.
       mobileDrawer: null,
 
@@ -1201,9 +1236,21 @@
           this.reloadReports(),
           this.reloadGraph(),
           this.reloadContextIntro(),                           // v3.9 — fetch identity section
+          this.reloadFalsifierSummary(),                       // v4.8 — counter-pole stats
         ]);
         // wait next tick so the #graph-viz container is in the DOM (x-show=true)
         this.$nextTick(() => this.renderGraph());
+      },
+
+      // v4.8 — fetch falsifier summary aggregato
+      async reloadFalsifierSummary() {
+        if (!this.activeDomain) return;
+        try {
+          this.falsifierSummary = await fetch(`/api/domains/${this.activeDomain}/falsifier_summary`).then(r => r.json());
+        } catch (e) {
+          console.error('falsifier summary load failed', e);
+          this.falsifierSummary = { n_total_flags: 0, n_reports_checked: 0, by_lens: {}, by_severity: {}, lens_labels: {} };
+        }
       },
 
       // v3.9 — fetch + cache context intro per il dominio attivo

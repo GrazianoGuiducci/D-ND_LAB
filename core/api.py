@@ -442,6 +442,76 @@ async def get_taxonomy(domain: str, request: Request) -> dict[str, Any]:
     }
 
 
+@app.get("/api/domains/{domain}/falsifier_summary")
+async def get_falsifier_summary(domain: str, request: Request) -> dict[str, Any]:
+    """Aggrega tutti i falsifier_*.json del dominio: conta flag per lens
+    (L1..L5), severity distribution, e ultimi 3 flag come sample. Usato
+    dalla dashboard per mostrare lo stato del counter-pole nel campo
+    sidebar (meta-pattern: quale lens si attiva piu' spesso?)."""
+    await _check_auth(request)
+    _validate_domain(domain)
+    falsifier_dir = paths.domain_data_dir(domain) / "falsifier"
+    if not falsifier_dir.exists():
+        return {
+            "n_reports_checked": 0,
+            "n_total_flags": 0,
+            "by_lens": {f"L{i}": 0 for i in range(1, 6)},
+            "by_severity": {"high": 0, "medium": 0, "low": 0},
+            "recent_flags": [],
+            "lens_labels": _LENS_LABELS,
+        }
+
+    by_lens: dict[str, int] = {f"L{i}": 0 for i in range(1, 6)}
+    by_severity: dict[str, int] = {"high": 0, "medium": 0, "low": 0}
+    recent: list[dict[str, Any]] = []
+    n_reports = 0
+    n_flags_total = 0
+
+    for fp in sorted(falsifier_dir.glob("falsifier_*.json"),
+                     key=lambda p: p.stat().st_mtime, reverse=True):
+        try:
+            rec = json.loads(fp.read_text())
+        except Exception:
+            continue
+        n_reports += 1
+        flags = rec.get("flags") or []
+        for fl in flags:
+            n_flags_total += 1
+            lens_n = fl.get("lens")
+            if isinstance(lens_n, int) and 1 <= lens_n <= 5:
+                by_lens[f"L{lens_n}"] += 1
+            sev = (fl.get("severity") or "").lower()
+            if sev in by_severity:
+                by_severity[sev] += 1
+            if len(recent) < 6:
+                recent.append({
+                    "report": rec.get("report_file"),
+                    "ts": rec.get("timestamp"),
+                    "lens": lens_n,
+                    "severity": sev,
+                    "claim": (fl.get("claim") or "")[:200],
+                    "evidence": (fl.get("evidence") or "")[:200],
+                })
+
+    return {
+        "n_reports_checked": n_reports,
+        "n_total_flags": n_flags_total,
+        "by_lens": by_lens,
+        "by_severity": by_severity,
+        "recent_flags": recent,
+        "lens_labels": _LENS_LABELS,
+    }
+
+
+_LENS_LABELS = {
+    "L1": "Hard constraint vs bias",
+    "L2": "Quantita' vs ratio",
+    "L3": "Axiom continuity",
+    "L4": "Edge case",
+    "L5": "Re-discovery",
+}
+
+
 @app.get("/api/domains/{domain}/falsifier/{filename}")
 async def get_falsifier(domain: str, filename: str, request: Request) -> dict[str, Any]:
     """Return falsifier output for a specific cycle. Filename can be either
