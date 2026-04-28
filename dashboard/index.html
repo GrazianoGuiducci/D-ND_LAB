@@ -599,12 +599,41 @@
           </div>
         </div>
 
-        <!-- TAB INCROCIO TEORIE -->
+        <!-- TAB TASSONOMIA — il "grafo d'insieme" generato da seme + lab_graph -->
         <div x-show="activeTab === 'incrocio'" x-transition.opacity.duration.150ms>
-          <div class="bg-slate-900 border border-slate-800 rounded-lg p-6">
-            <h2 class="text-lg font-medium mb-2">Incrocio teorie</h2>
-            <p class="text-xs text-slate-500 mb-4">Tabella delle 10 pair TQGE+R con costante / dipolo / ponte / insights del lab.</p>
-            <div class="text-slate-500 text-sm py-12 text-center italic">In arrivo (Phase 6 v4)</div>
+          <div class="bg-slate-900 border border-slate-800 rounded-lg p-4">
+            <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
+              <div>
+                <h2 class="text-lg font-medium">Tassonomia — grafo d'insieme</h2>
+                <p class="text-xs text-slate-500" x-text="taxonomyMeta.mode === 'pillars' ? 'Pillar mode: 5 teorie Q/T/G/E/R + cluster reports/tensioni' : (taxonomyMeta.mode === 'flat' ? 'Flat mode: gruppi per tipo (no teorie nel grafo attuale)' : '...')"></p>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-xs text-slate-500 font-mono" x-text="`${taxonomyMeta.n_groups} gruppi · ${taxonomyMeta.n_nodes} nodi · ${taxonomyMeta.n_bridges} ponti`"></span>
+                <button @click="reloadTaxonomy().then(() => renderTaxonomy())" class="text-xs text-slate-500 hover:text-slate-300">refresh</button>
+              </div>
+            </div>
+            <div id="taxonomy-viz" style="width: 100%; height: 540px; background: #0d0e14; border-radius: 0.5rem;"></div>
+            <!-- Legenda gruppi -->
+            <div class="mt-3 flex flex-wrap gap-3 text-xs">
+              <template x-for="g in taxonomyData.groups || []" :key="g.id">
+                <div class="flex items-center gap-1.5">
+                  <i class="legend-dot" :style="`background:${g.color}`"></i>
+                  <span class="text-slate-300" x-text="g.label"></span>
+                  <span class="text-slate-500 font-mono" x-text="`(${g.count})`"></span>
+                </div>
+              </template>
+            </div>
+            <!-- Bridges sintetizzati -->
+            <template x-if="taxonomyData.bridges && taxonomyData.bridges.length > 0">
+              <div class="mt-3 border-t border-slate-800 pt-3">
+                <h4 class="text-xs uppercase tracking-wider text-slate-500 mb-2">Ponti tra gruppi</h4>
+                <div class="flex flex-wrap gap-2">
+                  <template x-for="b in taxonomyData.bridges.slice(0, 12)" :key="`${b.source}-${b.target}`">
+                    <span class="text-xs px-2 py-1 rounded bg-slate-800 text-slate-300 font-mono" x-text="`${b.source} ↔ ${b.target} (${b.weight})`"></span>
+                  </template>
+                </div>
+              </div>
+            </template>
           </div>
         </div>
 
@@ -859,12 +888,13 @@
   };
   const NODE_TYPE_DEFAULT = '#94a3b8';
 
-  // v3 — tab definitions, mirrors LabGraph.tsx:216 activeTab values
+  // v3 — tab definitions, mirrors LabGraph.tsx:216 activeTab values.
+  // v4.11 — INCROCIO ora ospita il taxonomic graph (la 'specialita').
   const TABS = [
     { id: 'grafo',    icon: '⬢', label: 'Grafo' },
     { id: 'bicono',   icon: '◇', label: 'Bicono' },
     { id: 'agente',   icon: '⊙', label: 'Agente' },
-    { id: 'incrocio', icon: '✕', label: 'Incrocio teorie' },
+    { id: 'incrocio', icon: '✕', label: 'Tassonomia' },
   ];
 
   function dashboard() {
@@ -894,6 +924,11 @@
       // v3.5 — bicono gallery state
       biconi: [],
       biconoOnlyComplete: false,
+
+      // v4.11 — taxonomic graph
+      taxonomyData: { groups: [], bridges: [], nodes: [], edges: [] },
+      taxonomyMeta: {},
+      cyTax: null,
 
       // v4.4 — reports filter
       reportsOnlyFlagged: false,
@@ -1022,6 +1057,8 @@
         this.activeReport = null;
         this.selectedNode = null;
         this.biconi = [];                                      // v3.5 — reset bicono cache cross-domain
+        this.taxonomyData = { groups: [], bridges: [], nodes: [], edges: [] };  // v4.11 — reset
+        this.taxonomyMeta = {};
         this.contextIntro = { title: '', intro: '' };          // v3.9 — reset
         this.contextExpanded = false;
         await Promise.all([
@@ -1438,7 +1475,167 @@
         } else if (id === 'bicono' && this.biconi.length === 0) {
           // Lazy fetch — solo al primo accesso al tab
           this.reloadBiconi();
+        } else if (id === 'incrocio') {
+          // v4.11 — lazy fetch tassonomia + render
+          (this.taxonomyData?.groups?.length ? Promise.resolve() : this.reloadTaxonomy())
+            .then(() => this.$nextTick(() => this.renderTaxonomy()));
         }
+      },
+
+      // v4.11 — taxonomic graph: fetch + render con compound nodes
+      async reloadTaxonomy() {
+        if (!this.activeDomain) return;
+        try {
+          const t = await fetch(`/api/domains/${this.activeDomain}/taxonomy`).then(r => r.json());
+          this.taxonomyData = t;
+          this.taxonomyMeta = t.meta || {};
+        } catch (e) {
+          console.error('taxonomy load failed', e);
+          this.taxonomyData = { groups: [], bridges: [], nodes: [], edges: [] };
+          this.taxonomyMeta = {};
+        }
+      },
+
+      renderTaxonomy() {
+        const container = document.getElementById('taxonomy-viz');
+        if (!container) return;
+        if (this.cyTax) { try { this.cyTax.destroy(); } catch (e) {} this.cyTax = null; }
+
+        const groups = this.taxonomyData.groups || [];
+        const nodes = this.taxonomyData.nodes || [];
+        const edges = this.taxonomyData.edges || [];
+
+        if (groups.length === 0) {
+          container.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#64748b;font-size:14px">Tassonomia vuota — esegui un ciclo per popolare il grafo.</div>';
+          return;
+        }
+
+        // Build node→group lookup
+        const nodeGroup = {};
+        groups.forEach(g => (g.members || []).forEach(m => { nodeGroup[m] = g.id; }));
+
+        // Compound nodes: each group is a parent; its members are children with parent reference.
+        const cyNodes = [];
+        groups.forEach(g => {
+          cyNodes.push({
+            data: { id: `_grp_${g.id}`, label: `${g.label} (${g.count})`, isGroup: true, color: g.color },
+            classes: 'group-parent',
+          });
+        });
+        nodes.forEach(n => {
+          const parent = nodeGroup[n.id];
+          if (!parent) return;
+          cyNodes.push({
+            data: {
+              id: n.id,
+              label: this._truncate(n.label || n.id || '', 22),
+              type: n.type || 'unknown',
+              parent: `_grp_${parent}`,
+              color: NODE_TYPE_COLOR[n.type] || NODE_TYPE_DEFAULT,
+              full: n,
+            },
+          });
+        });
+
+        // Edges: passthrough from lab_graph; styled differently when crossing groups
+        const cyEdges = edges.map((e, i) => {
+          const ga = nodeGroup[e.source];
+          const gb = nodeGroup[e.target];
+          const crossGroup = ga && gb && ga !== gb;
+          return {
+            data: {
+              id: e.id || `tax_e${i}`,
+              source: e.source,
+              target: e.target,
+              type: e.type || 'rel',
+              crossGroup,
+            },
+          };
+        }).filter(e => nodeGroup[e.data.source] && nodeGroup[e.data.target]);
+
+        this.cyTax = cytoscape({
+          container,
+          elements: { nodes: cyNodes, edges: cyEdges },
+          style: [
+            {
+              selector: 'node',
+              style: {
+                'background-color': (ele) => ele.data('color') || NODE_TYPE_DEFAULT,
+                'label': 'data(label)',
+                'color': '#cbd5e1',
+                'font-size': 9,
+                'font-family': 'ui-monospace, monospace',
+                'text-valign': 'bottom',
+                'text-margin-y': 4,
+                'width': 12,
+                'height': 12,
+              },
+            },
+            {
+              selector: 'node[?isGroup]',
+              style: {
+                'background-color': (ele) => ele.data('color'),
+                'background-opacity': 0.06,
+                'border-color': (ele) => ele.data('color'),
+                'border-width': 1.5,
+                'border-opacity': 0.6,
+                'label': 'data(label)',
+                'color': (ele) => ele.data('color'),
+                'font-size': 12,
+                'font-weight': 600,
+                'font-family': 'ui-sans-serif, system-ui',
+                'text-valign': 'top',
+                'text-margin-y': -8,
+                'text-opacity': 1,
+                'shape': 'round-rectangle',
+                'padding': '12px',
+              },
+            },
+            {
+              selector: 'edge',
+              style: {
+                'width': 1,
+                'line-color': 'rgba(148,163,184,.18)',
+                'target-arrow-color': 'rgba(148,163,184,.3)',
+                'target-arrow-shape': 'triangle',
+                'arrow-scale': 0.5,
+                'curve-style': 'bezier',
+              },
+            },
+            {
+              selector: 'edge[?crossGroup]',
+              style: {
+                'line-color': '#a78bfa',
+                'target-arrow-color': '#c4b5fd',
+                'width': 2,
+                'opacity': 0.85,
+              },
+            },
+          ],
+          layout: {
+            name: 'cose',
+            animate: false,
+            nodeRepulsion: 12000,
+            idealEdgeLength: 80,
+            padding: 30,
+            componentSpacing: 80,
+            fit: true,
+          },
+          minZoom: 0.3,
+          maxZoom: 3,
+          wheelSensitivity: 0.2,
+        });
+
+        // Click su nodo membro → seleziona + apri sidebar dettaglio
+        this.cyTax.on('tap', 'node', (evt) => {
+          const node = evt.target;
+          if (node.data('isGroup')) return;
+          this.selectedNode = node.data('full');
+          this.sidebarRightOpen = true;
+          if (window.matchMedia('(max-width: 1024px)').matches) {
+            this.openMobileDrawer('right');
+          }
+        });
       },
 
       // v3.5 — galleria bicono

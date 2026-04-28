@@ -305,6 +305,143 @@ async def get_report(domain: str, filename: str, request: Request) -> dict[str, 
     }
 
 
+@app.get("/api/domains/{domain}/taxonomy")
+async def get_taxonomy(domain: str, request: Request) -> dict[str, Any]:
+    """Taxonomic graph endpoint — il 'grafo d'insieme' richiesto dall'operatore.
+
+    Aggrega i nodi del lab_graph in gruppi semanticamente coesi e calcola i
+    bridge (numero di edge cross-group). Pillars (top-level groups) sono:
+
+      - Per domini con teoria nodes (Q/T/G/E/R): le 5 teorie sono i pillar,
+        ogni report/tensione viene clusterizzato sotto la teoria con cui
+        condivide piu' lettere nell'id (defensive heuristic).
+      - Per domini senza teoria: pillar = node.type (tensione/report/scoperta
+        /ghost). Layout piatto.
+
+    Output:
+      {
+        groups: [{id, label, color, count, members: [node_ids]}],
+        bridges: [{source: groupA, target: groupB, weight: N}],
+        nodes: [...lab_graph nodes...],   # passthrough per il render
+        edges: [...lab_graph edges...],
+        meta: {domain, n_groups, n_nodes, n_bridges, mode: 'pillars'|'flat'}
+      }
+    """
+    await _check_auth(request)
+    _validate_domain(domain)
+
+    lab_graph_path = paths.domain_data_dir(domain) / "lab_graph.json"
+    if not lab_graph_path.exists():
+        return {"groups": [], "bridges": [], "nodes": [], "edges": [],
+                "meta": {"domain": domain, "n_groups": 0, "n_nodes": 0, "n_bridges": 0, "mode": "empty"}}
+    try:
+        graph_data = json.loads(lab_graph_path.read_text())
+    except Exception:
+        raise HTTPException(500, "lab_graph.json corrupted")
+
+    nodes = graph_data.get("graph", {}).get("nodes", []) or []
+    edges = graph_data.get("graph", {}).get("edges", []) or []
+
+    # Pillars: try theoria-first; fall back to type-based grouping.
+    THEORY_LETTERS = ["Q", "T", "G", "E", "R"]
+    THEORY_LABELS = {"Q": "Quantum", "T": "Topology", "G": "Geometry",
+                     "E": "Entropy", "R": "Representation"}
+    THEORY_COLORS = {"Q": "#a78bfa", "T": "#34d399", "G": "#22d3ee",
+                     "E": "#fbbf24", "R": "#fb7185"}
+
+    teoria_nodes = [n for n in nodes if n.get("type") == "teoria"]
+    if teoria_nodes:
+        # Theory pillar mode
+        mode = "pillars"
+        groups: list[dict[str, Any]] = []
+        # Build pillars from existing teoria nodes
+        for letter in THEORY_LETTERS:
+            tn = next((t for t in teoria_nodes
+                       if (t.get("id") or "").upper().startswith(letter)), None)
+            if tn:
+                groups.append({
+                    "id": letter,
+                    "label": tn.get("label") or THEORY_LABELS[letter],
+                    "color": THEORY_COLORS[letter],
+                    "letter": letter,
+                    "count": 0,
+                    "members": [tn["id"]],
+                })
+        # Cluster non-teoria nodes by which letters appear in their id+label
+        def best_pillar(node: dict) -> str | None:
+            haystack = (str(node.get("id", "")) + " " + str(node.get("label", ""))).upper()
+            scores = {letter: haystack.count(letter) for letter in THEORY_LETTERS}
+            top = max(scores.items(), key=lambda kv: kv[1])
+            return top[0] if top[1] > 0 else None
+        for n in nodes:
+            if n.get("type") == "teoria":
+                continue
+            p = best_pillar(n)
+            if p is None:
+                continue
+            for g in groups:
+                if g["id"] == p:
+                    g["members"].append(n["id"])
+                    g["count"] += 1
+                    break
+    else:
+        # Flat mode — group by node.type
+        mode = "flat"
+        TYPE_LABELS = {"tensione": "Tensioni", "report": "Reports",
+                       "teoria": "Teorie", "scoperta": "Scoperte",
+                       "ghost": "Ghosts", "ponte": "Ponti", "vuoto": "Vuoti"}
+        TYPE_COLORS = {"tensione": "#22d3ee", "report": "#a78bfa",
+                       "teoria": "#34d399", "scoperta": "#f472b6",
+                       "ghost": "#fbbf24", "ponte": "#818cf8", "vuoto": "#fb7185"}
+        type_groups: dict[str, dict[str, Any]] = {}
+        for n in nodes:
+            t = n.get("type") or "altro"
+            if t not in type_groups:
+                type_groups[t] = {
+                    "id": t,
+                    "label": TYPE_LABELS.get(t, t.title()),
+                    "color": TYPE_COLORS.get(t, "#94a3b8"),
+                    "letter": "",
+                    "count": 0,
+                    "members": [],
+                }
+            type_groups[t]["members"].append(n["id"])
+            type_groups[t]["count"] += 1
+        groups = list(type_groups.values())
+
+    # Build node→group lookup for bridge computation
+    node_group: dict[str, str] = {}
+    for g in groups:
+        for m in g["members"]:
+            node_group[m] = g["id"]
+
+    # Bridges = edges that cross distinct groups
+    bridges_count: dict[tuple[str, str], int] = {}
+    for e in edges:
+        ga = node_group.get(e.get("source"))
+        gb = node_group.get(e.get("target"))
+        if not ga or not gb or ga == gb:
+            continue
+        key = tuple(sorted([ga, gb]))
+        bridges_count[key] = bridges_count.get(key, 0) + 1
+    bridges = [{"source": k[0], "target": k[1], "weight": v}
+               for k, v in sorted(bridges_count.items(), key=lambda kv: -kv[1])]
+
+    return {
+        "groups": groups,
+        "bridges": bridges,
+        "nodes": nodes,
+        "edges": edges,
+        "meta": {
+            "domain": domain,
+            "n_groups": len(groups),
+            "n_nodes": len(nodes),
+            "n_bridges": len(bridges),
+            "mode": mode,
+        },
+    }
+
+
 @app.get("/api/domains/{domain}/falsifier/{filename}")
 async def get_falsifier(domain: str, filename: str, request: Request) -> dict[str, Any]:
     """Return falsifier output for a specific cycle. Filename can be either
