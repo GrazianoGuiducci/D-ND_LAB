@@ -901,21 +901,10 @@
 
               <template x-if="reports.length > 0">
                 <div>
-                  <!-- Timeline SVG -->
+                  <!-- Timeline SVG — innerHTML generato in JS (template x-for
+                       in SVG namespace ha bug noti con Alpine). -->
                   <div class="bg-slate-950 rounded-lg p-4 overflow-x-auto">
-                    <svg :viewBox="`0 0 ${trajectoryViewBox().w} ${trajectoryViewBox().h}`" preserveAspectRatio="xMidYMid meet" style="width:100%; min-width: 720px; height: 240px;">
-                      <!-- Axis -->
-                      <line :x1="40" :y1="trajectoryViewBox().h - 30" :x2="trajectoryViewBox().w - 20" :y2="trajectoryViewBox().h - 30" stroke="rgba(148,163,184,.25)" stroke-width="1"/>
-                      <!-- Reports as circles + stems -->
-                      <template x-for="(p, i) in trajectoryPoints()" :key="p.filename">
-                        <g style="cursor: pointer" @click="openReportFromTrajectory(p.filename)" @mouseenter="$el.style.opacity='1'" @mouseleave="$el.style.opacity='.85'" :style="`opacity:.85`">
-                          <line :x1="p.x" :y1="trajectoryViewBox().h - 30" :x2="p.x" :y2="p.y + 8" :stroke="p.color" stroke-width="1.5" stroke-opacity="0.5"/>
-                          <circle :cx="p.x" :cy="p.y" :r="p.r" :fill="p.color" stroke="white" stroke-opacity="0.18" stroke-width="1"/>
-                          <text :x="p.x" :y="trajectoryViewBox().h - 14" text-anchor="middle" fill="#94a3b8" style="font: 9px ui-monospace, monospace" x-text="p.shortDate"></text>
-                          <title x-text="`${p.title}\n${p.verdictCategory} · ${p.n_flags} flag · ${p.shortDate}`"></title>
-                        </g>
-                      </template>
-                    </svg>
+                    <div x-html="trajectoryHtml()" @click="onTrajectoryClick($event)"></div>
                   </div>
 
                   <!-- Legend categorie verdict -->
@@ -1745,10 +1734,8 @@
                 'border-color': 'rgba(255,255,255,.35)',
               },
             },
-            {
-              selector: 'node:hover',
-              style: { 'text-opacity': 1 },
-            },
+            /* Cytoscape non supporta selettore :hover — l'effetto e' wired
+               via cy.on('mouseover','node',...) piu' giu'. */
             {
               selector: 'node:selected',
               style: {
@@ -1933,10 +1920,13 @@
         if (window.matchMedia('(max-width: 1024px)').matches) return;
         if (this._sidebarTipHideTimer) { clearTimeout(this._sidebarTipHideTimer); this._sidebarTipHideTimer = null; }
         this.sidebarTipSide = side;
+        // Capture aside element BEFORE nextTick — ev.currentTarget e' null
+        // dopo che il browser ha cleaned-up l'evento (Alpine async).
+        const aside = ev?.currentTarget;
+        if (!aside) return;
         this.$nextTick(() => {
           const tip = document.getElementById('sidebar-tip');
           if (!tip) return;
-          const aside = ev.currentTarget;
           const rect = aside.getBoundingClientRect();
           // Position to the right of left sidebar, to the left of right sidebar
           if (side === 'left') {
@@ -2126,6 +2116,35 @@
       openReportFromTrajectory(filename) {
         this.activeTab = 'agente';
         this.openReport(filename);
+      },
+
+      // Trajectory SVG generato come HTML string per evitare i bug noti di
+      // <template x-for> dentro SVG namespace (Alpine importNode fail).
+      trajectoryHtml() {
+        const pts = this.trajectoryPoints();
+        if (!pts || pts.length === 0) return '';
+        const vb = this.trajectoryViewBox();
+        const escAttr = (s) => String(s ?? '').replace(/"/g, '&quot;').replace(/&/g, '&amp;').replace(/</g, '&lt;');
+        const groups = pts.map(p => {
+          const yBase = vb.h - 30;
+          const lineEnd = vb.h - 14;
+          const titleAttr = escAttr(`${p.title}\n${p.verdictCategory} · ${p.n_flags} flag · ${p.shortDate}`);
+          return `<g style="cursor:pointer;opacity:.85" data-filename="${escAttr(p.filename)}">
+            <title>${titleAttr}</title>
+            <line x1="${p.x}" y1="${yBase}" x2="${p.x}" y2="${p.y + 8}" stroke="${p.color}" stroke-width="1.5" stroke-opacity="0.5"/>
+            <circle cx="${p.x}" cy="${p.y}" r="${p.r}" fill="${p.color}" stroke="white" stroke-opacity="0.18" stroke-width="1"/>
+            <text x="${p.x}" y="${lineEnd}" text-anchor="middle" fill="#94a3b8" style="font:9px ui-monospace,monospace">${escAttr(p.shortDate)}</text>
+          </g>`;
+        }).join('');
+        return `<svg viewBox="0 0 ${vb.w} ${vb.h}" preserveAspectRatio="xMidYMid meet" style="width:100%;min-width:720px;height:240px">
+          <line x1="40" y1="${vb.h - 30}" x2="${vb.w - 20}" y2="${vb.h - 30}" stroke="rgba(148,163,184,.25)" stroke-width="1"/>
+          ${groups}
+        </svg>`;
+      },
+
+      onTrajectoryClick(ev) {
+        const g = ev.target.closest('g[data-filename]');
+        if (g) this.openReportFromTrajectory(g.dataset.filename);
       },
 
       renderTaxonomy() {
