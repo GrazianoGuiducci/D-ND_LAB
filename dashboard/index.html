@@ -1028,14 +1028,41 @@
             full: n,
           },
         }));
-        const edges = (this.graphData.graph?.edges || []).map((e, i) => ({
-          data: {
-            id: e.id || `e${i}`,
-            source: e.source,
-            target: e.target,
-            type: e.type || 'rel',
-          },
-        }));
+        // v4.5 — derive pair color for edges between teorie (ponte/dipolo edges)
+        const teoriaIds = new Set(
+          (this.graphData.graph?.nodes || [])
+            .filter(n => n.type === 'teoria')
+            .map(n => n.id)
+        );
+        const pairFromIds = (a, b) => {
+          // Extract first matching letter Q/T/G/E/R from each id
+          const letterOf = (id) => (String(id).match(/[QTGER]/) || [''])[0];
+          const la = letterOf(a), lb = letterOf(b);
+          if (!la || !lb) return null;
+          // Try both orderings against PAIR_COLOR
+          return PAIR_COLOR[la + 'x' + lb] ? la + 'x' + lb
+               : PAIR_COLOR[lb + 'x' + la] ? lb + 'x' + la
+               : null;
+        };
+        const edges = (this.graphData.graph?.edges || []).map((e, i) => {
+          const isPonte = e.type === 'ponte' || (teoriaIds.has(e.source) && teoriaIds.has(e.target));
+          const pair = e.pair || (isPonte ? pairFromIds(e.source, e.target) : null);
+          const pairColor = pair && PAIR_COLOR[pair];
+          // Label derivation: explicit label > pair > costante
+          const label = e.label || pair || e.costante || '';
+          return {
+            data: {
+              id: e.id || `e${i}`,
+              source: e.source,
+              target: e.target,
+              type: e.type || 'rel',
+              isPonte,
+              pair,
+              pairColor: pairColor || null,
+              label,
+            },
+          };
+        });
         if (nodes.length === 0) {
           container.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#64748b;font-size:14px">Graph is empty — run a cycle to populate it.</div>';
           return;
@@ -1105,9 +1132,45 @@
                 'curve-style': 'bezier',
               },
             },
+            // v4.5 — Ponte edges (teoria↔teoria) usano pair color dalla palette
+            // BiconoLab. Defensive: se nessuna pair derivabile, fallback sul default.
+            {
+              selector: 'edge[?isPonte]',
+              style: {
+                'line-color': (ele) => ele.data('pairColor') || '#64748b',
+                'target-arrow-color': (ele) => ele.data('pairColor') || '#64748b',
+                'width': 2,
+                'opacity': 0.85,
+              },
+            },
+            // Covers edges (report→tension): cyan tenue, semantica diversa dai ponti
+            {
+              selector: 'edge[type = "covers"]',
+              style: {
+                'line-color': 'rgba(34,211,238,.3)',
+                'target-arrow-color': 'rgba(34,211,238,.5)',
+                'line-style': 'dashed',
+              },
+            },
+            // Edge labels — visibili quando il toggle "Mostra tutti i nomi" e' on
+            // o sempre per i ponti (sono utili: mostrano la pair).
+            {
+              selector: 'edge[label]',
+              style: {
+                'label': 'data(label)',
+                'font-size': 9,
+                'font-family': 'ui-monospace, monospace',
+                'color': '#cbd5e1',
+                'text-background-color': 'rgba(15,23,42,.85)',
+                'text-background-opacity': 1,
+                'text-background-padding': '2px',
+                'text-rotation': 'autorotate',
+                'text-opacity': 1,
+              },
+            },
             {
               selector: 'edge:selected',
-              style: { 'line-color': '#a78bfa', 'width': 2 },
+              style: { 'line-color': '#a78bfa', 'width': 2.5 },
             },
           ],
           layout: {
