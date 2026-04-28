@@ -71,13 +71,35 @@
     .bicono-field.empty { opacity: .4; border-left-color: rgba(148,163,184,.3); }
     .bicono-field.empty .value::after { content: '— assente nel report'; color: #64748b; font-style: italic; }
 
-    /* v4.3 — Closed-state sidebar tooltip. Quando una sidebar e' collassata
-       (40px), hover sull'aside mostra un peek popover col summary del content.
-       Pattern Shell3Col closedTooltip. Single instance, posizionato da JS. */
-    .sidebar-tip { position: fixed; z-index: 60; opacity: 0; visibility: hidden; transition: opacity 120ms cubic-bezier(0.4,0,0.2,1); width: 240px; background: rgb(15 23 42); border: 1px solid rgb(51 65 85); border-radius: 8px; padding: 12px; box-shadow: 0 8px 24px rgba(0,0,0,.5); font-size: 12px; pointer-events: none; }
+    /* v4.3 + UI fix #6 — Sidebar peek tooltip (closed-state preview).
+       Pattern Shell3Col s3c-tip-portal portato fedelmente: width 260..340,
+       elev background, JetBrains Mono per il title in caps + tracking,
+       box-shadow 12px 34px nera 55%. */
+    .sidebar-tip {
+      position: fixed; z-index: 60;
+      min-width: 260px; max-width: 340px;
+      background: rgb(16 16 22);
+      border: 1px solid rgb(255 255 255 / 0.14);
+      border-radius: 10px;
+      padding: 0.85rem 0.95rem;
+      box-shadow: 0 12px 34px rgb(0 0 0 / 0.55);
+      opacity: 0; visibility: hidden; pointer-events: none;
+      transition: opacity 180ms cubic-bezier(0.25,0.1,0.25,1);
+      font-size: 0.875rem; line-height: 1.45;
+      color: rgb(215 218 230);
+    }
     .sidebar-tip.visible { opacity: 1; visibility: visible; }
-    .sidebar-tip h5 { color: #c4b5fd; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; margin: 0 0 8px; }
-    .sidebar-tip .stat-row { font-size: 11px; padding: 2px 0; border-bottom: 1px solid rgb(30 41 59); }
+    .sidebar-tip h5 {
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+      font-size: 0.7rem; letter-spacing: 0.14em; text-transform: uppercase;
+      color: rgb(170 175 190);
+      margin: 0 0 0.5rem;
+    }
+    .sidebar-tip .stat-row {
+      font-size: 0.78rem; padding: 0.3rem 0;
+      border-bottom: 1px solid rgb(255 255 255 / 0.06);
+      display: flex; justify-content: space-between; align-items: baseline;
+    }
     .sidebar-tip .stat-row:last-child { border-bottom: 0; }
     @media (max-width: 1024px) { .sidebar-tip { display: none; } }
 
@@ -347,21 +369,6 @@
 
   <!-- DOMAIN: 3-col layout full-page (no container, edge-to-edge come il sito ai-lab) -->
   <main x-show="view === 'domain' && activeDomain" class="px-4 py-3 space-y-3">
-
-    <!-- v3.9 — Sezione descrittiva top (cosa accade qui).
-         Letto da domains/<d>/context.md, prima sezione Identity/Chi sei.
-         Espandibile (default collapsed dopo il primo paragrafo). -->
-    <template x-if="contextIntro.intro">
-      <section class="bg-slate-900/60 border border-slate-800 rounded-lg px-5 py-4">
-        <div class="flex items-start justify-between gap-3 mb-2">
-          <h2 class="text-base font-medium text-purple-300" x-text="contextIntro.title || 'Cosa accade qui'"></h2>
-          <button @click="contextExpanded = !contextExpanded" class="text-xs text-slate-500 hover:text-slate-300 whitespace-nowrap">
-            <span x-text="contextExpanded ? '↑ comprimi' : '↓ espandi'"></span>
-          </button>
-        </div>
-        <div class="markdown text-sm text-slate-300" :class="contextExpanded ? '' : 'line-clamp-3'" x-html="renderMarkdown(contextIntro.intro)"></div>
-      </section>
-    </template>
 
     <!-- Tab bar — pattern da /opt/d-nd_com/components/LabGraph.tsx:216 -->
     <div class="lab-tabs">
@@ -831,6 +838,65 @@
           </div>
         </div>
 
+        <!-- TAB INFO/DOC — context.md del dominio + reference utili (UI fix #5).
+             Sostituisce la card intro che rubava spazio in alto. -->
+        <div x-show="activeTab === 'info'" x-transition.opacity.duration.150ms>
+          <div class="bg-slate-900 border border-slate-800 rounded-lg p-6 space-y-4">
+            <div>
+              <h2 class="text-lg font-medium" x-text="contextIntro.title || 'Info'"></h2>
+              <p class="text-xs text-slate-500 mt-1">Cosa fa questo lab, come leggere la dashboard, dove sono i dati. Letto dal context.md del dominio.</p>
+            </div>
+
+            <template x-if="contextIntro.intro">
+              <div class="markdown text-sm text-slate-200" x-html="renderMarkdown(contextIntro.intro)"></div>
+            </template>
+
+            <div class="border-t border-slate-800 pt-4">
+              <h3 class="text-sm font-medium text-purple-300 mb-2">Come si legge la dashboard</h3>
+              <ul class="text-sm text-slate-300 space-y-2 list-disc list-inside">
+                <li><strong>Grafo</strong> — knowledge graph del dominio. Click su un nodo apre il dettaglio a destra; tooltip al hover con azioni rapide.</li>
+                <li><strong>Bicono</strong> — galleria delle scoperte: 4 poli (radici/singolare/invariante/campo) parsati dal report.</li>
+                <li><strong>Agente</strong> — lista cicli con verdict + flag dal counter-pole. Filter Cimitero per i report falsificati.</li>
+                <li><strong>Tassonomia</strong> — grafo d'insieme aggregato per pillar/type, con sub-mode Trajectory (timeline cronologica).</li>
+                <li><strong>Chat</strong> (icona viola in basso a destra) — il lab risponde, può anche proporre azioni (inject tension, run cycle) che richiedono conferma.</li>
+              </ul>
+            </div>
+
+            <div class="border-t border-slate-800 pt-4">
+              <h3 class="text-sm font-medium text-purple-300 mb-2">Pipeline movements</h3>
+              <p class="text-xs text-slate-400 mb-2">Ogni ciclo notturno esegue 17 movements in sequenza:</p>
+              <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-1.5 text-[11px] font-mono">
+                <span class="bg-slate-800/50 rounded px-2 py-1">autopsy</span>
+                <span class="bg-slate-800/50 rounded px-2 py-1">build_field</span>
+                <span class="bg-slate-800/50 rounded px-2 py-1 text-purple-300">agent</span>
+                <span class="bg-slate-800/50 rounded px-2 py-1 text-rose-300">report_falsifier</span>
+                <span class="bg-slate-800/50 rounded px-2 py-1">validate_seed</span>
+                <span class="bg-slate-800/50 rounded px-2 py-1">verify_assertions</span>
+                <span class="bg-slate-800/50 rounded px-2 py-1">structural_check</span>
+                <span class="bg-slate-800/50 rounded px-2 py-1">build_lab_data</span>
+                <span class="bg-slate-800/50 rounded px-2 py-1">build_graph</span>
+                <span class="bg-slate-800/50 rounded px-2 py-1">sync</span>
+                <span class="bg-slate-800/50 rounded px-2 py-1">verify_endpoints</span>
+                <span class="bg-slate-800/50 rounded px-2 py-1">refiner</span>
+                <span class="bg-slate-800/50 rounded px-2 py-1">semantic_bridge</span>
+                <span class="bg-slate-800/50 rounded px-2 py-1">refresh_detector</span>
+                <span class="bg-slate-800/50 rounded px-2 py-1">seed_integrator</span>
+                <span class="bg-slate-800/50 rounded px-2 py-1">trajectory_evaluator</span>
+                <span class="bg-slate-800/50 rounded px-2 py-1">notify</span>
+              </div>
+            </div>
+
+            <div class="border-t border-slate-800 pt-4">
+              <h3 class="text-sm font-medium text-purple-300 mb-2">Reference</h3>
+              <div class="text-sm text-slate-300 space-y-1">
+                <div>· Repo: <a href="https://github.com/GrazianoGuiducci/D-ND_LAB" target="_blank" class="text-cyan-400 hover:underline">github.com/GrazianoGuiducci/D-ND_LAB</a></div>
+                <div>· Modello D-ND: f(x)=1+1/x · M=[[1,1],[1,0]] · det(M)=−1 · punto fisso φ</div>
+                <div>· Versione dashboard: <span class="font-mono text-slate-500" x-text="health.version || '?'"></span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </section>
 
       <!-- ============ SIDEBAR DETTAGLIO (right) ============ -->
@@ -1118,12 +1184,14 @@
   const NODE_TYPE_DEFAULT = '#94a3b8';
 
   // v3 — tab definitions, mirrors LabGraph.tsx:216 activeTab values.
-  // v4.11 — INCROCIO ora ospita il taxonomic graph (la 'specialita').
+  // v4.11 — INCROCIO ora ospita il taxonomic graph.
+  // UI fix #5 — Info tab al posto della card intro (operatore: "ruba spazio").
   const TABS = [
     { id: 'grafo',    icon: '⬢', label: 'Grafo' },
     { id: 'bicono',   icon: '◇', label: 'Bicono' },
     { id: 'agente',   icon: '⊙', label: 'Agente' },
     { id: 'incrocio', icon: '✕', label: 'Tassonomia' },
+    { id: 'info',     icon: 'ⓘ', label: 'Info' },
   ];
 
   function dashboard() {
@@ -2178,6 +2246,12 @@
       async openReport(filename) {
         const r = await fetch(`/api/domains/${this.activeDomain}/reports/${encodeURIComponent(filename)}`).then(r => r.json());
         this.activeReport = r;
+        // UI fix #7 — quando si apre un report nel tab AGENTE, auto-collapse
+        // sidebar DETTAGLIO (e' ridondante: il viewer mostra gia' tutto).
+        // Evita il problema "4 colonne". L'utente puo' riaprirla manualmente.
+        if (this.activeTab === 'agente' && window.matchMedia('(min-width: 1025px)').matches) {
+          this.sidebarRightOpen = false;
+        }
         // Fetch falsifier output (may not exist for older reports)
         this.activeFalsifier = null;
         try {
