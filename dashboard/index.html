@@ -53,10 +53,13 @@
       flex-direction: column;
     }
     .lab-content * { min-width: 0; }
-    /* Tab pane: ogni x-show toggle e' un figlio di lab-content. Quando
-       attivo, deve riempire l'altezza disponibile. */
+    /* Tab pane: ogni x-show toggle e' figlio di lab-content. Quando attivo
+       fill l'altezza disponibile. NB: NON facciamo flex:1 sul first-child
+       generico — solo grafo-pane ha bisogno (wrapper card che contiene il
+       graph-viz-wrap). agente-pane usa flex chain proprio (selector
+       flex-shrink + viewer flex:1). */
     .lab-content > [x-show] { flex: 1; min-height: 0; display: flex; flex-direction: column; }
-    .lab-content > [x-show] > div:first-child { flex: 1; min-height: 0; }
+    .grafo-pane > div:first-child { flex: 1; min-height: 0; }
     .scroll-fade { mask-image: linear-gradient(to bottom, black 80%, transparent 100%); }
     @keyframes pulse-cycle { 0%,100% { opacity: 1 } 50% { opacity: 0.4 } }
     .running { animation: pulse-cycle 1.5s ease-in-out infinite; }
