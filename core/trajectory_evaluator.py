@@ -199,6 +199,16 @@ def trajectory_evaluator(ctx: CycleContext) -> None:
             "EXECUTED" if execute else "log-only",
         )
 
+        # Cimitero auto-write hook (29/04). Quando il falsifier ha trovato HIGH
+        # flag E il valutatore decide CRYSTALLIZE con confidence high, il
+        # claim flaggato + evidence vengono archiviati nel cimitero del
+        # dominio. Domain-agnostic: legge i flag dal record falsifier_<ts>.json
+        # e usa il pattern strutturato '### Title\n---' del cimitero.
+        try:
+            _maybe_write_cimitero(ctx, decision)
+        except Exception as e:
+            logger.warning("cimitero auto-write skipped: %s", e)
+
     except NotImplementedError:
         _log_failure(log_path, ts, "llm_not_implemented",
                      reasoning="llm_adapter not implemented (Phase 2)")
@@ -477,6 +487,108 @@ def _execute_action(ctx: CycleContext, decision: dict[str, Any]) -> dict[str, An
                 "error": "continuous mode reserved for operator authorization"}
 
     return {"type": action_type, "ok": False, "error": "unknown action type"}
+
+
+# ─── Cimitero auto-write (universal) ──────────────────────────────
+
+
+def _maybe_write_cimitero(ctx: CycleContext, decision: dict[str, Any]) -> None:
+    """Append falsified claims to domains/<domain>/cimitero.md.
+
+    Trigger conditions (BOTH required):
+      - Falsifier produced HIGH severity flags this cycle
+      - Evaluator decision is CRYSTALLIZE with confidence high
+        (the claim has matured enough to be archived as falsified)
+
+    The pattern follows the structured cimitero format used in MM_D-ND:
+
+        ### <Title — short claim>
+
+        **Cosa diceva**: <claim from falsifier flag>
+        **Come è caduto**: <evidence + lens reference>
+        **Sostituito da**: <suggestion if present, else "—">
+        **Data falsificazione**: <date, cycle_ts, source>
+
+        ---
+
+    Idempotent: if an entry with the same cycle_ts already exists in
+    cimitero.md, the function returns silently. Domain-agnostic: each
+    domain accumulates its own cimitero in domains/<domain>/cimitero.md.
+    """
+    if (decision.get("decision") or "").upper() != "CRYSTALLIZE":
+        return
+    if (decision.get("confidence") or "").lower() != "high":
+        return
+
+    ts = ctx.timestamp
+    falsifier_path = paths.domain_data_dir(ctx.domain) / "falsifier" / f"falsifier_{ts}.json"
+    if not falsifier_path.exists():
+        return
+
+    try:
+        record = json.loads(falsifier_path.read_text())
+    except Exception:
+        return
+
+    flags = record.get("flags") or []
+    high_flags = [f for f in flags if isinstance(f, dict) and (f.get("severity") or "").lower() == "high"]
+    if not high_flags:
+        return
+
+    cimitero_path = Path("/opt/D-ND_LAB") / "domains" / ctx.domain / "cimitero.md"
+
+    # Idempotency check: if cimitero already contains this cycle ts, skip
+    if cimitero_path.exists():
+        existing = cimitero_path.read_text(errors="replace")
+        if f"cycle {ts}" in existing or f"falsifier_{ts}" in existing:
+            return
+
+    # Initialize cimitero if absent
+    if not cimitero_path.exists():
+        cimitero_path.parent.mkdir(parents=True, exist_ok=True)
+        cimitero_path.write_text(
+            "# Cimitero — Claim falsificati o declassati\n\n"
+            "> Qui finisce cio' che non ha superato il dubbio.\n"
+            "> Ogni voce: cosa diceva, perche' e' uscita, cosa l'ha sostituita, data.\n"
+            "> Il cimitero e' la memoria del filtro. Senza cimitero, il condensato non sa calibrarsi.\n\n"
+            "---\n\n"
+            "*Il cimitero cresce. Il condensato si densifica. Il rapporto tra i due e' la misura della maturita' del filtro.*\n"
+        )
+
+    text = cimitero_path.read_text(errors="replace")
+    closing_line = "*Il cimitero cresce."
+
+    # Build the new entries block (one per HIGH flag)
+    new_block_parts: list[str] = []
+    for fl in high_flags:
+        claim = (fl.get("claim") or "").strip()
+        evidence = (fl.get("evidence") or "").strip()
+        suggestion = (fl.get("suggestion") or "").strip()
+        lens = fl.get("lens", "?")
+        title = claim[:80] if claim else f"Lens L{lens} flag (cycle {ts})"
+        # Strip trailing punctuation from title for cleaner heading
+        title = title.rstrip(".:,;")
+        new_block_parts.append(
+            f"### {title}\n\n"
+            f"**Cosa diceva**: {claim or '—'}\n\n"
+            f"**Come è caduto**: Lens L{lens} (counter-pole). {evidence or '—'}\n\n"
+            f"**Sostituito da**: {suggestion or '—'}\n\n"
+            f"**Data falsificazione**: cycle {ts}, falsifier_{ts}.json (decisione CRYSTALLIZE high del valutatore)\n\n"
+            "---\n\n"
+        )
+    new_block = "".join(new_block_parts)
+
+    # Insert before the closing italic line if present, else append at end
+    if closing_line in text:
+        text = text.replace(closing_line, new_block + closing_line)
+    else:
+        text = text.rstrip() + "\n\n" + new_block
+
+    cimitero_path.write_text(text)
+    logger.info(
+        "cimitero auto-write: %d HIGH flag(s) archived → %s",
+        len(high_flags), cimitero_path,
+    )
 
 
 # ─── Movement registration ─────────────────────────────────────────
