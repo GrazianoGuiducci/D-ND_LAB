@@ -539,6 +539,126 @@ async def get_falsifier(domain: str, filename: str, request: Request) -> dict[st
         raise HTTPException(500, f"falsifier file corrupted: {e}")
 
 
+@app.get("/api/domains/{domain}/corrector_summary")
+async def get_corrector_summary(domain: str, request: Request) -> dict[str, Any]:
+    """Aggrega tutti i corrector_*.json del dominio: totale rewrites
+    proposed/applied/skipped, distribuzione per lens (L1/L3/L4), e
+    ultimi 6 rewrites come sample. Usato dalla dashboard per mostrare
+    quanto il bias_corrector sta intervenendo + dove."""
+    await _check_auth(request)
+    _validate_domain(domain)
+    corrector_dir = paths.domain_data_dir(domain) / "corrector"
+    if not corrector_dir.exists():
+        return {
+            "n_reports_checked": 0,
+            "n_total_proposed": 0,
+            "n_total_applied": 0,
+            "n_total_skipped": 0,
+            "by_lens": {"L1": 0, "L3": 0, "L4": 0},
+            "recent_rewrites": [],
+        }
+
+    by_lens: dict[str, int] = {"L1": 0, "L3": 0, "L4": 0}
+    recent: list[dict[str, Any]] = []
+    n_reports = 0
+    proposed = 0
+    applied = 0
+    skipped = 0
+
+    for fp in sorted(corrector_dir.glob("corrector_*.json"),
+                     key=lambda p: p.stat().st_mtime, reverse=True):
+        try:
+            rec = json.loads(fp.read_text())
+        except Exception:
+            continue
+        n_reports += 1
+        proposed += int(rec.get("rewrites_proposed", 0) or 0)
+        applied += int(rec.get("rewrites_applied", 0) or 0)
+        skipped += int(rec.get("rewrites_skipped", 0) or 0)
+        for rw in rec.get("rewrites") or []:
+            lens_n = rw.get("lens")
+            key = f"L{lens_n}" if lens_n in (1, 3, 4) else None
+            if key:
+                by_lens[key] += 1
+            if len(recent) < 6:
+                recent.append({
+                    "report": rec.get("report_file"),
+                    "ts": rec.get("timestamp"),
+                    "lens": lens_n,
+                    "before": (rw.get("before") or "")[:240],
+                    "after": (rw.get("after") or "")[:240],
+                    "reason": (rw.get("reason") or "")[:240],
+                })
+
+    return {
+        "n_reports_checked": n_reports,
+        "n_total_proposed": proposed,
+        "n_total_applied": applied,
+        "n_total_skipped": skipped,
+        "by_lens": by_lens,
+        "recent_rewrites": recent,
+    }
+
+
+@app.get("/api/domains/{domain}/corrector/{filename}")
+async def get_corrector(domain: str, filename: str, request: Request) -> dict[str, Any]:
+    """Return bias_corrector output for a specific cycle. Filename can be
+    report name, corrector file, or just timestamp. Mirrors get_falsifier."""
+    await _check_auth(request)
+    _validate_domain(domain)
+    if "/" in filename or ".." in filename:
+        raise HTTPException(400, "invalid filename")
+    ts_match = re.search(r"(\d{8}_\d{4})", filename)
+    if not ts_match:
+        raise HTTPException(400, "could not extract timestamp from filename")
+    ts = ts_match.group(1)
+    fp = paths.domain_data_dir(domain) / "corrector" / f"corrector_{ts}.json"
+    if not fp.exists():
+        return {"present": False, "ts": ts}
+    try:
+        record = json.loads(fp.read_text())
+        record["present"] = True
+        return record
+    except json.JSONDecodeError as e:
+        raise HTTPException(500, f"corrector file corrupted: {e}")
+
+
+@app.get("/api/domains/{domain}/report_diff/{filename}")
+async def get_report_diff(domain: str, filename: str, request: Request) -> dict[str, Any]:
+    """Return original vs corrected report for a cycle, when the bias_corrector
+    has rewritten claims. Returns both texts so the UI can render the diff.
+
+    If no .original.md exists, returns present=False (corrector found nothing
+    to fix, or did not run, or the original was the corrected version itself).
+    """
+    await _check_auth(request)
+    _validate_domain(domain)
+    if "/" in filename or ".." in filename:
+        raise HTTPException(400, "invalid filename")
+    ts_match = re.search(r"(\d{8}_\d{4})", filename)
+    if not ts_match:
+        raise HTTPException(400, "could not extract timestamp from filename")
+    ts = ts_match.group(1)
+    reports_dir = paths.reports_dir(domain)
+    original = reports_dir / f"agent_{ts}.original.md"
+    corrected = reports_dir / f"agent_{ts}.md"
+    if not original.exists():
+        return {"present": False, "ts": ts}
+    if not corrected.exists():
+        return {"present": False, "ts": ts, "note": "corrected file missing"}
+    try:
+        return {
+            "present": True,
+            "ts": ts,
+            "original": original.read_text(errors="replace"),
+            "corrected": corrected.read_text(errors="replace"),
+            "original_size": original.stat().st_size,
+            "corrected_size": corrected.stat().st_size,
+        }
+    except Exception as e:
+        raise HTTPException(500, f"diff read failed: {e}")
+
+
 @app.get("/api/domains/{domain}/context_intro")
 async def get_context_intro(domain: str, request: Request) -> dict[str, Any]:
     """Estrae la prima sezione 'identity' del context.md del dominio.

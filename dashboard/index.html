@@ -714,6 +714,24 @@
             </div>
           </template>
 
+          <!-- v4.9 — Bias corrector (A8 autologica interna pre-falsifier) -->
+          <template x-if="correctorSummary.n_total_applied > 0">
+            <div>
+              <h4 class="text-xs uppercase tracking-wider text-slate-500 mt-5 mb-2">Bias corrector</h4>
+              <div class="text-[10px] text-slate-500 mb-2" x-text="`${correctorSummary.n_total_applied} riformulati / ${correctorSummary.n_total_proposed} proposti su ${correctorSummary.n_reports_checked} report`"></div>
+              <div class="space-y-1">
+                <template x-for="lens in ['L1','L3','L4']" :key="lens">
+                  <div class="flex items-center justify-between gap-1.5 text-[11px]">
+                    <span class="font-mono text-slate-500" x-text="lens"></span>
+                    <span class="text-slate-300 truncate flex-1" x-text="lens === 'L1' ? 'Assoluti su dati biased' : lens === 'L3' ? 'Silent patching' : 'Edge case rounded'"></span>
+                    <span class="font-mono text-emerald-300" x-text="correctorSummary.by_lens?.[lens] || 0"></span>
+                  </div>
+                </template>
+              </div>
+              <div class="text-[9px] text-slate-500 mt-2 italic">A8 autologica — pre-falsifier</div>
+            </div>
+          </template>
+
           <!-- Legenda -->
           <h4 class="text-xs uppercase tracking-wider text-slate-500 mt-5 mb-2">Legenda</h4>
           <div class="space-y-1.5 text-xs text-slate-400">
@@ -1589,6 +1607,7 @@
 
       // v4.8 — falsifier summary aggregato (campo sidebar counter-pole)
       falsifierSummary: { n_total_flags: 0, n_reports_checked: 0, by_lens: {}, by_severity: {}, lens_labels: {} },
+      correctorSummary: { n_reports_checked: 0, n_total_proposed: 0, n_total_applied: 0, n_total_skipped: 0, by_lens: { L1: 0, L3: 0, L4: 0 }, recent_rewrites: [] },
 
       // v3.10 — mobile drawer state. null | 'left' | 'right'.
       mobileDrawer: null,
@@ -1832,6 +1851,7 @@
           this.reloadGraph(),
           this.reloadContextIntro(),                           // v3.9 — fetch identity section
           this.reloadFalsifierSummary(),                       // v4.8 — counter-pole stats
+          this.reloadCorrectorSummary(),                       // v4.9 — bias_corrector stats
         ]);
         // wait next tick so the #graph-viz container is in the DOM (x-show=true)
         this.$nextTick(() => this.renderGraph());
@@ -1845,6 +1865,17 @@
         } catch (e) {
           console.error('falsifier summary load failed', e);
           this.falsifierSummary = { n_total_flags: 0, n_reports_checked: 0, by_lens: {}, by_severity: {}, lens_labels: {} };
+        }
+      },
+
+      // v4.9 — fetch bias_corrector summary aggregato
+      async reloadCorrectorSummary() {
+        if (!this.activeDomain) return;
+        try {
+          this.correctorSummary = await fetch(`/api/domains/${this.activeDomain}/corrector_summary`).then(r => r.json());
+        } catch (e) {
+          console.error('corrector summary load failed', e);
+          this.correctorSummary = { n_reports_checked: 0, n_total_proposed: 0, n_total_applied: 0, n_total_skipped: 0, by_lens: { L1: 0, L3: 0, L4: 0 }, recent_rewrites: [] };
         }
       },
 
