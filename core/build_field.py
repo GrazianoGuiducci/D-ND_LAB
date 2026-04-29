@@ -97,6 +97,18 @@ def build_field(ctx: CycleContext) -> None:
         parts.append(reports_md)
         sections_written.append("recent_reports")
 
+    # 6b. Cimitero — claim falsificati di recente (universale, opzionale).
+    # Domain-agnostic: legge cimitero.md dal folder del dominio se presente.
+    # Operatore (29/04): "il demo e' generativo per altri tipi di lab.
+    # Le capability vivono qui, i contenuti specifici stanno per dominio."
+    # Lab fisica MM_D-ND ha il suo cimitero con MOD3_PROHIBITION etc.;
+    # ogni dominio (finance, biology, ...) avra' il proprio.
+    n_cimitero = int(params.get("recent_cimitero_n", 5))
+    cimitero_md = _cimitero_section(_cimitero_path(ctx.domain), n=n_cimitero)
+    if cimitero_md:
+        parts.append(cimitero_md)
+        sections_written.append("cimitero")
+
     # 7. Operator observations (optional, domain-specific)
     obs_path = params.get("observations_path")
     if obs_path:
@@ -540,6 +552,82 @@ def _task_section(task_path: Path | None) -> str:
 
 
 # ─── Helpers ────────────────────────────────────────────────────────
+
+
+def _cimitero_path(domain: str) -> Path:
+    """Path to the domain cimitero (falsified claims log).
+
+    Two locations searched, in order:
+      1. domains/<domain>/cimitero.md  (canonical for cross-cycle persistence)
+      2. <domain data>/cimitero.md     (dynamic, written by run-time tools)
+
+    Returns the first existing path, or the canonical one (may not exist).
+    Domain-agnostic: each domain provides its own cimitero, none is implied.
+    """
+    canonical = Path("/opt/D-ND_LAB") / "domains" / domain / "cimitero.md"
+    runtime = paths.domain_data_dir(domain) / "cimitero.md"
+    if canonical.exists():
+        return canonical
+    if runtime.exists():
+        return runtime
+    return canonical
+
+
+def _cimitero_section(cimitero_path: Path, n: int = 5) -> str | None:
+    """Render the last N falsified claims from cimitero.md as a section in the field.
+
+    Pattern: cimitero entries are H3 sections (### Title) separated by '\\n---\\n'.
+    The most recent are at the bottom (append-only). We surface the last N
+    so the agent sees them BEFORE writing — what was already falsified should
+    not be re-proposed with the same framing. Domain-agnostic.
+    """
+    if not cimitero_path.exists():
+        return None
+    try:
+        text = cimitero_path.read_text(errors="replace")
+    except Exception:
+        return None
+
+    entries: list[dict[str, str]] = []
+    for chunk in text.split("\n---\n"):
+        chunk = chunk.strip()
+        if not chunk:
+            continue
+        # Skip top header + meta blocks (Nodo regressivo etc.)
+        if chunk.startswith("# ") or chunk.startswith("## "):
+            continue
+        # Find first H3 title
+        title = None
+        for line in chunk.split("\n"):
+            s = line.strip()
+            if s.startswith("### "):
+                title = s[4:].strip()
+                break
+        if not title:
+            continue
+        body = "\n".join(l for l in chunk.split("\n") if not l.strip().startswith("#")).strip()
+        entries.append({"title": title[:120], "body": body[:600]})
+
+    if not entries:
+        return None
+
+    selected = entries[-n:][::-1]  # most recent first
+
+    parts = [
+        "## Cimitero — claim falsificati di recente (NON riproporre con lo stesso framing)\n",
+        "Questi claim sono stati falsificati dal counter-pole o da audit precedenti. ",
+        "Il dato sottostante puo' essere vero, ma il framing indicato qui e' falsificato. ",
+        "Riformula correttamente o evita il dominio.\n\n",
+    ]
+    for e in selected:
+        parts.append(f"### {e['title']}\n{e['body']}\n\n")
+    parts.append(
+        "Regola operativa: prima di scrivere un claim, controlla che non sia gia' "
+        "stato falsificato sopra. Se i tuoi dati ripropongono un pattern del cimitero, "
+        "dichiara esplicitamente la differenza o cambia la formulazione (es. 'bias forte "
+        "verso 0' al posto di 'proibizione zero' se il dato e' >0). Silent patching = L3 HIGH.\n"
+    )
+    return "".join(parts)
 
 
 def _resolve_domain_path(domain: str, rel: str) -> Path:

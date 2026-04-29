@@ -55,51 +55,48 @@ CORRECTOR_PROMPT = """You are the Bias Corrector of the D-ND Lab.
 
 You are A8 autologica applied internally — the asymmetric counter-pole INSIDE
 the producer flow, before the external falsifier. Your job is to read the
-report the producer just wrote and detect three specific failure-modes that
-the model has shown to repeat structurally. Where you find them, you propose
-a rewrite that preserves the data but corrects the framing.
+report the producer just wrote AND the empirical data files it references,
+detect three specific failure-modes that the model has shown to repeat
+structurally, and propose rewrites that preserve the data but correct the
+framing.
 
 You do NOT challenge the experiment design or the choice of tension. The
 producer's exploratory framing is preserved. You only correct the LANGUAGE
-of claims that contradict the report's own numerical evidence.
+of claims that contradict the report's own numerical evidence OR the data
+files it references.
 
-### What to look for (3 lenses, tied to D-ND axioms)
+### What to look for (3 lenses, tied to D-ND axioms — domain-agnostic)
 
 **L1 (A2) — Absolute language vs biased data.**
 The report writes 'always', 'pure', 'zero', 'never', 'absent', 'forbidden',
-'prohibition' but the report's own table or numbers show a non-zero value.
-Examples observed in past runs:
-- "Mod-3 self-transition zero confirming the prohibition" + table showing
-  16.14% self-transitions → claim contradicts its own data.
-- "Cramer is always pure Poisson (beta ~ 0.015)" → 0.015 is not 0.
-- "T[1][1] = T[2][2] = 0.000 exactly" + acknowledged exception at p=3.
+'prohibition' but the report's own table, numbers, OR the empirical data
+files show a non-zero value. The lens is universal: a hard constraint
+requires an exact zero in the data.
 
 **Rewrite rule**: replace the absolute with a precise quantitative phrase
-that names the bias correctly. 'Strong bias toward 0' if value < 0.05.
-'Bias toward ordering' if value < 0.5. State the exact number.
+that names the bias correctly. State the exact number. 'Strong bias toward
+0' if value < 0.05. 'Bias toward [direction]' if value within (0.05, 0.5).
 
 **L3 (A4) — Silent patching.**
 The setup ('Claim Under Test') uses one definition; the conclusion uses a
-different one without declaring the falsification of the original.
-Examples:
-- Setup: "F2: gaps live in {2,4} mod 6" → Verdict: "gaps mod 6 live in
-  {0,2,4}". The shift from {2,4} to {0,2,4} was never declared as a
-  falsification of F2.
-- Setup: "C1: primes are the only dynamic domain" → Verdict: "C1 is refined,
-  not falsified" while the data shows GUE is also dynamic.
+different one without declaring the falsification of the original. This
+includes cases where the data file shows a value that contradicts the
+setup but the report says the claim is "refined" instead of "falsified".
 
-**Rewrite rule**: insert an explicit declaration. "C1 was falsified at this
-cycle. The new claim that emerged is Z." Or: "F2 originally stated X; the
-data shows Y; F2 is now archived with corrected scope Y."
+**Rewrite rule**: insert an explicit declaration. "Claim X was falsified
+at this cycle. The new claim that emerged is Y." Never write "refined"
+when the original claim is contradicted.
 
 **L4 (A12) — Edge case rounded away.**
 The report writes 'always X' or 'never X' or '0 violations' while
-acknowledging a single counter-example.
-Examples:
-- "0 violations on 12225 ... (1 case at p=3)" → 1 is not 0.
+acknowledging a single counter-example, OR while a data file shows the
+counter-example exists.
 
-**Rewrite rule**: reformulate the perimeter. "For p > 3, X holds; the edge
-case at p=3 shows Y." The counter-example is a feature, not noise.
+**Rewrite rule**: reformulate the perimeter. "For [conditioned scope], X
+holds; the edge case at [exception] shows Y." The counter-example is a
+feature, not noise.
+
+{domain_examples}
 
 ### What you DO NOT touch
 
@@ -140,9 +137,7 @@ Rules:
 
 ---
 
-Report to correct:
-
-{report_text}
+{context}
 
 ---
 
@@ -191,7 +186,18 @@ def bias_corrector(ctx: CycleContext) -> None:
         )
         report_text = report_text[:max_input]
 
-    prompt = CORRECTOR_PROMPT.replace("{report_text}", report_text)
+    # Build context: report + domain data files + (optional) domain examples.
+    # Mirrors report_falsifier._collect_data_excerpts so the corrector can see
+    # L3 setup-vs-data discrepancies (the setup is in the report, the data
+    # often lives in JSON files referenced but not quoted).
+    max_data_bytes = int(params.get("max_data_bytes", 20_000))
+    data_excerpts = _collect_data_excerpts(ctx, report_text, max_data_bytes)
+    context_block = _build_context(report_text, data_excerpts)
+    domain_examples_block = _load_domain_examples(ctx.domain)
+
+    prompt = (CORRECTOR_PROMPT
+              .replace("{context}", context_block)
+              .replace("{domain_examples}", domain_examples_block))
 
     try:
         adapter_config = llm_adapter.AdapterConfig.from_env()
@@ -321,6 +327,103 @@ def _mark_pending(ctx: CycleContext, ts: str, *, reason: str) -> None:
         status="pending",
         reason=reason,
     )
+
+
+# ─── Data context collection (mirror of report_falsifier pattern) ──
+
+
+_DATA_FILE_REF_RE = re.compile(
+    r"`?(?:data/[^`\s)]+|domains/[^`\s)]+/(?:data|corpus|reports)/[^`\s)]+|[A-Za-z0-9_]+\.(?:json|csv|jsonl))`?",
+)
+
+
+def _collect_data_excerpts(
+    ctx: CycleContext, report_text: str, budget_bytes: int
+) -> list[dict[str, str]]:
+    """Find data files the report references and read excerpts under budget.
+
+    Mirrors report_falsifier._collect_data_excerpts so the corrector can
+    catch L3 setup-vs-data discrepancies where the setup lives in the report
+    but the contradicting data lives in a JSON file. Domain-agnostic.
+    """
+    candidates: set[Path] = set()
+    domain_data = paths.domain_data_dir(ctx.domain)
+
+    for m in _DATA_FILE_REF_RE.finditer(report_text):
+        ref = m.group(0).strip("`")
+        for base in (Path(ref), domain_data / Path(ref).name, domain_data / ref):
+            try:
+                p = base if base.is_absolute() else (Path("/opt/D-ND_LAB") / base)
+                if p.exists() and p.is_file():
+                    candidates.add(p.resolve())
+                    break
+            except Exception:
+                pass
+
+    # Canonical files always considered
+    for canonical in ("lab_data.json", "lab_graph.json", "seed.json"):
+        p = domain_data / canonical
+        if p.exists():
+            candidates.add(p.resolve())
+
+    # Computation trace (artifacts) from this cycle
+    artifact_dir = domain_data / "artifacts" / ctx.timestamp
+    if artifact_dir.exists() and artifact_dir.is_dir():
+        for p in sorted(artifact_dir.glob("call_*.json")):
+            candidates.add(p.resolve())
+
+    if not candidates:
+        return []
+
+    per_file = max(1024, budget_bytes // max(1, len(candidates)))
+    out: list[dict[str, str]] = []
+    for p in sorted(candidates):
+        try:
+            text = p.read_text(errors="replace")
+        except Exception:
+            continue
+        if len(text) > per_file:
+            text = text[:per_file] + f"\n…[truncated, file is {len(text)} bytes]"
+        out.append({"path": str(p), "excerpt": text})
+    return out
+
+
+def _build_context(report_text: str, data_excerpts: list[dict[str, str]]) -> str:
+    parts = ["## REPORT (markdown the producer just wrote)\n", report_text[:8000], "\n"]
+    if data_excerpts:
+        parts.append("\n## EMPIRICAL DATA FILES (the substrate the report references)\n")
+        for d in data_excerpts:
+            parts.append(f"### {d['path']}\n```\n{d['excerpt']}\n```\n")
+    else:
+        parts.append("\n## EMPIRICAL DATA FILES\n_none referenced or readable_\n")
+    return "".join(parts)
+
+
+def _load_domain_examples(domain: str) -> str:
+    """Optional per-domain bias examples loaded from domains/<domain>/bias_examples.md.
+
+    Domain-agnostic by design: if the file is absent, the prompt uses only
+    the universal lens definitions (no domain-specific illustrations).
+    Each domain (physics, finance, biology, ...) can ship its own collection
+    of past biases as concrete reference for the corrector LLM.
+
+    The file is expected to be markdown with sections like '### L1 ...',
+    '### L3 ...', '### L4 ...'. The whole file is injected as-is.
+    """
+    examples_path = paths.domain_dir(domain) / "bias_examples.md" \
+        if hasattr(paths, "domain_dir") else None
+    # Fallback: try the standard layout
+    if examples_path is None or not examples_path.exists():
+        examples_path = Path("/opt/D-ND_LAB") / "domains" / domain / "bias_examples.md"
+    if not examples_path.exists():
+        return ""
+    try:
+        text = examples_path.read_text(errors="replace")
+        if not text.strip():
+            return ""
+        return f"\n### Domain-specific bias examples (from {domain}/bias_examples.md)\n\n{text.strip()}\n"
+    except Exception:
+        return ""
 
 
 # ─── Movement registration ─────────────────────────────────────────
