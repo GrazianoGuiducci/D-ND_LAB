@@ -98,7 +98,8 @@ MOVEMENT_ORDER: list[str] = [
     "autopsy",
     "build_field",
     "agent",
-    "report_falsifier",   # NEW — asymmetric counter-pole, checks report internal coherence
+    "bias_corrector",     # NEW (29/04) — A8 autologica interna: rewrite biased claims pre-falsifier
+    "report_falsifier",   # asymmetric counter-pole, checks report internal coherence
     "validate_seed",
     "verify_assertions",
     "structural_check",
@@ -234,4 +235,5 @@ from core import trajectory_evaluator as _trajectory_evaluator  # noqa: E402, F4
 from core import agent as _agent  # noqa: E402, F401
 from core import io_movements as _io_movements  # noqa: E402, F401
 from core import report_falsifier as _report_falsifier  # noqa: E402, F401
+from core import bias_corrector as _bias_corrector  # noqa: E402, F401  # NEW 29/04
 # 17 movements registered (added report_falsifier as asymmetric counter-pole to agent).
