@@ -85,6 +85,24 @@ def seed_integrator(ctx: CycleContext) -> None:
     tensioni = list(seed.get("tensioni", []))
     # Stable: keep manually-injected at their position relative to themselves
     tensioni = [t for t in tensioni if isinstance(t, dict)]
+
+    # Cross-source aggregation (Phase 1.5, 29/04): integra le tensioni che
+    # vengono dai movements del ciclo. Senza questo, A5 e' parzialmente
+    # aperto — il verify_assertions produce risultati che il seed non vede.
+    # Universale: ogni dominio puo' avere il suo verify_assertions, ogni
+    # FAIL diventa tensione "contraddizione", tutti PASS su >5 test
+    # diventa tensione META "simmetria sospetta" (anti-tautologica).
+    new_from_assertions = _tensions_from_assertions(ctx.metrics.get("verify_assertions", {}))
+    if new_from_assertions:
+        existing_ids = {t.get("id") for t in tensioni if t.get("id")}
+        for nt in new_from_assertions:
+            if nt.get("id") not in existing_ids:
+                tensioni.append(nt)
+                existing_ids.add(nt.get("id"))
+                logger.info(
+                    "seed_integrator: +tensione %s da verify_assertions (%s)",
+                    nt.get("id"), nt.get("tipo"),
+                )
     tensioni.sort(
         key=lambda t: t.get("intensità", t.get("intensita", 0)) or 0,
         reverse=True,
@@ -136,6 +154,69 @@ def seed_integrator(ctx: CycleContext) -> None:
         "seed_integrator: piano %s → %s, %d tensions, direction='%s...'",
         prev_piano, new_piano, len(tensioni), direzione[:60],
     )
+
+
+def _tensions_from_assertions(assertion_metrics: dict[str, Any]) -> list[dict[str, Any]]:
+    """Convert verify_assertions output into seed tensions.
+
+    Universale, agnostic to domain. Pattern derivato da MM_D-ND
+    dipartimento.cristallizza_seme:
+
+      FAIL (status=FAIL) → tensione 'contraddizione' intensita 1.0
+      SKIP (status=SKIP) → tensione 'bloccato' (potenziale bloccato)
+      tutti PASS su N>5 test → tensione META 'simmetria sospetta'
+        intensita 0.5 (anti-tautologica: il sistema sta verificando
+        contenuto o struttura?)
+
+    Output: list of tension dicts (id, tipo, claim, intensità, nota,
+    fonte). Empty list se assertion_metrics e' vuoto o malformato.
+    """
+    results = assertion_metrics.get("results") or []
+    if not isinstance(results, list) or not results:
+        return []
+
+    out: list[dict[str, Any]] = []
+
+    # FAIL → tensione contraddizione (massima intensità)
+    for r in results:
+        if not isinstance(r, dict):
+            continue
+        if r.get("status") == "FAIL":
+            out.append({
+                "tipo": "contraddizione",
+                "id": f"ASSERT_{r.get('id', '?')}",
+                "claim": r.get("claim", "")[:200],
+                "dettaglio": r.get("detail", "")[:300],
+                "intensità": 1.0,
+                "nota": "verify_assertions FAIL — claim del modello vs dato divergono. O il claim va corretto o il test e' sbagliato.",
+                "fonte": r.get("source", "verify_assertions"),
+            })
+        elif r.get("status") == "SKIP":
+            # Tracciato ma intensità più bassa — è potenziale bloccato, non contraddizione
+            out.append({
+                "tipo": "bloccato",
+                "id": f"SKIP_{r.get('id', '?')}",
+                "claim": r.get("claim", "")[:200],
+                "dettaglio": r.get("detail", "")[:300],
+                "intensità": 0.4,
+                "nota": "verify_assertions SKIP — il test non si e' eseguito (manca prerequisito).",
+                "fonte": r.get("source", "verify_assertions"),
+            })
+
+    # Tutti PASS su >5 test → simmetria sospetta (META anti-tautologica)
+    n_pass = assertion_metrics.get("n_pass", 0)
+    n_total = assertion_metrics.get("n_total", 0)
+    if n_total > 5 and n_pass == n_total:
+        out.append({
+            "tipo": "simmetria_sospetta",
+            "id": "META_ALL_PASS",
+            "claim": f"Tutti i {n_total} test passano — verifica che non stiamo testando solo tautologie",
+            "intensità": 0.5,
+            "nota": "Convergenza univoca su tutti i test = segnale ambiguo. I test stanno verificando contenuto o struttura? Possibile shuffle/null check necessario.",
+            "fonte": "verify_assertions META",
+        })
+
+    return out
 
 
 def _direction_from_tensions(tensioni: list[dict[str, Any]]) -> str:
