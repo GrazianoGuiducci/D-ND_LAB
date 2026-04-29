@@ -748,7 +748,15 @@
             <span>Mostra tutti i nomi</span>
           </label>
 
-          <button @click="showRunModal = true" class="w-full mt-5 px-3 py-2 rounded bg-purple-600 hover:bg-purple-500 text-white text-xs font-medium transition">▶ Run cycle</button>
+          <!-- Run cycle disabled in production demo (29/04). Sostituito da CTA early access
+               finche' il lab non e' stabile. Operatore: "finche' non avremo un sistema
+               stabile e opportuno disattiviamo il play ciclo nella dashboard, mettiamo
+               un avviso 'chiedi accesso anticipato alla demo'". -->
+          <button @click="showEarlyAccessModal = true" class="w-full mt-5 px-3 py-2 rounded bg-slate-700 hover:bg-slate-600 border border-slate-600 text-slate-200 text-xs font-medium transition flex items-center justify-center gap-1.5">
+            <span class="text-amber-400">●</span>
+            <span>Early access</span>
+          </button>
+          <p class="text-[10px] text-slate-500 mt-2 leading-relaxed">Il lab e' in collaudo. Per provarlo o adattarlo a un dominio specifico, scrivi.</p>
         </div>
       </aside>
 
@@ -1423,7 +1431,40 @@
     </div>
   </div>
 
-  <!-- Run-cycle modal -->
+  <!-- Early access modal (v4.9 29/04) — sostituisce Run cycle finche' demo non stabile.
+       Operatore: il lab e' in collaudo, l'utente esterno non lancia cycle direttamente. -->
+  <div x-show="showEarlyAccessModal" x-cloak class="fixed inset-0 z-30 bg-black/70 flex items-center justify-center p-4" @click.self="showEarlyAccessModal = false">
+    <div class="bg-slate-900 border border-slate-700 rounded-lg p-6 max-w-md w-full">
+      <h2 class="text-lg font-medium mb-2 flex items-center gap-2">
+        <span class="text-amber-400">●</span>
+        <span>Demo in collaudo</span>
+      </h2>
+      <p class="text-sm text-slate-400 mb-4 leading-relaxed">
+        Stiamo affinando il lab autonomo prima di aprire l'esecuzione cycle al pubblico.
+        L'avvio diretto del cycle e' temporaneamente disattivato.
+      </p>
+      <p class="text-sm text-slate-300 mb-4 leading-relaxed">
+        Se vuoi <span class="text-slate-100">accesso anticipato alla demo</span>, vedere il
+        lab girare su un dominio specifico (finanza, biologia, linguistica, ...), o
+        adattarlo a un caso d'uso, scrivici:
+      </p>
+      <a href="mailto:info@d-nd.com?subject=Accesso anticipato alla demo D-ND_LAB"
+         class="block w-full px-4 py-3 rounded bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium text-center transition">
+        info@d-nd.com
+      </a>
+      <div class="text-[11px] text-slate-500 mt-4 leading-relaxed">
+        Quello che vedi qui e' uno snapshot del campo: tensioni, scoperte, falsifier,
+        bias_corrector, grafo. I dati sono reali — il cycle attivo e' in esecuzione
+        controllata mentre il sistema viene completato.
+      </div>
+      <div class="flex justify-end mt-4">
+        <button @click="showEarlyAccessModal = false" class="px-4 py-2 text-sm text-slate-400 hover:text-white">Chiudi</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Run-cycle modal (preservato — usato internamente da operatore con accesso, NON da
+       button principale piu'. Resta per propose_run_cycle in chat assistant). -->
   <div x-show="showRunModal" x-cloak class="fixed inset-0 z-30 bg-black/70 flex items-center justify-center p-4" @click.self="showRunModal = false">
     <div class="bg-slate-900 border border-slate-700 rounded-lg p-6 max-w-2xl w-full max-h-[90vh] flex flex-col">
       <h2 class="text-lg font-medium mb-4">Run cycle on <span class="font-mono text-purple-400" x-text="activeDomain"></span></h2>
@@ -1646,6 +1687,7 @@
 
       // Run modal
       showRunModal: false,
+      showEarlyAccessModal: false,  // v4.9 — sostituisce Run cycle finche' demo non stabile
       runDirectionOverride: '',
       runCycleId: null,
       runStatus: '',
