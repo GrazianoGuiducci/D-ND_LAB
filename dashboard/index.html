@@ -615,9 +615,46 @@
 
   <!-- HOME: domain picker (mantiene container — landing del prodotto) -->
   <main x-show="view === 'home'" class="max-w-7xl mx-auto px-4 py-8">
-    <div class="mb-8">
-      <h1 class="text-3xl font-light">An autonomous research lab</h1>
-      <p class="text-slate-400 mt-2">Pick a domain to enter, or read the architecture in <a href="https://github.com/GrazianoGuiducci/D-ND_LAB#the-16-movements" class="text-purple-400 hover:underline">the 16 movements</a>.</p>
+
+    <!-- Hero per il visitatore casuale (Viewpoint 1).
+         Layered disclosure: tagline + 3 frasi + link discreti per audience
+         tecniche, prodotto, modello (V3/V4/V5). -->
+    <div class="mb-10 max-w-3xl">
+      <h1 class="text-3xl md:text-4xl font-light tracking-tight">
+        A lab that thinks, then critiques itself.
+      </h1>
+      <p class="text-slate-400 mt-4 leading-relaxed">
+        Un sistema cognitivo autonomo. Ogni notte sceglie una domanda
+        di ricerca, prova a rispondere, viene auto-corretto da un
+        secondo polo asimmetrico, e i claim che resistono entrano in
+        un seme che evolve. Quello che vedi sotto è ciò che ha
+        trovato — e, nel <em>cimitero</em>, ciò che ha scartato.
+      </p>
+      <p class="text-slate-500 text-sm mt-3 leading-relaxed">
+        La struttura sotto è generica. Lo stesso sistema può girare
+        su matematica, finanza, biologia, ricerca aziendale. Qui
+        gira su <span class="text-slate-300">fisica/matematica</span>
+        come prova del modello.
+      </p>
+
+      <!-- Entry points discreti per audience diverse -->
+      <div class="flex flex-wrap gap-3 mt-6 text-xs">
+        <a href="https://d-nd.com/manifesto" class="px-3 py-1.5 rounded border border-slate-700 hover:border-purple-600 text-slate-400 hover:text-slate-200 transition">
+          Il modello D-ND →
+        </a>
+        <a href="https://github.com/GrazianoGuiducci/D-ND_LAB" class="px-3 py-1.5 rounded border border-slate-700 hover:border-purple-600 text-slate-400 hover:text-slate-200 transition">
+          Architettura (codice) →
+        </a>
+        <a href="mailto:info@d-nd.com?subject=Lab custom per il mio dominio" class="px-3 py-1.5 rounded border border-slate-700 hover:border-amber-600 text-slate-400 hover:text-amber-300 transition">
+          Lab custom per il tuo dominio →
+        </a>
+      </div>
+    </div>
+
+    <!-- Sezione domini -->
+    <div class="mb-3 flex items-baseline justify-between">
+      <h2 class="text-sm uppercase tracking-wider text-slate-500">Domini attivi</h2>
+      <span class="text-xs text-slate-600">scegli un dominio per entrare nel campo vivo</span>
     </div>
 
     <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
