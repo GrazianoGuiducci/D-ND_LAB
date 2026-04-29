@@ -115,7 +115,28 @@ def run_agent(
         RuntimeError: max_turns reached without final answer; or budget cap hit.
     """
     config = config or AdapterConfig.from_env()
-    config.validate()
+
+    # Bridge route for bare (no-tools) calls — uses operator subscription
+    # (codex/claude CLI via THIA tm3_bridge), zero marginal cost.
+    # Activated by env vars THIA_LLM_BASE_URL + THIA_LLM_TOKEN. Only applies
+    # when tools is None (bridge is bare-mode, no tool support).
+    # Aggiunto 29/04: TM7 ha messo la stessa catena codex→claude→openrouter
+    # in piu' punti del sito. Riuso del pattern per i movement bare del demo
+    # (bias_corrector, report_falsifier, refiner, trajectory_evaluator).
+    bridge_url = os.environ.get("THIA_LLM_BASE_URL", "").rstrip("/")
+    bridge_token = os.environ.get("THIA_LLM_TOKEN", "")
+    use_bridge = bool(tools is None and bridge_url and bridge_token)
+
+    if use_bridge:
+        effective_base_url = bridge_url
+        effective_api_key = bridge_token  # placeholder, real auth via header
+        default_headers = {"X-THIA-Token": bridge_token}
+    else:
+        effective_base_url = config.base_url
+        effective_api_key = config.api_key
+        default_headers = None
+        # Validate only when NOT using bridge (bridge has its own auth path)
+        config.validate()
 
     # Lazy import — keeps openai out of import graph for scaffolding.
     try:
@@ -125,7 +146,13 @@ def run_agent(
             "openai package required. Install with: pip install openai"
         ) from e
 
-    client = openai.OpenAI(base_url=config.base_url, api_key=config.api_key)
+    client_kwargs: dict[str, Any] = {
+        "base_url": effective_base_url,
+        "api_key": effective_api_key or "x",  # SDK requires non-empty key
+    }
+    if default_headers:
+        client_kwargs["default_headers"] = default_headers
+    client = openai.OpenAI(**client_kwargs)
 
     messages: list[dict[str, Any]] = []
     if system_prompt:
