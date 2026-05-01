@@ -21,6 +21,8 @@ from __future__ import annotations
 import json
 import logging
 import os
+import shutil
+import subprocess
 import time
 import urllib.error
 import urllib.request
@@ -83,6 +85,129 @@ class AdapterConfig:
             )
 
 
+# ---------------------------------------------------------------------------
+# CLI provider chain (refactor 01/05): replicare in D-ND_LAB il pattern di
+# MM_D-ND lab_agent.sh — claude CLI subprocess primary, codex CLI fallback,
+# OpenRouter HTTP fallback. Per uso personale interno (subscription OAuth =
+# gratis, tool use nativo). Per chi installa D-ND_LAB altrove: configurabile
+# tramite LLM_PROVIDER_CHAIN env var. Default = "claude-cli,codex-cli,openrouter".
+# ---------------------------------------------------------------------------
+
+
+def _run_via_claude_cli(
+    system_prompt: str,
+    user_message: str,
+    config: AdapterConfig,
+) -> AgentResult:
+    """Provider claude CLI subprocess.
+
+    Pattern identico a /opt/MM_D-ND/tools/lab_agent.sh — claude CLI in
+    OAuth subscription mode (gratis). Tool use nativo (Bash, Read, Write,
+    Edit, ...) gestito internamente dal CLI.
+
+    NOTA: tool schemas custom passati a run_agent NON vengono registrati
+    qui — claude CLI usa i suoi builtin. Per il lab cycle questo va bene
+    (i movement usano filesystem / python_exec / shell_exec, tutti coperti
+    dai tools nativi).
+    """
+    if not shutil.which("claude"):
+        raise RuntimeError("claude CLI not found in PATH")
+
+    full_prompt = (
+        f"{system_prompt}\n\n---\n\n{user_message}" if system_prompt else user_message
+    )
+
+    args = [
+        "claude",
+        "-p", full_prompt,
+        "--max-turns", str(config.max_turns),
+        "--permission-mode", "acceptEdits",
+    ]
+
+    t0 = time.time()
+    try:
+        result = subprocess.run(
+            args,
+            capture_output=True,
+            text=True,
+            timeout=config.timeout_seconds,
+            check=False,
+        )
+    except subprocess.TimeoutExpired as e:
+        raise TimeoutError(
+            f"claude CLI exceeded {config.timeout_seconds}s"
+        ) from e
+
+    duration = time.time() - t0
+
+    if result.returncode != 0:
+        stderr_preview = (result.stderr or "")[:500]
+        raise RuntimeError(
+            f"claude CLI exit {result.returncode}: {stderr_preview}"
+        )
+
+    return AgentResult(
+        final_text=result.stdout or "",
+        turns=0,  # gestito internamente dal CLI
+        tool_calls=[],  # non esposto via subprocess
+        stop_reason="claude-cli-complete",
+        duration_s=duration,
+    )
+
+
+def _run_via_codex_cli(
+    system_prompt: str,
+    user_message: str,
+    config: AdapterConfig,
+) -> AgentResult:
+    """Provider codex CLI subprocess.
+
+    Pattern simile a /opt/THIA/services/tm3_bridge.js — codex CLI con OAuth
+    ChatGPT account (subscription, no paid API key richiesta). Stesso
+    tradeoff di claude-cli su tool schemas custom.
+    """
+    if not shutil.which("codex"):
+        raise RuntimeError("codex CLI not found in PATH")
+
+    full_prompt = (
+        f"{system_prompt}\n\n---\n\n{user_message}" if system_prompt else user_message
+    )
+
+    # codex CLI accepts the prompt via stdin (-) for non-interactive mode
+    args = ["codex", "exec", "-", "--non-interactive"]
+
+    t0 = time.time()
+    try:
+        result = subprocess.run(
+            args,
+            input=full_prompt,
+            capture_output=True,
+            text=True,
+            timeout=config.timeout_seconds,
+            check=False,
+        )
+    except subprocess.TimeoutExpired as e:
+        raise TimeoutError(
+            f"codex CLI exceeded {config.timeout_seconds}s"
+        ) from e
+
+    duration = time.time() - t0
+
+    if result.returncode != 0:
+        stderr_preview = (result.stderr or "")[:500]
+        raise RuntimeError(
+            f"codex CLI exit {result.returncode}: {stderr_preview}"
+        )
+
+    return AgentResult(
+        final_text=result.stdout or "",
+        turns=0,
+        tool_calls=[],
+        stop_reason="codex-cli-complete",
+        duration_s=duration,
+    )
+
+
 # Tool registry passed to run_agent. Each entry:
 #   {
 #     "schema": {...},        # OpenAI tools schema
@@ -115,6 +240,44 @@ def run_agent(
         RuntimeError: max_turns reached without final answer; or budget cap hit.
     """
     config = config or AdapterConfig.from_env()
+
+    # Provider chain (refactor 01/05): se LLM_PROVIDER_CHAIN configurata,
+    # prova in ordine ogni provider. Default chain: claude-cli → codex-cli
+    # → openrouter (= comportamento legacy se i CLI non sono disponibili).
+    # Per disabilitare: LLM_PROVIDER_CHAIN=openrouter (solo HTTP).
+    chain_str = os.environ.get("LLM_PROVIDER_CHAIN", "claude-cli,codex-cli,openrouter")
+    chain = [p.strip().lower() for p in chain_str.split(",") if p.strip()]
+
+    # CLI providers (claude-cli, codex-cli) gestiscono tool use nativamente
+    # via builtin, NON via tool_schemas custom. Sono adatti per i lab cycle
+    # che usano filesystem/python_exec/shell_exec. Per use case che richiedono
+    # tool schemas custom registrati, usare openrouter/openai diretto.
+    last_err: Exception | None = None
+    cli_providers = {"claude-cli", "codex-cli"}
+    has_cli_in_chain = any(p in cli_providers for p in chain)
+
+    if has_cli_in_chain:
+        for provider in chain:
+            if provider == "claude-cli":
+                try:
+                    logger.info("provider chain: trying claude-cli")
+                    return _run_via_claude_cli(system_prompt, user_message, config)
+                except (RuntimeError, TimeoutError) as e:
+                    logger.warning(f"claude-cli failed: {e} — falling back")
+                    last_err = e
+                    continue
+            if provider == "codex-cli":
+                try:
+                    logger.info("provider chain: trying codex-cli")
+                    return _run_via_codex_cli(system_prompt, user_message, config)
+                except (RuntimeError, TimeoutError) as e:
+                    logger.warning(f"codex-cli failed: {e} — falling back")
+                    last_err = e
+                    continue
+            if provider in ("openrouter", "openai"):
+                # falls through to OpenAI-compat HTTP path below
+                logger.info(f"provider chain: falling through to {provider} (HTTP)")
+                break
 
     # Bridge route for bare (no-tools) calls — uses operator subscription
     # (codex/claude CLI via THIA tm3_bridge), zero marginal cost.
