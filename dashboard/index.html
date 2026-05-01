@@ -2799,12 +2799,12 @@
                 'background-color': (ele) => ele.data('color') || NODE_TYPE_DEFAULT,
                 'label': 'data(label)',
                 'color': '#cbd5e1',
-                'font-size': 9,
+                'font-size': 10,
                 'font-family': 'ui-monospace, monospace',
                 'text-valign': 'bottom',
-                'text-margin-y': 4,
-                'width': 12,
-                'height': 12,
+                'text-margin-y': 5,
+                'width': 18,
+                'height': 18,
               },
             },
             {
@@ -2851,10 +2851,12 @@
           layout: {
             name: 'cose',
             animate: false,
-            nodeRepulsion: 12000,
-            idealEdgeLength: 80,
-            padding: 30,
-            componentSpacing: 80,
+            nodeRepulsion: 4500,        // era 12000 — nodi troppo distanti
+            idealEdgeLength: 55,         // era 80 — compatta layout
+            padding: 25,
+            componentSpacing: 60,        // era 80 — gruppi più vicini
+            nestingFactor: 1.2,          // compound nodes più stretti sui figli
+            gravity: 0.4,                // tira verso centro (era default)
             fit: true,
           },
           minZoom: 0.3,
