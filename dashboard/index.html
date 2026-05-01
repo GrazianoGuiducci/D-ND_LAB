@@ -539,6 +539,7 @@
     .graph-viz-wrap { position: relative; }
     .graph-viz-wrap.fullscreen { position: fixed; inset: 0; z-index: 40; background: #0d0e14; padding: 16px; border-radius: 0; }
     .graph-viz-wrap.fullscreen #graph-viz { height: calc(100vh - 32px); border-radius: 0.5rem; }
+    .taxonomy-viz-wrap { position: relative; }
     .taxonomy-viz-wrap.fullscreen { position: fixed; inset: 0; z-index: 40; background: #0d0e14; padding: 16px; border-radius: 0; }
     .taxonomy-viz-wrap.fullscreen #taxonomy-viz { height: calc(100vh - 32px) !important; border-radius: 0.5rem; }
     .graph-fs-close { position: absolute; top: 24px; right: 24px; z-index: 41; background: rgba(15,23,42,.95); border: 1px solid rgb(51 65 85); color: #cbd5e1; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; backdrop-filter: blur(8px); }
@@ -1129,7 +1130,7 @@
               <div class="mb-2">
                 <p class="text-xs text-slate-500" x-text="taxonomyMeta.mode === 'pillars' ? 'Pillar mode: 5 teorie Q/T/G/E/R + cluster reports/tensioni' : (taxonomyMeta.mode === 'flat' ? 'Flat mode: gruppi per tipo (no teorie nel grafo attuale)' : '...')"></p>
               </div>
-              <div class="taxonomy-viz-wrap" :class="taxonomyFullscreen && 'fullscreen'" style="position: relative;">
+              <div class="taxonomy-viz-wrap" :class="taxonomyFullscreen && 'fullscreen'">
                 <div id="taxonomy-viz" style="width: 100%; height: 520px; background: #0d0e14; border-radius: 0.5rem;"></div>
                 <button x-show="taxonomyFullscreen" @click="taxonomyFullscreen = false; $nextTick(() => { if (cyTax) { cyTax.resize(); cyTax.fit(undefined, 30); } })" class="graph-fs-close">✕ Esci (ESC)</button>
               </div>
