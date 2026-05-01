@@ -542,6 +542,43 @@
     .taxonomy-viz-wrap { position: relative; }
     .taxonomy-viz-wrap.fullscreen { position: fixed; inset: 0; z-index: 40; background: #0d0e14; padding: 16px; border-radius: 0; }
     .taxonomy-viz-wrap.fullscreen #taxonomy-viz { height: calc(100vh - 32px) !important; border-radius: 0.5rem; }
+
+    /* Custom tooltip via data-tip — coerente con stile sito d-nd.com.
+       Sostituisce title="..." HTML nativo (rendering OS-default ingestibile). */
+    [data-tip] { position: relative; }
+    [data-tip]:hover::after {
+      content: attr(data-tip);
+      position: absolute;
+      bottom: calc(100% + 6px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: #121216;
+      color: #d8dbe7;
+      border: 1px solid rgba(167, 139, 250, .4);
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 11px;
+      font-family: ui-sans-serif, system-ui;
+      white-space: nowrap;
+      z-index: 60;
+      pointer-events: none;
+      box-shadow: 0 4px 16px rgba(0,0,0,.4);
+    }
+    /* Custom select coerente con .selector della home (custom chevron, no rendering OS). */
+    select.dnd-select {
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      background-image:
+        linear-gradient(90deg, transparent calc(100% - 22px), rgba(167, 139, 250, .11) calc(100% - 22px)),
+        url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 12 12'><path d='M3 4.5l3 3 3-3' stroke='%23a78bfa' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/></svg>");
+      background-repeat: no-repeat;
+      background-position: right center, right 8px center;
+      background-size: auto, 10px;
+      padding-right: 22px;
+      color-scheme: dark;
+    }
+    select.dnd-select option { background: #121216; color: #d8dbe7; }
     .graph-fs-close { position: absolute; top: 24px; right: 24px; z-index: 41; background: rgba(15,23,42,.95); border: 1px solid rgb(51 65 85); color: #cbd5e1; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; backdrop-filter: blur(8px); }
     .graph-fs-close:hover { background: rgb(30 41 59); color: #c4b5fd; }
 
@@ -702,7 +739,7 @@
               <div class="text-slate-600 uppercase tracking-wider mb-1">Stato</div>
               <!-- Toggle Attivo/Disattivo (placeholder, sempre 'attivo' per ora). -->
               <button class="flex items-center gap-2 cursor-not-allowed opacity-70" disabled
-                      :title="'Gestione stato dominio · UI placeholder'">
+                      data-tip="Gestione stato dominio · UI placeholder">
                 <span class="relative inline-block w-7 h-3.5 rounded-full bg-green-700/60">
                   <span class="absolute right-0.5 top-0.5 w-2.5 h-2.5 rounded-full bg-green-300"></span>
                 </span>
@@ -712,9 +749,9 @@
             <div>
               <div class="text-slate-600 uppercase tracking-wider mb-1">Cron cycle</div>
               <!-- Selettore CRON (placeholder, disabled). Per physics mostra 'real-time'. -->
-              <select class="w-full bg-slate-950 border border-slate-700 rounded px-1.5 py-1 text-[10px] text-slate-400 cursor-not-allowed"
+              <select class="dnd-select w-full bg-slate-950 border border-slate-700 rounded px-1.5 py-1 text-[10px] text-slate-400 cursor-not-allowed"
                       disabled
-                      :title="'Schedule del cycle automatico · UI placeholder'">
+                      data-tip="Schedule del cycle automatico · UI placeholder">
                 <option x-text="d.id === 'physics' ? '03:30 UTC · attivo' : 'disabilitato'"></option>
               </select>
             </div>
@@ -1686,7 +1723,7 @@
               </template>
               <template x-if="(cycleTraces || []).length > 0">
                 <div class="space-y-2">
-                  <select class="w-full bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs text-slate-200"
+                  <select class="dnd-select w-full bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs text-slate-200"
                           @change="loadCycleTrace($event.target.value)">
                     <option value="">— scegli un cycle —</option>
                     <template x-for="t in cycleTraces" :key="t.cycle_ts">
