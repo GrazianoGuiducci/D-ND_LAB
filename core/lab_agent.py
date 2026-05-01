@@ -113,6 +113,7 @@ MOVEMENT_ORDER: list[str] = [
     "refresh_detector",
     "seed_integrator",
     "trajectory_evaluator",
+    "ssp_pipeline",        # NEW (01/05) — chiude scoperta → prodotto: crystallize+eligibility+designer+stage4
     "notify",
 ]
 
@@ -239,4 +240,5 @@ from core import report_falsifier as _report_falsifier  # noqa: E402, F401
 from core import bias_corrector as _bias_corrector  # noqa: E402, F401  # NEW 29/04
 from core import bicono_extractor as _bicono_extractor  # noqa: E402, F401  # NEW 29/04
 from core import verify_assertions as _verify_assertions  # noqa: E402, F401  # NEW 29/04
+from core import ssp_pipeline as _ssp_pipeline  # noqa: E402, F401  # NEW 01/05 — scoperta→prodotto
 # 17 movements registered (added report_falsifier as asymmetric counter-pole to agent).

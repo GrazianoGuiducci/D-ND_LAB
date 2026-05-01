@@ -1250,6 +1250,73 @@
                 Lancia un cycle e poi il trigger <code class="text-cyan-400 text-xs">on_crystallize.py</code>.
               </div>
             </template>
+
+            <!-- Prodotti maturi (Stage 4 PASS / FAIL / INCONCLUSIVE / UNTESTABLE) -->
+            <template x-if="(prodottiSsp || []).length > 0">
+              <div class="space-y-3 mt-6">
+                <h3 class="text-sm font-medium text-slate-300">Prodotti maturi (<span x-text="prodottiSsp.length"></span>)</h3>
+                <p class="text-xs text-slate-500">Stage 4 eseguito — verification.json reale, metriche empiriche da PoC A/B (claude-cli OAuth).</p>
+                <template x-for="p in prodottiSsp" :key="p.id">
+                  <div class="bg-slate-950 border border-slate-800 rounded p-4 space-y-2"
+                       :class="{
+                         'border-l-4 border-l-green-500': p.status === 'PASS',
+                         'border-l-4 border-l-red-500': p.status === 'FAIL',
+                         'border-l-4 border-l-yellow-500': p.status === 'INCONCLUSIVE',
+                         'border-l-4 border-l-slate-500': p.status === 'UNTESTABLE',
+                       }">
+                    <div class="flex items-start justify-between gap-3">
+                      <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2 flex-wrap">
+                          <span class="text-xs font-mono px-2 py-0.5 rounded"
+                                :class="{
+                                  'bg-green-900/40 text-green-300': p.status === 'PASS',
+                                  'bg-red-900/40 text-red-300': p.status === 'FAIL',
+                                  'bg-yellow-900/40 text-yellow-300': p.status === 'INCONCLUSIVE',
+                                  'bg-slate-800 text-slate-400': p.status === 'UNTESTABLE',
+                                }"
+                                x-text="p.status"></span>
+                          <span class="text-xs text-slate-500">type:</span>
+                          <span class="text-xs font-mono text-purple-300" x-text="p.type"></span>
+                          <span class="text-xs text-slate-500">·</span>
+                          <span class="text-xs font-mono text-cyan-400" x-text="p.discovery_cycle_ts"></span>
+                        </div>
+                        <div class="text-sm text-slate-200 mt-1 truncate" x-text="p.name || p.id"></div>
+                      </div>
+                    </div>
+                    <!-- Metrics A/B -->
+                    <template x-if="p.metrics && (p.metrics.naive_score !== undefined)">
+                      <div class="ml-2 mt-2 pt-2 border-t border-slate-800 grid grid-cols-3 gap-3 text-xs">
+                        <div>
+                          <div class="text-slate-500 uppercase tracking-wider text-[10px]">Naive baseline</div>
+                          <div class="font-mono text-slate-300" x-text="(Number(p.metrics.naive_score) || 0).toFixed(4)"></div>
+                        </div>
+                        <div>
+                          <div class="text-slate-500 uppercase tracking-wider text-[10px]">Informed (finding)</div>
+                          <div class="font-mono text-slate-300" x-text="(Number(p.metrics.informed_score) || 0).toFixed(4)"></div>
+                        </div>
+                        <div>
+                          <div class="text-slate-500 uppercase tracking-wider text-[10px]">Delta (informed − naive)</div>
+                          <div class="font-mono"
+                               :class="{
+                                 'text-green-400': Number(p.metrics.delta) > 0.05,
+                                 'text-yellow-400': Math.abs(Number(p.metrics.delta) || 0) <= 0.05,
+                                 'text-red-400': Number(p.metrics.delta) < -0.05,
+                               }"
+                               x-text="((Number(p.metrics.delta) > 0 ? '+' : '') + ((Number(p.metrics.delta) || 0).toFixed(4)))"></div>
+                        </div>
+                        <template x-if="p.metrics.n_trials">
+                          <div class="col-span-3 text-[10px] text-slate-600">
+                            n_trials = <span x-text="p.metrics.n_trials"></span> ·
+                            verifier_form: <span class="font-mono" x-text="p.verifier_form"></span> ·
+                            verified_at: <span class="font-mono" x-text="(p.verified_at || '').substring(0,16)"></span>
+                          </div>
+                        </template>
+                      </div>
+                    </template>
+                  </div>
+                </template>
+              </div>
+            </template>
           </div>
         </div>
 
