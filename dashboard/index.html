@@ -1723,14 +1723,30 @@
               </template>
               <template x-if="(cycleTraces || []).length > 0">
                 <div class="space-y-2">
-                  <select class="dnd-select w-full bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs text-slate-200"
-                          @change="loadCycleTrace($event.target.value)">
-                    <option value="">— scegli un cycle —</option>
-                    <template x-for="t in cycleTraces" :key="t.cycle_ts">
-                      <option :value="t.cycle_ts"
-                              x-text="`${t.cycle_ts} · ${t.total_s}s · ${t.n_ok}/${t.n_movements}`"></option>
-                    </template>
-                  </select>
+                  <!-- Custom dropdown Alpine — niente <select> nativo (browser non
+                       stila il popover delle option, breaking dark theme).
+                       Pattern speculare al Reports selector. -->
+                  <div class="relative" @click.outside="cycleTraceDropdownOpen = false">
+                    <button @click="cycleTraceDropdownOpen = !cycleTraceDropdownOpen"
+                            class="w-full bg-slate-950 border border-slate-700 hover:border-purple-700 rounded px-2 py-1 text-xs text-slate-200 text-left flex items-center justify-between transition">
+                      <span class="truncate" x-text="activeCycleTrace
+                        ? `${activeCycleTrace.cycle_ts} · ${activeCycleTrace.total_s}s · ${activeCycleTrace.n_ok}/${activeCycleTrace.n_movements}`
+                        : '— scegli un cycle —'"></span>
+                      <span class="text-purple-400 text-xs ml-2 flex-shrink-0" x-text="cycleTraceDropdownOpen ? '▴' : '▾'"></span>
+                    </button>
+                    <div x-show="cycleTraceDropdownOpen" x-cloak x-transition.opacity.duration.120ms
+                         class="absolute left-0 right-0 top-full mt-1 bg-slate-900 border border-slate-700 rounded shadow-2xl z-30 max-h-72 overflow-y-auto">
+                      <button @click="activeCycleTrace = null; cycleTraceDropdownOpen = false"
+                              class="w-full text-left px-2 py-1.5 text-xs text-slate-300 italic hover:bg-slate-800 transition">— scegli un cycle —</button>
+                      <template x-for="t in cycleTraces" :key="t.cycle_ts">
+                        <button @click="loadCycleTrace(t.cycle_ts); cycleTraceDropdownOpen = false"
+                                :class="activeCycleTrace?.cycle_ts === t.cycle_ts ? 'bg-purple-900/30 text-purple-200' : 'text-slate-200 hover:bg-slate-800'"
+                                class="w-full text-left px-2 py-1.5 text-xs transition border-t border-slate-800 font-mono">
+                          <span x-text="`${t.cycle_ts} · ${t.total_s}s · ${t.n_ok}/${t.n_movements}`"></span>
+                        </button>
+                      </template>
+                    </div>
+                  </div>
 
                   <template x-if="activeCycleTrace">
                     <div class="space-y-2">
@@ -2213,6 +2229,7 @@
       activeReportFilename: '',
       reportsDropdownOpen: false,
       tabsDropdownOpen: false,
+      cycleTraceDropdownOpen: false,
 
       // Falsifier — fetched lazily quando il report viene aperto
       activeFalsifier: null,
