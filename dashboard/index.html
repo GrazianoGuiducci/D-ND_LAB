@@ -1638,12 +1638,19 @@
             </div>
           </template>
 
-          <!-- Seed quick view (sotto al dettaglio nodo) -->
-          <h4 class="text-xs uppercase tracking-wider text-slate-500 mt-5 mb-2">Seed</h4>
-          <div class="text-xs space-y-1 text-slate-400">
-            <div><span class="text-slate-500">piano:</span> <span class="font-mono text-cyan-400" x-text="seed.piano ?? '?'"></span></div>
-            <div class="italic line-clamp-3" x-text="seed.direzione || '—'"></div>
-          </div>
+          <!-- Seed quick view: solo dove ha senso (Grafo / Bicono / Tassonomia).
+               In Agente/Prodotti/Info il pannello è già pieno di info contestuali
+               (Indice report, Cycle trace, scoperta/prodotto selezionato, ecc) —
+               il seed sarebbe ridondante e ruba spazio. -->
+          <template x-if="['grafo','bicono','incrocio'].includes(activeTab)">
+            <div>
+              <h4 class="text-xs uppercase tracking-wider text-slate-500 mt-5 mb-2">Seed</h4>
+              <div class="text-xs space-y-1 text-slate-400">
+                <div><span class="text-slate-500">piano:</span> <span class="font-mono text-cyan-400" x-text="seed.piano ?? '?'"></span></div>
+                <div class="italic line-clamp-3" x-text="seed.direzione || '—'"></div>
+              </div>
+            </div>
+          </template>
 
           <!-- Indice report (ToC) — sticky in sidebar destra quando si legge un report
                in tab Agente. Era nel pane centrale ma scorreva via col contenuto. -->
