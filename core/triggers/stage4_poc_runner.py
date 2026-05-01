@@ -258,64 +258,22 @@ def compute_verdict(metrics: dict, verification_spec: dict) -> tuple[str, str, l
         return "INCONCLUSIVE", f"nessuna differenza significativa (delta={delta:.4f})", notes
 
 
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("cycle_ts")
-    ap.add_argument("finding_idx", nargs="?", type=int, default=None,
-                    help="finding id (1-based dal report). Omettere con --auto")
-    ap.add_argument("--auto", action="store_true",
-                    help="Seleziona automaticamente il primo applicative_finding eligible")
-    ap.add_argument("--candidate-type", default="library", choices=["library", "kernel", "demo"])
-    ap.add_argument("--domain", default=None)
-    ap.add_argument("--max-turns", type=int, default=8)
-    ap.add_argument("--gen-timeout", type=int, default=300, help="Timeout per claude generation")
-    ap.add_argument("--exec-timeout", type=int, default=90, help="Timeout per poc.py execution")
-    ap.add_argument("--force", action="store_true")
-    args = ap.parse_args()
+def _run_one_candidate(cycle_ts: str, finding_idx: int, finding_title: str,
+                       candidate: dict, agent_path: Path, finding_excerpt: str,
+                       verdict_text: str, args) -> dict:
+    """Process un singolo candidate (library / kernel / demo) → genera prodotto.
 
-    if args.domain:
-        global _PATHS
-        _PATHS = _resolve_paths(args.domain)
-
-    cycle_ts = args.cycle_ts
-    print(f"stage4_poc_runner cycle_ts={cycle_ts} domain={_PATHS['domain']}")
-
-    # 1. Pick finding
-    if args.auto or args.finding_idx is None:
-        finding_idx, finding_title = find_first_eligible(cycle_ts)
-        print(f"  auto-selected finding #{finding_idx}: {finding_title[:80]}")
-    else:
-        finding_idx = args.finding_idx
-
-    # 2. Carica manifest + candidate
-    manifest_path, manifest = find_manifest(cycle_ts)
-    candidate = find_candidate(manifest, finding_idx, args.candidate_type)
-    print(f"  candidate: {candidate['name']} ({candidate['type']})")
-
-    # 3. Carica agent report per excerpt finding
-    agent_path = _PATHS["reports"] / f"agent_{cycle_ts}.md"
-    if not agent_path.exists():
-        print(f"  ERROR: agent report mancante {agent_path}", file=sys.stderr)
-        return 2
-    agent_text = agent_path.read_text()
-    finding_title = candidate.get("discovery_finding_title", "")
-    finding_excerpt = ""
-    m = re.search(rf"^\s*{finding_idx}\.\s+(\*\*[^\n]+(?:\n(?!\s*\d+\.\s).*)*)", agent_text, re.M)
-    if m:
-        finding_excerpt = m.group(1)[:1500]
-    verdict_m = re.search(r"##\s+[Vv]erdict\s*\n(.+?)(?=\n##\s+|\Z)", agent_text, re.S)
-    verdict_text = (verdict_m.group(1).strip()[:600]) if verdict_m else "(no verdict section)"
-
-    # 4. Setup product directory
+    Ritorna dict con: type, verdict, reason, prod_dir, skipped (bool).
+    """
     product_id = f"{cycle_ts}_finding{finding_idx}_{candidate['type']}_{slugify(finding_title)}"
     prod_dir = _PATHS["prodotti"] / product_id
     if prod_dir.exists() and not args.force:
-        print(f"  SKIP {prod_dir} (esiste, --force per riesecuzione)")
-        return 0
+        print(f"  [{candidate['type']}] SKIP {product_id} (esiste, --force per riesecuzione)")
+        return {"type": candidate["type"], "verdict": "SKIP", "reason": "exists",
+                "prod_dir": str(prod_dir), "skipped": True}
     prod_dir.mkdir(parents=True, exist_ok=True)
-    print(f"  product dir: {prod_dir}")
+    print(f"  [{candidate['type']}] product dir: {prod_dir}")
 
-    # 5. Genera poc.py via claude-cli
     prompt = PROMPT_TEMPLATE.format(
         cycle_ts=cycle_ts,
         domain=_PATHS["domain"],
@@ -329,25 +287,23 @@ def main():
         verification_spec=json.dumps(candidate.get("verification_spec", {}), indent=2)[:2000],
     )
     (prod_dir / "prompt.txt").write_text(prompt)
-    print(f"  prompt: {len(prompt)} chars (saved → prompt.txt)")
 
     try:
         poc_code = generate_poc_script(prompt, target_dir=prod_dir,
                                        max_turns=args.max_turns, timeout=args.gen_timeout)
     except (RuntimeError, subprocess.TimeoutExpired) as e:
-        print(f"  ERROR generating poc.py: {e}", file=sys.stderr)
+        print(f"  [{candidate['type']}] ERROR generating poc.py: {e}", file=sys.stderr)
         (prod_dir / "stage4_error.txt").write_text(f"GENERATION FAILED: {e}\n")
-        return 3
-    poc_path = prod_dir / "poc.py"
-    print(f"  generated poc.py: {len(poc_code)} chars (written by claude-cli Write tool)")
+        return {"type": candidate["type"], "verdict": "FAIL", "reason": f"generation: {e}",
+                "prod_dir": str(prod_dir), "skipped": False}
 
-    # 6. Eseguo poc.py
+    print(f"  [{candidate['type']}] generated poc.py: {len(poc_code)} chars")
+
     started_at = datetime.now(timezone.utc)
-    ok, log, metrics = execute_poc(poc_path, prod_dir, timeout=args.exec_timeout)
+    ok, log, metrics = execute_poc(prod_dir / "poc.py", prod_dir, timeout=args.exec_timeout)
     finished_at = datetime.now(timezone.utc)
     (prod_dir / "poc.log").write_text(log)
 
-    # 7. Verdict
     if not ok or metrics is None:
         verdict = "FAIL"
         reason = "PoC failed to execute or produce metrics.json"
@@ -355,9 +311,8 @@ def main():
     else:
         verdict, reason, criteria_notes = compute_verdict(metrics, candidate.get("verification_spec", {}))
 
-    print(f"  verdict: {verdict} — {reason}")
+    print(f"  [{candidate['type']}] verdict: {verdict} — {reason[:120]}")
 
-    # 8. Scrivi verification.json + manifest.json
     verification = {
         "schema_version": "0.1",
         "stage": 4,
@@ -370,7 +325,7 @@ def main():
         "finished_at": finished_at.isoformat(),
         "duration_s": round((finished_at - started_at).total_seconds(), 2),
         "metrics": metrics or {},
-        "status": verdict,  # legacy alias
+        "status": verdict,
         "verified_at": finished_at.isoformat(),
     }
     (prod_dir / "verification.json").write_text(json.dumps(verification, indent=2))
@@ -393,16 +348,110 @@ def main():
             "Prodotto generato automaticamente da Stage 4 PoC runner.",
             "verification.json contiene metriche reali (NON .spec).",
             "Verdict empirico — può essere PASS / FAIL / INCONCLUSIVE / UNTESTABLE.",
-            "Codice in poc.py — single-file standalone, deterministic se seed fissato.",
-            "Da rivedere prima di promuovere a deploy/install.",
         ],
     }
     (prod_dir / "manifest.json").write_text(json.dumps(product_manifest, indent=2))
 
-    print(f"DONE → {prod_dir}")
-    print(f"  files: poc.py · poc.log · metrics.json · verification.json · manifest.json")
-    print(f"  verdict: {verdict}")
-    return 0
+    return {"type": candidate["type"], "verdict": verdict, "reason": reason,
+            "prod_dir": str(prod_dir), "skipped": False, "metrics": metrics or {}}
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("cycle_ts")
+    ap.add_argument("finding_idx", nargs="?", type=int, default=None,
+                    help="finding id (1-based dal report). Omettere con --auto")
+    ap.add_argument("--auto", action="store_true",
+                    help="Seleziona automaticamente il primo applicative_finding eligible")
+    # Multi-candidate (NEW 01/05): default genera tutti e 3 i tipi (library/kernel/demo)
+    # per lo stesso finding. Operatore poi sceglie quale promuovere a prodotto.
+    ap.add_argument("--candidate-types", default="library,kernel,demo",
+                    help="Comma-separated lista di tipi da testare. Default: tutti.")
+    # Legacy alias singolo (backward-compat)
+    ap.add_argument("--candidate-type", default=None, choices=["library", "kernel", "demo", None],
+                    help="DEPRECATED — usa --candidate-types. Singolo tipo (per compat).")
+    ap.add_argument("--domain", default=None)
+    ap.add_argument("--max-turns", type=int, default=8)
+    ap.add_argument("--gen-timeout", type=int, default=300, help="Timeout per claude generation")
+    ap.add_argument("--exec-timeout", type=int, default=90, help="Timeout per poc.py execution")
+    ap.add_argument("--force", action="store_true")
+    args = ap.parse_args()
+
+    if args.domain:
+        global _PATHS
+        _PATHS = _resolve_paths(args.domain)
+
+    cycle_ts = args.cycle_ts
+    print(f"stage4_poc_runner cycle_ts={cycle_ts} domain={_PATHS['domain']}")
+
+    # Resolve candidate types list (legacy --candidate-type prevale per compat)
+    if args.candidate_type:
+        types_to_run = [args.candidate_type]
+        print(f"  legacy --candidate-type={args.candidate_type} (single)")
+    else:
+        types_to_run = [t.strip() for t in args.candidate_types.split(",") if t.strip()]
+    print(f"  candidate types: {types_to_run}")
+
+    # 1. Pick finding
+    if args.auto or args.finding_idx is None:
+        finding_idx, finding_title = find_first_eligible(cycle_ts)
+        print(f"  auto-selected finding #{finding_idx}: {finding_title[:80]}")
+    else:
+        finding_idx = args.finding_idx
+        finding_title = ""
+
+    # 2. Carica manifest una volta
+    manifest_path, manifest = find_manifest(cycle_ts)
+
+    # 3. Carica agent report una volta — excerpt + verdict condivisi tra i 3 PoC
+    agent_path = _PATHS["reports"] / f"agent_{cycle_ts}.md"
+    if not agent_path.exists():
+        print(f"  ERROR: agent report mancante {agent_path}", file=sys.stderr)
+        return 2
+    agent_text = agent_path.read_text()
+    finding_excerpt = ""
+    m = re.search(rf"^\s*{finding_idx}\.\s+(\*\*[^\n]+(?:\n(?!\s*\d+\.\s).*)*)", agent_text, re.M)
+    if m:
+        finding_excerpt = m.group(1)[:1500]
+    verdict_m = re.search(r"##\s+[Vv]erdict\s*\n(.+?)(?=\n##\s+|\Z)", agent_text, re.S)
+    verdict_text = (verdict_m.group(1).strip()[:600]) if verdict_m else "(no verdict section)"
+
+    # 4. Loop sui types — uno PoC per type (compute parallelo possibile in futuro)
+    results = []
+    for candidate_type in types_to_run:
+        try:
+            candidate = find_candidate(manifest, finding_idx, candidate_type)
+        except ValueError as e:
+            print(f"  [{candidate_type}] SKIP: {e}", file=sys.stderr)
+            results.append({"type": candidate_type, "verdict": "SKIP",
+                            "reason": "no candidate in manifest", "skipped": True})
+            continue
+
+        # Update finding_title from candidate (in case auto did not set it)
+        if not finding_title:
+            finding_title = candidate.get("discovery_finding_title", "")
+
+        result = _run_one_candidate(cycle_ts, finding_idx, finding_title,
+                                    candidate, agent_path, finding_excerpt,
+                                    verdict_text, args)
+        results.append(result)
+
+    # 5. Riepilogo aggregato
+    print()
+    print(f"════ STAGE 4 SUMMARY — finding #{finding_idx} on cycle {cycle_ts} ════")
+    n_pass = sum(1 for r in results if r["verdict"] == "PASS")
+    n_fail = sum(1 for r in results if r["verdict"] == "FAIL")
+    n_skip = sum(1 for r in results if r.get("skipped"))
+    n_other = len(results) - n_pass - n_fail - n_skip
+    for r in results:
+        flag = {"PASS": "✓", "FAIL": "✗", "SKIP": "−"}.get(r["verdict"], "?")
+        delta = ""
+        if r.get("metrics") and r["metrics"].get("delta") is not None:
+            d = r["metrics"]["delta"]
+            delta = f" Δ={('+' if d>0 else '')}{d:.4f}"
+        print(f"  [{flag}] {r['type']:<8} {r['verdict']:<13}{delta}  — {r['reason'][:80]}")
+    print(f"  totals: {n_pass} PASS · {n_fail} FAIL · {n_skip} SKIP · {n_other} other")
+    return 0 if (n_pass + n_skip) == len(results) else 1
 
 
 if __name__ == "__main__":

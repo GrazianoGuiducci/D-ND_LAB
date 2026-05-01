@@ -142,11 +142,15 @@ def ssp_pipeline_movement(ctx: CycleContext) -> None:
     # Step 4 — stage4 PoC runner (auto-pick primo applicative_finding)
     # Genera library candidate (più adatto al benchmark A/B). Timeout largo
     # perché claude-cli + esecuzione PoC.
+    # Multi-candidate (NEW 01/05): genera tutti e 3 i tipi (library/kernel/demo)
+    # per il finding eligible. Il sistema produce 3 PoC con verdict diversi,
+    # operatore decide quale promuovere. Timeout aumentato proporzionalmente.
     rc, out = _run_trigger("stage4_poc_runner.py",
-                           [cycle_ts, "--auto", "--candidate-type", "library",
+                           [cycle_ts, "--auto",
+                            "--candidate-types", "library,kernel,demo",
                             "--max-turns", "8", "--gen-timeout", "360",
                             "--exec-timeout", "90"],
-                           cwd=cwd, timeout=480, env_extra=env)
+                           cwd=cwd, timeout=1200, env_extra=env)
     if rc != 0:
         logger.warning("ssp_pipeline: stage4 rc=%s\n%s", rc, out[-1000:])
         ctx.metrics["ssp_pipeline_status"] = f"stage4_failed:rc={rc}"
