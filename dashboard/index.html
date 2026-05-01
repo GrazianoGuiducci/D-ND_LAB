@@ -1130,7 +1130,7 @@
               </div>
               <div class="flex items-center gap-2" x-show="incrocioMode === 'taxonomy'">
                 <span class="text-xs text-slate-500 font-mono" x-text="`${taxonomyMeta.n_groups || 0} gruppi · ${taxonomyMeta.n_nodes || 0} nodi · ${taxonomyMeta.n_bridges || 0} ponti`"></span>
-                <button @click="if (cyTax) { cyTax.layout({name:'cose', animate:true, nodeRepulsion:4500, idealEdgeLength:55, padding:25, componentSpacing:60, gravity:0.4, nestingFactor:1.2}).run(); cyTax.fit(undefined, 30); }" class="text-xs px-2 py-1 rounded bg-slate-800 hover:bg-slate-700" title="Relayout">↻</button>
+                <button @click="if (cyTax) { cyTax.layout({name:'cose', animate:true, nodeRepulsion:1800, idealEdgeLength:35, padding:40, componentSpacing:25, gravity:1.5, nestingFactor:0.8, numIter:1500, initialTemp:200, coolingFactor:0.95}).run(); setTimeout(() => cyTax && cyTax.fit(undefined, 40), 350); }" class="text-xs px-2 py-1 rounded bg-slate-800 hover:bg-slate-700" title="Relayout (compatto)">↻</button>
                 <button @click="taxonomyFullscreen = !taxonomyFullscreen; $nextTick(() => { if (cyTax) { cyTax.resize(); cyTax.fit(undefined, taxonomyFullscreen ? 50 : 30); } })" class="text-xs px-2 py-1 rounded bg-slate-800 hover:bg-slate-700" title="Fullscreen">⛶</button>
                 <button @click="reloadTaxonomy().then(() => renderTaxonomy())" class="text-xs text-slate-500 hover:text-slate-300">refresh</button>
               </div>
@@ -3161,17 +3161,34 @@
           layout: {
             name: 'cose',
             animate: false,
-            nodeRepulsion: 4500,        // era 12000 — nodi troppo distanti
-            idealEdgeLength: 55,         // era 80 — compatta layout
-            padding: 25,
-            componentSpacing: 60,        // era 80 — gruppi più vicini
-            nestingFactor: 1.2,          // compound nodes più stretti sui figli
-            gravity: 0.4,                // tira verso centro (era default)
+            // Layout calibrato per "massima grandezza tutto nel viewport"
+            // (operatore 01/05 sera): nodi vicini, gruppi compatti, fit aggressivo.
+            nodeRepulsion: 1800,         // ridotto da 4500 — molto più vicini
+            idealEdgeLength: 35,          // ridotto da 55 — compatto
+            padding: 40,                  // più padding del cy.fit per non tagliare
+            componentSpacing: 25,         // ridotto da 60 — componenti separate quasi unite
+            nestingFactor: 0.8,           // < 1 = parent stretti sui figli
+            gravity: 1.5,                 // alto = forte tirata al centro (no drift componenti isolate)
+            numIter: 1500,                // più iterazioni = più stabile
+            initialTemp: 200,             // temperatura iniziale moderata
+            coolingFactor: 0.95,
+            minTemp: 1.0,
             fit: true,
           },
           minZoom: 0.3,
           maxZoom: 3,
           wheelSensitivity: 0.2,
+        });
+
+        // Force fit aggressivo dopo layout settle: garantisce "tutto nel viewport"
+        // anche con componenti disconnesse o nodi outlier.
+        this.cyTax.ready(() => {
+          this.$nextTick(() => {
+            if (this.cyTax) {
+              this.cyTax.resize();
+              this.cyTax.fit(undefined, 40);
+            }
+          });
         });
 
         // Click su nodo membro → seleziona + apri sidebar dettaglio
