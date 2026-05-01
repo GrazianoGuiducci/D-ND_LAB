@@ -216,7 +216,49 @@ def run_cycle(domain: str) -> CycleContext:
     ctx.metrics["cycle_total_s"] = round(total_elapsed, 2)
     logger.info("Cycle ended: %.1fs, %d errors", total_elapsed, len(ctx.errors))
 
+    # Trace dump — persiste sequenza movements + durations + status + metrics
+    # in cycle_trace_<ts>.json (consumato da /api/domains/<d>/cycle_trace + UI timeline).
+    try:
+        trace = _build_cycle_trace(ctx, total_elapsed)
+        trace_path = ctx.data_dir / f"cycle_trace_{timestamp}.json"
+        trace_path.write_text(json.dumps(trace, indent=2))
+        logger.info("Cycle trace written: %s", trace_path)
+    except Exception as e:
+        logger.warning("Failed to write cycle trace: %s", e)
+
     return ctx
+
+
+def _build_cycle_trace(ctx: CycleContext, total_elapsed: float) -> dict:
+    """Costruisce il trace serializzabile del cycle: sequenza movements
+    con durata, status, metrics. Source of truth per /api/cycle_trace.
+    """
+    movements = []
+    for name in MOVEMENT_ORDER:
+        status = ctx.movement_status.get(name, "not_run")
+        m_metrics = ctx.metrics.get(name, {}) or {}
+        movements.append({
+            "name": name,
+            "status": status,
+            "duration_s": m_metrics.get("duration_s"),
+            "metrics": {k: v for k, v in m_metrics.items() if k != "duration_s"},
+            "is_critical": name in CRITICAL_MOVEMENTS,
+        })
+    return {
+        "schema_version": "0.1",
+        "cycle_ts": ctx.timestamp,
+        "domain": ctx.domain,
+        "total_s": round(total_elapsed, 2),
+        "n_movements": len(MOVEMENT_ORDER),
+        "n_ok": sum(1 for m in movements if m["status"] == "ok"),
+        "n_skipped": sum(1 for m in movements if str(m["status"]).startswith("skipped")),
+        "n_pending": sum(1 for m in movements if str(m["status"]).startswith("pending")),
+        "n_errors": len(ctx.errors),
+        "errors": ctx.errors,
+        "movements": movements,
+        "ssp_pipeline_status": ctx.metrics.get("ssp_pipeline_status"),
+        "cycle_total_s": ctx.metrics.get("cycle_total_s"),
+    }
 
 
 # ─── Movement imports — register implementations ────────────────────

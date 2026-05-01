@@ -913,6 +913,47 @@ async def list_applications(domain: str, request: Request) -> dict[str, Any]:
     }
 
 
+@app.get("/api/domains/{domain}/cycle_traces")
+async def list_cycle_traces(domain: str, request: Request, limit: int = 20) -> list[dict[str, Any]]:
+    """Lista riassuntiva dei cycle_trace_*.json del dominio (per dropdown timeline)."""
+    await _check_auth(request)
+    _validate_domain(domain)
+    domain_dir = paths.domain_data_dir(domain)
+    if not domain_dir.exists():
+        return []
+    items = []
+    for f in sorted(domain_dir.glob("cycle_trace_*.json"),
+                    key=lambda p: p.stat().st_mtime, reverse=True)[:limit]:
+        try:
+            data = json.loads(f.read_text())
+            items.append({
+                "cycle_ts": data.get("cycle_ts", ""),
+                "domain": domain,
+                "total_s": data.get("total_s"),
+                "n_movements": data.get("n_movements"),
+                "n_ok": data.get("n_ok"),
+                "n_skipped": data.get("n_skipped"),
+                "n_errors": data.get("n_errors"),
+                "ssp_pipeline_status": data.get("ssp_pipeline_status"),
+            })
+        except (json.JSONDecodeError, OSError):
+            continue
+    return items
+
+
+@app.get("/api/domains/{domain}/cycle_trace/{cycle_ts}")
+async def get_cycle_trace(domain: str, cycle_ts: str, request: Request) -> dict[str, Any]:
+    """Dettaglio cycle_trace: sequenza movements + duration + status + metrics + errori."""
+    await _check_auth(request)
+    _validate_domain(domain)
+    if "/" in cycle_ts or ".." in cycle_ts:
+        raise HTTPException(status_code=400, detail="Invalid cycle_ts")
+    trace_path = paths.domain_data_dir(domain) / f"cycle_trace_{cycle_ts}.json"
+    if not trace_path.exists():
+        raise HTTPException(status_code=404, detail=f"cycle_trace per {cycle_ts} non trovato")
+    return json.loads(trace_path.read_text())
+
+
 @app.get("/api/domains/{domain}/prodotti")
 async def list_prodotti(domain: str, request: Request) -> list[dict[str, Any]]:
     """Lista prodotti maturi (post Stage 4 PoC runner).
