@@ -655,14 +655,26 @@
         </div>
       </div>
       <nav class="flex items-center gap-2 text-sm flex-shrink-0">
-        <button class="px-3 py-1 rounded hover:bg-slate-800" :class="{'bg-slate-800': view === 'home'}" @click="view = 'home'">Domains</button>
+        <!-- Home dashboard (Domains list). Icona casa per chiarezza navigazione. -->
+        <button class="px-3 py-1 rounded hover:bg-slate-800 flex items-center gap-1.5"
+                :class="{'bg-slate-800': view === 'home'}"
+                @click="view = 'home'"
+                data-tip="Torna alla lista Domini">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0">
+            <path d="M3 9.5L12 3l9 6.5V21a1 1 0 0 1-1 1h-5v-7h-6v7H4a1 1 0 0 1-1-1V9.5z"/>
+          </svg>
+          <span>Domains</span>
+        </button>
+        <!-- Breadcrumb: dominio attivo, click torna alla view dominio -->
         <template x-if="activeDomain">
-          <button class="px-3 py-1 rounded hover:bg-slate-800 font-mono text-cyan-400 text-xs" @click="view = 'domain'" x-text="activeDomain"></button>
+          <div class="flex items-center gap-1">
+            <span class="text-slate-500 text-xs">/</span>
+            <button class="px-3 py-1 rounded hover:bg-slate-800 font-mono text-cyan-400 text-xs" @click="view = 'domain'" x-text="activeDomain"></button>
+          </div>
         </template>
         <!-- Link esterni nascosti su mobile (<1024px) per non sovrapporsi al dropdown tab.
              Accessibili da tab Info → Reference. -->
-        <span class="text-slate-300 mx-1 hidden lg:inline">·</span>
-        <a href="/" class="px-3 py-1 rounded hover:bg-slate-800 text-slate-400 hidden lg:inline-block" title="Lab fisica · sito di presentazione">↗ Sito</a>
+        <a href="/" class="px-3 py-1 rounded hover:bg-slate-800 text-slate-400 hidden lg:inline-block ml-2" title="Lab fisica · sito di presentazione">↗ Sito</a>
         <a href="/d-nd-lab.html" class="px-3 py-1 rounded hover:bg-slate-800 text-slate-400 hidden lg:inline-block" title="D-ND_LAB · pagina prodotto open source">↗ Prodotto</a>
         <a href="https://github.com/GrazianoGuiducci/D-ND_LAB" class="px-3 py-1 rounded hover:bg-slate-800 text-slate-400 hidden lg:inline-block" target="_blank" title="Repository GitHub">GitHub →</a>
       </nav>
