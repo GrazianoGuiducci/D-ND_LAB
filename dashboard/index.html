@@ -59,8 +59,8 @@
     .text-slate-200 { color: rgb(240 240 245) !important; }   /* primary text */
     .text-slate-300 { color: rgb(220 222 230) !important; }   /* body */
     .text-slate-400 { color: rgb(200 202 215) !important; }   /* MUTED ora 200 (era 172) */
-    .text-slate-500 { color: rgb(172 175 192) !important; }   /* SUBTLE ora 172 (era 148) */
-    .text-slate-600 { color: rgb(148 151 168) !important; }
+    .text-slate-300 { color: rgb(172 175 192) !important; }   /* SUBTLE ora 172 (era 148) */
+    .text-slate-400 { color: rgb(148 151 168) !important; }
     /* Neon accents piu' vivi */
     .text-cyan-400 { color: rgb(var(--neon-cyan)) !important; }
     .text-purple-400 { color: rgb(var(--neon-purple)) !important; }
@@ -619,7 +619,7 @@
           <img src="/assets/logos/logo_40px.jpg" alt="D-ND" class="w-7 h-7 rounded shadow ring-1 ring-white/10">
           <span class="text-xl font-light tracking-tight">D-ND_LAB</span>
         </a>
-        <span class="text-xs text-slate-500 uppercase tracking-wider hidden sm:inline">dashboard</span>
+        <span class="text-xs text-slate-300 uppercase tracking-wider hidden sm:inline">dashboard</span>
         <!-- Version label rimosso dalla toolbar (operatore: 'occupa spazio e non serve').
              Resta visibile in tab Info → Reference. -->
       </div>
@@ -661,7 +661,7 @@
         </template>
         <!-- Link esterni nascosti su mobile (<1024px) per non sovrapporsi al dropdown tab.
              Accessibili da tab Info → Reference. -->
-        <span class="text-slate-700 mx-1 hidden lg:inline">·</span>
+        <span class="text-slate-300 mx-1 hidden lg:inline">·</span>
         <a href="/" class="px-3 py-1 rounded hover:bg-slate-800 text-slate-400 hidden lg:inline-block" title="Lab fisica · sito di presentazione">↗ Sito</a>
         <a href="/d-nd-lab.html" class="px-3 py-1 rounded hover:bg-slate-800 text-slate-400 hidden lg:inline-block" title="D-ND_LAB · pagina prodotto open source">↗ Prodotto</a>
         <a href="https://github.com/GrazianoGuiducci/D-ND_LAB" class="px-3 py-1 rounded hover:bg-slate-800 text-slate-400 hidden lg:inline-block" target="_blank" title="Repository GitHub">GitHub →</a>
@@ -686,7 +686,7 @@
         un seme che evolve. Quello che vedi sotto è ciò che ha
         trovato — e, nel <em>cimitero</em>, ciò che ha scartato.
       </p>
-      <p class="text-slate-500 text-sm mt-3 leading-relaxed">
+      <p class="text-slate-300 text-sm mt-3 leading-relaxed">
         La struttura sotto è generica. Lo stesso sistema può girare
         su matematica, finanza, biologia, ricerca aziendale. Qui
         gira su <span class="text-slate-300">fisica/matematica</span>
@@ -709,8 +709,8 @@
 
     <!-- Sezione domini -->
     <div class="mb-3 flex items-baseline justify-between">
-      <h2 class="text-sm uppercase tracking-wider text-slate-500">Domini attivi</h2>
-      <span class="text-xs text-slate-600">scegli un dominio per entrare nel campo vivo</span>
+      <h2 class="text-sm uppercase tracking-wider text-slate-300">Domini attivi</h2>
+      <span class="text-xs text-slate-400">scegli un dominio per entrare nel campo vivo</span>
     </div>
 
     <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -719,16 +719,16 @@
              @click="enterDomain(d.id)">
           <div class="flex items-center justify-between mb-3">
             <h2 class="text-xl font-medium" x-text="d.title"></h2>
-            <span class="text-xs text-slate-500 font-mono" x-text="d.version"></span>
+            <span class="text-xs text-slate-300 font-mono" x-text="d.version"></span>
           </div>
           <p class="text-sm text-slate-400 mb-4 line-clamp-2" x-text="d.description"></p>
-          <div class="flex justify-between text-xs text-slate-500 font-mono pt-3 border-t border-slate-800">
+          <div class="flex justify-between text-xs text-slate-300 font-mono pt-3 border-t border-slate-800">
             <span>piano: <span class="text-cyan-400" x-text="d.piano"></span></span>
             <span><span class="text-cyan-400" x-text="d.n_tensions"></span> tensions</span>
             <span><span class="text-cyan-400" x-text="d.n_reports"></span> reports</span>
           </div>
           <template x-if="d.direzione">
-            <p class="mt-3 text-xs italic text-slate-500 line-clamp-2" x-text="'→ ' + d.direzione"></p>
+            <p class="mt-3 text-xs italic text-slate-300 line-clamp-2" x-text="'→ ' + d.direzione"></p>
           </template>
 
           <!-- Controlli dominio (UI placeholder — gestione futura).
@@ -736,7 +736,7 @@
           <div class="mt-3 pt-3 border-t border-slate-800 grid grid-cols-2 gap-3 text-[10px]"
                @click.stop>
             <div>
-              <div class="text-slate-600 uppercase tracking-wider mb-1">Stato</div>
+              <div class="text-slate-400 uppercase tracking-wider mb-1">Stato</div>
               <!-- Toggle Attivo/Disattivo (placeholder, sempre 'attivo' per ora). -->
               <button class="flex items-center gap-2 cursor-not-allowed opacity-70" disabled
                       data-tip="Gestione stato dominio · UI placeholder">
@@ -747,7 +747,7 @@
               </button>
             </div>
             <div>
-              <div class="text-slate-600 uppercase tracking-wider mb-1">Cron cycle</div>
+              <div class="text-slate-400 uppercase tracking-wider mb-1">Cron cycle</div>
               <!-- Selettore CRON (placeholder, disabled). Per physics mostra 'real-time'. -->
               <select class="dnd-select w-full bg-slate-950 border border-slate-700 rounded px-1.5 py-1 text-[10px] text-slate-400 cursor-not-allowed"
                       disabled
@@ -759,7 +759,7 @@
         </div>
       </template>
     </div>
-    <p class="text-xs text-slate-600 italic mt-3">
+    <p class="text-xs text-slate-400 italic mt-3">
       Toggle stato + cron sono UI placeholder — la gestione live arriva con il pannello admin
       (controllo per dominio: attivazione, override schedule, run on-demand).
     </p>
@@ -790,7 +790,7 @@
         <div class="sb-title-vertical">CAMPO</div>
         <!-- Su mobile, il toggle desktop e' nascosto e si usa questo close X -->
         <div class="flex items-center justify-between mb-2" style="margin-top:-4px">
-          <h3 class="text-xs uppercase tracking-wider text-slate-500 mt-1" x-show="sidebarLeftOpen || mobileDrawer === 'left'">Campo</h3>
+          <h3 class="text-xs uppercase tracking-wider text-slate-300 mt-1" x-show="sidebarLeftOpen || mobileDrawer === 'left'">Campo</h3>
           <button @click="closeMobileDrawer()" class="mobile-close-btn text-slate-400 hover:text-slate-200 px-2 py-1 rounded text-base" title="Chiudi">×</button>
         </div>
         <div x-show="sidebarLeftOpen || mobileDrawer === 'left'" class="pt-1">
@@ -807,7 +807,7 @@
           </div>
 
           <!-- Freschezza -->
-          <h4 class="text-xs uppercase tracking-wider text-slate-500 mt-5 mb-2">Freschezza</h4>
+          <h4 class="text-xs uppercase tracking-wider text-slate-300 mt-5 mb-2">Freschezza</h4>
           <div class="space-y-0">
             <div class="stat-row" @mouseenter="showStatTip('oggi', $event)" @mouseleave="hideStatTip()"><span class="text-slate-400">oggi</span><span class="stat-num text-green-400" x-text="freshnessStats().today"></span></div>
             <div class="stat-row" @mouseenter="showStatTip('fresche', $event)" @mouseleave="hideStatTip()"><span class="text-slate-400">fresche (7d)</span><span class="stat-num text-cyan-400" x-text="freshnessStats().fresh"></span></div>
@@ -821,12 +821,12 @@
           <!-- v4.8 — Counter-pole (falsifier per-lens summary) -->
           <template x-if="falsifierSummary.n_total_flags > 0">
             <div>
-              <h4 class="text-xs uppercase tracking-wider text-slate-500 mt-5 mb-2">Counter-pole</h4>
-              <div class="text-[10px] text-slate-500 mb-2" x-text="`${falsifierSummary.n_total_flags} flag su ${falsifierSummary.n_reports_checked} report`"></div>
+              <h4 class="text-xs uppercase tracking-wider text-slate-300 mt-5 mb-2">Counter-pole</h4>
+              <div class="text-[10px] text-slate-300 mb-2" x-text="`${falsifierSummary.n_total_flags} flag su ${falsifierSummary.n_reports_checked} report`"></div>
               <div class="space-y-1">
                 <template x-for="lens in ['L1','L2','L3','L4','L5']" :key="lens">
                   <div class="flex items-center justify-between gap-1.5 text-[11px]">
-                    <span class="font-mono text-slate-500" x-text="lens"></span>
+                    <span class="font-mono text-slate-300" x-text="lens"></span>
                     <span class="text-slate-300 truncate flex-1" x-text="falsifierSummary.lens_labels?.[lens] || ''"></span>
                     <span class="font-mono text-rose-300" x-text="falsifierSummary.by_lens?.[lens] || 0"></span>
                   </div>
@@ -843,23 +843,23 @@
           <!-- v4.9 — Bias corrector (A8 autologica interna pre-falsifier) -->
           <template x-if="correctorSummary.n_total_applied > 0">
             <div>
-              <h4 class="text-xs uppercase tracking-wider text-slate-500 mt-5 mb-2">Bias corrector</h4>
-              <div class="text-[10px] text-slate-500 mb-2" x-text="`${correctorSummary.n_total_applied} riformulati / ${correctorSummary.n_total_proposed} proposti su ${correctorSummary.n_reports_checked} report`"></div>
+              <h4 class="text-xs uppercase tracking-wider text-slate-300 mt-5 mb-2">Bias corrector</h4>
+              <div class="text-[10px] text-slate-300 mb-2" x-text="`${correctorSummary.n_total_applied} riformulati / ${correctorSummary.n_total_proposed} proposti su ${correctorSummary.n_reports_checked} report`"></div>
               <div class="space-y-1">
                 <template x-for="lens in ['L1','L3','L4']" :key="lens">
                   <div class="flex items-center justify-between gap-1.5 text-[11px]">
-                    <span class="font-mono text-slate-500" x-text="lens"></span>
+                    <span class="font-mono text-slate-300" x-text="lens"></span>
                     <span class="text-slate-300 truncate flex-1" x-text="lens === 'L1' ? 'Assoluti su dati biased' : lens === 'L3' ? 'Silent patching' : 'Edge case rounded'"></span>
                     <span class="font-mono text-emerald-300" x-text="correctorSummary.by_lens?.[lens] || 0"></span>
                   </div>
                 </template>
               </div>
-              <div class="text-[9px] text-slate-500 mt-2 italic">A8 autologica — pre-falsifier</div>
+              <div class="text-[9px] text-slate-300 mt-2 italic">A8 autologica — pre-falsifier</div>
             </div>
           </template>
 
           <!-- Legenda -->
-          <h4 class="text-xs uppercase tracking-wider text-slate-500 mt-5 mb-2">Legenda</h4>
+          <h4 class="text-xs uppercase tracking-wider text-slate-300 mt-5 mb-2">Legenda</h4>
           <div class="space-y-1.5 text-xs text-slate-400">
             <div class="flex items-center gap-2" @mouseenter="showStatTip('legend_tensione', $event)" @mouseleave="hideStatTip()"><i class="legend-dot" style="background:#22d3ee"></i> tensione</div>
             <div class="flex items-center gap-2" @mouseenter="showStatTip('legend_report', $event)" @mouseleave="hideStatTip()"><i class="legend-dot" style="background:#a78bfa"></i> report</div>
@@ -882,7 +882,7 @@
             <span class="text-amber-400">●</span>
             <span>Early access</span>
           </button>
-          <p class="text-[10px] text-slate-500 mt-2 leading-relaxed">Il lab e' in collaudo. Per provarlo o adattarlo a un dominio specifico, scrivi.</p>
+          <p class="text-[10px] text-slate-300 mt-2 leading-relaxed">Il lab e' in collaudo. Per provarlo o adattarlo a un dominio specifico, scrivi.</p>
         </div>
       </aside>
 
@@ -895,7 +895,7 @@
             <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
               <h2 class="text-lg font-medium flex items-center gap-2">
                 <span>Knowledge graph</span>
-                <span class="text-xs text-slate-500 font-mono" x-show="graphStats.n_nodes !== undefined" x-text="`${graphStats.n_nodes ?? 0} nodes · ${graphStats.n_edges ?? 0} edges`"></span>
+                <span class="text-xs text-slate-300 font-mono" x-show="graphStats.n_nodes !== undefined" x-text="`${graphStats.n_nodes ?? 0} nodes · ${graphStats.n_edges ?? 0} edges`"></span>
               </h2>
               <div class="flex items-center gap-2">
                 <template x-if="selectedNode">
@@ -906,7 +906,7 @@
                 </template>
                 <button @click="resetGraphLayout()" class="text-xs px-2 py-1 rounded bg-slate-800 hover:bg-slate-700" title="Relayout">↻</button>
                 <button @click="setGraphFullscreen(true)" class="text-xs px-2 py-1 rounded bg-slate-800 hover:bg-slate-700" title="Fullscreen (F)">⛶</button>
-                <button @click="reloadGraph().then(() => renderGraph())" class="text-xs text-slate-500 hover:text-slate-300">refresh</button>
+                <button @click="reloadGraph().then(() => renderGraph())" class="text-xs text-slate-300 hover:text-slate-300">refresh</button>
               </div>
             </div>
             <div class="graph-viz-wrap" :class="graphFullscreen && 'fullscreen'">
@@ -914,7 +914,7 @@
               <button x-show="graphFullscreen" @click="setGraphFullscreen(false)" class="graph-fs-close">✕ Esci (ESC)</button>
             </div>
             <div class="graph-legend">
-              <span class="text-slate-500 italic">Click su un nodo → contesto chat + dettaglio destra</span>
+              <span class="text-slate-300 italic">Click su un nodo → contesto chat + dettaglio destra</span>
             </div>
           </div>
         </div>
@@ -925,7 +925,7 @@
             <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
               <div>
                 <h2 class="text-lg font-medium">Bicono — galleria delle scoperte</h2>
-                <p class="text-xs text-slate-500">Ogni report compila i propri 4 poli (radici · singolare · invariante · campo). Click → apri in Agente.</p>
+                <p class="text-xs text-slate-300">Ogni report compila i propri 4 poli (radici · singolare · invariante · campo). Click → apri in Agente.</p>
               </div>
               <label class="flex items-center gap-2 text-xs text-slate-400">
                 <input type="checkbox" x-model="biconoOnlyComplete">
@@ -934,15 +934,15 @@
             </div>
 
             <template x-if="biconi.length === 0">
-              <div class="text-slate-500 text-sm py-12 text-center italic">Nessun report ancora — esegui un ciclo per popolare la galleria.</div>
+              <div class="text-slate-300 text-sm py-12 text-center italic">Nessun report ancora — esegui un ciclo per popolare la galleria.</div>
             </template>
 
             <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <template x-for="b in filteredBiconi()" :key="b.filename">
                 <button @click="openBiconoCard(b)" class="text-left bicono-card hover:border-purple-500 transition cursor-pointer w-full" style="border-color: rgba(167,139,250,.18)">
-                  <div class="text-xs font-mono text-slate-500 mb-2 flex items-center justify-between">
+                  <div class="text-xs font-mono text-slate-300 mb-2 flex items-center justify-between">
                     <span class="truncate flex-1" x-text="b.filename"></span>
-                    <span class="text-slate-600 ml-2" x-text="formatDate(b.mtime)"></span>
+                    <span class="text-slate-400 ml-2" x-text="formatDate(b.mtime)"></span>
                   </div>
                   <div class="text-sm text-slate-200 line-clamp-2 mb-3 font-medium" x-text="b.title || '(no title)'"></div>
 
@@ -960,7 +960,7 @@
                   </template>
 
                   <template x-if="!b.bicono">
-                    <div class="text-xs text-slate-500 italic py-3 text-center border border-dashed border-slate-700 rounded">bicono assente o non parsabile</div>
+                    <div class="text-xs text-slate-300 italic py-3 text-center border border-dashed border-slate-700 rounded">bicono assente o non parsabile</div>
                   </template>
 
                   <div class="mt-2 flex gap-1.5 flex-wrap">
@@ -1001,7 +1001,7 @@
               <div x-show="reportsDropdownOpen" x-cloak x-transition.opacity.duration.120ms
                    class="absolute left-0 right-0 top-full mt-1 bg-slate-900 border border-slate-700 rounded shadow-2xl z-30 max-h-[400px] overflow-y-auto">
                 <button @click="activeReportFilename = ''; activeReport = null; reportsDropdownOpen = false"
-                        class="w-full text-left px-3 py-2 text-sm text-slate-500 italic hover:bg-slate-800 transition">— scegli un report —</button>
+                        class="w-full text-left px-3 py-2 text-sm text-slate-300 italic hover:bg-slate-800 transition">— scegli un report —</button>
                 <template x-for="r in filteredReports()" :key="r.filename">
                   <button @click="activeReportFilename = r.filename; openReport(r.filename); reportsDropdownOpen = false"
                           :class="activeReportFilename === r.filename ? 'bg-purple-900/30 text-purple-200' : 'text-slate-200 hover:bg-slate-800'"
@@ -1014,15 +1014,15 @@
                         <template x-if="isCimitero(r)"><span> 🪦</span></template>
                       </span>
                     </div>
-                    <div class="text-[10px] text-slate-500 font-mono mt-0.5" x-text="formatDate(r.mtime)"></div>
+                    <div class="text-[10px] text-slate-300 font-mono mt-0.5" x-text="formatDate(r.mtime)"></div>
                   </button>
                 </template>
                 <template x-if="filteredReports().length === 0">
-                  <div class="px-3 py-3 text-xs text-slate-500 italic">Nessun report con questo filtro.</div>
+                  <div class="px-3 py-3 text-xs text-slate-300 italic">Nessun report con questo filtro.</div>
                 </template>
               </div>
             </div>
-            <span class="text-xs text-slate-500 font-mono whitespace-nowrap" x-text="`${filteredReports().length}/${reports.length}`"></span>
+            <span class="text-xs text-slate-300 font-mono whitespace-nowrap" x-text="`${filteredReports().length}/${reports.length}`"></span>
             <div class="flex items-center gap-0.5 bg-slate-950 rounded p-0.5 text-[10px]">
               <button @click="reportsFilter = 'all'"
                       :class="reportsFilter === 'all' ? 'bg-slate-700 text-slate-100' : 'text-slate-400 hover:text-slate-200'"
@@ -1039,18 +1039,18 @@
           <!-- Viewer single column — riempie il resto, scroll interno -->
           <section class="agente-viewer bg-slate-900 border border-slate-800 rounded-lg p-5">
               <template x-if="!activeReport">
-                <div class="h-full flex flex-col items-center justify-center text-center text-slate-500 py-12">
-                  <div class="text-3xl text-slate-700 mb-3">⊙</div>
+                <div class="h-full flex flex-col items-center justify-center text-center text-slate-300 py-12">
+                  <div class="text-3xl text-slate-300 mb-3">⊙</div>
                   <div class="text-sm">Seleziona un report dal menu in alto</div>
-                  <div class="text-xs text-slate-600 mt-2 italic">Bicono · falsifier · ToC + markdown content</div>
+                  <div class="text-xs text-slate-400 mt-2 italic">Bicono · falsifier · ToC + markdown content</div>
                 </div>
               </template>
 
               <template x-if="activeReport">
                 <div>
                   <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
-                    <div class="text-xs font-mono text-slate-500" x-text="activeReport.filename"></div>
-                    <button @click="activeReport = null" class="text-xs text-slate-500 hover:text-slate-300">close</button>
+                    <div class="text-xs font-mono text-slate-300" x-text="activeReport.filename"></div>
+                    <button @click="activeReport = null" class="text-xs text-slate-300 hover:text-slate-300">close</button>
                   </div>
 
 
@@ -1064,13 +1064,13 @@
                         <span x-show="activeFalsifier.coherent === false" x-text="`⚠ Falsifier — ${activeFalsifier.flags.length} flag`"></span>
                       </h4>
                       <p class="text-xs text-slate-300 italic mb-1" x-text="activeFalsifier.summary"></p>
-                      <div class="text-[10px] text-slate-500 font-mono" x-text="`model: ${activeFalsifier.model || '?'}`"></div>
+                      <div class="text-[10px] text-slate-300 font-mono" x-text="`model: ${activeFalsifier.model || '?'}`"></div>
                       <template x-for="(flag, i) in activeFalsifier.flags" :key="i">
                         <div class="falsifier-flag" :class="flag.severity">
                           <div class="mb-2 flex items-center gap-2 flex-wrap">
                             <span class="lens-label" x-text="`L${flag.lens}`" :title="falsifierSummary.lens_labels?.[`L${flag.lens}`] || ''"></span>
                             <span class="severity-label" x-text="flag.severity"></span>
-                            <span class="text-[10px] text-slate-500 italic" x-text="falsifierSummary.lens_labels?.[`L${flag.lens}`] || ''"></span>
+                            <span class="text-[10px] text-slate-300 italic" x-text="falsifierSummary.lens_labels?.[`L${flag.lens}`] || ''"></span>
                           </div>
                           <!-- v4.8 — diff view: claim ↔ evidence side-by-side -->
                           <div class="grid sm:grid-cols-2 gap-2 mb-2">
@@ -1153,20 +1153,20 @@
                         class="px-3 py-1 rounded text-xs font-medium transition">↗ Trajectory</button>
               </div>
               <div class="flex items-center gap-2" x-show="incrocioMode === 'taxonomy'">
-                <span class="text-xs text-slate-500 font-mono" x-text="`${taxonomyMeta.n_groups || 0} gruppi · ${taxonomyMeta.n_nodes || 0} nodi · ${taxonomyMeta.n_bridges || 0} ponti`"></span>
+                <span class="text-xs text-slate-300 font-mono" x-text="`${taxonomyMeta.n_groups || 0} gruppi · ${taxonomyMeta.n_nodes || 0} nodi · ${taxonomyMeta.n_bridges || 0} ponti`"></span>
                 <button @click="if (cyTax) { cyTax.layout({name:'cose', animate:true, nodeRepulsion:1800, idealEdgeLength:35, padding:40, componentSpacing:25, gravity:1.5, nestingFactor:0.8, numIter:1500, initialTemp:200, coolingFactor:0.95}).run(); setTimeout(() => cyTax && cyTax.fit(undefined, 40), 350); }" class="text-xs px-2 py-1 rounded bg-slate-800 hover:bg-slate-700" title="Relayout (compatto)">↻</button>
                 <button @click="taxonomyFullscreen = !taxonomyFullscreen; $nextTick(() => { if (cyTax) { cyTax.resize(); cyTax.fit(undefined, taxonomyFullscreen ? 50 : 30); } })" class="text-xs px-2 py-1 rounded bg-slate-800 hover:bg-slate-700" title="Fullscreen">⛶</button>
-                <button @click="reloadTaxonomy().then(() => renderTaxonomy())" class="text-xs text-slate-500 hover:text-slate-300">refresh</button>
+                <button @click="reloadTaxonomy().then(() => renderTaxonomy())" class="text-xs text-slate-300 hover:text-slate-300">refresh</button>
               </div>
               <div class="flex items-center gap-2" x-show="incrocioMode === 'trajectory'">
-                <span class="text-xs text-slate-500 font-mono" x-text="`${reports.length} cicli`"></span>
+                <span class="text-xs text-slate-300 font-mono" x-text="`${reports.length} cicli`"></span>
               </div>
             </div>
 
             <!-- Mode: Tassonomia -->
             <div x-show="incrocioMode === 'taxonomy'">
               <div class="mb-2">
-                <p class="text-xs text-slate-500" x-text="taxonomyMeta.mode === 'pillars' ? 'Pillar mode: 5 teorie Q/T/G/E/R + cluster reports/tensioni' : (taxonomyMeta.mode === 'flat' ? 'Flat mode: gruppi per tipo (no teorie nel grafo attuale)' : '...')"></p>
+                <p class="text-xs text-slate-300" x-text="taxonomyMeta.mode === 'pillars' ? 'Pillar mode: 5 teorie Q/T/G/E/R + cluster reports/tensioni' : (taxonomyMeta.mode === 'flat' ? 'Flat mode: gruppi per tipo (no teorie nel grafo attuale)' : '...')"></p>
               </div>
               <div class="taxonomy-viz-wrap" :class="taxonomyFullscreen && 'fullscreen'">
                 <div id="taxonomy-viz" style="width: 100%; height: 520px; background: #0d0e14; border-radius: 0.5rem;"></div>
@@ -1179,11 +1179,11 @@
                   <span class="inline-flex items-center gap-1.5">
                     <i class="legend-dot" :style="`background:${g.color}`"></i>
                     <span x-text="g.label"></span>
-                    <span class="text-slate-600 font-mono" x-text="`${g.count}`"></span>
+                    <span class="text-slate-400 font-mono" x-text="`${g.count}`"></span>
                   </span>
                 </template>
                 <template x-if="taxonomyData.bridges && taxonomyData.bridges.length > 0">
-                  <span class="text-slate-500 italic" x-text="`+ ${taxonomyData.bridges.length} ponti cross-group`"></span>
+                  <span class="text-slate-300 italic" x-text="`+ ${taxonomyData.bridges.length} ponti cross-group`"></span>
                 </template>
               </div>
             </div>
@@ -1191,11 +1191,11 @@
             <!-- Mode: Trajectory — timeline cronologico dei cicli -->
             <div x-show="incrocioMode === 'trajectory'">
               <div class="mb-2">
-                <p class="text-xs text-slate-500">Sequenza cronologica dei report. Colore = categoria verdict (constraint/discovery/null/refute). Altezza barra = n_flags del falsifier (verifica). Click → apri il report.</p>
+                <p class="text-xs text-slate-300">Sequenza cronologica dei report. Colore = categoria verdict (constraint/discovery/null/refute). Altezza barra = n_flags del falsifier (verifica). Click → apri il report.</p>
               </div>
 
               <template x-if="reports.length === 0">
-                <div class="text-slate-500 text-sm py-12 text-center italic">Nessun report ancora — esegui il primo ciclo.</div>
+                <div class="text-slate-300 text-sm py-12 text-center italic">Nessun report ancora — esegui il primo ciclo.</div>
               </template>
 
               <template x-if="reports.length > 0">
@@ -1212,14 +1212,14 @@
                     <div class="flex items-center gap-1.5"><i class="legend-dot" style="background:#34d399"></i><span class="text-slate-300">DISCOVERY</span></div>
                     <div class="flex items-center gap-1.5"><i class="legend-dot" style="background:#fbbf24"></i><span class="text-slate-300">PARTIAL / REFUTE</span></div>
                     <div class="flex items-center gap-1.5"><i class="legend-dot" style="background:#94a3b8"></i><span class="text-slate-300">NULL / OTHER</span></div>
-                    <span class="text-slate-500 ml-auto italic">Altezza barra ∝ n_flags falsifier</span>
+                    <span class="text-slate-300 ml-auto italic">Altezza barra ∝ n_flags falsifier</span>
                   </div>
 
                   <!-- Cards lista cronologica per dettaglio testuale -->
                   <div class="mt-4 grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
                     <template x-for="p in trajectoryPoints()" :key="p.filename">
                       <button @click="openReportFromTrajectory(p.filename)" class="text-left bg-slate-800/40 hover:bg-slate-800 rounded p-2 transition border border-slate-700/50">
-                        <div class="flex items-center justify-between text-[10px] font-mono text-slate-500">
+                        <div class="flex items-center justify-between text-[10px] font-mono text-slate-300">
                           <span x-text="p.shortDate"></span>
                           <span class="px-1.5 rounded text-[9px]" :style="`background:${p.color}30; color:${p.color}`" x-text="p.verdictCategory"></span>
                         </div>
@@ -1242,7 +1242,7 @@
           <div class="bg-slate-900 border border-slate-800 rounded-lg p-6 space-y-4">
             <div>
               <h2 class="text-lg font-medium">Prodotti — pipeline SSP</h2>
-              <p class="text-xs text-slate-500 mt-1">
+              <p class="text-xs text-slate-300 mt-1">
                 Scoperte (Stage 1) → Applicazioni candidate (Stage 2) → Prodotti maturi (Stage 4 verified).
                 Ogni scoperta espande in card. Pre-discovery / transitional pubblicate con disclaimer.
               </p>
@@ -1251,19 +1251,19 @@
             <!-- Riepilogo SSP -->
             <div class="grid grid-cols-3 gap-3 mt-2 text-sm">
               <div class="bg-slate-950 border border-slate-800 rounded p-3">
-                <div class="text-slate-500 text-xs uppercase tracking-wider">Scoperte</div>
+                <div class="text-slate-300 text-xs uppercase tracking-wider">Scoperte</div>
                 <div class="text-2xl font-mono text-cyan-400 mt-1" x-text="(scoperteSsp || []).length"></div>
-                <div class="text-xs text-slate-600 mt-1">lab-note + cycle-report drafts</div>
+                <div class="text-xs text-slate-400 mt-1">lab-note + cycle-report drafts</div>
               </div>
               <div class="bg-slate-950 border border-slate-800 rounded p-3">
-                <div class="text-slate-500 text-xs uppercase tracking-wider">Applicazioni candidate</div>
+                <div class="text-slate-300 text-xs uppercase tracking-wider">Applicazioni candidate</div>
                 <div class="text-2xl font-mono text-purple-400 mt-1" x-text="(applicazioniSsp.candidates || []).length"></div>
-                <div class="text-xs text-slate-600 mt-1">manifest.draft.json — Stage 2</div>
+                <div class="text-xs text-slate-400 mt-1">manifest.draft.json — Stage 2</div>
               </div>
               <div class="bg-slate-950 border border-slate-800 rounded p-3">
-                <div class="text-slate-500 text-xs uppercase tracking-wider">Prodotti maturi</div>
+                <div class="text-slate-300 text-xs uppercase tracking-wider">Prodotti maturi</div>
                 <div class="text-2xl font-mono text-green-400 mt-1" x-text="(prodottiSsp || []).length"></div>
-                <div class="text-xs text-slate-600 mt-1">verification.json reale — Stage 4</div>
+                <div class="text-xs text-slate-400 mt-1">verification.json reale — Stage 4</div>
               </div>
             </div>
 
@@ -1278,19 +1278,19 @@
                     <div class="flex items-center justify-between">
                       <div class="flex-1">
                         <div class="text-sm font-medium text-slate-200" x-text="s.title_proposal || s.dir"></div>
-                        <div class="text-xs text-slate-500 mt-1">
+                        <div class="text-xs text-slate-300 mt-1">
                           <span class="font-mono text-cyan-400" x-text="s.cycle_ts"></span> ·
                           status: <span class="font-mono"
                             :class="{
                               'text-green-400': s.status === 'mature',
                               'text-yellow-400': s.status === 'transitional',
                               'text-orange-400': s.status === 'pre_discovery',
-                              'text-slate-500': s.status === 'draft',
+                              'text-slate-300': s.status === 'draft',
                             }"
                             x-text="s.status"></span> ·
                           ssp_state: <span class="text-purple-300" x-text="s.ssp_state"></span>
                           <template x-if="s.is_auto_scaffold">
-                            <span class="ml-2 text-xs text-slate-600">[auto]</span>
+                            <span class="ml-2 text-xs text-slate-400">[auto]</span>
                           </template>
                         </div>
                       </div>
@@ -1298,13 +1298,13 @@
                     <!-- Applicazioni candidate per questa scoperta -->
                     <template x-if="(applicazioniSsp.candidates || []).filter(a => a.cycle_ts === s.cycle_ts).length > 0">
                       <div class="ml-4 mt-2 pt-2 border-t border-slate-800 space-y-1">
-                        <div class="text-xs text-slate-500 uppercase tracking-wider">Applicazioni candidate (eligible)</div>
+                        <div class="text-xs text-slate-300 uppercase tracking-wider">Applicazioni candidate (eligible)</div>
                         <template x-for="a in applicazioniSsp.candidates.filter(c => c.cycle_ts === s.cycle_ts)" :key="a.name + a.type">
                           <div class="text-xs text-slate-400 flex items-center gap-2">
                             <span class="font-mono" x-text="a.type"></span>
                             <span x-text="a.name"></span>
-                            <span class="text-slate-600">·</span>
-                            <span class="text-slate-500" x-text="a.verifier_form"></span>
+                            <span class="text-slate-400">·</span>
+                            <span class="text-slate-300" x-text="a.verifier_form"></span>
                           </div>
                         </template>
                       </div>
@@ -1314,10 +1314,10 @@
                     <template x-if="(applicazioniSsp.review_required || []).filter(r => r.cycle_ts === s.cycle_ts).length > 0 || (applicazioniSsp.non_application || []).filter(n => n.cycle_ts === s.cycle_ts).length > 0">
                       <div class="ml-4 mt-2 pt-2 border-t border-slate-800 space-y-1">
                         <button @click="excludedExpanded[s.cycle_ts] = !excludedExpanded[s.cycle_ts]"
-                                class="text-xs text-slate-500 uppercase tracking-wider flex items-center gap-1 hover:text-slate-300 transition">
+                                class="text-xs text-slate-300 uppercase tracking-wider flex items-center gap-1 hover:text-slate-300 transition">
                           <span x-text="excludedExpanded[s.cycle_ts] ? '▾' : '▸'"></span>
                           <span>Findings non applicativi</span>
-                          <span class="font-mono text-slate-600 normal-case" x-text="`(${(applicazioniSsp.review_required || []).filter(r => r.cycle_ts === s.cycle_ts).length} review · ${(applicazioniSsp.non_application || []).filter(n => n.cycle_ts === s.cycle_ts).length} skip)`"></span>
+                          <span class="font-mono text-slate-400 normal-case" x-text="`(${(applicazioniSsp.review_required || []).filter(r => r.cycle_ts === s.cycle_ts).length} review · ${(applicazioniSsp.non_application || []).filter(n => n.cycle_ts === s.cycle_ts).length} skip)`"></span>
                         </button>
                         <div x-show="excludedExpanded[s.cycle_ts]" x-cloak class="space-y-1 mt-1">
                           <!-- review_required: il gate ha esitato → operatore decide -->
@@ -1326,21 +1326,21 @@
                               <span class="text-yellow-400 font-mono flex-shrink-0">?</span>
                               <div class="flex-1 min-w-0">
                                 <div class="text-slate-400" x-text="`#${r.finding_id} ${r.title}`"></div>
-                                <div class="text-slate-600 italic mt-0.5" x-text="r.reason"></div>
+                                <div class="text-slate-400 italic mt-0.5" x-text="r.reason"></div>
                               </div>
                             </div>
                           </template>
                           <!-- non_application: il gate ha escluso (rediscovery, methodology, ecc) -->
                           <template x-for="n in applicazioniSsp.non_application.filter(c => c.cycle_ts === s.cycle_ts)" :key="n.finding_id">
                             <div class="text-xs flex items-start gap-2 ml-2">
-                              <span class="text-slate-500 font-mono flex-shrink-0">✗</span>
+                              <span class="text-slate-300 font-mono flex-shrink-0">✗</span>
                               <div class="flex-1 min-w-0">
-                                <div class="text-slate-500">
+                                <div class="text-slate-300">
                                   <span x-text="`#${n.finding_id}`"></span>
                                   <span class="text-purple-400 font-mono" x-text="`[${n.role}]`"></span>
                                   <span x-text="n.title"></span>
                                 </div>
-                                <div class="text-slate-600 italic mt-0.5" x-text="n.skip_reason"></div>
+                                <div class="text-slate-400 italic mt-0.5" x-text="n.skip_reason"></div>
                               </div>
                             </div>
                           </template>
@@ -1354,7 +1354,7 @@
 
             <!-- Empty state -->
             <template x-if="(scoperteSsp || []).length === 0">
-              <div class="bg-slate-950 border border-dashed border-slate-800 rounded p-6 text-center text-sm text-slate-500">
+              <div class="bg-slate-950 border border-dashed border-slate-800 rounded p-6 text-center text-sm text-slate-300">
                 Nessuna scoperta SSP per questo dominio.
                 Lancia un cycle e poi il trigger <code class="text-cyan-400 text-xs">on_crystallize.py</code>.
               </div>
@@ -1364,7 +1364,7 @@
             <template x-if="(prodottiSsp || []).length > 0">
               <div class="space-y-3 mt-6">
                 <h3 class="text-sm font-medium text-slate-300">Prodotti maturi (<span x-text="prodottiSsp.length"></span>)</h3>
-                <p class="text-xs text-slate-500">Stage 4 eseguito — verification.json reale, metriche empiriche da PoC A/B (claude-cli OAuth).</p>
+                <p class="text-xs text-slate-300">Stage 4 eseguito — verification.json reale, metriche empiriche da PoC A/B (claude-cli OAuth).</p>
                 <template x-for="p in prodottiSsp" :key="p.id">
                   <div class="bg-slate-950 border border-slate-800 rounded p-4 space-y-2 cursor-pointer hover:border-cyan-700 transition"
                        @click="selectedProdottoSsp = p; selectedScopertaSsp = null; sidebarRightOpen = true; if (window.matchMedia('(max-width: 1024px)').matches) openMobileDrawer('right')"
@@ -1386,9 +1386,9 @@
                                   'bg-slate-800 text-slate-400': p.status === 'UNTESTABLE',
                                 }"
                                 x-text="p.status"></span>
-                          <span class="text-xs text-slate-500">type:</span>
+                          <span class="text-xs text-slate-300">type:</span>
                           <span class="text-xs font-mono text-purple-300" x-text="p.type"></span>
-                          <span class="text-xs text-slate-500">·</span>
+                          <span class="text-xs text-slate-300">·</span>
                           <span class="text-xs font-mono text-cyan-400" x-text="p.discovery_cycle_ts"></span>
                         </div>
                         <div class="text-sm text-slate-200 mt-1 truncate" x-text="p.name || p.id"></div>
@@ -1398,15 +1398,15 @@
                     <template x-if="p.metrics && (p.metrics.naive_score !== undefined)">
                       <div class="ml-2 mt-2 pt-2 border-t border-slate-800 grid grid-cols-3 gap-3 text-xs">
                         <div>
-                          <div class="text-slate-500 uppercase tracking-wider text-[10px]">Naive baseline</div>
+                          <div class="text-slate-300 uppercase tracking-wider text-[10px]">Naive baseline</div>
                           <div class="font-mono text-slate-300" x-text="(Number(p.metrics.naive_score) || 0).toFixed(4)"></div>
                         </div>
                         <div>
-                          <div class="text-slate-500 uppercase tracking-wider text-[10px]">Informed (finding)</div>
+                          <div class="text-slate-300 uppercase tracking-wider text-[10px]">Informed (finding)</div>
                           <div class="font-mono text-slate-300" x-text="(Number(p.metrics.informed_score) || 0).toFixed(4)"></div>
                         </div>
                         <div>
-                          <div class="text-slate-500 uppercase tracking-wider text-[10px]">Delta (informed − naive)</div>
+                          <div class="text-slate-300 uppercase tracking-wider text-[10px]">Delta (informed − naive)</div>
                           <div class="font-mono"
                                :class="{
                                  'text-green-400': Number(p.metrics.delta) > 0.05,
@@ -1416,7 +1416,7 @@
                                x-text="((Number(p.metrics.delta) > 0 ? '+' : '') + ((Number(p.metrics.delta) || 0).toFixed(4)))"></div>
                         </div>
                         <template x-if="p.metrics.n_trials">
-                          <div class="col-span-3 text-[10px] text-slate-600">
+                          <div class="col-span-3 text-[10px] text-slate-400">
                             n_trials = <span x-text="p.metrics.n_trials"></span> ·
                             verifier_form: <span class="font-mono" x-text="p.verifier_form"></span> ·
                             verified_at: <span class="font-mono" x-text="(p.verified_at || '').substring(0,16)"></span>
@@ -1437,7 +1437,7 @@
           <div class="bg-slate-900 border border-slate-800 rounded-lg p-6 space-y-4">
             <div>
               <h2 class="text-lg font-medium" x-text="contextIntro.title || 'Info'"></h2>
-              <p class="text-xs text-slate-500 mt-1">Cosa fa questo lab, come leggere la dashboard, dove sono i dati. Letto dal context.md del dominio.</p>
+              <p class="text-xs text-slate-300 mt-1">Cosa fa questo lab, come leggere la dashboard, dove sono i dati. Letto dal context.md del dominio.</p>
             </div>
 
             <template x-if="contextIntro.intro">
@@ -1477,11 +1477,11 @@
                   <p class="text-xs text-slate-400 mt-1">
                     <code class="text-cyan-400">finding_eligibility_gate.py</code> classifica ogni finding del report con classifier multi-segnale:
                     <span class="font-mono text-green-400">applicative_finding</span>,
-                    <span class="font-mono text-slate-500">literature_rediscovery</span>,
-                    <span class="font-mono text-slate-500">methodology_note</span>,
-                    <span class="font-mono text-slate-500">boundary_warning</span>,
-                    <span class="font-mono text-slate-500">verdict_summary</span>,
-                    <span class="font-mono text-slate-500">negative_result</span>,
+                    <span class="font-mono text-slate-300">literature_rediscovery</span>,
+                    <span class="font-mono text-slate-300">methodology_note</span>,
+                    <span class="font-mono text-slate-300">boundary_warning</span>,
+                    <span class="font-mono text-slate-300">verdict_summary</span>,
+                    <span class="font-mono text-slate-300">negative_result</span>,
                     <span class="font-mono text-yellow-400">REVIEW_REQUIRED</span> (ambiguo).
                     Niente skip silenzioso — tutto va in <code>finding_index.draft.json</code>.
                   </p>
@@ -1499,11 +1499,11 @@
                   <p class="text-xs text-slate-400 mt-1">
                     <code class="text-cyan-400">stage4_poc_runner.py</code> chiude il loop: passa la verification_spec a un LLM (claude-cli OAuth) che scrive un <code>poc.py</code> standalone con metodo naive vs informed-by-finding.
                     Lo script viene eseguito (sandboxed, max 90s, no network), produce <code>metrics.json</code>, il runner confronta vs criteri e scrive <code>verification.json</code> reale.
-                    Verdict: <span class="font-mono text-green-400">PASS</span> (delta &gt; 0.05), <span class="font-mono text-red-400">FAIL</span> (delta &lt; -0.05), <span class="font-mono text-yellow-400">INCONCLUSIVE</span> (marginale), <span class="font-mono text-slate-500">UNTESTABLE</span> (negative_result).
+                    Verdict: <span class="font-mono text-green-400">PASS</span> (delta &gt; 0.05), <span class="font-mono text-red-400">FAIL</span> (delta &lt; -0.05), <span class="font-mono text-yellow-400">INCONCLUSIVE</span> (marginale), <span class="font-mono text-slate-300">UNTESTABLE</span> (negative_result).
                   </p>
                 </div>
               </div>
-              <p class="text-xs text-slate-500 mt-3 italic">
+              <p class="text-xs text-slate-300 mt-3 italic">
                 Il movement <code>ssp_pipeline</code> esegue automaticamente Stage 1+1.5 ogni cycle, e Stage 2+4 solo per scoperte mature. Questo significa: lab notturno → mattina trovi scoperta + applicazioni + prodotti già verificati con metriche A/B reali. Niente intervento manuale.
               </p>
             </div>
@@ -1540,7 +1540,7 @@
               <div class="text-sm text-slate-300 space-y-1">
                 <div>· Repo: <a href="https://github.com/GrazianoGuiducci/D-ND_LAB" target="_blank" class="text-cyan-400 hover:underline">github.com/GrazianoGuiducci/D-ND_LAB</a></div>
                 <div>· Modello D-ND: f(x)=1+1/x · M=[[1,1],[1,0]] · det(M)=−1 · punto fisso φ</div>
-                <div>· Versione dashboard: <span class="font-mono text-slate-500" x-text="health.version || '?'"></span></div>
+                <div>· Versione dashboard: <span class="font-mono text-slate-300" x-text="health.version || '?'"></span></div>
               </div>
             </div>
           </div>
@@ -1565,13 +1565,13 @@
         <div class="sb-title-vertical">DETTAGLIO</div>
         <div class="flex items-center justify-between mb-2" style="margin-top:-4px">
           <button @click="closeMobileDrawer()" class="mobile-close-btn text-slate-400 hover:text-slate-200 px-2 py-1 rounded text-base" title="Chiudi">×</button>
-          <h3 class="text-xs uppercase tracking-wider text-slate-500 mt-1 ml-auto" x-show="sidebarRightOpen || mobileDrawer === 'right'">Dettaglio</h3>
+          <h3 class="text-xs uppercase tracking-wider text-slate-300 mt-1 ml-auto" x-show="sidebarRightOpen || mobileDrawer === 'right'">Dettaglio</h3>
         </div>
         <div x-show="sidebarRightOpen || mobileDrawer === 'right'" class="pt-1">
 
           <!-- Empty state contestuale: dipende dal tab attivo. -->
           <template x-if="!selectedNode && !selectedScopertaSsp && !selectedProdottoSsp">
-            <p class="text-slate-500 text-xs italic py-4"
+            <p class="text-slate-300 text-xs italic py-4"
                x-text="activeTab === 'prodotti' ? 'Click su una scoperta o prodotto per vedere il dettaglio qui.' : (activeTab === 'grafo' ? 'Click su un nodo del grafo per vedere il dettaglio qui.' : (activeTab === 'agente' ? 'Apri un report per vedere il dettaglio del cycle qui.' : 'Seleziona un elemento per vedere il dettaglio qui.'))"></p>
           </template>
 
@@ -1585,13 +1585,13 @@
                         'text-green-400': selectedScopertaSsp.status === 'mature',
                         'text-yellow-400': selectedScopertaSsp.status === 'transitional',
                         'text-orange-400': selectedScopertaSsp.status === 'pre_discovery',
-                        'text-slate-500': selectedScopertaSsp.status === 'draft',
+                        'text-slate-300': selectedScopertaSsp.status === 'draft',
                       }"
                       x-text="selectedScopertaSsp.status"></span>
-                <button @click="selectedScopertaSsp = null" class="ml-auto text-slate-500 hover:text-slate-200 text-xs">×</button>
+                <button @click="selectedScopertaSsp = null" class="ml-auto text-slate-300 hover:text-slate-200 text-xs">×</button>
               </div>
               <div class="text-sm text-slate-200" x-text="selectedScopertaSsp.title_proposal || selectedScopertaSsp.dir"></div>
-              <div class="text-[10px] text-slate-500 space-y-0.5">
+              <div class="text-[10px] text-slate-300 space-y-0.5">
                 <div>cycle_ts: <span class="font-mono text-cyan-400" x-text="selectedScopertaSsp.cycle_ts"></span></div>
                 <div>ssp_state: <span class="text-purple-300" x-text="selectedScopertaSsp.ssp_state"></span></div>
                 <div>slug: <span class="font-mono" x-text="selectedScopertaSsp.slug_proposal"></span></div>
@@ -1615,10 +1615,10 @@
                       }"
                       x-text="selectedProdottoSsp.status"></span>
                 <span class="text-[10px] font-mono text-purple-300" x-text="selectedProdottoSsp.type"></span>
-                <button @click="selectedProdottoSsp = null" class="ml-auto text-slate-500 hover:text-slate-200 text-xs">×</button>
+                <button @click="selectedProdottoSsp = null" class="ml-auto text-slate-300 hover:text-slate-200 text-xs">×</button>
               </div>
               <div class="text-sm text-slate-200" x-text="selectedProdottoSsp.name || selectedProdottoSsp.id"></div>
-              <div class="text-[10px] text-slate-500 space-y-0.5">
+              <div class="text-[10px] text-slate-300 space-y-0.5">
                 <div>cycle: <span class="font-mono text-cyan-400" x-text="selectedProdottoSsp.discovery_cycle_ts"></span></div>
                 <div>finding: <span class="font-mono" x-text="`#${selectedProdottoSsp.discovery_finding_idx}`"></span></div>
                 <div>verifier: <span class="font-mono" x-text="selectedProdottoSsp.verifier_form"></span></div>
@@ -1627,15 +1627,15 @@
               <template x-if="selectedProdottoSsp.metrics && selectedProdottoSsp.metrics.naive_score !== undefined">
                 <div class="grid grid-cols-3 gap-1 text-[10px] mt-2 pt-2 border-t border-slate-800">
                   <div>
-                    <div class="text-slate-600 uppercase tracking-wider">Naive</div>
+                    <div class="text-slate-400 uppercase tracking-wider">Naive</div>
                     <div class="font-mono text-slate-300" x-text="(Number(selectedProdottoSsp.metrics.naive_score) || 0).toFixed(4)"></div>
                   </div>
                   <div>
-                    <div class="text-slate-600 uppercase tracking-wider">Informed</div>
+                    <div class="text-slate-400 uppercase tracking-wider">Informed</div>
                     <div class="font-mono text-slate-300" x-text="(Number(selectedProdottoSsp.metrics.informed_score) || 0).toFixed(4)"></div>
                   </div>
                   <div>
-                    <div class="text-slate-600 uppercase tracking-wider">Δ</div>
+                    <div class="text-slate-400 uppercase tracking-wider">Δ</div>
                     <div class="font-mono"
                          :class="{
                            'text-green-400': Number(selectedProdottoSsp.metrics.delta) > 0.05,
@@ -1682,9 +1682,9 @@
                il seed sarebbe ridondante e ruba spazio. -->
           <template x-if="['grafo','bicono','incrocio'].includes(activeTab)">
             <div>
-              <h4 class="text-xs uppercase tracking-wider text-slate-500 mt-5 mb-2">Seed</h4>
+              <h4 class="text-xs uppercase tracking-wider text-slate-300 mt-5 mb-2">Seed</h4>
               <div class="text-xs space-y-1 text-slate-400">
-                <div><span class="text-slate-500">piano:</span> <span class="font-mono text-cyan-400" x-text="seed.piano ?? '?'"></span></div>
+                <div><span class="text-slate-300">piano:</span> <span class="font-mono text-cyan-400" x-text="seed.piano ?? '?'"></span></div>
                 <div class="italic line-clamp-3" x-text="seed.direzione || '—'"></div>
               </div>
             </div>
@@ -1695,8 +1695,8 @@
           <template x-if="activeTab === 'agente' && activeReport && reportToc().length >= 3">
             <div class="mt-5 border-t border-slate-800 pt-4">
               <div class="flex items-center justify-between mb-2">
-                <h4 class="text-xs uppercase tracking-wider text-slate-500">Indice report</h4>
-                <span class="text-[10px] text-slate-600" x-text="reportToc().length + ' sezioni'"></span>
+                <h4 class="text-xs uppercase tracking-wider text-slate-300">Indice report</h4>
+                <span class="text-[10px] text-slate-400" x-text="reportToc().length + ' sezioni'"></span>
               </div>
               <ul class="space-y-0.5 max-h-72 overflow-y-auto pr-1">
                 <template x-for="h in reportToc()" :key="h.id">
@@ -1715,11 +1715,11 @@
           <template x-if="activeTab === 'info' || activeTab === 'agente' || activeTab === 'prodotti'">
             <div class="mt-5 border-t border-slate-800 pt-4">
               <div class="flex items-center justify-between mb-2">
-                <h4 class="text-xs uppercase tracking-wider text-slate-500">Cycle trace</h4>
-                <span class="text-[10px] text-slate-600" x-text="(cycleTraces || []).length + ' disponibili'"></span>
+                <h4 class="text-xs uppercase tracking-wider text-slate-300">Cycle trace</h4>
+                <span class="text-[10px] text-slate-400" x-text="(cycleTraces || []).length + ' disponibili'"></span>
               </div>
               <template x-if="(cycleTraces || []).length === 0">
-                <p class="text-xs text-slate-600 italic">Nessun cycle_trace ancora. Scritto a fine cycle dal post-deploy 01/05.</p>
+                <p class="text-xs text-slate-400 italic">Nessun cycle_trace ancora. Scritto a fine cycle dal post-deploy 01/05.</p>
               </template>
               <template x-if="(cycleTraces || []).length > 0">
                 <div class="space-y-2">
@@ -1736,17 +1736,17 @@
                     <div class="space-y-2">
                       <div class="grid grid-cols-2 gap-1 text-[10px]">
                         <div>
-                          <div class="text-slate-600 uppercase tracking-wider">Total</div>
+                          <div class="text-slate-400 uppercase tracking-wider">Total</div>
                           <div class="font-mono text-slate-300" x-text="`${activeCycleTrace.total_s}s`"></div>
                         </div>
                         <div>
-                          <div class="text-slate-600 uppercase tracking-wider">OK / N</div>
+                          <div class="text-slate-400 uppercase tracking-wider">OK / N</div>
                           <div class="font-mono text-green-400" x-text="`${activeCycleTrace.n_ok}/${activeCycleTrace.n_movements}`"></div>
                         </div>
                       </div>
                       <template x-if="activeCycleTrace.ssp_pipeline_status">
                         <div class="text-[10px]">
-                          <span class="text-slate-600 uppercase tracking-wider">SSP</span>
+                          <span class="text-slate-400 uppercase tracking-wider">SSP</span>
                           <span class="font-mono text-purple-300 ml-1" x-text="activeCycleTrace.ssp_pipeline_status"></span>
                         </div>
                       </template>
@@ -1757,12 +1757,12 @@
                                   :class="{
                                     'text-green-400': m.status === 'ok',
                                     'text-red-400': m.status === 'error',
-                                    'text-slate-600': String(m.status).startsWith('skipped'),
+                                    'text-slate-400': String(m.status).startsWith('skipped'),
                                     'text-yellow-400': String(m.status).startsWith('pending'),
                                   }"
                                   x-text="m.status === 'ok' ? '✓' : (m.status === 'error' ? '✗' : (String(m.status).startsWith('skipped') ? '−' : '?'))"></span>
                             <span class="font-mono flex-1 truncate text-slate-400" x-text="m.name"></span>
-                            <span class="font-mono text-slate-600 flex-shrink-0"
+                            <span class="font-mono text-slate-400 flex-shrink-0"
                                   x-text="m.duration_s !== null && m.duration_s !== undefined ? `${m.duration_s}s` : ''"></span>
                           </div>
                         </template>
@@ -1819,15 +1819,15 @@
           <div class="stat-row flex justify-between"><span>applicazioni</span><span class="font-mono text-cyan-400" x-text="campoStats().applicazioni"></span></div>
           <div class="stat-row flex justify-between"><span>prodotti</span><span class="font-mono text-cyan-400" x-text="campoStats().prodotti"></span></div>
           <div class="stat-row flex justify-between"><span>cicli</span><span class="font-mono text-cyan-400" x-text="campoStats().cicli"></span></div>
-          <div class="stat-row flex justify-between mt-2 pt-2 border-t border-slate-700"><span class="text-slate-500">oggi</span><span class="font-mono text-green-400" x-text="freshnessStats().today"></span></div>
-          <div class="text-[10px] text-slate-500 italic mt-2">click per espandere</div>
+          <div class="stat-row flex justify-between mt-2 pt-2 border-t border-slate-700"><span class="text-slate-300">oggi</span><span class="font-mono text-green-400" x-text="freshnessStats().today"></span></div>
+          <div class="text-[10px] text-slate-300 italic mt-2">click per espandere</div>
         </div>
       </template>
       <template x-if="sidebarTipSide === 'right'">
         <div>
           <h5>Dettaglio</h5>
           <template x-if="!selectedNode">
-            <div class="text-[11px] text-slate-500 italic">Nessun nodo selezionato — click su un nodo del grafo.</div>
+            <div class="text-[11px] text-slate-300 italic">Nessun nodo selezionato — click su un nodo del grafo.</div>
           </template>
           <template x-if="selectedNode">
             <div>
@@ -1838,7 +1838,7 @@
               </template>
             </div>
           </template>
-          <div class="text-[10px] text-slate-500 italic mt-2">click per espandere</div>
+          <div class="text-[10px] text-slate-300 italic mt-2">click per espandere</div>
         </div>
       </template>
     </div>
@@ -1921,12 +1921,12 @@
       <div class="flex-1 overflow-y-auto px-3 py-3 space-y-3" style="min-height:0">
         <template x-for="(m, i) in chatMessages" :key="i">
           <div :class="m.role === 'user' ? 'pl-6' : 'pr-6'">
-            <div class="text-[10px] uppercase tracking-wider text-slate-500 mb-1" x-text="m.role === 'user' ? 'tu' : 'lab'"></div>
+            <div class="text-[10px] uppercase tracking-wider text-slate-300 mb-1" x-text="m.role === 'user' ? 'tu' : 'lab'"></div>
             <div :class="m.role === 'user' ? 'bg-purple-900/30 border-purple-800/60' : 'bg-slate-800/50 border-slate-700'"
                  class="border rounded-lg px-3 py-2 markdown text-sm" x-html="renderMarkdown(m.content)"></div>
             <!-- v5 — tool trace (collapsed, mostra cosa il chat agent ha letto) -->
             <template x-if="m.tool_trace && m.tool_trace.length > 0">
-              <details class="mt-1 text-[10px] text-slate-500">
+              <details class="mt-1 text-[10px] text-slate-300">
                 <summary class="cursor-pointer hover:text-slate-300">🔧 <span x-text="`${m.tool_trace.length} tool call`"></span></summary>
                 <div class="mt-1 pl-3 space-y-0.5">
                   <template x-for="(t, k) in m.tool_trace" :key="k">
@@ -1950,7 +1950,7 @@
                       <div class="text-[10px] text-emerald-400" x-text="`✓ ${a.result || 'eseguito'}`"></div>
                     </template>
                     <template x-if="a.declined">
-                      <div class="text-[10px] text-slate-500">— annullato</div>
+                      <div class="text-[10px] text-slate-300">— annullato</div>
                     </template>
                   </div>
                 </template>
@@ -1960,12 +1960,12 @@
         </template>
         <template x-if="chatLoading">
           <div class="pr-6">
-            <div class="text-[10px] uppercase tracking-wider text-slate-500 mb-1">lab</div>
+            <div class="text-[10px] uppercase tracking-wider text-slate-300 mb-1">lab</div>
             <div class="bg-slate-800/50 border border-slate-700 rounded-lg px-3 py-2 text-sm running">thinking...</div>
           </div>
         </template>
         <template x-if="chatMessages.length === 0 && !chatLoading">
-          <div class="text-slate-500 text-xs text-center py-3 italic">
+          <div class="text-slate-300 text-xs text-center py-3 italic">
             Il lab ha seed, last reports e cimitero in contesto.<br>
             Click su un nodo del grafo per domande mirate.
           </div>
@@ -2001,7 +2001,7 @@
          class="block w-full px-4 py-3 rounded bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium text-center transition">
         info@d-nd.com
       </a>
-      <div class="text-[11px] text-slate-500 mt-4 leading-relaxed">
+      <div class="text-[11px] text-slate-300 mt-4 leading-relaxed">
         Quello che vedi qui e' uno snapshot del campo: tensioni, scoperte, falsifier,
         bias_corrector, grafo. I dati sono reali — il cycle attivo e' in esecuzione
         controllata mentre il sistema viene completato.
