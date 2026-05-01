@@ -1,0 +1,49 @@
+{
+  "schema_version": "0.1",
+  "entries": [
+    {
+      "date": "2026-05-01",
+      "title": "SSP pipeline end-to-end + 3 prodotti verificati + 31 commit UX",
+      "highlights": [
+        "Stage 1 → 4 SSP pipeline replicata in core/triggers/ (on_crystallize, eligibility_gate, application_designer, build_applications_index, stage4_poc_runner) con path domain-agnostic LAB_DATA_DIR/<domain>/",
+        "ssp_pipeline movement registrato in lab_agent.MOVEMENT_ORDER (post trajectory_evaluator, pre notify) — esecuzione automatica ogni cycle",
+        "Stage 4 PoC runner multi-candidate: testa library + kernel + demo per finding eligible. claude-cli OAuth gratis genera + esegue PoC sandboxed, scrive verification.json reale",
+        "Provider chain claude-cli/codex-cli/openrouter in core/llm_adapter.py (LLM_PROVIDER_CHAIN env)",
+        "Cycle trace dump (cycle_trace_<ts>.json) + 2 endpoint API + UI timeline in sidebar destra",
+        "FastAPI endpoints: /api/domains/{d}/scoperte, /scoperte/{slug}, /applications, /prodotti, /prodotti/{id}, /cycle_traces, /cycle_trace/{ts}",
+        "Tab Prodotti UI: 3-card summary, scoperte espandibili con findings esclusi (review_required + non_application), prodotti maturi con metriche A/B colorate (border-left verde PASS / rosso FAIL / giallo INCONCLUSIVE)",
+        "Tab Info: nuova sezione Pipeline SSP (Stage 1/1.5/2/4) + tooltip sidebar SSP-aware",
+        "Sidebar destra contestuale: dettaglio scoperta/prodotto SSP selezionato + Indice report sticky + Cycle trace timeline (sostituisce vecchia tab Dinamica)",
+        "Chat consapevole pagina: context_tab + selectedScoperta/Prodotto in chat_endpoint, summary SSP live nel system prompt",
+        "Tassonomia layout calibrato (nodeRepulsion 1800, gravity 1.5) + force fit post-layout-settle + fullscreen funzionante (rimosso style inline che bloccava position:fixed)",
+        "Selettori coerenti con stile sito: .selector pattern replicato in scoperte.html + applications.html, custom-select inline per popover dark-themed (no più rendering OS sulle option), .dnd-select + [data-tip] sul dashboard",
+        "Contrasti dashboard alzati di uno step (text-slate-700/600/500 → 500/400/300) per allinearsi a palette --text/--muted del sito",
+        "Nav header: icona casa SVG su 'Domains' + breadcrumb '/ <domain>' quando dominio attivo, rimosso separator '·' orfano"
+      ],
+      "products_generated_today": [
+        {
+          "cycle_ts": "20260501_1256",
+          "finding_idx": 2,
+          "finding_title": "z = 12,813 — l'ordine sequenziale porta informazione massiva",
+          "candidates": [
+            {"type": "library", "verdict": "PASS", "delta": 0.0719, "naive": 0.4146, "informed": 0.4865, "n_trials": 3596},
+            {"type": "kernel",  "verdict": "PASS", "delta": 0.6858, "naive": 0.3117, "informed": 0.9975, "note": "winner per ordine di magnitudine"},
+            {"type": "demo",    "verdict": "PASS", "delta": 0.0909, "naive": 0.4039, "informed": 0.4948}
+          ]
+        }
+      ],
+      "cristallizations_propagated": [
+        "Risalita alla Sorgente — corollario A1/A2/A8/A12/A15 (kernel TMx + MM_D-ND/KERNEL_SEED + d-nd-seed/kernels/axioms.md)",
+        "Autologica Preventiva (Vicinato del Bug) — corollario A4/A8/A12/A15 (stessi 3 sedi)"
+      ],
+      "commits": {
+        "D-ND_LAB": 31,
+        "lab-d-nd-site": 3,
+        "MM_D-ND": 1,
+        "d-nd-seed": 1
+      },
+      "safety_guard_hits": 25,
+      "guard_pattern_observation": "Tutti su azioni nel flusso atteso di sviluppo (10 SERVICE_CONTROL su restart post-edit codice servizio in DEMO_MODE, 4 FILE_DELETE su scaffold rigenerabili gitignored o /tmp/*, altri vari). Candidato top per affinamento prossima sessione (Autologica Preventiva applicata al guard stesso)."
+    }
+  ]
+}
