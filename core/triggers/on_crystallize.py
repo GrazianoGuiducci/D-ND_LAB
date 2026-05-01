@@ -300,7 +300,7 @@ provenance:
   agent_report: tools/data/reports/agent_{ctx['cycle_ts']}.md
   falsifier_report: tools/data/reports/falsifier_{ctx['cycle_ts']}.json
   falsifier_verdict: {fals['verdict_label']}
-  valutatore_decision: CRYSTALLIZE_high
+  valutatore_decision: {ctx.get('valutatore_decision','unknown')}_{ctx.get('valutatore_confidence','unknown')}
   gate_status: {ctx.get('gate_status','unknown')}
 target_route: lab.d-nd.com/lab-notes/{ctx['slug']}
 target_cms_category: lab-note
@@ -385,7 +385,7 @@ provenance:
   agent_report: tools/data/reports/agent_{ctx['cycle_ts']}.md
   falsifier_report: tools/data/reports/falsifier_{ctx['cycle_ts']}.json
   falsifier_verdict: {fals['verdict_label']}
-  valutatore_decision: CRYSTALLIZE_high
+  valutatore_decision: {ctx.get('valutatore_decision','unknown')}_{ctx.get('valutatore_confidence','unknown')}
 target_route: lab.d-nd.com/cycles/{ctx['cycle_ts']}
 target_cms_category: cycle-report
 related_lab_note: lab-note.draft.md
@@ -501,6 +501,7 @@ def main():
         "draft_status": draft_status,
         "gate_status": gate_status,
         "valutatore_decision": valutatore.get("decision", "unknown") if valutatore else "no-entry",
+        "valutatore_confidence": valutatore.get("confidence", "unknown") if valutatore else "no-entry",
     }
 
     out_dir = APPS_BASE / f"{cycle_ts}_{slug}{args.out_suffix}"

@@ -782,6 +782,137 @@ async def get_cimitero(domain: str, request: Request) -> dict[str, str]:
     return {"content": p.read_text(errors="replace")}
 
 
+@app.get("/api/domains/{domain}/scoperte")
+async def list_scoperte(domain: str, request: Request) -> list[dict[str, Any]]:
+    """Lista scoperte (lab-note + cycle-report drafts) per il dominio.
+
+    Output di on_crystallize.py — letto live, no cache. Read-only OK in demo mode.
+    """
+    await _check_auth(request)
+    _validate_domain(domain)
+    scoperte_dir = paths.domain_data_dir(domain) / "scoperte"
+    if not scoperte_dir.exists():
+        return []
+    items = []
+    for d in sorted(scoperte_dir.iterdir(), key=lambda p: p.stat().st_mtime, reverse=True):
+        if not d.is_dir():
+            continue
+        lab_note = d / "lab-note.draft.md"
+        cycle_report = d / "cycle-report.draft.md"
+        if not lab_note.exists():
+            continue
+        ln_text = lab_note.read_text(errors="replace")
+        fm_match = re.match(r"^---\s*\n(.*?)\n---\s*\n", ln_text, re.S)
+        meta = {}
+        if fm_match:
+            for line in fm_match.group(1).splitlines():
+                if line.strip() and ":" in line and not line.startswith(" "):
+                    k, _, v = line.strip().partition(":")
+                    meta[k.strip()] = v.strip().strip('"').strip("'")
+        parts = d.name.split("_")
+        cycle_ts = f"{parts[0]}_{parts[1]}" if len(parts) >= 2 and parts[0].isdigit() else ""
+        items.append({
+            "dir": d.name,
+            "domain": domain,
+            "cycle_ts": cycle_ts,
+            "title_proposal": meta.get("title_proposal", ""),
+            "slug_proposal": meta.get("slug_proposal", ""),
+            "status": meta.get("status", "draft"),
+            "ssp_state": meta.get("ssp_state", "scoperte"),
+            "is_auto_scaffold": d.name.endswith("_auto"),
+            "has_cycle_report": cycle_report.exists(),
+            "modified_at": datetime.fromtimestamp(d.stat().st_mtime).isoformat(),
+        })
+    return items
+
+
+@app.get("/api/domains/{domain}/scoperte/{slug_dir}")
+async def get_scoperta_detail(domain: str, slug_dir: str, request: Request) -> dict[str, Any]:
+    """Dettaglio singola scoperta — ritorna il markdown + metadata."""
+    await _check_auth(request)
+    _validate_domain(domain)
+    if "/" in slug_dir or ".." in slug_dir:
+        raise HTTPException(status_code=400, detail="Invalid slug_dir")
+    scoperta_dir = paths.domain_data_dir(domain) / "scoperte" / slug_dir
+    if not scoperta_dir.is_dir():
+        raise HTTPException(status_code=404, detail=f"Scoperta {slug_dir} non trovata")
+    lab_note = scoperta_dir / "lab-note.draft.md"
+    cycle_report = scoperta_dir / "cycle-report.draft.md"
+    return {
+        "dir": slug_dir,
+        "domain": domain,
+        "lab_note_md": lab_note.read_text(errors="replace") if lab_note.exists() else "",
+        "cycle_report_md": cycle_report.read_text(errors="replace") if cycle_report.exists() else "",
+    }
+
+
+@app.get("/api/domains/{domain}/applications")
+async def list_applications(domain: str, request: Request) -> dict[str, Any]:
+    """Lista applications candidate (output application_designer.py).
+
+    Aggrega manifest.draft.json di ogni soluzione del dominio.
+    """
+    await _check_auth(request)
+    _validate_domain(domain)
+    soluzioni_dir = paths.domain_data_dir(domain) / "soluzioni"
+    if not soluzioni_dir.exists():
+        return {"domain": domain, "candidates": [], "review_required": [], "non_application": []}
+    candidates = []
+    review_required = []
+    non_application = []
+    for d in sorted(soluzioni_dir.iterdir(), key=lambda p: p.stat().st_mtime, reverse=True):
+        if not d.is_dir():
+            continue
+        manifest_path = d / "manifest.draft.json"
+        if not manifest_path.exists():
+            continue
+        try:
+            manifest = json.loads(manifest_path.read_text())
+        except json.JSONDecodeError:
+            continue
+        provenance = manifest.get("discovery_provenance", {})
+        cycle_ts = provenance.get("cycle_ts", "")
+        for app in manifest.get("applications_candidate", []):
+            candidates.append({
+                "dir": d.name,
+                "domain": domain,
+                "cycle_ts": cycle_ts,
+                "name": app.get("name", ""),
+                "type": app.get("type", ""),
+                "discovery_finding_idx": app.get("discovery_finding_idx"),
+                "discovery_finding_title": app.get("discovery_finding_title", ""),
+                "verifier_form": (app.get("verification_spec") or {}).get("verifier_form", ""),
+                "status": "draft",
+                "maturity": "transitional_candidate",
+            })
+        for r in manifest.get("review_required_findings", []):
+            review_required.append({
+                "dir": d.name, "domain": domain, "cycle_ts": cycle_ts,
+                "finding_id": r.get("finding_id"),
+                "title": r.get("title", ""),
+                "reason": r.get("reason") or r.get("skip_reason", ""),
+            })
+        for n in manifest.get("non_application_findings", []):
+            non_application.append({
+                "dir": d.name, "domain": domain, "cycle_ts": cycle_ts,
+                "finding_id": n.get("finding_id"),
+                "title": n.get("title", ""),
+                "role": n.get("role", ""),
+                "skip_reason": n.get("skip_reason", ""),
+            })
+    return {
+        "domain": domain,
+        "summary": {
+            "n_candidates": len(candidates),
+            "n_review_required": len(review_required),
+            "n_non_application": len(non_application),
+        },
+        "candidates": candidates,
+        "review_required": review_required,
+        "non_application": non_application,
+    }
+
+
 @app.post("/api/domains/{domain}/run")
 async def run_cycle_endpoint(domain: str, body: RunRequest, request: Request) -> dict[str, str]:
     await _check_auth(request)
