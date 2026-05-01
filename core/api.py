@@ -152,7 +152,11 @@ class ChatMessage(BaseModel):
 class ChatRequest(BaseModel):
     messages: list[ChatMessage]
     session_id: str | None = None
-    context_node: dict[str, Any] | None = None  # selected graph node, if any
+    context_node: dict[str, Any] | None = None       # selected graph node, if any
+    # Consapevolezza pagina (Atto UX 7) — il chat agent sa cosa l'utente sta guardando
+    context_tab: str | None = None                   # 'grafo' | 'bicono' | 'agente' | 'incrocio' | 'prodotti' | 'info'
+    context_scoperta: dict[str, Any] | None = None   # SSP scoperta selezionata in tab Prodotti
+    context_prodotto: dict[str, Any] | None = None   # SSP prodotto maturo selezionato in tab Prodotti
 
 
 class InjectTensionRequest(BaseModel):
@@ -1134,6 +1138,52 @@ async def chat_endpoint(domain: str, body: ChatRequest, request: Request) -> dic
         )
         system_prompt += node_md
 
+    # Consapevolezza pagina (Atto UX 7): tab attiva + selezione SSP.
+    # Pattern bot sito: il chat sa dove l'utente è e cosa sta guardando,
+    # può suggerire CTA ('vai al tab Prodotti', 'apri questa scoperta').
+    if body.context_tab:
+        tab_label = {
+            "grafo": "Grafo (knowledge graph)",
+            "bicono": "Bicono (galleria scoperte 4-poli)",
+            "agente": "Agente (lista cicli + verdict + falsifier flags)",
+            "incrocio": "Tassonomia (grafo aggregato + Trajectory timeline)",
+            "prodotti": "Prodotti (pipeline SSP: scoperte / applicazioni / prodotti maturi)",
+            "info": "Info (context.md domain + Pipeline SSP spiegata + reference)",
+        }.get(body.context_tab, body.context_tab)
+        system_prompt += f"\n\n## CURRENT TAB — user is viewing: {tab_label}\n"
+        system_prompt += (
+            "When relevant, suggest concrete CTAs like 'Apri tab Info → Pipeline SSP per "
+            "il dettaglio', 'Vai su tab Prodotti per vedere i prodotti maturi', "
+            "'Cerca nella Sidebar Dettaglio (destra)'. Be a guide, not just a Q&A.\n"
+        )
+
+    if body.context_scoperta:
+        s = body.context_scoperta
+        system_prompt += (
+            "\n\n## SCOPERTA SELEZIONATA — user is inspecting in tab Prodotti\n"
+            f"- title: {s.get('title_proposal', s.get('dir', '?'))[:200]}\n"
+            f"- cycle_ts: {s.get('cycle_ts', '?')}\n"
+            f"- status: {s.get('status', '?')} (mature/transitional/pre_discovery/draft)\n"
+            f"- ssp_state: {s.get('ssp_state', 'scoperte')}\n"
+            "Answer focused on this scoperta. If status is pre_discovery/transitional, "
+            "explain why no products have been generated yet (gate strict).\n"
+        )
+
+    if body.context_prodotto:
+        p = body.context_prodotto
+        m = p.get("metrics", {}) or {}
+        system_prompt += (
+            "\n\n## PRODOTTO SELEZIONATO — user is inspecting in tab Prodotti\n"
+            f"- name: {p.get('name', p.get('id', '?'))[:200]}\n"
+            f"- type: {p.get('type', '?')} (library / kernel / demo)\n"
+            f"- verdict: {p.get('status', '?')} (PASS / FAIL / INCONCLUSIVE / UNTESTABLE)\n"
+            f"- discovery_cycle_ts: {p.get('discovery_cycle_ts', '?')}\n"
+            f"- finding_idx: #{p.get('discovery_finding_idx', '?')}\n"
+            f"- metrics: naive={m.get('naive_score')} informed={m.get('informed_score')} delta={m.get('delta')} n_trials={m.get('n_trials')}\n"
+            "Answer about what was actually verified and what the metrics mean. "
+            "If asked, suggest reading poc.py via the read_report tool or detail endpoint.\n"
+        )
+
     # Augment system prompt with chat tools usage hint
     system_prompt += (
         "\n\n## TOOLS AVAILABLE\n"
@@ -1526,6 +1576,38 @@ def _build_chat_system_prompt(domain: str) -> str:
             parts.append(cim_text)
         except Exception:
             pass
+
+    # SSP pipeline summary (Atto UX 7 — consapevolezza dei prodotti)
+    domain_dir = paths.domain_data_dir(domain)
+    scoperte_dir = domain_dir / "scoperte"
+    soluzioni_dir = domain_dir / "soluzioni"
+    prodotti_dir = domain_dir / "prodotti"
+    n_scoperte = sum(1 for d in scoperte_dir.iterdir() if d.is_dir()) if scoperte_dir.exists() else 0
+    n_soluzioni = sum(1 for d in soluzioni_dir.iterdir() if d.is_dir()) if soluzioni_dir.exists() else 0
+    n_prodotti_pass = 0
+    n_prodotti_fail = 0
+    if prodotti_dir.exists():
+        for p in prodotti_dir.iterdir():
+            if not p.is_dir():
+                continue
+            v = p / "verification.json"
+            if v.exists():
+                try:
+                    data = json.loads(v.read_text())
+                    s = data.get("status", data.get("verdict", ""))
+                    if s == "PASS":
+                        n_prodotti_pass += 1
+                    elif s == "FAIL":
+                        n_prodotti_fail += 1
+                except (json.JSONDecodeError, OSError):
+                    pass
+    parts.append("")
+    parts.append("## SSP PIPELINE — current state")
+    parts.append(f"- Scoperte (Stage 1, lab-note drafts): {n_scoperte}")
+    parts.append(f"- Soluzioni con manifest (Stage 2): {n_soluzioni}")
+    parts.append(f"- Prodotti maturi (Stage 4 verified): {n_prodotti_pass} PASS, {n_prodotti_fail} FAIL")
+    parts.append("Pipeline auto: cycle → on_crystallize → eligibility_gate → "
+                 "(if mature) application_designer → (if eligible) stage4_poc_runner → verification.json reale.")
 
     return "\n".join(parts)
 

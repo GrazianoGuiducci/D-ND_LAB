@@ -3549,6 +3549,9 @@
         this.chatInput = '';
         this.chatLoading = true;
         try {
+          // Consapevolezza pagina: mando context tab/scoperta/prodotto al backend.
+          // Il chat agent risponde sapendo cosa l'utente sta guardando, suggerisce CTA
+          // (es. 'apri tab Info → Pipeline SSP', 'guarda Sidebar Dettaglio'). Pattern bot sito.
           const r = await fetch(`/api/domains/${this.activeDomain}/chat`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -3556,6 +3559,9 @@
               messages: this.chatMessages,
               session_id: this.chatSessionId,
               context_node: this.selectedNode || null,
+              context_tab: this.activeTab || null,
+              context_scoperta: this.selectedScopertaSsp || null,
+              context_prodotto: this.selectedProdottoSsp || null,
             }),
           });
           if (!r.ok) {
