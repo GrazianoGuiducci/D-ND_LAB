@@ -1358,129 +1358,6 @@
           </div>
         </div>
 
-        <!-- TAB DINAMICA — timeline movements del cycle: status + duration per movement.
-             Source: data/<domain>/cycle_trace_<ts>.json scritti post-cycle. -->
-        <div x-show="activeTab === 'dinamica'" x-transition.opacity.duration.150ms class="dinamica-pane">
-          <div class="bg-slate-900 border border-slate-800 rounded-lg p-6 space-y-4">
-            <div>
-              <h2 class="text-lg font-medium">Dinamica del lab</h2>
-              <p class="text-xs text-slate-500 mt-1">
-                Sequenza dei movements eseguiti per cycle. Status (ok / skipped / pending / error) +
-                durata per movement. Source: <code class="text-cyan-400">cycle_trace_*.json</code>.
-                Disponibile dai cycle che girano dopo il deploy del dump (01/05 sera in poi).
-              </p>
-            </div>
-
-            <!-- Empty state -->
-            <template x-if="(cycleTraces || []).length === 0">
-              <div class="bg-slate-950 border border-dashed border-slate-800 rounded p-6 text-center text-sm text-slate-500">
-                Nessun cycle_trace per questo dominio.
-                Il prossimo cycle che gira dopo il deploy lo scriverà automaticamente.
-              </div>
-            </template>
-
-            <!-- Lista cycle + select -->
-            <template x-if="(cycleTraces || []).length > 0">
-              <div class="space-y-3">
-                <div>
-                  <label class="text-xs text-slate-500 uppercase tracking-wider">Seleziona cycle</label>
-                  <select class="mt-1 w-full bg-slate-950 border border-slate-700 rounded px-3 py-1.5 text-sm text-slate-200"
-                          @change="loadCycleTrace($event.target.value)">
-                    <option value="">— scegli un cycle —</option>
-                    <template x-for="t in cycleTraces" :key="t.cycle_ts">
-                      <option :value="t.cycle_ts"
-                              x-text="`${t.cycle_ts}  ·  ${t.total_s}s  ·  ${t.n_ok}/${t.n_movements} ok  ·  ssp=${t.ssp_pipeline_status || '-'}`"></option>
-                    </template>
-                  </select>
-                </div>
-
-                <!-- Trace dettaglio -->
-                <template x-if="activeCycleTrace">
-                  <div class="bg-slate-950 border border-slate-800 rounded p-4 space-y-3">
-                    <!-- Header sintesi -->
-                    <div class="grid grid-cols-4 gap-3 text-xs">
-                      <div>
-                        <div class="text-slate-500 uppercase tracking-wider text-[10px]">Cycle</div>
-                        <div class="font-mono text-cyan-400" x-text="activeCycleTrace.cycle_ts"></div>
-                      </div>
-                      <div>
-                        <div class="text-slate-500 uppercase tracking-wider text-[10px]">Total</div>
-                        <div class="font-mono text-slate-300" x-text="`${activeCycleTrace.total_s}s`"></div>
-                      </div>
-                      <div>
-                        <div class="text-slate-500 uppercase tracking-wider text-[10px]">OK / N</div>
-                        <div class="font-mono text-green-400" x-text="`${activeCycleTrace.n_ok} / ${activeCycleTrace.n_movements}`"></div>
-                      </div>
-                      <div>
-                        <div class="text-slate-500 uppercase tracking-wider text-[10px]">Errors</div>
-                        <div class="font-mono"
-                             :class="activeCycleTrace.n_errors > 0 ? 'text-red-400' : 'text-slate-500'"
-                             x-text="activeCycleTrace.n_errors"></div>
-                      </div>
-                    </div>
-
-                    <!-- SSP pipeline status -->
-                    <template x-if="activeCycleTrace.ssp_pipeline_status">
-                      <div class="text-xs flex items-center gap-2 pt-2 border-t border-slate-800">
-                        <span class="text-slate-500 uppercase tracking-wider text-[10px]">SSP pipeline</span>
-                        <span class="font-mono text-purple-300" x-text="activeCycleTrace.ssp_pipeline_status"></span>
-                      </div>
-                    </template>
-
-                    <!-- Timeline orizzontale: 1 barra per movement -->
-                    <div class="space-y-1 pt-2 border-t border-slate-800">
-                      <div class="text-xs text-slate-500 uppercase tracking-wider mb-2">Sequenza movements</div>
-                      <template x-for="m in (activeCycleTrace.movements || [])" :key="m.name">
-                        <div class="flex items-center gap-2 text-xs"
-                             :class="m.is_critical ? 'opacity-100' : ''">
-                          <!-- Status dot -->
-                          <span class="font-mono w-3 flex-shrink-0"
-                                :class="{
-                                  'text-green-400': m.status === 'ok',
-                                  'text-red-400': m.status === 'error',
-                                  'text-slate-500': String(m.status).startsWith('skipped'),
-                                  'text-yellow-400': String(m.status).startsWith('pending'),
-                                }"
-                                x-text="m.status === 'ok' ? '✓' : (m.status === 'error' ? '✗' : (String(m.status).startsWith('skipped') ? '−' : '?'))"></span>
-                          <!-- Movement name -->
-                          <span class="font-mono w-40 flex-shrink-0 truncate"
-                                :class="m.is_critical ? 'text-cyan-300' : 'text-slate-300'"
-                                x-text="m.name"></span>
-                          <!-- Duration bar -->
-                          <div class="flex-1 h-3 bg-slate-900 rounded relative overflow-hidden">
-                            <template x-if="m.duration_s !== null && m.duration_s !== undefined && activeCycleTrace.total_s > 0">
-                              <div class="h-full"
-                                   :class="{
-                                     'bg-green-700/60': m.status === 'ok',
-                                     'bg-red-700/60': m.status === 'error',
-                                     'bg-slate-700/40': String(m.status).startsWith('skipped'),
-                                   }"
-                                   :style="`width: ${Math.min(100, (m.duration_s / activeCycleTrace.total_s) * 100)}%`"></div>
-                            </template>
-                          </div>
-                          <!-- Duration label -->
-                          <span class="font-mono text-slate-500 w-16 flex-shrink-0 text-right"
-                                x-text="m.duration_s !== null && m.duration_s !== undefined ? `${m.duration_s}s` : '—'"></span>
-                        </div>
-                      </template>
-                    </div>
-
-                    <!-- Errors list -->
-                    <template x-if="(activeCycleTrace.errors || []).length > 0">
-                      <div class="pt-2 border-t border-slate-800 space-y-1">
-                        <div class="text-xs text-slate-500 uppercase tracking-wider">Errori</div>
-                        <template x-for="(err, i) in activeCycleTrace.errors" :key="i">
-                          <div class="text-xs font-mono text-red-400" x-text="err"></div>
-                        </template>
-                      </div>
-                    </template>
-                  </div>
-                </template>
-              </div>
-            </template>
-          </div>
-        </div>
-
         <!-- TAB INFO/DOC — context.md del dominio + reference utili (UI fix #5).
              Sostituisce la card intro che rubava spazio in alto. -->
         <div x-show="activeTab === 'info'" x-transition.opacity.duration.150ms class="info-pane">
@@ -1502,7 +1379,7 @@
                 <li><strong>Agente</strong> — lista cicli con verdict + flag dal counter-pole. Filter Cimitero per i report falsificati.</li>
                 <li><strong>Tassonomia</strong> — grafo d'insieme aggregato per pillar/type, con sub-mode Trajectory (timeline cronologica).</li>
                 <li><strong>Prodotti</strong> — pipeline SSP (vedi sotto). Card per scoperta espandibile con applicazioni candidate, findings esclusi (review_required + skip), prodotti maturi con metriche A/B.</li>
-                <li><strong>Dinamica</strong> — timeline movements per cycle: status (ok / skip / pending / error) + durata per movement, da <code>cycle_trace_*.json</code>. Risponde alla domanda "che sequenza ha portato a quel risultato?".</li>
+                <li><strong>Sidebar Dettaglio</strong> (destra) — info contestuali al tab attivo: dettaglio nodo selezionato (Grafo), seed corrente, e <em>cycle trace</em> in Info/Agente/Prodotti (timeline movements del cycle: status + durata + ssp_pipeline_status, da <code>cycle_trace_*.json</code>).</li>
                 <li><strong>Chat</strong> (icona viola in basso a destra) — il lab risponde, può anche proporre azioni (inject tension, run cycle) che richiedono conferma.</li>
               </ul>
             </div>
@@ -1654,6 +1531,79 @@
             <div><span class="text-slate-500">piano:</span> <span class="font-mono text-cyan-400" x-text="seed.piano ?? '?'"></span></div>
             <div class="italic line-clamp-3" x-text="seed.direzione || '—'"></div>
           </div>
+
+          <!-- Cycle trace — sostituisce la vecchia tab 'Dinamica'. Contestuale a Info/Agente/Prodotti.
+               Source: cycle_trace_*.json scritti post-cycle. -->
+          <template x-if="activeTab === 'info' || activeTab === 'agente' || activeTab === 'prodotti'">
+            <div class="mt-5 border-t border-slate-800 pt-4">
+              <div class="flex items-center justify-between mb-2">
+                <h4 class="text-xs uppercase tracking-wider text-slate-500">Cycle trace</h4>
+                <span class="text-[10px] text-slate-600" x-text="(cycleTraces || []).length + ' disponibili'"></span>
+              </div>
+              <template x-if="(cycleTraces || []).length === 0">
+                <p class="text-xs text-slate-600 italic">Nessun cycle_trace ancora. Scritto a fine cycle dal post-deploy 01/05.</p>
+              </template>
+              <template x-if="(cycleTraces || []).length > 0">
+                <div class="space-y-2">
+                  <select class="w-full bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs text-slate-200"
+                          @change="loadCycleTrace($event.target.value)">
+                    <option value="">— scegli un cycle —</option>
+                    <template x-for="t in cycleTraces" :key="t.cycle_ts">
+                      <option :value="t.cycle_ts"
+                              x-text="`${t.cycle_ts} · ${t.total_s}s · ${t.n_ok}/${t.n_movements}`"></option>
+                    </template>
+                  </select>
+
+                  <template x-if="activeCycleTrace">
+                    <div class="space-y-2">
+                      <div class="grid grid-cols-2 gap-1 text-[10px]">
+                        <div>
+                          <div class="text-slate-600 uppercase tracking-wider">Total</div>
+                          <div class="font-mono text-slate-300" x-text="`${activeCycleTrace.total_s}s`"></div>
+                        </div>
+                        <div>
+                          <div class="text-slate-600 uppercase tracking-wider">OK / N</div>
+                          <div class="font-mono text-green-400" x-text="`${activeCycleTrace.n_ok}/${activeCycleTrace.n_movements}`"></div>
+                        </div>
+                      </div>
+                      <template x-if="activeCycleTrace.ssp_pipeline_status">
+                        <div class="text-[10px]">
+                          <span class="text-slate-600 uppercase tracking-wider">SSP</span>
+                          <span class="font-mono text-purple-300 ml-1" x-text="activeCycleTrace.ssp_pipeline_status"></span>
+                        </div>
+                      </template>
+                      <div class="space-y-0.5 mt-2 pt-2 border-t border-slate-800">
+                        <template x-for="m in (activeCycleTrace.movements || [])" :key="m.name">
+                          <div class="flex items-center gap-1 text-[10px]">
+                            <span class="font-mono w-2 flex-shrink-0"
+                                  :class="{
+                                    'text-green-400': m.status === 'ok',
+                                    'text-red-400': m.status === 'error',
+                                    'text-slate-600': String(m.status).startsWith('skipped'),
+                                    'text-yellow-400': String(m.status).startsWith('pending'),
+                                  }"
+                                  x-text="m.status === 'ok' ? '✓' : (m.status === 'error' ? '✗' : (String(m.status).startsWith('skipped') ? '−' : '?'))"></span>
+                            <span class="font-mono flex-1 truncate text-slate-400" x-text="m.name"></span>
+                            <span class="font-mono text-slate-600 flex-shrink-0"
+                                  x-text="m.duration_s !== null && m.duration_s !== undefined ? `${m.duration_s}s` : ''"></span>
+                          </div>
+                        </template>
+                      </div>
+                      <template x-if="(activeCycleTrace.errors || []).length > 0">
+                        <div class="pt-2 border-t border-slate-800 space-y-0.5">
+                          <div class="text-[10px] text-red-400">Errors:</div>
+                          <template x-for="(err, i) in activeCycleTrace.errors" :key="i">
+                            <div class="text-[10px] font-mono text-red-400 truncate" x-text="err"></div>
+                          </template>
+                        </div>
+                      </template>
+                    </div>
+                  </template>
+                </div>
+              </template>
+            </div>
+          </template>
+
         </div>
       </aside>
 
@@ -1970,7 +1920,7 @@
     },
     cicli: {
       title: 'Cicli · pipeline autonoma',
-      body: 'Cicli notturni completati dal lab agente. Ogni ciclo esegue 20 movements: autopsy → build_field → agent → bias_corrector → report_falsifier → bicono_extractor → ... → ssp_pipeline → notify. Tab Dinamica per la timeline dettagliata di un cycle. Tab Info → "Pipeline movements".',
+      body: 'Cicli notturni completati dal lab agente. Ogni ciclo esegue 20 movements: autopsy → build_field → agent → bias_corrector → report_falsifier → bicono_extractor → ... → ssp_pipeline → notify. Sidebar Dettaglio (destra) per la timeline movements del cycle. Tab Info → "Pipeline movements" per la lista completa.',
       logic: (s) => `Eseguiti finora: ${s.campoStats().cicli}. Cron 03:30 UTC sul VPS. Pipeline det=−1: producer + counter-pole + refiner + SSP autonomo.`,
     },
     oggi: {
@@ -2024,7 +1974,6 @@
     { id: 'agente',   icon: '⊙', label: 'Agente' },
     { id: 'incrocio', icon: '✕', label: 'Tassonomia' },
     { id: 'prodotti', icon: '✦', label: 'Prodotti' },
-    { id: 'dinamica', icon: '⟳', label: 'Dinamica' },
     { id: 'info',     icon: 'ⓘ', label: 'Info' },
   ];
 
