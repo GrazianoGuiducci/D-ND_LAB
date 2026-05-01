@@ -504,6 +504,8 @@
     /* Tab bar — desktop: inline buttons. Mobile (<768): dropdown nativo. */
     .lab-tabs { display: flex; align-items: center; gap: 0; border-bottom: 1px solid rgb(30 41 59); overflow-x: auto; }
     .lab-tabs-mobile { display: none; max-width: 240px; }
+    /* Dropdown mobile deve stare SOPRA tutto (header z-10, dropdown z-50). */
+    .lab-tabs-mobile > div[x-show] { z-index: 50; }
     @media (max-width: 1024px) {
       .lab-tabs { display: none !important; }
       .lab-tabs-mobile { display: block; }
@@ -599,7 +601,7 @@
           <span class="text-purple-400 text-xs ml-2 flex-shrink-0" x-text="tabsDropdownOpen ? '▴' : '▾'"></span>
         </button>
         <div x-show="tabsDropdownOpen" x-cloak x-transition.opacity.duration.120ms
-             class="absolute left-0 right-0 top-full mt-1 bg-slate-900 border border-slate-700 rounded shadow-2xl z-30 overflow-hidden">
+             class="absolute left-0 right-0 top-full mt-1 bg-slate-900 border border-slate-700 rounded shadow-2xl z-50 overflow-hidden">
           <template x-for="tab in TABS" :key="tab.id">
             <button @click="setActiveTab(tab.id); tabsDropdownOpen = false"
                     :class="activeTab === tab.id ? 'bg-purple-900/30 text-purple-200' : 'text-slate-200 hover:bg-slate-800'"
@@ -615,10 +617,12 @@
         <template x-if="activeDomain">
           <button class="px-3 py-1 rounded hover:bg-slate-800 font-mono text-cyan-400 text-xs" @click="view = 'domain'" x-text="activeDomain"></button>
         </template>
-        <span class="text-slate-700 mx-1">·</span>
-        <a href="/" class="px-3 py-1 rounded hover:bg-slate-800 text-slate-400" title="Lab fisica · sito di presentazione">↗ Sito</a>
-        <a href="/d-nd-lab.html" class="px-3 py-1 rounded hover:bg-slate-800 text-slate-400" title="D-ND_LAB · pagina prodotto open source">↗ Prodotto</a>
-        <a href="https://github.com/GrazianoGuiducci/D-ND_LAB" class="px-3 py-1 rounded hover:bg-slate-800 text-slate-400" target="_blank" title="Repository GitHub">GitHub →</a>
+        <!-- Link esterni nascosti su mobile (<1024px) per non sovrapporsi al dropdown tab.
+             Accessibili da tab Info → Reference. -->
+        <span class="text-slate-700 mx-1 hidden lg:inline">·</span>
+        <a href="/" class="px-3 py-1 rounded hover:bg-slate-800 text-slate-400 hidden lg:inline-block" title="Lab fisica · sito di presentazione">↗ Sito</a>
+        <a href="/d-nd-lab.html" class="px-3 py-1 rounded hover:bg-slate-800 text-slate-400 hidden lg:inline-block" title="D-ND_LAB · pagina prodotto open source">↗ Prodotto</a>
+        <a href="https://github.com/GrazianoGuiducci/D-ND_LAB" class="px-3 py-1 rounded hover:bg-slate-800 text-slate-400 hidden lg:inline-block" target="_blank" title="Repository GitHub">GitHub →</a>
       </nav>
     </div>
   </header>
