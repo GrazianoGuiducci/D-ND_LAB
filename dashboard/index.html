@@ -1014,21 +1014,6 @@
                     <button @click="activeReport = null" class="text-xs text-slate-500 hover:text-slate-300">close</button>
                   </div>
 
-                  <!-- v4.10 — Table of Contents (collapsible) generato dai header markdown -->
-                  <template x-if="reportToc().length >= 3">
-                    <details class="mb-3 bg-slate-800/30 border border-slate-700 rounded-lg p-2 text-xs" open>
-                      <summary class="cursor-pointer text-slate-400 hover:text-slate-200 font-medium px-1 select-none">📑 Indice (<span x-text="reportToc().length"></span> sezioni)</summary>
-                      <ul class="mt-2 space-y-0.5 pl-1">
-                        <template x-for="h in reportToc()" :key="h.id">
-                          <li :style="`margin-left: ${(h.level - 1) * 14}px`">
-                            <a :href="`#${h.id}`" @click.prevent="scrollToHeading(h.id)"
-                               :class="h.level === 1 ? 'text-slate-200 font-medium' : (h.level === 2 ? 'text-slate-300' : 'text-slate-400')"
-                               class="hover:text-purple-300 block py-0.5 truncate" x-text="h.text"></a>
-                          </li>
-                        </template>
-                      </ul>
-                    </details>
-                  </template>
 
                   <!-- Falsifier card — flag dal counter-pole, mostrato sopra il bicono -->
                   <template x-if="activeFalsifier && activeFalsifier.present">
@@ -1658,6 +1643,26 @@
             <div><span class="text-slate-500">piano:</span> <span class="font-mono text-cyan-400" x-text="seed.piano ?? '?'"></span></div>
             <div class="italic line-clamp-3" x-text="seed.direzione || '—'"></div>
           </div>
+
+          <!-- Indice report (ToC) — sticky in sidebar destra quando si legge un report
+               in tab Agente. Era nel pane centrale ma scorreva via col contenuto. -->
+          <template x-if="activeTab === 'agente' && activeReport && reportToc().length >= 3">
+            <div class="mt-5 border-t border-slate-800 pt-4">
+              <div class="flex items-center justify-between mb-2">
+                <h4 class="text-xs uppercase tracking-wider text-slate-500">Indice report</h4>
+                <span class="text-[10px] text-slate-600" x-text="reportToc().length + ' sezioni'"></span>
+              </div>
+              <ul class="space-y-0.5 max-h-72 overflow-y-auto pr-1">
+                <template x-for="h in reportToc()" :key="h.id">
+                  <li :style="`margin-left: ${(h.level - 1) * 10}px`">
+                    <a :href="`#${h.id}`" @click.prevent="scrollToHeading(h.id)"
+                       :class="h.level === 1 ? 'text-slate-200 font-medium' : (h.level === 2 ? 'text-slate-300' : 'text-slate-400')"
+                       class="hover:text-purple-300 block py-0.5 truncate text-[11px]" x-text="h.text"></a>
+                  </li>
+                </template>
+              </ul>
+            </div>
+          </template>
 
           <!-- Cycle trace — sostituisce la vecchia tab 'Dinamica'. Contestuale a Info/Agente/Prodotti.
                Source: cycle_trace_*.json scritti post-cycle. -->
