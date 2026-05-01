@@ -241,7 +241,7 @@ async def list_reports(domain: str, request: Request, limit: int = 50) -> list[d
         return []
     falsifier_dir = paths.domain_data_dir(domain) / "falsifier"
     out = []
-    for f in sorted(reports_dir.glob("agent_*.md"), key=lambda p: p.stat().st_mtime, reverse=True)[:limit]:
+    for f in sorted(_agent_report_files(reports_dir), key=lambda p: p.stat().st_mtime, reverse=True)[:limit]:
         try:
             text = f.read_text(errors="replace")
         except Exception:
@@ -713,7 +713,7 @@ async def list_biconi(domain: str, request: Request, limit: int = 50) -> list[di
     if not reports_dir.exists():
         return []
     out: list[dict[str, Any]] = []
-    for f in sorted(reports_dir.glob("agent_*.md"), key=lambda p: p.stat().st_mtime, reverse=True)[:limit]:
+    for f in sorted(_agent_report_files(reports_dir), key=lambda p: p.stat().st_mtime, reverse=True)[:limit]:
         try:
             text = f.read_text(errors="replace")
         except Exception:
@@ -1280,7 +1280,7 @@ def _chat_tools(domain: str) -> tuple[list[dict[str, Any]], dict[str, Callable],
         if not reports_dir.exists():
             return json.dumps([])
         out = []
-        for f in sorted(reports_dir.glob("agent_*.md"),
+        for f in sorted(_agent_report_files(reports_dir),
                         key=lambda p: p.stat().st_mtime, reverse=True)[:limit]:
             try:
                 text = f.read_text(errors="replace")
@@ -1339,7 +1339,7 @@ def _chat_tools(domain: str) -> tuple[list[dict[str, Any]], dict[str, Callable],
         out = []
         if not reports_dir.exists():
             return json.dumps([])
-        for f in sorted(reports_dir.glob("agent_*.md"),
+        for f in sorted(_agent_report_files(reports_dir),
                         key=lambda p: p.stat().st_mtime, reverse=True):
             try:
                 text = f.read_text(errors="replace")
@@ -1497,7 +1497,7 @@ def _build_chat_system_prompt(domain: str) -> str:
     reports_dir = paths.reports_dir(domain)
     if reports_dir.exists():
         reports = sorted(
-            reports_dir.glob("agent_*.md"),
+            _agent_report_files(reports_dir),
             key=lambda p: p.stat().st_mtime,
             reverse=True,
         )[:3]
@@ -1608,6 +1608,16 @@ def _validate_domain(domain: str) -> None:
         raise HTTPException(404, f"domain '{domain}' not found")
 
 
+def _agent_report_files(reports_dir: Path) -> list[Path]:
+    """Lista i report del agent escludendo i backup .original.md (audit trail
+    pre-bias_corrector). I .original.md restano sul filesystem per ispezione
+    ma non vanno mostrati nella UI come report distinti.
+    """
+    if not reports_dir.exists():
+        return []
+    return [f for f in reports_dir.glob("agent_*.md") if ".original." not in f.name]
+
+
 def _read_json_safe(p: Path, default: Any) -> Any:
     if not p.exists():
         return default
@@ -1621,7 +1631,7 @@ def _count_reports(domain: str) -> int:
     rd = paths.reports_dir(domain)
     if not rd.exists():
         return 0
-    return sum(1 for _ in rd.glob("agent_*.md"))
+    return sum(1 for _ in _agent_report_files(rd))
 
 
 def _sum_costs_from_reports(domain: str) -> float:
