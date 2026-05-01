@@ -3389,16 +3389,20 @@
       renderMarkdown(text) {
         if (!text) return '';
         try {
-          // v4.10 — auto-add ids to headings cosi' la ToC puo' anchor-link
+          // marked v14 signature: heading({tokens, depth, raw, text}).
+          // Auto-id sugli heading così la ToC può anchor-link (#slug).
           const renderer = new marked.Renderer();
           const slugify = (s) => String(s).toLowerCase()
               .replace(/<[^>]+>/g, '')
               .replace(/[^a-z0-9]+/g, '-')
               .replace(/(^-|-$)/g, '')
               .slice(0, 80) || 'h';
-          renderer.heading = (text, level, raw) => {
-            const id = slugify(raw || text);
-            return `<h${level} id="${id}">${text}</h${level}>`;
+          renderer.heading = ({ tokens, depth, raw, text }) => {
+            // text e' la stringa post-inline-render; raw e' il source del heading
+            const rawText = raw || text || (tokens || []).map(t => t.raw || t.text || '').join('');
+            const renderedText = text || (renderer.parser ? renderer.parser.parseInline(tokens) : rawText);
+            const id = slugify(rawText);
+            return `<h${depth} id="${id}">${renderedText}</h${depth}>\n`;
           };
           return marked.parse(text, { breaks: true, gfm: true, renderer });
         } catch (e) {
