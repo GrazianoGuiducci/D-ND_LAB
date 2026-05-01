@@ -1203,7 +1203,9 @@
               <div class="space-y-3 mt-4">
                 <h3 class="text-sm font-medium text-slate-300">Scoperte (<span x-text="scoperteSsp.length"></span>)</h3>
                 <template x-for="s in scoperteSsp" :key="s.dir">
-                  <div class="bg-slate-950 border border-slate-800 rounded p-4 space-y-2">
+                  <div class="bg-slate-950 border border-slate-800 rounded p-4 space-y-2 cursor-pointer hover:border-cyan-700 transition"
+                       :class="selectedScopertaSsp?.dir === s.dir && 'border-cyan-600'"
+                       @click="selectedScopertaSsp = s; selectedProdottoSsp = null; sidebarRightOpen = true; if (window.matchMedia('(max-width: 1024px)').matches) openMobileDrawer('right')">
                     <div class="flex items-center justify-between">
                       <div class="flex-1">
                         <div class="text-sm font-medium text-slate-200" x-text="s.title_proposal || s.dir"></div>
@@ -1295,12 +1297,14 @@
                 <h3 class="text-sm font-medium text-slate-300">Prodotti maturi (<span x-text="prodottiSsp.length"></span>)</h3>
                 <p class="text-xs text-slate-500">Stage 4 eseguito — verification.json reale, metriche empiriche da PoC A/B (claude-cli OAuth).</p>
                 <template x-for="p in prodottiSsp" :key="p.id">
-                  <div class="bg-slate-950 border border-slate-800 rounded p-4 space-y-2"
+                  <div class="bg-slate-950 border border-slate-800 rounded p-4 space-y-2 cursor-pointer hover:border-cyan-700 transition"
+                       @click="selectedProdottoSsp = p; selectedScopertaSsp = null; sidebarRightOpen = true; if (window.matchMedia('(max-width: 1024px)').matches) openMobileDrawer('right')"
                        :class="{
                          'border-l-4 border-l-green-500': p.status === 'PASS',
                          'border-l-4 border-l-red-500': p.status === 'FAIL',
                          'border-l-4 border-l-yellow-500': p.status === 'INCONCLUSIVE',
                          'border-l-4 border-l-slate-500': p.status === 'UNTESTABLE',
+                         'ring-2 ring-cyan-600': selectedProdottoSsp?.id === p.id,
                        }">
                     <div class="flex items-start justify-between gap-3">
                       <div class="flex-1 min-w-0">
@@ -1496,8 +1500,86 @@
         </div>
         <div x-show="sidebarRightOpen || mobileDrawer === 'right'" class="pt-1">
 
-          <template x-if="!selectedNode">
-            <p class="text-slate-500 text-xs italic py-4">Click su un nodo del grafo per vedere il dettaglio qui.</p>
+          <!-- Empty state contestuale: dipende dal tab attivo. -->
+          <template x-if="!selectedNode && !selectedScopertaSsp && !selectedProdottoSsp">
+            <p class="text-slate-500 text-xs italic py-4"
+               x-text="activeTab === 'prodotti' ? 'Click su una scoperta o prodotto per vedere il dettaglio qui.' : (activeTab === 'grafo' ? 'Click su un nodo del grafo per vedere il dettaglio qui.' : (activeTab === 'agente' ? 'Apri un report per vedere il dettaglio del cycle qui.' : 'Seleziona un elemento per vedere il dettaglio qui.'))"></p>
+          </template>
+
+          <!-- Dettaglio scoperta SSP selezionata (tab Prodotti) -->
+          <template x-if="selectedScopertaSsp">
+            <div class="detail-card space-y-2">
+              <div class="flex items-center gap-2">
+                <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-cyan-900/40 text-cyan-300">SCOPERTA</span>
+                <span class="text-[10px] font-mono"
+                      :class="{
+                        'text-green-400': selectedScopertaSsp.status === 'mature',
+                        'text-yellow-400': selectedScopertaSsp.status === 'transitional',
+                        'text-orange-400': selectedScopertaSsp.status === 'pre_discovery',
+                        'text-slate-500': selectedScopertaSsp.status === 'draft',
+                      }"
+                      x-text="selectedScopertaSsp.status"></span>
+                <button @click="selectedScopertaSsp = null" class="ml-auto text-slate-500 hover:text-slate-200 text-xs">×</button>
+              </div>
+              <div class="text-sm text-slate-200" x-text="selectedScopertaSsp.title_proposal || selectedScopertaSsp.dir"></div>
+              <div class="text-[10px] text-slate-500 space-y-0.5">
+                <div>cycle_ts: <span class="font-mono text-cyan-400" x-text="selectedScopertaSsp.cycle_ts"></span></div>
+                <div>ssp_state: <span class="text-purple-300" x-text="selectedScopertaSsp.ssp_state"></span></div>
+                <div>slug: <span class="font-mono" x-text="selectedScopertaSsp.slug_proposal"></span></div>
+              </div>
+              <!-- Quick action: load trace di questo cycle -->
+              <button @click="loadCycleTrace(selectedScopertaSsp.cycle_ts)"
+                      class="detail-action text-cyan-300 mt-2">→ Carica trace di questo cycle</button>
+            </div>
+          </template>
+
+          <!-- Dettaglio prodotto maturo selezionato (tab Prodotti) -->
+          <template x-if="selectedProdottoSsp">
+            <div class="detail-card space-y-2">
+              <div class="flex items-center gap-2">
+                <span class="text-[10px] font-mono px-1.5 py-0.5 rounded"
+                      :class="{
+                        'bg-green-900/40 text-green-300': selectedProdottoSsp.status === 'PASS',
+                        'bg-red-900/40 text-red-300': selectedProdottoSsp.status === 'FAIL',
+                        'bg-yellow-900/40 text-yellow-300': selectedProdottoSsp.status === 'INCONCLUSIVE',
+                        'bg-slate-800 text-slate-400': selectedProdottoSsp.status === 'UNTESTABLE',
+                      }"
+                      x-text="selectedProdottoSsp.status"></span>
+                <span class="text-[10px] font-mono text-purple-300" x-text="selectedProdottoSsp.type"></span>
+                <button @click="selectedProdottoSsp = null" class="ml-auto text-slate-500 hover:text-slate-200 text-xs">×</button>
+              </div>
+              <div class="text-sm text-slate-200" x-text="selectedProdottoSsp.name || selectedProdottoSsp.id"></div>
+              <div class="text-[10px] text-slate-500 space-y-0.5">
+                <div>cycle: <span class="font-mono text-cyan-400" x-text="selectedProdottoSsp.discovery_cycle_ts"></span></div>
+                <div>finding: <span class="font-mono" x-text="`#${selectedProdottoSsp.discovery_finding_idx}`"></span></div>
+                <div>verifier: <span class="font-mono" x-text="selectedProdottoSsp.verifier_form"></span></div>
+              </div>
+              <!-- Metriche A/B compatte -->
+              <template x-if="selectedProdottoSsp.metrics && selectedProdottoSsp.metrics.naive_score !== undefined">
+                <div class="grid grid-cols-3 gap-1 text-[10px] mt-2 pt-2 border-t border-slate-800">
+                  <div>
+                    <div class="text-slate-600 uppercase tracking-wider">Naive</div>
+                    <div class="font-mono text-slate-300" x-text="(Number(selectedProdottoSsp.metrics.naive_score) || 0).toFixed(4)"></div>
+                  </div>
+                  <div>
+                    <div class="text-slate-600 uppercase tracking-wider">Informed</div>
+                    <div class="font-mono text-slate-300" x-text="(Number(selectedProdottoSsp.metrics.informed_score) || 0).toFixed(4)"></div>
+                  </div>
+                  <div>
+                    <div class="text-slate-600 uppercase tracking-wider">Δ</div>
+                    <div class="font-mono"
+                         :class="{
+                           'text-green-400': Number(selectedProdottoSsp.metrics.delta) > 0.05,
+                           'text-yellow-400': Math.abs(Number(selectedProdottoSsp.metrics.delta) || 0) <= 0.05,
+                           'text-red-400': Number(selectedProdottoSsp.metrics.delta) < -0.05,
+                         }"
+                         x-text="((Number(selectedProdottoSsp.metrics.delta) > 0 ? '+' : '') + ((Number(selectedProdottoSsp.metrics.delta) || 0).toFixed(4)))"></div>
+                  </div>
+                </div>
+              </template>
+              <button @click="loadCycleTrace(selectedProdottoSsp.discovery_cycle_ts)"
+                      class="detail-action text-cyan-300 mt-2">→ Carica trace del cycle generatore</button>
+            </div>
           </template>
 
           <template x-if="selectedNode">
@@ -1991,7 +2073,9 @@
       scoperteSsp: [],
       applicazioniSsp: { candidates: [], review_required: [], non_application: [] },
       prodottiSsp: [],
-      excludedExpanded: {},  // cycle_ts → bool (espansione findings non applicativi)
+      excludedExpanded: {},        // cycle_ts → bool (espansione findings non applicativi)
+      selectedScopertaSsp: null,   // scoperta SSP selezionata → dettaglio sidebar destra
+      selectedProdottoSsp: null,   // prodotto maturo selezionato → dettaglio sidebar destra
       // Dinamica — cycle traces (sequenza movements + duration + status)
       cycleTraces: [],         // riassunti dei trace
       activeCycleTrace: null,  // dettaglio del cycle selezionato
