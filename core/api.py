@@ -913,6 +913,72 @@ async def list_applications(domain: str, request: Request) -> dict[str, Any]:
     }
 
 
+@app.get("/api/domains/{domain}/prodotti")
+async def list_prodotti(domain: str, request: Request) -> list[dict[str, Any]]:
+    """Lista prodotti maturi (post Stage 4 PoC runner).
+
+    Un prodotto maturo ha sia manifest.json che verification.json reale
+    (NON .spec) — distintivo di Stage 4 eseguito con metriche concrete.
+    Vuoto finché non gira stage4_poc_runner.py.
+    """
+    await _check_auth(request)
+    _validate_domain(domain)
+    prodotti_dir = paths.domain_data_dir(domain) / "prodotti"
+    if not prodotti_dir.exists():
+        return []
+    items = []
+    for d in sorted(prodotti_dir.iterdir(), key=lambda p: p.stat().st_mtime, reverse=True):
+        if not d.is_dir():
+            continue
+        verification = d / "verification.json"
+        manifest = d / "manifest.json"
+        if not (verification.exists() and manifest.exists()):
+            continue
+        try:
+            m = json.loads(manifest.read_text())
+            v = json.loads(verification.read_text())
+        except json.JSONDecodeError:
+            continue
+        items.append({
+            "id": d.name,
+            "domain": domain,
+            "type": m.get("type", ""),
+            "name": m.get("name", d.name),
+            "status": v.get("status", "unknown"),
+            "verifier_form": v.get("verifier_form", ""),
+            "metrics": v.get("metrics", {}),
+            "discovery_cycle_ts": m.get("discovery_cycle_ts", ""),
+            "discovery_finding_idx": m.get("discovery_finding_idx"),
+            "verified_at": v.get("verified_at", ""),
+            "modified_at": datetime.fromtimestamp(d.stat().st_mtime).isoformat(),
+        })
+    return items
+
+
+@app.get("/api/domains/{domain}/prodotti/{product_id}")
+async def get_prodotto_detail(domain: str, product_id: str, request: Request) -> dict[str, Any]:
+    """Dettaglio prodotto: manifest + verification + script + log."""
+    await _check_auth(request)
+    _validate_domain(domain)
+    if "/" in product_id or ".." in product_id:
+        raise HTTPException(status_code=400, detail="Invalid product_id")
+    prod_dir = paths.domain_data_dir(domain) / "prodotti" / product_id
+    if not prod_dir.is_dir():
+        raise HTTPException(status_code=404, detail=f"Prodotto {product_id} non trovato")
+    manifest = prod_dir / "manifest.json"
+    verification = prod_dir / "verification.json"
+    poc_script = prod_dir / "poc.py"
+    poc_log = prod_dir / "poc.log"
+    return {
+        "id": product_id,
+        "domain": domain,
+        "manifest": json.loads(manifest.read_text()) if manifest.exists() else {},
+        "verification": json.loads(verification.read_text()) if verification.exists() else {},
+        "poc_script": poc_script.read_text(errors="replace") if poc_script.exists() else "",
+        "poc_log": poc_log.read_text(errors="replace") if poc_log.exists() else "",
+    }
+
+
 @app.post("/api/domains/{domain}/run")
 async def run_cycle_endpoint(domain: str, body: RunRequest, request: Request) -> dict[str, str]:
     await _check_auth(request)

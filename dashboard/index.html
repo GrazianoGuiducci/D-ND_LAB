@@ -724,6 +724,8 @@
             <div class="stat-row" @mouseenter="showStatTip('ponti', $event)" @mouseleave="hideStatTip()"><span class="text-slate-400">ponti</span><span class="stat-num" x-text="campoStats().ponti"></span></div>
             <div class="stat-row" @mouseenter="showStatTip('vuoti', $event)" @mouseleave="hideStatTip()"><span class="text-slate-400">vuoti</span><span class="stat-num" x-text="campoStats().vuoti"></span></div>
             <div class="stat-row" @mouseenter="showStatTip('scoperte', $event)" @mouseleave="hideStatTip()"><span class="text-slate-400">scoperte</span><span class="stat-num" x-text="campoStats().scoperte"></span></div>
+            <div class="stat-row" @mouseenter="showStatTip('applicazioni', $event)" @mouseleave="hideStatTip()"><span class="text-slate-400">applicazioni</span><span class="stat-num" x-text="campoStats().applicazioni"></span></div>
+            <div class="stat-row" @mouseenter="showStatTip('prodotti', $event)" @mouseleave="hideStatTip()"><span class="text-slate-400">prodotti</span><span class="stat-num" x-text="campoStats().prodotti"></span></div>
             <div class="stat-row" @mouseenter="showStatTip('cicli', $event)" @mouseleave="hideStatTip()"><span class="text-slate-400">cicli</span><span class="stat-num" x-text="campoStats().cicli"></span></div>
           </div>
 
@@ -1165,6 +1167,92 @@
           </div>
         </div>
 
+        <!-- TAB PRODOTTI — SSP: scoperte → applicazioni → prodotti.
+             Card-per-scoperta espandibili. Stage 4 ancora vuoto fino a PoC runner. -->
+        <div x-show="activeTab === 'prodotti'" x-transition.opacity.duration.150ms class="prodotti-pane">
+          <div class="bg-slate-900 border border-slate-800 rounded-lg p-6 space-y-4">
+            <div>
+              <h2 class="text-lg font-medium">Prodotti — pipeline SSP</h2>
+              <p class="text-xs text-slate-500 mt-1">
+                Scoperte (Stage 1) → Applicazioni candidate (Stage 2) → Prodotti maturi (Stage 4 verified).
+                Ogni scoperta espande in card. Pre-discovery / transitional pubblicate con disclaimer.
+              </p>
+            </div>
+
+            <!-- Riepilogo SSP -->
+            <div class="grid grid-cols-3 gap-3 mt-2 text-sm">
+              <div class="bg-slate-950 border border-slate-800 rounded p-3">
+                <div class="text-slate-500 text-xs uppercase tracking-wider">Scoperte</div>
+                <div class="text-2xl font-mono text-cyan-400 mt-1" x-text="(scoperteSsp || []).length"></div>
+                <div class="text-xs text-slate-600 mt-1">lab-note + cycle-report drafts</div>
+              </div>
+              <div class="bg-slate-950 border border-slate-800 rounded p-3">
+                <div class="text-slate-500 text-xs uppercase tracking-wider">Applicazioni candidate</div>
+                <div class="text-2xl font-mono text-purple-400 mt-1" x-text="(applicazioniSsp.candidates || []).length"></div>
+                <div class="text-xs text-slate-600 mt-1">manifest.draft.json — Stage 2</div>
+              </div>
+              <div class="bg-slate-950 border border-slate-800 rounded p-3">
+                <div class="text-slate-500 text-xs uppercase tracking-wider">Prodotti maturi</div>
+                <div class="text-2xl font-mono text-green-400 mt-1" x-text="(prodottiSsp || []).length"></div>
+                <div class="text-xs text-slate-600 mt-1">verification.json reale — Stage 4</div>
+              </div>
+            </div>
+
+            <!-- Lista scoperte (raggruppa applicazioni per cycle_ts) -->
+            <template x-if="(scoperteSsp || []).length > 0">
+              <div class="space-y-3 mt-4">
+                <h3 class="text-sm font-medium text-slate-300">Scoperte ({{ scoperteSsp.length }})</h3>
+                <template x-for="s in scoperteSsp" :key="s.dir">
+                  <div class="bg-slate-950 border border-slate-800 rounded p-4 space-y-2">
+                    <div class="flex items-center justify-between">
+                      <div class="flex-1">
+                        <div class="text-sm font-medium text-slate-200" x-text="s.title_proposal || s.dir"></div>
+                        <div class="text-xs text-slate-500 mt-1">
+                          <span class="font-mono text-cyan-400" x-text="s.cycle_ts"></span> ·
+                          status: <span class="font-mono"
+                            :class="{
+                              'text-green-400': s.status === 'mature',
+                              'text-yellow-400': s.status === 'transitional',
+                              'text-orange-400': s.status === 'pre_discovery',
+                              'text-slate-500': s.status === 'draft',
+                            }"
+                            x-text="s.status"></span> ·
+                          ssp_state: <span class="text-purple-300" x-text="s.ssp_state"></span>
+                          <template x-if="s.is_auto_scaffold">
+                            <span class="ml-2 text-xs text-slate-600">[auto]</span>
+                          </template>
+                        </div>
+                      </div>
+                    </div>
+                    <!-- Applicazioni candidate per questa scoperta -->
+                    <template x-if="(applicazioniSsp.candidates || []).filter(a => a.cycle_ts === s.cycle_ts).length > 0">
+                      <div class="ml-4 mt-2 pt-2 border-t border-slate-800 space-y-1">
+                        <div class="text-xs text-slate-500 uppercase tracking-wider">Applicazioni candidate</div>
+                        <template x-for="a in applicazioniSsp.candidates.filter(c => c.cycle_ts === s.cycle_ts)" :key="a.name + a.type">
+                          <div class="text-xs text-slate-400 flex items-center gap-2">
+                            <span class="font-mono" x-text="a.type"></span>
+                            <span x-text="a.name"></span>
+                            <span class="text-slate-600">·</span>
+                            <span class="text-slate-500" x-text="a.verifier_form"></span>
+                          </div>
+                        </template>
+                      </div>
+                    </template>
+                  </div>
+                </template>
+              </div>
+            </template>
+
+            <!-- Empty state -->
+            <template x-if="(scoperteSsp || []).length === 0">
+              <div class="bg-slate-950 border border-dashed border-slate-800 rounded p-6 text-center text-sm text-slate-500">
+                Nessuna scoperta SSP per questo dominio.
+                Lancia un cycle e poi il trigger <code class="text-cyan-400 text-xs">on_crystallize.py</code>.
+              </div>
+            </template>
+          </div>
+        </div>
+
         <!-- TAB INFO/DOC — context.md del dominio + reference utili (UI fix #5).
              Sostituisce la card intro che rubava spazio in alto. -->
         <div x-show="activeTab === 'info'" x-transition.opacity.duration.150ms class="info-pane">
@@ -1318,6 +1406,8 @@
           <div class="stat-row flex justify-between"><span>ponti</span><span class="font-mono text-cyan-400" x-text="campoStats().ponti"></span></div>
           <div class="stat-row flex justify-between"><span>vuoti</span><span class="font-mono text-cyan-400" x-text="campoStats().vuoti"></span></div>
           <div class="stat-row flex justify-between"><span>scoperte</span><span class="font-mono text-cyan-400" x-text="campoStats().scoperte"></span></div>
+          <div class="stat-row flex justify-between"><span>applicazioni</span><span class="font-mono text-cyan-400" x-text="campoStats().applicazioni"></span></div>
+          <div class="stat-row flex justify-between"><span>prodotti</span><span class="font-mono text-cyan-400" x-text="campoStats().prodotti"></span></div>
           <div class="stat-row flex justify-between"><span>cicli</span><span class="font-mono text-cyan-400" x-text="campoStats().cicli"></span></div>
           <div class="stat-row flex justify-between mt-2 pt-2 border-t border-slate-700"><span class="text-slate-500">oggi</span><span class="font-mono text-green-400" x-text="freshnessStats().today"></span></div>
           <div class="text-[10px] text-slate-500 italic mt-2">click per espandere</div>
@@ -1641,6 +1731,7 @@
     { id: 'bicono',   icon: '◇', label: 'Bicono' },
     { id: 'agente',   icon: '⊙', label: 'Agente' },
     { id: 'incrocio', icon: '✕', label: 'Tassonomia' },
+    { id: 'prodotti', icon: '✦', label: 'Prodotti' },
     { id: 'info',     icon: 'ⓘ', label: 'Info' },
   ];
 
@@ -1654,6 +1745,10 @@
       seed: {},
       reports: [],
       activeReport: null,
+      // SSP — output di on_crystallize.py (filesystem-based, separato dal knowledge graph)
+      scoperteSsp: [],
+      applicazioniSsp: { candidates: [], review_required: [], non_application: [] },
+      prodottiSsp: [],
 
       // Graph
       cy: null,                 // Cytoscape instance
@@ -1943,6 +2038,7 @@
           this.reloadContextIntro(),                           // v3.9 — fetch identity section
           this.reloadFalsifierSummary(),                       // v4.8 — counter-pole stats
           this.reloadCorrectorSummary(),                       // v4.9 — bias_corrector stats
+          this.reloadSsp(),                                    // SSP scoperte/applicazioni/prodotti (filesystem)
         ]);
         // wait next tick so the #graph-viz container is in the DOM (x-show=true)
         this.$nextTick(() => this.renderGraph());
@@ -2396,16 +2492,24 @@
         if (this.cy) this.cy.elements().unselect();
       },
 
-      // v3 — sidebar CAMPO stats. Pulled from graphStats (server-computed
-      // via build_graph movement) + reports list. Source of truth: lab_graph.json.
+      // v3 — sidebar CAMPO stats. Knowledge graph (lab_graph.json) +
+      // SSP filesystem (scoperte/, soluzioni/, prodotti/). Due fonti distinte:
+      // - graph: nodi del campo vivo (build_graph movement)
+      // - SSP:   output di on_crystallize/eligibility/designer (Stage 1-2)
       campoStats() {
         const s = this.graphStats || {};
         const byType = s.by_type || {};
+        const sspApp = this.applicazioniSsp || {};
         return {
           teorie: byType.teoria || 0,
           ponti: byType.ponte || s.ponti || 0,
           vuoti: byType.vuoto || s.vuoti || 0,
-          scoperte: byType.scoperta || s.scoperte || 0,
+          // scoperte = nodi-scoperta del graph + lab-notes SSP filesystem
+          scoperte: (byType.scoperta || s.scoperte || 0) + (this.scoperteSsp?.length || 0),
+          // applicazioni = candidates Stage 2 (soluzioni/<ts>_<slug>/manifest.draft.json)
+          applicazioni: (sspApp.candidates?.length || 0),
+          // prodotti = mature, post Stage 4 (verification.json reale)
+          prodotti: this.prodottiSsp?.length || 0,
           cicli: this.reports.length,
         };
       },
@@ -2843,6 +2947,25 @@
       async reloadReports() {
         if (!this.activeDomain) return;
         this.reports = await fetch(`/api/domains/${this.activeDomain}/reports`).then(r => r.json());
+      },
+
+      async reloadSsp() {
+        // SSP filesystem-based output di on_crystallize/eligibility/designer.
+        // Separato dal knowledge graph (lab_graph.json by_type) — due fonti diverse.
+        if (!this.activeDomain) return;
+        const dom = this.activeDomain;
+        try {
+          const [sco, app, prod] = await Promise.all([
+            fetch(`/api/domains/${dom}/scoperte`).then(r => r.ok ? r.json() : []),
+            fetch(`/api/domains/${dom}/applications`).then(r => r.ok ? r.json() : { candidates: [], review_required: [], non_application: [] }),
+            fetch(`/api/domains/${dom}/prodotti`).then(r => r.ok ? r.json() : []).catch(() => []),
+          ]);
+          this.scoperteSsp = Array.isArray(sco) ? sco : [];
+          this.applicazioniSsp = app && typeof app === 'object' ? app : { candidates: [], review_required: [], non_application: [] };
+          this.prodottiSsp = Array.isArray(prod) ? prod : [];
+        } catch (e) {
+          console.warn('reloadSsp failed:', e);
+        }
       },
 
       async openReport(filename) {

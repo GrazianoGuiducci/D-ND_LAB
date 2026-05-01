@@ -375,6 +375,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("cycle_ts")
     ap.add_argument("--force", action="store_true")
+    ap.add_argument("--force-pre-discovery", action="store_true",
+                    help="Genera manifest anche per scoperte transitional/pre_discovery (per testing/manual review)")
     ap.add_argument("--domain", default=None)
     args = ap.parse_args()
 
@@ -402,18 +404,26 @@ def main():
     print(f"  scoperta dir: {scoperta_dir.name}")
 
     # Skip se transitional/pre_discovery — claim non maturi
+    # (sovrascrivibile con --force-pre-discovery per Stage 4 testing manuale)
+    forced_pre_discovery = False
     if cycle_report_path.exists():
         cr_text = cycle_report_path.read_text()
         m = re.search(r"^status:\s*(\S+)", cr_text, re.M)
         scoperta_status = m.group(1).strip() if m else "draft"
         if scoperta_status in ("transitional", "pre_discovery"):
-            reason = ("high flag nel falsifier" if scoperta_status == "transitional"
-                      else "valutatore non CRYSTALLIZE")
-            print(f"  scoperta status={scoperta_status} → SKIP application_designer")
-            print(f"  motivazione: {reason}; claim non affidabili per generare")
-            print(f"               applicazioni. La scoperta è comunque pubblicata")
-            print(f"               con visible_risks dichiarati e disclaimer.")
-            return 0
+            if not args.force_pre_discovery:
+                reason = ("high flag nel falsifier" if scoperta_status == "transitional"
+                          else "valutatore non CRYSTALLIZE")
+                print(f"  scoperta status={scoperta_status} → SKIP application_designer")
+                print(f"  motivazione: {reason}; claim non affidabili per generare")
+                print(f"               applicazioni. La scoperta è comunque pubblicata")
+                print(f"               con visible_risks dichiarati e disclaimer.")
+                print(f"               (--force-pre-discovery per generare comunque, marker presente)")
+                return 0
+            else:
+                forced_pre_discovery = True
+                print(f"  scoperta status={scoperta_status} → FORCED generation via --force-pre-discovery")
+                print(f"               manifest sarà marcato force_generated_for_testing=true")
 
     report_text = agent_path.read_text()
 
@@ -451,6 +461,9 @@ def main():
         str(cycle_report_path) if cycle_report_path.exists() else None,
         eligibility_index=eligibility_index,
     )
+    if forced_pre_discovery:
+        manifest["force_generated_for_testing"] = True
+        manifest["force_reason"] = f"Generated despite scoperta_status={scoperta_status} via --force-pre-discovery"
     summary = render_summary_draft(cycle_ts, slug, manifest)
 
     out_dir = SOLUZIONI / f"{cycle_ts}_{slug}"
