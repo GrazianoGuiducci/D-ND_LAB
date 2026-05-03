@@ -1074,11 +1074,16 @@ async def list_prodotti(domain: str, request: Request) -> list[dict[str, Any]]:
             v = json.loads(verification.read_text())
         except json.JSONDecodeError:
             continue
+        # Sanitize on-the-fly: strip [TARGET] prefix da name (safety per
+        # manifest.json dei prodotti pre-refactor 03/05).
+        raw_name = m.get("name", d.name)
+        clean_name = re.sub(r'^\[TARGET\]\s+', '', raw_name)
+        clean_name = re.sub(r'^\[TARGET — [^\]]+\]\s*', '', clean_name)
         items.append({
             "id": d.name,
             "domain": domain,
             "type": m.get("type", ""),
-            "name": m.get("name", d.name),
+            "name": clean_name,
             "status": v.get("status", "unknown"),
             "verifier_form": v.get("verifier_form", ""),
             "metrics": v.get("metrics", {}),
