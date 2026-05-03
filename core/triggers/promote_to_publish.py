@@ -54,8 +54,8 @@ from datetime import datetime, timezone
 def _resolve_paths(domain: str | None = None) -> dict[str, Path]:
     """Compatibile MM_D-ND production e D-ND_LAB sandbox.
 
-    MM_D-ND: /opt/MM_D-ND/applications/scoperte → published
-    D-ND_LAB: /opt/D-ND_LAB/data/<domain>/scoperte → published
+    MM_D-ND: /opt/MM_D-ND/applications/{scoperte,soluzioni} → published
+    D-ND_LAB: /opt/D-ND_LAB/data/<domain>/{scoperte,soluzioni} → published
     """
     lab_data = os.environ.get("LAB_DATA_DIR")
     if lab_data:
@@ -67,6 +67,7 @@ def _resolve_paths(domain: str | None = None) -> dict[str, Path]:
         base = Path("/opt/MM_D-ND/applications")
     return {
         "scoperte": base / "scoperte",
+        "soluzioni": base / "soluzioni",
         "published": base / "published",
     }
 
@@ -88,6 +89,28 @@ YAML_LINE_PATTERNS = [
     # Strip placeholder addressed_in_artifact
     (re.compile(r'^\s*addressed_in_artifact:\s*"\[TARGET — to fill\]"\s*$\n', re.M), ''),
 ]
+
+# Pattern per JSON manifest fields (recursive on string values).
+# Strip prefisso "[TARGET]" e marker "[TARGET — to be assessed/to fill/...]"
+JSON_VALUE_PATTERNS = [
+    (re.compile(r'^\[TARGET\]\s+'), ''),
+    (re.compile(r'^\[TARGET — [^\]]+\]\s*'), ''),
+    (re.compile(r'^\[TO BE VERIFIED\]\s+'), ''),
+]
+
+
+def sanitize_json_value(value):
+    """Recursively strip [TARGET] markers from JSON dict/list/str values."""
+    if isinstance(value, str):
+        for pat, repl in JSON_VALUE_PATTERNS:
+            value = pat.sub(repl, value)
+        return value
+    if isinstance(value, list):
+        return [sanitize_json_value(v) for v in value]
+    if isinstance(value, dict):
+        return {k: sanitize_json_value(v) for k, v in value.items()}
+    return value
+
 
 BODY_PATTERNS = [
     # Strip prefisso TM1 da title H1
@@ -159,8 +182,35 @@ def strip_auto_suffix(dirname: str) -> str:
     return re.sub(r'_auto$', '', dirname)
 
 
-def promote_one(scoperta_dir: Path, published_base: Path, force: bool = False) -> dict:
-    """Promote single scoperta dir to published. Return summary dict."""
+def find_soluzione_dir(scoperta_name: str, soluzioni_base: Path) -> Path | None:
+    """Trova la soluzione corrispondente a una scoperta dir.
+
+    Convenzione: scoperta '20260430_0330_<slug>_auto' → soluzione
+    '20260430_0330_<slug>' (no _auto suffix). Match per prefix.
+    """
+    if not soluzioni_base.exists():
+        return None
+    pub_name = strip_auto_suffix(scoperta_name)
+    direct = soluzioni_base / pub_name
+    if direct.is_dir():
+        return direct
+    # Fallback: glob su prefisso (per cycle senza _auto)
+    matches = list(soluzioni_base.glob(f"{pub_name}*"))
+    return matches[0] if matches else None
+
+
+import json as _json  # local alias to avoid shadowing in main
+
+
+def promote_one(scoperta_dir: Path, published_base: Path,
+                soluzioni_base: Path | None = None,
+                force: bool = False) -> dict:
+    """Promote single scoperta dir + matching soluzione to published.
+
+    Pubblica:
+      - lab-note.md + cycle-report.md (da scoperte/)
+      - manifest.json + summary.md + finding_index.json (da soluzioni/)
+    """
     pub_name = strip_auto_suffix(scoperta_dir.name)
     pub_dir = published_base / pub_name
     summary = {
@@ -178,7 +228,7 @@ def promote_one(scoperta_dir: Path, published_base: Path, force: bool = False) -
 
     pub_dir.mkdir(parents=True, exist_ok=True)
 
-    # Map: draft filename → published filename
+    # Map: draft filename → published filename (from scoperte/)
     file_map = {
         "lab-note.draft.md": "lab-note.md",
         "cycle-report.draft.md": "cycle-report.md",
@@ -193,6 +243,52 @@ def promote_one(scoperta_dir: Path, published_base: Path, force: bool = False) -
         dst = pub_dir / pub_filename
         dst.write_text(cleaned, encoding='utf-8')
         summary["files_promoted"].append(pub_filename)
+
+    # Soluzione corrispondente (se esiste): manifest + summary + finding_index
+    if soluzioni_base is not None:
+        sol_dir = find_soluzione_dir(scoperta_dir.name, soluzioni_base)
+        if sol_dir:
+            # manifest.draft.json: sanitize JSON values recursively (strip [TARGET])
+            mf_src = sol_dir / "manifest.draft.json"
+            if mf_src.exists():
+                try:
+                    raw_json = _json.loads(mf_src.read_text(encoding='utf-8'))
+                    sanitized_json = sanitize_json_value(raw_json)
+                    (pub_dir / "manifest.json").write_text(
+                        _json.dumps(sanitized_json, indent=2, ensure_ascii=False),
+                        encoding='utf-8'
+                    )
+                    summary["files_promoted"].append("manifest.json")
+                except _json.JSONDecodeError as e:
+                    summary["files_promoted"].append(f"manifest.json [SKIP: {e}]")
+
+            # summary.draft.md: stesso sanitize body markdown + JSON_VALUE patterns
+            sm_src = sol_dir / "summary.draft.md"
+            if sm_src.exists():
+                raw_md = sm_src.read_text(encoding='utf-8')
+                cleaned_md = sanitize_content(raw_md)
+                # Extra: strip [TARGET] inline anche dal body summary
+                for pat, repl in JSON_VALUE_PATTERNS:
+                    cleaned_md = pat.sub(repl, cleaned_md)
+                # Strip generic [TARGET] markers in body (es. "[TARGET] X")
+                cleaned_md = re.sub(r'\[TARGET\]\s+', '', cleaned_md)
+                cleaned_md = re.sub(r'\[TARGET — [^\]]+\]\s*', '', cleaned_md)
+                (pub_dir / "summary.md").write_text(cleaned_md, encoding='utf-8')
+                summary["files_promoted"].append("summary.md")
+
+            # finding_index.draft.json: già pulito ma copiamo per coerenza
+            fi_src = sol_dir / "finding_index.draft.json"
+            if fi_src.exists():
+                try:
+                    raw_json = _json.loads(fi_src.read_text(encoding='utf-8'))
+                    sanitized_json = sanitize_json_value(raw_json)
+                    (pub_dir / "finding_index.json").write_text(
+                        _json.dumps(sanitized_json, indent=2, ensure_ascii=False),
+                        encoding='utf-8'
+                    )
+                    summary["files_promoted"].append("finding_index.json")
+                except _json.JSONDecodeError:
+                    pass
 
     # Write meta.json with promotion provenance
     meta_path = pub_dir / "_promote_meta.json"
@@ -221,6 +317,7 @@ def main():
 
     paths = _resolve_paths(args.domain)
     scoperte_dir = paths["scoperte"]
+    soluzioni_base = paths["soluzioni"]
     published_base = paths["published"]
 
     if not scoperte_dir.exists():
@@ -248,7 +345,7 @@ def main():
     promoted = 0
     skipped = 0
     for d in targets:
-        s = promote_one(d, published_base, force=args.force)
+        s = promote_one(d, published_base, soluzioni_base=soluzioni_base, force=args.force)
         if s["skipped"]:
             print(f"  [skip] {d.name} — {s['skip_reason']}")
             skipped += 1

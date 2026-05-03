@@ -860,20 +860,21 @@ async def get_scoperta_detail(domain: str, slug_dir: str, request: Request) -> d
 async def list_applications(domain: str, request: Request) -> dict[str, Any]:
     """Lista applications candidate (output application_designer.py).
 
-    Aggrega manifest.draft.json di ogni soluzione del dominio.
+    Refactor 03/05: aggrega published/<dir>/manifest.json (sanitized,
+    no [TARGET] markers). Demo mode = pubblico.
     """
     await _check_auth(request)
     _validate_domain(domain)
-    soluzioni_dir = paths.domain_data_dir(domain) / "soluzioni"
-    if not soluzioni_dir.exists():
+    published_dir = paths.domain_data_dir(domain) / "published"
+    if not published_dir.exists():
         return {"domain": domain, "candidates": [], "review_required": [], "non_application": []}
     candidates = []
     review_required = []
     non_application = []
-    for d in sorted(soluzioni_dir.iterdir(), key=lambda p: p.stat().st_mtime, reverse=True):
+    for d in sorted(published_dir.iterdir(), key=lambda p: p.stat().st_mtime, reverse=True):
         if not d.is_dir():
             continue
-        manifest_path = d / "manifest.draft.json"
+        manifest_path = d / "manifest.json"
         if not manifest_path.exists():
             continue
         try:

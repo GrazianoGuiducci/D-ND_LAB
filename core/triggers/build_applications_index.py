@@ -109,17 +109,20 @@ def collect_scoperte(domain_dir: Path, domain: str) -> list[dict]:
 
 
 def collect_soluzioni(domain_dir: Path, domain: str) -> tuple[list[dict], list[dict], list[dict]]:
+    """Refactor 03/05 sera: source ora published/<dir>/manifest.json
+    (sanitized da promote_to_publish, no [TARGET] markers).
+    """
     candidates = []
     review = []
     non_app = []
-    soluzioni_dir = domain_dir / "soluzioni"
-    if not soluzioni_dir.exists():
+    published_dir = domain_dir / "published"
+    if not published_dir.exists():
         return candidates, review, non_app
-    for d in sorted(soluzioni_dir.iterdir()):
+    for d in sorted(published_dir.iterdir()):
         if not d.is_dir():
             continue
-        manifest_path = d / "manifest.draft.json"
-        finding_index_path = d / "finding_index.draft.json"
+        manifest_path = d / "manifest.json"
+        finding_index_path = d / "finding_index.json"
         if not manifest_path.exists():
             continue
         try:
@@ -141,9 +144,9 @@ def collect_soluzioni(domain_dir: Path, domain: str) -> tuple[list[dict], list[d
                 "verifier_form": (app.get("verification_spec") or {}).get("verifier_form", ""),
                 "status": "draft",
                 "maturity": "transitional_candidate",
-                "web_path_manifest": f"data/{domain}/soluzioni/{d.name}/manifest.draft.json",
-                "web_path_finding_index": f"data/{domain}/soluzioni/{d.name}/finding_index.draft.json" if finding_index_path.exists() else None,
-                "web_path_summary": f"data/{domain}/soluzioni/{d.name}/summary.draft.md",
+                "web_path_manifest": f"data/{domain}/soluzioni/{d.name}/manifest.json",
+                "web_path_finding_index": f"data/{domain}/soluzioni/{d.name}/finding_index.json" if finding_index_path.exists() else None,
+                "web_path_summary": f"data/{domain}/soluzioni/{d.name}/summary.md",
             })
         for r in manifest.get("review_required_findings", []):
             review.append({
