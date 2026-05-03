@@ -4,6 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>D-ND_LAB</title>
+  <!-- Nav styles condivisi col sito (lab.d-nd.com) — site-nav-wrap dropdown + external-nav -->
+  <link rel="stylesheet" href="/assets/css/nav.css" />
   <meta name="description" content="Dashboard operativa del Lab D-ND: domini, cycle, report, graph, seeds e movimenti.">
   <link rel="icon" href="/assets/favicon.ico">
   <meta property="og:type" content="website">
@@ -628,7 +630,8 @@
     }
   </style>
 </head>
-<body class="bg-slate-950 text-slate-200 min-h-screen" x-data="dashboard()" x-init="init()">
+<body class="bg-slate-950 text-slate-200 min-h-screen" x-data="dashboard()" x-init="init()"
+      :class="siteDrawerOpen && 'overflow-hidden'">
 
   <!-- Header — tabs inline nel toolbar (operatore: una sola riga per
        eliminare il page scroll causato dal compensare con calc viewport) -->
@@ -674,8 +677,10 @@
           </template>
         </div>
       </div>
+      <!-- Right cluster: Domains + breadcrumb + Sito dropdown + esterni
+           (refactor 03/05 sera: pattern unificato col sito 4 pagine). -->
       <nav class="flex items-center gap-2 text-sm flex-shrink-0">
-        <!-- Home dashboard (Domains list). Icona casa per chiarezza navigazione. -->
+        <!-- Home dashboard (Domains list) -->
         <button class="px-3 py-1 rounded hover:bg-slate-800 flex items-center gap-1.5"
                 :class="{'bg-slate-800': view === 'home'}"
                 @click="view = 'home'"
@@ -685,18 +690,42 @@
           </svg>
           <span>Domains</span>
         </button>
-        <!-- Breadcrumb: dominio attivo, click torna alla view dominio -->
         <template x-if="activeDomain">
           <div class="flex items-center gap-1">
             <span class="text-slate-500 text-xs">/</span>
             <button class="px-3 py-1 rounded hover:bg-slate-800 font-mono text-cyan-400 text-xs" @click="view = 'domain'" x-text="activeDomain"></button>
           </div>
         </template>
-        <!-- Link esterni nascosti su mobile (<1024px) per non sovrapporsi al dropdown tab.
-             Accessibili da tab Info → Reference. -->
-        <a href="/" class="px-3 py-1 rounded hover:bg-slate-800 text-slate-400 hidden lg:inline-block ml-2" title="Lab fisica · sito di presentazione">↗ Sito</a>
-        <a href="/d-nd-lab.html" class="px-3 py-1 rounded hover:bg-slate-800 text-slate-400 hidden lg:inline-block" title="D-ND_LAB · pagina prodotto open source">↗ Prodotto</a>
-        <a href="https://github.com/GrazianoGuiducci/D-ND_LAB" class="px-3 py-1 rounded hover:bg-slate-800 text-slate-400 hidden lg:inline-block" target="_blank" title="Repository GitHub">GitHub →</a>
+
+        <!-- Layer 2: Sito dropdown (hover/click) — Alpine reactive -->
+        <div class="site-nav-wrap ml-2 hidden md:block"
+             x-data="{ siteOpen: false }"
+             :class="{ 'open': siteOpen }"
+             @click.outside="siteOpen = false"
+             @keydown.escape="siteOpen = false">
+          <button class="site-nav-trigger" @click="siteOpen = !siteOpen" :aria-expanded="siteOpen">
+            Sito <span class="caret">▾</span>
+          </button>
+          <div class="site-nav-panel" role="menu">
+            <a href="/">Home Lab</a>
+            <a href="/scoperte.html">Scoperte</a>
+            <a href="/applications.html">Applicazioni</a>
+            <a href="/d-nd-lab.html">D-ND_LAB</a>
+            <a href="/dashboard/" data-current>Dashboard</a>
+          </div>
+        </div>
+
+        <!-- Layer 3: Esterni (>1280px) -->
+        <nav class="external-nav hidden xl:flex" aria-label="Risorse esterne">
+          <a href="https://github.com/GrazianoGuiducci/D-ND_LAB" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <a href="https://d-nd.com" target="_blank" rel="noopener noreferrer">d-nd.com</a>
+        </nav>
+
+        <!-- Mobile-only menu (md:hidden) — drawer Alpine per Sito + Esterno -->
+        <button class="md:hidden mobile-toggle"
+                style="display: inline-flex;"
+                @click="siteDrawerOpen = true"
+                aria-label="Apri menu sito">☰</button>
       </nav>
     </div>
   </header>
@@ -2259,6 +2288,8 @@
       // Modale candidato (refactor 03/05 sera): card click → modale 3 tab
       modaleCandidato: { open: false, tab: 'overview', loading: false, candidate: null,
                          manifest: null, summary_md: '', lab_note_md: '', cycle_report_md: '' },
+      // Mobile drawer (refactor 03/05 sera): Sito + Esterno fuori da lab-tabs-mobile
+      siteDrawerOpen: false,
       // Dinamica — cycle traces (sequenza movements + duration + status)
       cycleTraces: [],         // riassunti dei trace
       activeCycleTrace: null,  // dettaglio del cycle selezionato
@@ -3994,6 +4025,37 @@
     };
   }
   </script>
+
+  <!-- ═══ MOBILE DRAWER SITO (refactor 03/05 sera) — accesso a Sito + Esterno
+       quando viewport <md (lab-tabs-mobile copre solo tabs interni) ═══ -->
+  <div x-show="siteDrawerOpen" x-cloak
+       @keydown.escape.window="siteDrawerOpen = false"
+       class="mobile-drawer-backdrop md:hidden"
+       :class="siteDrawerOpen && 'open'"
+       @click.self="siteDrawerOpen = false"></div>
+  <aside x-show="siteDrawerOpen" x-cloak
+         class="mobile-drawer md:hidden"
+         :class="siteDrawerOpen && 'open'"
+         aria-label="Menu mobile"
+         :aria-hidden="!siteDrawerOpen">
+    <div class="mobile-drawer-head">
+      <strong>Menu</strong>
+      <button class="close-btn" @click="siteDrawerOpen = false" aria-label="Chiudi">✕</button>
+    </div>
+    <div class="mobile-drawer-section">
+      <h3>Sito</h3>
+      <a href="/" @click="siteDrawerOpen = false">Home Lab</a>
+      <a href="/scoperte.html" @click="siteDrawerOpen = false">Scoperte</a>
+      <a href="/applications.html" @click="siteDrawerOpen = false">Applicazioni</a>
+      <a href="/d-nd-lab.html" @click="siteDrawerOpen = false">D-ND_LAB</a>
+      <a href="/dashboard/" data-current @click="siteDrawerOpen = false">Dashboard</a>
+    </div>
+    <div class="mobile-drawer-section">
+      <h3>Esterno</h3>
+      <a href="https://github.com/GrazianoGuiducci/D-ND_LAB" target="_blank" rel="noopener" data-external @click="siteDrawerOpen = false">GitHub</a>
+      <a href="https://d-nd.com" target="_blank" rel="noopener" data-external @click="siteDrawerOpen = false">d-nd.com</a>
+    </div>
+  </aside>
 
   <!-- ═══ MODALE CANDIDATO (refactor 03/05 sera) ═══════════════════════
        Card click → modale 3 tab: Overview / Manifest / Source.
