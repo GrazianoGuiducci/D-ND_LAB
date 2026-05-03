@@ -103,6 +103,20 @@ def ssp_pipeline_movement(ctx: CycleContext) -> None:
         return
     logger.info("ssp_pipeline: on_crystallize OK")
 
+    # Step 1.5 — promote_to_publish (refactor 03/05 sera).
+    # Sempre, anche per cycle pre_discovery/transitional, perché la
+    # dashboard FastAPI espone published/ pubblicamente. Senza promote,
+    # i cycle che skippano post-eligibility non sarebbero mai visibili.
+    # Sanitize draft → published/ rimuove markup workflow ([TARGET — TM1
+    # refinement], copy_authority, sezioni placeholder, scaffold notices).
+    rc, out = _run_trigger("promote_to_publish.py", [cycle_ts, "--force"],
+                           cwd=cwd, timeout=20, env_extra=env)
+    if rc != 0:
+        logger.warning("ssp_pipeline: promote_to_publish rc=%s\n%s", rc, out[-300:])
+        # Non blocca: degraded display, recoverable.
+    else:
+        logger.info("ssp_pipeline: promote_to_publish OK")
+
     # Step 2 — eligibility gate (sempre)
     rc, out = _run_trigger("finding_eligibility_gate.py", [cycle_ts, "--force"],
                            cwd=cwd, timeout=30, env_extra=env)
@@ -161,6 +175,17 @@ def ssp_pipeline_movement(ctx: CycleContext) -> None:
     verdict = verdict_m.group(1) if verdict_m else "unknown"
     ctx.metrics["ssp_pipeline_status"] = f"complete:stage4={verdict}"
     logger.info("ssp_pipeline: stage4 verdict=%s", verdict)
+
+    # Step 5 — build_applications_index (source: published/, refactor 03/05).
+    # Rigenera data/applications.json per pagine sito statiche.
+    rc, out = _run_trigger("build_applications_index.py", [],
+                           cwd=cwd, timeout=30, env_extra=env)
+    if rc != 0:
+        logger.warning("ssp_pipeline: build_index rc=%s\n%s", rc, out[-300:])
+        # Non blocca lo status del cycle — il sito può rimanere stale fino
+        # al prossimo cycle, non è critical path.
+    else:
+        logger.info("ssp_pipeline: build_applications_index OK")
 
 
 register_movement("ssp_pipeline", ssp_pipeline_movement)

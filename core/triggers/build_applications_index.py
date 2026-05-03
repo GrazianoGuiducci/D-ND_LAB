@@ -70,15 +70,18 @@ def parse_front_matter(path: Path) -> dict:
 
 
 def collect_scoperte(domain_dir: Path, domain: str) -> list[dict]:
+    """Legge SOLO da published/ (refactor 03/05): scoperte/ è draft interno workflow,
+    non visibile al sito. Se published/ vuoto, l'index è vuoto (intenzionale).
+    """
     items = []
-    scoperte_dir = domain_dir / "scoperte"
-    if not scoperte_dir.exists():
+    published_dir = domain_dir / "published"
+    if not published_dir.exists():
         return items
-    for d in sorted(scoperte_dir.iterdir()):
+    for d in sorted(published_dir.iterdir()):
         if not d.is_dir():
             continue
-        lab_note = d / "lab-note.draft.md"
-        cycle_report = d / "cycle-report.draft.md"
+        lab_note = d / "lab-note.md"
+        cycle_report = d / "cycle-report.md"
         ln_meta = parse_front_matter(lab_note)
         cr_meta = parse_front_matter(cycle_report)
         parts = d.name.split("_")
@@ -87,8 +90,8 @@ def collect_scoperte(domain_dir: Path, domain: str) -> list[dict]:
             cycle_ts = f"{parts[0]}_{parts[1]}"
         elif len(parts) >= 1 and parts[0].isdigit():
             cycle_ts = parts[0]
-        web_lab_note = f"data/{domain}/scoperte/{d.name}/lab-note.draft.md" if lab_note.exists() else None
-        web_cycle_report = f"data/{domain}/scoperte/{d.name}/cycle-report.draft.md" if cycle_report.exists() else None
+        web_lab_note = f"data/{domain}/scoperte/{d.name}/lab-note.md" if lab_note.exists() else None
+        web_cycle_report = f"data/{domain}/scoperte/{d.name}/cycle-report.md" if cycle_report.exists() else None
         items.append({
             "dir": d.name,
             "domain": domain,
@@ -96,11 +99,9 @@ def collect_scoperte(domain_dir: Path, domain: str) -> list[dict]:
             "lab_instance": ln_meta.get("lab_instance") or domain,
             "ssp_state": ln_meta.get("ssp_state") or cr_meta.get("ssp_state") or "scoperte",
             "status": ln_meta.get("status") or cr_meta.get("status") or "draft",
-            "is_auto_scaffold": d.name.endswith("_auto"),
+            "is_auto_scaffold": False,
             "title_proposal": ln_meta.get("title_proposal") or "",
             "slug_proposal": ln_meta.get("slug_proposal") or "",
-            "target_route_lab_note": ln_meta.get("target_route") or "",
-            "target_route_cycle_report": cr_meta.get("target_route") or "",
             "web_path_lab_note": web_lab_note,
             "web_path_cycle_report": web_cycle_report,
         })

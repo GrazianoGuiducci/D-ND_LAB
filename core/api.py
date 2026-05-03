@@ -794,15 +794,17 @@ async def list_scoperte(domain: str, request: Request) -> list[dict[str, Any]]:
     """
     await _check_auth(request)
     _validate_domain(domain)
-    scoperte_dir = paths.domain_data_dir(domain) / "scoperte"
-    if not scoperte_dir.exists():
+    # Refactor 03/05: scoperte/ è draft interno workflow (con markup TM1/[TARGET]),
+    # published/ è source pubblica (sanitized). Dashboard demo-mode = pubblico.
+    published_dir = paths.domain_data_dir(domain) / "published"
+    if not published_dir.exists():
         return []
     items = []
-    for d in sorted(scoperte_dir.iterdir(), key=lambda p: p.stat().st_mtime, reverse=True):
+    for d in sorted(published_dir.iterdir(), key=lambda p: p.stat().st_mtime, reverse=True):
         if not d.is_dir():
             continue
-        lab_note = d / "lab-note.draft.md"
-        cycle_report = d / "cycle-report.draft.md"
+        lab_note = d / "lab-note.md"
+        cycle_report = d / "cycle-report.md"
         if not lab_note.exists():
             continue
         ln_text = lab_note.read_text(errors="replace")
@@ -823,7 +825,7 @@ async def list_scoperte(domain: str, request: Request) -> list[dict[str, Any]]:
             "slug_proposal": meta.get("slug_proposal", ""),
             "status": meta.get("status", "draft"),
             "ssp_state": meta.get("ssp_state", "scoperte"),
-            "is_auto_scaffold": d.name.endswith("_auto"),
+            "is_auto_scaffold": False,
             "has_cycle_report": cycle_report.exists(),
             "modified_at": datetime.fromtimestamp(d.stat().st_mtime).isoformat(),
         })
@@ -832,16 +834,20 @@ async def list_scoperte(domain: str, request: Request) -> list[dict[str, Any]]:
 
 @app.get("/api/domains/{domain}/scoperte/{slug_dir}")
 async def get_scoperta_detail(domain: str, slug_dir: str, request: Request) -> dict[str, Any]:
-    """Dettaglio singola scoperta — ritorna il markdown + metadata."""
+    """Dettaglio singola scoperta — ritorna il markdown + metadata.
+
+    Refactor 03/05: legge da published/ (sanitized). Per accesso draft
+    interno: filesystem direct (non esposto via API).
+    """
     await _check_auth(request)
     _validate_domain(domain)
     if "/" in slug_dir or ".." in slug_dir:
         raise HTTPException(status_code=400, detail="Invalid slug_dir")
-    scoperta_dir = paths.domain_data_dir(domain) / "scoperte" / slug_dir
+    scoperta_dir = paths.domain_data_dir(domain) / "published" / slug_dir
     if not scoperta_dir.is_dir():
         raise HTTPException(status_code=404, detail=f"Scoperta {slug_dir} non trovata")
-    lab_note = scoperta_dir / "lab-note.draft.md"
-    cycle_report = scoperta_dir / "cycle-report.draft.md"
+    lab_note = scoperta_dir / "lab-note.md"
+    cycle_report = scoperta_dir / "cycle-report.md"
     return {
         "dir": slug_dir,
         "domain": domain,
