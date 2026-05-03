@@ -3596,15 +3596,22 @@
         this.modaleCandidato = {
           open: true, tab: 'overview', loading: true, candidate,
           manifest: null, summary_md: '', lab_note_md: '', cycle_report_md: '',
+          // Step C state (03/05 sera): action availability fetched async
+          seedLookup: null,        // {found, package_name, url_github} | null
+          verification: null,      // {verified, product_id, verification} | null
         };
         const dom = this.activeDomain;
         const dir = candidate.dir;
         try {
-          // dir candidate è soluzione dir name (es. "20260430_0330_...-algebraic")
-          // → coincide con published/<dir>/ — fetch manifest + source.
-          const [m, s] = await Promise.all([
+          const [m, s, seed, ver] = await Promise.all([
             fetch(`/api/domains/${dom}/manifest/${dir}`).then(r => r.ok ? r.json() : null),
             fetch(`/api/domains/${dom}/scoperte/${dir}`).then(r => r.ok ? r.json() : null),
+            // Step C-1: cerca kernel nel seed solo per type=kernel (lib/demo non vanno al seed)
+            candidate.type === 'kernel'
+              ? fetch(`/api/seed/lookup/${candidate.name}`).then(r => r.ok ? r.json() : null)
+              : Promise.resolve({found: false, reason: `${candidate.type} non viene promosso al seed`}),
+            // Step C-2: verification se Stage 4 ha già girato per questo cycle+type
+            fetch(`/api/domains/${dom}/verification/${dir}/${candidate.type}`).then(r => r.ok ? r.json() : null),
           ]);
           if (m) {
             this.modaleCandidato.manifest = m.manifest;
@@ -3614,10 +3621,25 @@
             this.modaleCandidato.lab_note_md = s.lab_note_md || '';
             this.modaleCandidato.cycle_report_md = s.cycle_report_md || '';
           }
+          this.modaleCandidato.seedLookup = seed;
+          this.modaleCandidato.verification = ver;
         } catch (e) {
           console.warn('openCandidateModale failed:', e);
         } finally {
           this.modaleCandidato.loading = false;
+        }
+      },
+      openSeedRepo() {
+        const s = this.modaleCandidato.seedLookup;
+        if (s && s.found && s.url_github) {
+          window.open(s.url_github, '_blank', 'noopener,noreferrer');
+        }
+      },
+      // Step C-2: View verification opens a sub-modal o sostituisce contenuto
+      // del tab. Per minimal scope, switch alla tab Verification rendering.
+      viewVerification() {
+        if (this.modaleCandidato.verification && this.modaleCandidato.verification.verified) {
+          this.modaleCandidato.tab = 'verification';
         }
       },
       closeCandidateModale() {
@@ -4015,14 +4037,15 @@
       </div>
 
       <!-- Tabs -->
-      <div class="flex border-b border-slate-800 px-5">
-        <template x-for="t in ['overview', 'manifest', 'source', 'actions']" :key="t">
-          <button @click="modaleCandidato.tab = t"
+      <div class="flex border-b border-slate-800 px-5 overflow-x-auto">
+        <template x-for="t in ['overview', 'manifest', 'source', 'actions', 'verification']" :key="t">
+          <button x-show="t !== 'verification' || (modaleCandidato.verification && modaleCandidato.verification.verified)"
+                  @click="modaleCandidato.tab = t"
                   :class="modaleCandidato.tab === t
                           ? 'border-cyan-500 text-cyan-300'
                           : 'border-transparent text-slate-400 hover:text-slate-200'"
-                  class="px-4 py-2 text-sm border-b-2 transition capitalize"
-                  x-text="t"></button>
+                  class="px-4 py-2 text-sm border-b-2 transition capitalize whitespace-nowrap"
+                  x-text="t === 'verification' ? '✓ Verification' : t"></button>
         </template>
       </div>
 
@@ -4103,14 +4126,13 @@
           </div>
         </div>
 
-        <!-- Tab: Actions (Step B 03/05 sera) -->
+        <!-- Tab: Actions (Step B+C 03/05 sera) -->
         <div x-show="!modaleCandidato.loading && modaleCandidato.tab === 'actions'" class="space-y-3">
           <div class="text-xs text-slate-400 mb-2">
-            Operazioni disponibili su questo candidato. Quelle disabilitate
-            arriveranno in step successivi (richiedono trigger LLM o link cross-repo).
+            Operazioni disponibili su questo candidato.
           </div>
 
-          <!-- Active actions -->
+          <!-- Step B (sempre attive) -->
           <button @click="downloadBlueprint()"
                   class="w-full px-4 py-2 rounded bg-cyan-900/40 border border-cyan-700 text-cyan-300 hover:bg-cyan-900/60 transition flex items-center justify-between text-sm">
             <span>📦 Download Blueprint (markdown self-contained)</span>
@@ -4123,27 +4145,92 @@
             <span class="text-xs text-slate-400">→ JSON</span>
           </button>
 
-          <!-- Disabled actions (placeholder per Step C) -->
-          <button disabled
-                  title="Step C: trigger Stage 4 PoC LLM (~3min, claude-cli/codex-cli)"
-                  class="w-full px-4 py-2 rounded bg-slate-900 border border-slate-800 text-slate-300 cursor-not-allowed flex items-center justify-between text-sm opacity-60">
-            <span>🚀 Promote to Stage 4 PoC</span>
-            <span class="text-xs">[Step C — coming]</span>
-          </button>
-
-          <button disabled
-                  title="Step C: visualizza verification.json se Stage 4 ha già girato"
-                  class="w-full px-4 py-2 rounded bg-slate-900 border border-slate-800 text-slate-300 cursor-not-allowed flex items-center justify-between text-sm opacity-60">
+          <!-- Step C-2: View Stage 4 verification (attiva solo se Stage 4 done) -->
+          <button @click="viewVerification()"
+                  :disabled="!(modaleCandidato.verification && modaleCandidato.verification.verified)"
+                  :class="modaleCandidato.verification && modaleCandidato.verification.verified
+                          ? 'bg-emerald-900/30 border-emerald-700 text-emerald-300 hover:bg-emerald-900/50 cursor-pointer'
+                          : 'bg-slate-900 border-slate-800 text-slate-500 cursor-not-allowed opacity-60'"
+                  class="w-full px-4 py-2 rounded border transition flex items-center justify-between text-sm"
+                  :title="modaleCandidato.verification && modaleCandidato.verification.verified
+                          ? `Verdict: ${modaleCandidato.verification.verification.verdict}`
+                          : 'Stage 4 PoC non ancora eseguito su questo candidato'">
             <span>🔍 View Stage 4 verification</span>
-            <span class="text-xs">[Step C — coming]</span>
+            <span class="text-xs"
+                  x-text="modaleCandidato.verification && modaleCandidato.verification.verified
+                          ? '→ ' + modaleCandidato.verification.verification.verdict
+                          : '[non eseguito]'"></span>
           </button>
 
-          <button disabled
-                  title="Step C: link al kernel installabile in d-nd-seed/kernels (se PACKAGED)"
-                  class="w-full px-4 py-2 rounded bg-slate-900 border border-slate-800 text-slate-300 cursor-not-allowed flex items-center justify-between text-sm opacity-60">
-            <span>🌱 Open in seed repo</span>
-            <span class="text-xs">[Step C — coming]</span>
+          <!-- Step C-1: Open in seed repo (attiva solo se kernel trovato) -->
+          <button @click="openSeedRepo()"
+                  :disabled="!(modaleCandidato.seedLookup && modaleCandidato.seedLookup.found)"
+                  :class="modaleCandidato.seedLookup && modaleCandidato.seedLookup.found
+                          ? 'bg-purple-900/30 border-purple-700 text-purple-300 hover:bg-purple-900/50 cursor-pointer'
+                          : 'bg-slate-900 border-slate-800 text-slate-500 cursor-not-allowed opacity-60'"
+                  class="w-full px-4 py-2 rounded border transition flex items-center justify-between text-sm"
+                  :title="modaleCandidato.seedLookup && modaleCandidato.seedLookup.found
+                          ? `Apri ${modaleCandidato.seedLookup.package_name} su GitHub`
+                          : (modaleCandidato.seedLookup ? modaleCandidato.seedLookup.reason : 'verifica in corso...')">
+            <span>🌱 Open in d-nd-seed repo</span>
+            <span class="text-xs"
+                  x-text="modaleCandidato.seedLookup && modaleCandidato.seedLookup.found ? '→ GitHub' : '[non promosso]'"></span>
           </button>
+
+          <!-- Step C-3: Promote to Stage 4 PoC (placeholder, async LLM trigger) -->
+          <button disabled
+                  title="Step C-3: trigger Stage 4 PoC LLM (claude-cli/codex-cli, ~3min). In sviluppo: richiede gestione async via WebSocket."
+                  class="w-full px-4 py-2 rounded bg-slate-900 border border-slate-800 border-dashed text-slate-400 cursor-not-allowed flex items-center justify-between text-sm opacity-60">
+            <span>🚀 Promote to Stage 4 PoC</span>
+            <span class="text-xs">[in sviluppo]</span>
+          </button>
+        </div>
+
+        <!-- Tab: Verification (Step C-2, visibile solo se Stage 4 done) -->
+        <div x-show="!modaleCandidato.loading && modaleCandidato.tab === 'verification'" class="space-y-4">
+          <template x-if="modaleCandidato.verification && modaleCandidato.verification.verified">
+            <div>
+              <div class="flex items-center gap-2 mb-3">
+                <span class="text-xs font-mono px-2 py-1 rounded"
+                      :class="modaleCandidato.verification.verification.verdict === 'PASS'
+                              ? 'bg-emerald-900/40 text-emerald-300 border border-emerald-700'
+                              : (modaleCandidato.verification.verification.verdict === 'FAIL'
+                                 ? 'bg-rose-900/40 text-rose-300 border border-rose-700'
+                                 : 'bg-yellow-900/40 text-yellow-300 border border-yellow-700')"
+                      x-text="`Verdict: ${modaleCandidato.verification.verification.verdict}`"></span>
+                <span class="text-xs text-slate-400 font-mono"
+                      x-text="`verifier: ${modaleCandidato.verification.verification.verifier_form}`"></span>
+                <span class="text-xs text-slate-400 font-mono"
+                      x-text="`${modaleCandidato.verification.verification.duration_s?.toFixed(1) || '?'}s`"></span>
+              </div>
+
+              <div class="text-xs uppercase tracking-wider text-slate-300 mb-1">Reason</div>
+              <div class="text-xs text-slate-200 mb-3 bg-slate-950 p-3 rounded border border-slate-800"
+                   x-text="modaleCandidato.verification.verification.reason || '—'"></div>
+
+              <template x-if="modaleCandidato.verification.verification.metrics">
+                <div>
+                  <div class="text-xs uppercase tracking-wider text-slate-300 mb-1">Metrics</div>
+                  <div class="grid grid-cols-2 gap-2 text-xs">
+                    <template x-for="(value, key) in modaleCandidato.verification.verification.metrics" :key="key">
+                      <div x-show="typeof value === 'number' || typeof value === 'string'"
+                           class="bg-slate-950 p-2 rounded border border-slate-800">
+                        <div class="text-slate-400 font-mono text-[10px] uppercase" x-text="key"></div>
+                        <div class="text-slate-100 font-mono mt-0.5"
+                             x-text="typeof value === 'number' ? value.toFixed(4) : value"></div>
+                      </div>
+                    </template>
+                  </div>
+                </div>
+              </template>
+
+              <div class="mt-3">
+                <div class="text-xs uppercase tracking-wider text-slate-300 mb-1">Product ID</div>
+                <code class="text-xs text-cyan-400 break-all"
+                      x-text="modaleCandidato.verification.product_id"></code>
+              </div>
+            </div>
+          </template>
         </div>
       </div>
 

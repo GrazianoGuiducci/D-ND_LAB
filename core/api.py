@@ -856,6 +856,87 @@ async def get_scoperta_detail(domain: str, slug_dir: str, request: Request) -> d
     }
 
 
+@app.get("/api/seed/lookup/{candidate_name}")
+async def lookup_seed_package(candidate_name: str, request: Request) -> dict[str, Any]:
+    """Cerca un kernel nel d-nd-seed/kernels/ che corrisponde al candidate name.
+
+    Step C-1 (operatore 03/05 sera): "Open in seed repo" del modale.
+    Match fuzzy: strip suffix tipo (-lib/-kernel/-demo) + match per nome dir
+    (kebab→snake compat) contro stage5_verification.json esistenti.
+
+    Ritorna: {found, package_name, url_github, url_local} o {found: false}.
+    """
+    await _check_auth(request)
+    seed_kernels_dir = Path("/opt/d-nd-seed/kernels")
+    if not seed_kernels_dir.exists():
+        return {"found": False, "reason": "d-nd-seed/kernels/ non disponibile su questo nodo"}
+
+    # Strip type suffix dal candidate name
+    base = re.sub(r'-(?:lib|kernel|demo)$', '', candidate_name)
+    base_norm = base.lower().replace('-', '').replace('_', '')
+
+    for d in sorted(seed_kernels_dir.iterdir()):
+        if not d.is_dir():
+            continue
+        if not (d / "stage5_verification.json").exists():
+            continue
+        dir_norm = d.name.lower().replace('_', '').replace('-', '')
+        # match: candidate slug è contenuto nel package name (o viceversa)
+        if base_norm in dir_norm or dir_norm.replace('dndkernel', '') in base_norm:
+            return {
+                "found": True,
+                "package_name": d.name,
+                "url_github": f"https://github.com/GrazianoGuiducci/d-nd-seed/tree/main/kernels/{d.name}",
+                "url_local": str(d),
+            }
+    return {"found": False, "reason": f"no kernel matching '{base}' in seed"}
+
+
+@app.get("/api/domains/{domain}/verification/{slug_dir}/{candidate_type}")
+async def get_verification_detail(domain: str, slug_dir: str, candidate_type: str,
+                                   request: Request) -> dict[str, Any]:
+    """Step C-2 (operatore 03/05 sera): "View Stage 4 verification".
+
+    Cerca il prodotto maturo corrispondente al cycle+type+slug e ritorna
+    verification.json. La dir naming convenzione di Stage 4 PoC runner:
+      <cycle_ts>_finding<N>_<type>_<slug-without-suffix>
+    """
+    await _check_auth(request)
+    _validate_domain(domain)
+    if "/" in slug_dir or ".." in slug_dir or candidate_type not in ("library", "kernel", "demo"):
+        raise HTTPException(status_code=400, detail="invalid params")
+
+    prodotti_dir = paths.domain_data_dir(domain) / "prodotti"
+    if not prodotti_dir.exists():
+        return {"verified": False, "reason": "prodotti/ non disponibile"}
+
+    # Estrai cycle_ts dalla slug_dir (formato: 20260501_1256_xxx)
+    parts = slug_dir.split("_")
+    if len(parts) < 2 or not parts[0].isdigit() or not parts[1].isdigit():
+        return {"verified": False, "reason": f"cycle_ts non parsable da {slug_dir}"}
+    cycle_ts = f"{parts[0]}_{parts[1]}"
+
+    # Cerca dir prodotto matching cycle_ts + type
+    for d in prodotti_dir.iterdir():
+        if not d.is_dir():
+            continue
+        if not (d.name.startswith(cycle_ts) and f"_{candidate_type}_" in d.name):
+            continue
+        verification_path = d / "verification.json"
+        if not verification_path.exists():
+            continue
+        try:
+            v = json.loads(verification_path.read_text())
+        except json.JSONDecodeError as e:
+            raise HTTPException(status_code=500, detail=f"verification parse: {e}")
+        return {
+            "verified": True,
+            "product_id": d.name,
+            "verification": v,
+        }
+    return {"verified": False, "reason": f"no verified product per cycle {cycle_ts} type {candidate_type}"}
+
+
 @app.get("/api/domains/{domain}/blueprint/{slug_dir}/{candidate_type}")
 async def get_blueprint(domain: str, slug_dir: str, candidate_type: str,
                         request: Request) -> Response:
