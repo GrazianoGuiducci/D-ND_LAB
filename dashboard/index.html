@@ -584,6 +584,23 @@
     select.dnd-select option { background: #121216; color: #d8dbe7; }
     .graph-fs-close { position: absolute; top: 24px; right: 24px; z-index: 41; background: rgba(15,23,42,.95); border: 1px solid rgb(51 65 85); color: #cbd5e1; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; backdrop-filter: blur(8px); }
     .graph-fs-close:hover { background: rgb(30 41 59); color: #c4b5fd; }
+    /* Refactor 03/05 sera: floating control bar in fullscreen — refresh +
+       relayout disponibili anche quando il grafo occupa l'intero viewport. */
+    .graph-fs-controls {
+      position: absolute; top: 24px; left: 24px; z-index: 41;
+      display: flex; gap: 8px; align-items: center;
+      background: rgba(15,23,42,.95); border: 1px solid rgb(51 65 85);
+      border-radius: 8px; padding: 6px 8px;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 4px 16px rgba(0,0,0,.4);
+    }
+    .graph-fs-controls button {
+      background: transparent; border: 1px solid transparent; color: #cbd5e1;
+      padding: 4px 10px; border-radius: 4px; font-size: 12px; cursor: pointer;
+      transition: background .12s, color .12s, border-color .12s;
+    }
+    .graph-fs-controls button:hover { background: rgb(30 41 59); color: #22d3ee; border-color: rgba(34,211,238,.3); }
+    .graph-fs-controls .label { font-size: 11px; color: #94a3b8; padding: 0 4px; }
 
     /* v3.8 — Chat floating bottom-right (THIA-style, vedi /opt/d-nd_com).
        Stato chiuso: bolla circolare 56px. Stato aperto: pannello 380x540 con
@@ -926,6 +943,12 @@
             </div>
             <div class="graph-viz-wrap" :class="graphFullscreen && 'fullscreen'">
               <div id="graph-viz"></div>
+              <!-- Floating controls visibili in fullscreen (refactor 03/05 sera) -->
+              <div x-show="graphFullscreen" class="graph-fs-controls">
+                <span class="label" x-text="`${graphStats.n_nodes ?? 0}n · ${graphStats.n_edges ?? 0}e`"></span>
+                <button @click="resetGraphLayout()" title="Relayout (fcose)">↻ relayout</button>
+                <button @click="reloadGraph().then(() => renderGraph())" title="Refresh dati">⟳ refresh</button>
+              </div>
               <button x-show="graphFullscreen" @click="setGraphFullscreen(false)" class="graph-fs-close">✕ Esci (ESC)</button>
             </div>
             <div class="graph-legend">
@@ -1185,6 +1208,14 @@
               </div>
               <div class="taxonomy-viz-wrap" :class="taxonomyFullscreen && 'fullscreen'">
                 <div id="taxonomy-viz" style="width: 100%; height: 520px; background: #0d0e14; border-radius: 0.5rem;"></div>
+                <!-- Floating controls visibili in fullscreen (refactor 03/05 sera) -->
+                <div x-show="taxonomyFullscreen" class="graph-fs-controls">
+                  <span class="label" x-text="`${(taxonomyData.nodes||[]).length}n · ${(taxonomyData.edges||[]).length}e`"></span>
+                  <button @click="if (cyTax) { cyTax.layout({name: typeof cytoscapeFcose !== 'undefined' ? 'fcose' : 'cose', animate:true, animationDuration:600, quality:'proof', randomize:true, fit:true, padding:80, nodeRepulsion:8000, idealEdgeLength:90, edgeElasticity:0.45, gravity:0.3, gravityCompound:1.0, gravityRangeCompound:1.5, gravityRange:3.8, nestingFactor:0.1, numIter:2500, tile:true, tilingPaddingVertical:30, tilingPaddingHorizontal:30}).run(); setTimeout(() => cyTax && cyTax.fit(undefined, 60), 700); }"
+                          title="Relayout (fcose)">↻ relayout</button>
+                  <button @click="reloadTaxonomy().then(() => renderTaxonomy())"
+                          title="Refresh dati">⟳ refresh</button>
+                </div>
                 <button x-show="taxonomyFullscreen" @click="taxonomyFullscreen = false; $nextTick(() => { if (cyTax) { cyTax.resize(); cyTax.fit(undefined, 30); } })" class="graph-fs-close">✕ Esci (ESC)</button>
               </div>
               <!-- Legenda inline compatta — niente piu' sezione ponti separata
@@ -2980,7 +3011,29 @@
 
       resetGraphLayout() {
         if (!this.cy) return;
-        this.cy.layout({ name: 'cose', animate: true, nodeRepulsion: 8000, idealEdgeLength: 80, padding: 30 }).run();
+        // Refactor 03/05 sera: fcose stesso pattern di renderGraph init
+        // (operatore: "il relayout un po' meno"). Animato per UX.
+        this.cy.layout({
+          name: typeof cytoscapeFcose !== 'undefined' ? 'fcose' : 'cose',
+          animate: true,
+          animationDuration: 600,
+          quality: 'proof',
+          randomize: true,
+          fit: true,
+          padding: 40,                    // ridotto da 60 → nodi più grandi nel viewport
+          nodeRepulsion: 9000,
+          idealEdgeLength: 110,
+          edgeElasticity: 0.45,
+          gravity: 0.25,
+          gravityRange: 3.8,
+          numIter: 2500,
+          tile: false,
+          // Fallback cose
+          componentSpacing: 80,
+          initialTemp: 220,
+          coolingFactor: 0.95,
+        }).run();
+        setTimeout(() => this.cy && this.cy.fit(undefined, 40), 700);
       },
 
       // v4.9 — fullscreen toggle. Cytoscape resize automatico nel container
@@ -2992,7 +3045,7 @@
         this.$nextTick(() => {
           if (this.cy) {
             this.cy.resize();
-            this.cy.fit(undefined, on ? 50 : 30);
+            this.cy.fit(undefined, on ? 30 : 25);  // padding ridotto → nodi più grandi
           }
         });
       },
