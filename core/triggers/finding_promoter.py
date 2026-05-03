@@ -85,35 +85,96 @@ If not promotable, leave applicative_rule/use_case/kernel_name_suggestion empty 
 """
 
 
-def call_claude_cli(prompt: str, timeout: int = 300) -> str:
-    """Call claude CLI in OAuth mode (free subscription). Return raw stdout."""
-    if not shutil.which("claude"):
-        raise RuntimeError("claude CLI not found in PATH")
+# Provider chain (refactor 03/05 sera, operatore decision):
+# codex-cli (TM7 ChatGPT account) → claude-cli (OAuth subscription)
+# → openrouter (paid HTTP). Override via LLM_PROVIDER_CHAIN env var.
+LLM_PROVIDER_CHAIN = [
+    p.strip()
+    for p in os.environ.get("LLM_PROVIDER_CHAIN", "codex-cli,claude-cli,openrouter").split(",")
+    if p.strip()
+]
+OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY") or os.environ.get("LLM_API_KEY", "")
+OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
+OPENROUTER_MODEL = os.environ.get("OPENROUTER_MODEL") or os.environ.get("LLM_MODEL", "deepseek/deepseek-v4-pro")
 
-    args = [
-        "claude",
-        "-p", prompt,
-        "--max-turns", "1",
-        "--permission-mode", "acceptEdits",
-        "--allowedTools", "",
-    ]
+
+def _via_codex_cli(prompt: str, timeout: int) -> str | None:
+    if not shutil.which("codex"):
+        return None
     try:
-        result = subprocess.run(
-            args,
-            capture_output=True,
-            text=True,
-            timeout=timeout,
-            check=False,
+        r = subprocess.run(
+            ["codex", "exec", "-", "--non-interactive"],
+            input=prompt, capture_output=True, text=True, timeout=timeout,
         )
-    except subprocess.TimeoutExpired as e:
-        raise TimeoutError(f"claude CLI timeout {timeout}s") from e
+        if r.returncode == 0 and (r.stdout or "").strip():
+            return r.stdout
+    except (subprocess.TimeoutExpired, FileNotFoundError):
+        pass
+    return None
 
-    if result.returncode != 0:
-        raise RuntimeError(
-            f"claude CLI exit {result.returncode}: {(result.stderr or '')[:300]}"
+
+def _via_claude_cli(prompt: str, timeout: int) -> str | None:
+    if not shutil.which("claude"):
+        return None
+    try:
+        r = subprocess.run(
+            ["claude", "-p", prompt, "--max-turns", "1",
+             "--permission-mode", "acceptEdits", "--allowedTools", ""],
+            capture_output=True, text=True, timeout=timeout,
         )
+        if r.returncode == 0 and (r.stdout or "").strip():
+            return r.stdout
+    except (subprocess.TimeoutExpired, FileNotFoundError):
+        pass
+    return None
 
-    return result.stdout or ""
+
+def _via_openrouter(prompt: str, timeout: int) -> str | None:
+    if not OPENROUTER_API_KEY:
+        return None
+    import urllib.request
+    import urllib.error
+    payload = json.dumps({
+        "model": OPENROUTER_MODEL,
+        "messages": [{"role": "user", "content": prompt}],
+        "temperature": 0.3,
+        "max_tokens": 2000,
+    }).encode("utf-8")
+    req = urllib.request.Request(
+        OPENROUTER_URL,
+        data=payload,
+        headers={
+            "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+            "Content-Type": "application/json",
+        },
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+            return data["choices"][0]["message"]["content"]
+    except (urllib.error.HTTPError, urllib.error.URLError, KeyError):
+        return None
+
+
+_PROVIDERS = {
+    "codex-cli": _via_codex_cli,
+    "claude-cli": _via_claude_cli,
+    "openrouter": _via_openrouter,
+}
+
+
+def call_llm_chain(prompt: str, timeout: int = 300) -> str:
+    """Provider chain dispatcher: codex → claude → openrouter (default)."""
+    for name in LLM_PROVIDER_CHAIN:
+        fn = _PROVIDERS.get(name)
+        if not fn:
+            continue
+        out = fn(prompt, timeout)
+        if out:
+            print(f"      [provider: {name} OK]", file=sys.stderr)
+            return out
+        print(f"      [provider: {name} unavailable, next]", file=sys.stderr)
+    raise RuntimeError(f"all providers in chain {LLM_PROVIDER_CHAIN} failed")
 
 
 def extract_json(raw: str) -> dict:
@@ -142,7 +203,7 @@ def evaluate_finding(finding: dict) -> dict:
         lit_score=scores.get("literature_rediscovery", 0),
     )
 
-    raw = call_claude_cli(prompt)
+    raw = call_llm_chain(prompt)
     try:
         decision = extract_json(raw)
     except (ValueError, json.JSONDecodeError) as e:

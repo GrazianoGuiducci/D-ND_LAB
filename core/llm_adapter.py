@@ -245,7 +245,7 @@ def run_agent(
     # prova in ordine ogni provider. Default chain: claude-cli → codex-cli
     # → openrouter (= comportamento legacy se i CLI non sono disponibili).
     # Per disabilitare: LLM_PROVIDER_CHAIN=openrouter (solo HTTP).
-    chain_str = os.environ.get("LLM_PROVIDER_CHAIN", "claude-cli,codex-cli,openrouter")
+    chain_str = os.environ.get("LLM_PROVIDER_CHAIN", "codex-cli,claude-cli,openrouter")
     chain = [p.strip().lower() for p in chain_str.split(",") if p.strip()]
 
     # CLI providers (claude-cli, codex-cli) gestiscono tool use nativamente
