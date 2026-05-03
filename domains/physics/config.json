@@ -1,0 +1,54 @@
+{
+  "$schema": "../../config.schema.json",
+  "domain": "physics",
+  "version": "0.1.0-alpha",
+  "title": "D-ND Physics Lab",
+  "description": "The original autonomous research lab — applies the D-ND modus to mathematical physics (primes, zeta function, GUE, dynamical systems, theory crossing TQGE+R).",
+  "model": {
+    "context_file": "context.md",
+    "tension_to_category": "tension_to_category.json",
+    "seed_tensions": "seed_tensions.json"
+  },
+  "context": {
+    "data_dir": "physics",
+    "max_turns": 25,
+    "timeout_seconds": 1200
+  },
+  "tools": [
+    {
+      "name": "filesystem",
+      "type": "builtin"
+    },
+    {
+      "name": "python_exec",
+      "type": "builtin"
+    },
+    {
+      "name": "shell_exec",
+      "type": "builtin"
+    }
+  ],
+  "movements": {
+    "autopsy":              { "enabled": true },
+    "build_field":          { "enabled": true },
+    "agent":                { "enabled": true },
+    "validate_seed":        { "enabled": true },
+    "verify_assertions":    { "enabled": true },
+    "structural_check":     { "enabled": true, "params": { "inject_meta_tensions": true } },
+    "build_lab_data":       { "enabled": true },
+    "build_graph":          { "enabled": true },
+    "sync":                 { "enabled": false, "params": { "comment": "Phase 1 ports rsync to /opt/THIA — disabled until refactored" } },
+    "verify_endpoints":     { "enabled": false },
+    "refiner":              { "enabled": true },
+    "semantic_bridge":      { "enabled": true },
+    "refresh_detector":     { "enabled": true },
+    "seed_integrator":      { "enabled": true },
+    "trajectory_evaluator": { "enabled": true, "params": { "execute": false, "log_only": true } },
+    "notify":               { "enabled": true }
+  },
+  "notify": {
+    "webhook_url_env": "NOTIFY_WEBHOOK_URL",
+    "on_success": true,
+    "on_error": true
+  }
+}
