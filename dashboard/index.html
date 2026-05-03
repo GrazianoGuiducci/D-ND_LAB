@@ -1312,11 +1312,14 @@
                       <div class="ml-4 mt-2 pt-2 border-t border-slate-800 space-y-1">
                         <div class="text-xs text-slate-300 uppercase tracking-wider">Applicazioni candidate (eligible)</div>
                         <template x-for="a in applicazioniSsp.candidates.filter(c => c.cycle_ts === s.cycle_ts)" :key="a.name + a.type">
-                          <div class="text-xs text-slate-400 flex items-center gap-2">
+                          <div class="text-xs text-slate-400 flex items-center gap-2 cursor-pointer hover:text-cyan-400 transition group"
+                               @click.stop="openCandidateModale(a)"
+                               title="Click per dettagli + azioni">
                             <span class="font-mono" x-text="a.type"></span>
                             <span x-text="a.name"></span>
                             <span class="text-slate-400">·</span>
                             <span class="text-slate-300" x-text="a.verifier_form"></span>
+                            <span class="ml-1 opacity-0 group-hover:opacity-100 text-cyan-400">→</span>
                           </div>
                         </template>
                       </div>
@@ -2200,6 +2203,9 @@
       excludedExpanded: {},        // cycle_ts → bool (espansione findings non applicativi)
       selectedScopertaSsp: null,   // scoperta SSP selezionata → dettaglio sidebar destra
       selectedProdottoSsp: null,   // prodotto maturo selezionato → dettaglio sidebar destra
+      // Modale candidato (refactor 03/05 sera): card click → modale 3 tab
+      modaleCandidato: { open: false, tab: 'overview', loading: false, candidate: null,
+                         manifest: null, summary_md: '', lab_note_md: '', cycle_report_md: '' },
       // Dinamica — cycle traces (sequenza movements + duration + status)
       cycleTraces: [],         // riassunti dei trace
       activeCycleTrace: null,  // dettaglio del cycle selezionato
@@ -3444,6 +3450,50 @@
         }
       },
 
+      // Modale candidato (refactor 03/05 sera): apre modale + fetch manifest+source.
+      async openCandidateModale(candidate) {
+        if (!candidate) return;
+        this.modaleCandidato = {
+          open: true, tab: 'overview', loading: true, candidate,
+          manifest: null, summary_md: '', lab_note_md: '', cycle_report_md: '',
+        };
+        const dom = this.activeDomain;
+        const dir = candidate.dir;
+        try {
+          // dir candidate è soluzione dir name (es. "20260430_0330_...-algebraic")
+          // → coincide con published/<dir>/ — fetch manifest + source.
+          const [m, s] = await Promise.all([
+            fetch(`/api/domains/${dom}/manifest/${dir}`).then(r => r.ok ? r.json() : null),
+            fetch(`/api/domains/${dom}/scoperte/${dir}`).then(r => r.ok ? r.json() : null),
+          ]);
+          if (m) {
+            this.modaleCandidato.manifest = m.manifest;
+            this.modaleCandidato.summary_md = m.summary_md || '';
+          }
+          if (s) {
+            this.modaleCandidato.lab_note_md = s.lab_note_md || '';
+            this.modaleCandidato.cycle_report_md = s.cycle_report_md || '';
+          }
+        } catch (e) {
+          console.warn('openCandidateModale failed:', e);
+        } finally {
+          this.modaleCandidato.loading = false;
+        }
+      },
+      closeCandidateModale() {
+        this.modaleCandidato.open = false;
+      },
+      // Estrae il candidato target dal manifest (matcha per type)
+      candidateInManifest() {
+        if (!this.modaleCandidato.manifest || !this.modaleCandidato.candidate) return null;
+        const wantType = this.modaleCandidato.candidate.type;
+        const wantName = this.modaleCandidato.candidate.name;
+        const cs = this.modaleCandidato.manifest.applications_candidate || [];
+        return cs.find(c => c.type === wantType && c.name === wantName)
+            || cs.find(c => c.type === wantType)
+            || null;
+      },
+
       async reloadCycleTraces() {
         if (!this.activeDomain) return;
         try {
@@ -3750,5 +3800,146 @@
     };
   }
   </script>
+
+  <!-- ═══ MODALE CANDIDATO (refactor 03/05 sera) ═══════════════════════
+       Card click → modale 3 tab: Overview / Manifest / Source.
+       Tab Actions arriverà nel prossimo step (B: blueprint + actions). -->
+  <div x-show="modaleCandidato.open" x-cloak
+       @keydown.escape.window="closeCandidateModale()"
+       class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+       @click.self="closeCandidateModale()">
+    <div class="bg-slate-900 border border-slate-700 rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col"
+         @click.stop>
+      <!-- Header -->
+      <div class="flex items-start justify-between px-5 py-3 border-b border-slate-800">
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="text-xs font-mono px-2 py-0.5 rounded bg-slate-800 text-cyan-400"
+                  x-text="modaleCandidato.candidate?.type || '?'"></span>
+            <span class="text-xs px-2 py-0.5 rounded bg-yellow-900/40 text-yellow-300"
+                  x-text="modaleCandidato.candidate?.maturity || 'transitional_candidate'"></span>
+            <span class="text-xs text-slate-400 font-mono"
+                  x-text="modaleCandidato.candidate?.cycle_ts || ''"></span>
+          </div>
+          <h2 class="text-base text-slate-100 mt-1 font-medium" x-text="modaleCandidato.candidate?.name || ''"></h2>
+        </div>
+        <button @click="closeCandidateModale()"
+                class="text-slate-400 hover:text-slate-100 text-xl leading-none">✕</button>
+      </div>
+
+      <!-- Pipeline visualizer SSP -->
+      <div class="px-5 py-3 border-b border-slate-800 bg-slate-950">
+        <div class="flex items-center justify-center gap-2 text-xs">
+          <span class="px-2 py-1 rounded bg-cyan-900/30 text-cyan-300 border border-cyan-700">✓ scoperta</span>
+          <span class="text-slate-300">━━</span>
+          <span class="px-2 py-1 rounded bg-cyan-900/30 text-cyan-300 border border-cyan-700">✓ candidato</span>
+          <span class="text-slate-300">━━</span>
+          <span class="px-2 py-1 rounded bg-slate-800 text-slate-400 border border-slate-700"
+                title="Stage 4 PoC verification — non ancora eseguito">○ Stage 4</span>
+          <span class="text-slate-300">━━</span>
+          <span class="px-2 py-1 rounded bg-slate-800 text-slate-400 border border-slate-700"
+                title="Stage 5 packaging — kernel installabile">○ Stage 5</span>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="flex border-b border-slate-800 px-5">
+        <template x-for="t in ['overview', 'manifest', 'source']" :key="t">
+          <button @click="modaleCandidato.tab = t"
+                  :class="modaleCandidato.tab === t
+                          ? 'border-cyan-500 text-cyan-300'
+                          : 'border-transparent text-slate-400 hover:text-slate-200'"
+                  class="px-4 py-2 text-sm border-b-2 transition capitalize"
+                  x-text="t"></button>
+        </template>
+      </div>
+
+      <!-- Body -->
+      <div class="flex-1 overflow-y-auto p-5 text-sm">
+        <template x-if="modaleCandidato.loading">
+          <div class="text-slate-400 italic">Caricamento manifest + sorgente…</div>
+        </template>
+
+        <!-- Tab: Overview -->
+        <div x-show="!modaleCandidato.loading && modaleCandidato.tab === 'overview'" class="space-y-4">
+          <template x-if="candidateInManifest()">
+            <div class="space-y-3">
+              <div>
+                <div class="text-xs uppercase tracking-wider text-slate-300 mb-1">Cosa fa</div>
+                <div class="text-slate-200" x-text="candidateInManifest().what_it_does || '—'"></div>
+              </div>
+              <div>
+                <div class="text-xs uppercase tracking-wider text-slate-300 mb-1">Finding sorgente</div>
+                <div class="text-slate-200">
+                  <span class="font-mono text-cyan-400" x-text="`#${candidateInManifest().discovery_finding_idx}`"></span>
+                  <span x-text="candidateInManifest().discovery_finding_title || '—'"></span>
+                </div>
+              </div>
+              <div>
+                <div class="text-xs uppercase tracking-wider text-slate-300 mb-1">Verifier form</div>
+                <div class="text-slate-200" x-text="(candidateInManifest().verification_spec || {}).verifier_form || '—'"></div>
+              </div>
+              <div>
+                <div class="text-xs uppercase tracking-wider text-slate-300 mb-1">Status</div>
+                <div class="text-slate-200" x-text="(candidateInManifest().verification_spec || {}).status || 'SPEC_ONLY'"></div>
+              </div>
+            </div>
+          </template>
+          <template x-if="!candidateInManifest()">
+            <div class="text-slate-400 italic">Manifest non disponibile per questo candidato.</div>
+          </template>
+        </div>
+
+        <!-- Tab: Manifest -->
+        <div x-show="!modaleCandidato.loading && modaleCandidato.tab === 'manifest'" class="space-y-4">
+          <template x-if="candidateInManifest()">
+            <div class="space-y-3">
+              <template x-for="section in [
+                {key: 'required_inputs', label: 'Required inputs'},
+                {key: 'success_criteria', label: 'Success criteria'},
+                {key: 'falsification_criteria', label: 'Falsification criteria'},
+                {key: 'expected_artifacts', label: 'Expected artifacts'},
+                {key: 'risks', label: 'Risks'}
+              ]" :key="section.key">
+                <div>
+                  <div class="text-xs uppercase tracking-wider text-slate-300 mb-1" x-text="section.label"></div>
+                  <ul class="list-disc list-inside text-slate-200 space-y-1">
+                    <template x-for="item in ((candidateInManifest().verification_spec || {})[section.key] || [])" :key="item">
+                      <li x-text="item" class="text-xs"></li>
+                    </template>
+                    <template x-if="((candidateInManifest().verification_spec || {})[section.key] || []).length === 0">
+                      <li class="text-slate-400 italic text-xs">—</li>
+                    </template>
+                  </ul>
+                </div>
+              </template>
+            </div>
+          </template>
+        </div>
+
+        <!-- Tab: Source -->
+        <div x-show="!modaleCandidato.loading && modaleCandidato.tab === 'source'" class="space-y-4">
+          <div>
+            <div class="text-xs uppercase tracking-wider text-slate-300 mb-1">Lab note</div>
+            <pre class="text-xs text-slate-200 bg-slate-950 p-3 rounded border border-slate-800 whitespace-pre-wrap font-mono max-h-64 overflow-y-auto"
+                 x-text="modaleCandidato.lab_note_md || '(non disponibile)'"></pre>
+          </div>
+          <div>
+            <div class="text-xs uppercase tracking-wider text-slate-300 mb-1">Cycle report</div>
+            <pre class="text-xs text-slate-200 bg-slate-950 p-3 rounded border border-slate-800 whitespace-pre-wrap font-mono max-h-64 overflow-y-auto"
+                 x-text="modaleCandidato.cycle_report_md || '(non disponibile)'"></pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer (placeholder per Actions B) -->
+      <div class="px-5 py-3 border-t border-slate-800 text-xs text-slate-400 flex items-center justify-between">
+        <span>Tab Actions (Promote / Download Blueprint / View Stage 4) — prossimo step</span>
+        <button @click="closeCandidateModale()"
+                class="px-3 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200">Chiudi</button>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>

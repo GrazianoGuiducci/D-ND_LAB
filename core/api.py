@@ -856,6 +856,44 @@ async def get_scoperta_detail(domain: str, slug_dir: str, request: Request) -> d
     }
 
 
+@app.get("/api/domains/{domain}/manifest/{slug_dir}")
+async def get_manifest_detail(domain: str, slug_dir: str, request: Request) -> dict[str, Any]:
+    """Manifest completo (sanitized) per una soluzione: usato dal modale UI.
+
+    Refactor 03/05 sera: source published/<slug>/manifest.json.
+    Ritorna anche summary + finding_index per esposizione completa modale.
+    """
+    await _check_auth(request)
+    _validate_domain(domain)
+    if "/" in slug_dir or ".." in slug_dir:
+        raise HTTPException(status_code=400, detail="Invalid slug_dir")
+    pub_dir = paths.domain_data_dir(domain) / "published" / slug_dir
+    if not pub_dir.is_dir():
+        raise HTTPException(status_code=404, detail=f"Manifest {slug_dir} non trovato")
+    manifest_path = pub_dir / "manifest.json"
+    summary_path = pub_dir / "summary.md"
+    finding_index_path = pub_dir / "finding_index.json"
+    manifest = {}
+    if manifest_path.exists():
+        try:
+            manifest = json.loads(manifest_path.read_text())
+        except json.JSONDecodeError as e:
+            raise HTTPException(status_code=500, detail=f"manifest parse error: {e}")
+    finding_index = {}
+    if finding_index_path.exists():
+        try:
+            finding_index = json.loads(finding_index_path.read_text())
+        except json.JSONDecodeError:
+            pass
+    return {
+        "dir": slug_dir,
+        "domain": domain,
+        "manifest": manifest,
+        "summary_md": summary_path.read_text(errors="replace") if summary_path.exists() else "",
+        "finding_index": finding_index,
+    }
+
+
 @app.get("/api/domains/{domain}/applications")
 async def list_applications(domain: str, request: Request) -> dict[str, Any]:
     """Lista applications candidate (output application_designer.py).
