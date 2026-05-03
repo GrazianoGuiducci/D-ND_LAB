@@ -707,11 +707,11 @@
             Sito <span class="caret">▾</span>
           </button>
           <div class="site-nav-panel" role="menu">
-            <a href="/">Home Lab</a>
-            <a href="/scoperte.html">Scoperte</a>
-            <a href="/applications.html">Applicazioni</a>
+            <a href="/">Home</a>
             <a href="/d-nd-lab.html">D-ND_LAB</a>
             <a href="/dashboard/" data-current>Dashboard</a>
+            <a href="/scoperte.html">Scoperte</a>
+            <a href="/applications.html">Applicazioni</a>
           </div>
         </div>
 
@@ -721,9 +721,10 @@
           <a href="https://d-nd.com" target="_blank" rel="noopener noreferrer">d-nd.com</a>
         </nav>
 
-        <!-- Mobile-only menu (md:hidden) — drawer Alpine per Sito + Esterno -->
-        <button class="md:hidden mobile-toggle"
-                style="display: inline-flex;"
+        <!-- Mobile-only menu — drawer Alpine per Sito + Esterno.
+             CSS .mobile-toggle gestisce visibility (display:none default,
+             display:inline-flex sotto 760px). -->
+        <button class="mobile-toggle"
                 @click="siteDrawerOpen = true"
                 aria-label="Apri menu sito">☰</button>
       </nav>
@@ -4044,11 +4045,11 @@
     </div>
     <div class="mobile-drawer-section">
       <h3>Sito</h3>
-      <a href="/" @click="siteDrawerOpen = false">Home Lab</a>
-      <a href="/scoperte.html" @click="siteDrawerOpen = false">Scoperte</a>
-      <a href="/applications.html" @click="siteDrawerOpen = false">Applicazioni</a>
+      <a href="/" @click="siteDrawerOpen = false">Home</a>
       <a href="/d-nd-lab.html" @click="siteDrawerOpen = false">D-ND_LAB</a>
       <a href="/dashboard/" data-current @click="siteDrawerOpen = false">Dashboard</a>
+      <a href="/scoperte.html" @click="siteDrawerOpen = false">Scoperte</a>
+      <a href="/applications.html" @click="siteDrawerOpen = false">Applicazioni</a>
     </div>
     <div class="mobile-drawer-section">
       <h3>Esterno</h3>
