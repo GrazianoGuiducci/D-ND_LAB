@@ -45,3 +45,12 @@ htmlcov/
 domains/*/corpus/*
 !domains/*/corpus/.gitkeep
 !domains/*/corpus/README.md
+
+# ─────────────────────────────────────────────────────────────────
+# Domain content vive in repo separate (refactor 03/05 sera).
+# D-ND_LAB è l'engine; ogni dominio applicato è un repo a sé.
+# Setup: clone il dominio dentro domains/<name>/ dopo install engine.
+# ─────────────────────────────────────────────────────────────────
+domains/physics/
+# Experiment scripts del lab fisica (generati durante i cycles)
+tools/exp_*.py

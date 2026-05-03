@@ -112,10 +112,26 @@ extended, Gemini 3) is preserved across multi-turn loops automatically.
 
 ## Domains shipped
 
-| domain | what it studies |
-|---|---|
-| `physics` | mathematical physics through D-ND: primes, zeta, GUE, theory crossing TQGE+R |
-| `editorial` | the operator's archive — discriminates source from echo, drafts publishable copy through the bicono filter and non-dual-copy gate |
+| domain | what it studies | repo |
+|---|---|---|
+| `physics` | mathematical physics through D-ND: primes, zeta, GUE, theory crossing TQGE+R | [dnd-lab-physics](https://github.com/GrazianoGuiducci/dnd-lab-physics) |
+| `editorial` | the operator's archive — discriminates source from echo, drafts publishable copy through the bicono filter and non-dual-copy gate | shipped here in `domains/editorial/` |
+
+**Domain content lives in separate repos** (refactor 2026-05-03). The
+engine is what ships here; each domain that uses it is its own repo
+with its own lifecycle. After installing the engine:
+
+```bash
+# Add the physics domain
+cd ~/.d-nd-lab/domains
+git clone https://github.com/GrazianoGuiducci/dnd-lab-physics.git physics
+
+# Or any other domain repo following the same convention
+```
+
+The directory `domains/physics/` is **gitignored** in this repo so it
+can host the cloned content without conflicts. The same pattern applies
+to any future domain (finance, biology, security, drug discovery, ...).
 
 Each domain is a directory with `config.json`, `context.md`,
 `tension_to_category.json`, `seed_tensions.json`, `tools/`, and
