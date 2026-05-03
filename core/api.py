@@ -37,7 +37,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 try:
-    from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, Request
+    from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, Request, Response
     from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
     from fastapi.staticfiles import StaticFiles
     from pydantic import BaseModel
@@ -854,6 +854,51 @@ async def get_scoperta_detail(domain: str, slug_dir: str, request: Request) -> d
         "lab_note_md": lab_note.read_text(errors="replace") if lab_note.exists() else "",
         "cycle_report_md": cycle_report.read_text(errors="replace") if cycle_report.exists() else "",
     }
+
+
+@app.get("/api/domains/{domain}/blueprint/{slug_dir}/{candidate_type}")
+async def get_blueprint(domain: str, slug_dir: str, candidate_type: str,
+                        request: Request) -> Response:
+    """Genera blueprint markdown per un candidate (library/kernel/demo).
+
+    Operatore 03/05 sera: "report o blueprint che lo realizzi (in uno step
+    successivo)". Step B: download markdown self-contained per
+    implementatore umano.
+    """
+    await _check_auth(request)
+    _validate_domain(domain)
+    if candidate_type not in ("library", "kernel", "demo"):
+        raise HTTPException(status_code=400,
+                            detail="candidate_type must be library/kernel/demo")
+    if "/" in slug_dir or ".." in slug_dir:
+        raise HTTPException(status_code=400, detail="Invalid slug_dir")
+    pub_dir = paths.domain_data_dir(domain) / "published" / slug_dir
+    manifest_path = pub_dir / "manifest.json"
+    if not manifest_path.exists():
+        raise HTTPException(status_code=404,
+                            detail=f"manifest non trovato per {slug_dir}")
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding='utf-8'))
+    except json.JSONDecodeError as e:
+        raise HTTPException(status_code=500, detail=f"manifest parse: {e}")
+    candidates = manifest.get("applications_candidate", [])
+    target = next((c for c in candidates if c.get("type") == candidate_type), None)
+    if not target:
+        raise HTTPException(status_code=404,
+                            detail=f"nessun candidate type={candidate_type}")
+
+    # Import lazily per evitare cycle import in caso di refactor
+    from core.triggers.blueprint_generator import render_blueprint
+    source_meta = manifest.get("discovery_provenance", {}) or {}
+    md = render_blueprint(manifest, target, source_meta)
+
+    name = target.get("name", "blueprint")
+    filename = f"BLUEPRINT_{name}.md"
+    return Response(
+        content=md,
+        media_type="text/markdown",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 @app.get("/api/domains/{domain}/manifest/{slug_dir}")

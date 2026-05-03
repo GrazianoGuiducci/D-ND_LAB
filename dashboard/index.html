@@ -3493,6 +3493,38 @@
             || cs.find(c => c.type === wantType)
             || null;
       },
+      // Step B (03/05 sera): download blueprint markdown da endpoint API
+      async downloadBlueprint() {
+        const c = this.modaleCandidato.candidate;
+        if (!c) return;
+        const dom = this.activeDomain;
+        try {
+          const url = `/api/domains/${dom}/blueprint/${c.dir}/${c.type}`;
+          const resp = await fetch(url);
+          if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+          const blob = await resp.blob();
+          const fileURL = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = fileURL;
+          a.download = `BLUEPRINT_${c.name}.md`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(fileURL);
+        } catch (e) {
+          console.error('downloadBlueprint failed:', e);
+          alert('Download blueprint fallito: ' + e.message);
+        }
+      },
+      async copyManifestJson() {
+        const m = this.modaleCandidato.manifest;
+        if (!m) return;
+        try {
+          await navigator.clipboard.writeText(JSON.stringify(m, null, 2));
+        } catch (e) {
+          console.warn('clipboard failed:', e);
+        }
+      },
 
       async reloadCycleTraces() {
         if (!this.activeDomain) return;
@@ -3844,7 +3876,7 @@
 
       <!-- Tabs -->
       <div class="flex border-b border-slate-800 px-5">
-        <template x-for="t in ['overview', 'manifest', 'source']" :key="t">
+        <template x-for="t in ['overview', 'manifest', 'source', 'actions']" :key="t">
           <button @click="modaleCandidato.tab = t"
                   :class="modaleCandidato.tab === t
                           ? 'border-cyan-500 text-cyan-300'
@@ -3930,11 +3962,56 @@
                  x-text="modaleCandidato.cycle_report_md || '(non disponibile)'"></pre>
           </div>
         </div>
+
+        <!-- Tab: Actions (Step B 03/05 sera) -->
+        <div x-show="!modaleCandidato.loading && modaleCandidato.tab === 'actions'" class="space-y-3">
+          <div class="text-xs text-slate-400 mb-2">
+            Operazioni disponibili su questo candidato. Quelle disabilitate
+            arriveranno in step successivi (richiedono trigger LLM o link cross-repo).
+          </div>
+
+          <!-- Active actions -->
+          <button @click="downloadBlueprint()"
+                  class="w-full px-4 py-2 rounded bg-cyan-900/40 border border-cyan-700 text-cyan-300 hover:bg-cyan-900/60 transition flex items-center justify-between text-sm">
+            <span>📦 Download Blueprint (markdown self-contained)</span>
+            <span class="text-xs text-cyan-400">→ .md</span>
+          </button>
+
+          <button @click="copyManifestJson()"
+                  class="w-full px-4 py-2 rounded bg-slate-800 border border-slate-700 text-slate-200 hover:bg-slate-700 transition flex items-center justify-between text-sm">
+            <span>📋 Copy manifest JSON to clipboard</span>
+            <span class="text-xs text-slate-400">→ JSON</span>
+          </button>
+
+          <!-- Disabled actions (placeholder per Step C) -->
+          <button disabled
+                  title="Step C: trigger Stage 4 PoC LLM (~3min, claude-cli/codex-cli)"
+                  class="w-full px-4 py-2 rounded bg-slate-900 border border-slate-800 text-slate-300 cursor-not-allowed flex items-center justify-between text-sm opacity-60">
+            <span>🚀 Promote to Stage 4 PoC</span>
+            <span class="text-xs">[Step C — coming]</span>
+          </button>
+
+          <button disabled
+                  title="Step C: visualizza verification.json se Stage 4 ha già girato"
+                  class="w-full px-4 py-2 rounded bg-slate-900 border border-slate-800 text-slate-300 cursor-not-allowed flex items-center justify-between text-sm opacity-60">
+            <span>🔍 View Stage 4 verification</span>
+            <span class="text-xs">[Step C — coming]</span>
+          </button>
+
+          <button disabled
+                  title="Step C: link al kernel installabile in d-nd-seed/kernels (se PACKAGED)"
+                  class="w-full px-4 py-2 rounded bg-slate-900 border border-slate-800 text-slate-300 cursor-not-allowed flex items-center justify-between text-sm opacity-60">
+            <span>🌱 Open in seed repo</span>
+            <span class="text-xs">[Step C — coming]</span>
+          </button>
+        </div>
       </div>
 
-      <!-- Footer (placeholder per Actions B) -->
+      <!-- Footer -->
       <div class="px-5 py-3 border-t border-slate-800 text-xs text-slate-400 flex items-center justify-between">
-        <span>Tab Actions (Promote / Download Blueprint / View Stage 4) — prossimo step</span>
+        <span class="text-slate-300">
+          <span x-text="modaleCandidato.candidate?.dir || ''" class="font-mono"></span>
+        </span>
         <button @click="closeCandidateModale()"
                 class="px-3 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200">Chiudi</button>
       </div>
