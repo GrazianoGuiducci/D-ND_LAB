@@ -2652,113 +2652,133 @@
           container,
           elements: { nodes, edges },
           style: [
-            // Default node style — label as bottom caption (truncated 30)
+            // Refactor 03/05 sera: nodi più visibili (border, outline), edge
+            // più contrastati, font leggibile come Tassonomia.
             {
               selector: 'node',
               style: {
                 'background-color': (ele) => NODE_TYPE_COLOR[ele.data('type')] || NODE_TYPE_DEFAULT,
-                'border-width': 1,
-                'border-color': 'rgba(255,255,255,.15)',
+                'border-width': 2,
+                'border-color': (ele) => NODE_TYPE_COLOR[ele.data('type')] || NODE_TYPE_DEFAULT,
+                'border-opacity': 0.85,
                 'label': 'data(label)',
-                'color': '#cbd5e1',
-                'font-size': 9,
+                'color': '#e2e8f0',
+                'font-size': 11,
+                'font-weight': 500,
                 'font-family': 'ui-monospace, monospace',
                 'text-wrap': 'wrap',
-                'text-max-width': 110,
+                'text-max-width': 130,
                 'text-valign': 'bottom',
-                'text-margin-y': 4,
+                'text-margin-y': 6,
+                'text-outline-color': '#08080c',
+                'text-outline-width': 2,
+                'text-outline-opacity': 0.95,
                 'text-opacity': this.showAllLabels ? 1 : 0,
                 'width':  'data(size)',
                 'height': 'data(size)',
               },
             },
             // Theory nodes — cerchio grande con LETTERA centrale (Q/T/G/E/R)
-            // Pattern dal sito d-nd.com/ai-lab dove le teorie sono i 5 nodi-pilastro.
             {
               selector: 'node[type = "teoria"]',
               style: {
                 'label': 'data(letter)',
                 'color': '#ffffff',
-                'font-size': 18,
-                'font-weight': 700,
+                'font-size': 20,
+                'font-weight': 800,
                 'font-family': 'ui-sans-serif, system-ui',
                 'text-valign': 'center',
                 'text-halign': 'center',
                 'text-margin-y': 0,
+                'text-outline-color': 'rgba(0,0,0,.4)',
+                'text-outline-width': 1,
                 'text-opacity': 1,
-                'border-width': 2,
-                'border-color': 'rgba(255,255,255,.35)',
+                'border-width': 3,
+                'border-color': 'rgba(255,255,255,.5)',
               },
             },
-            /* Cytoscape non supporta selettore :hover — l'effetto e' wired
-               via cy.on('mouseover','node',...) piu' giu'. */
             {
               selector: 'node:selected',
               style: {
                 'border-color': '#a78bfa',
-                'border-width': 3,
+                'border-width': 4,
+                'border-opacity': 1,
                 'text-opacity': 1,
               },
             },
             {
               selector: 'edge',
               style: {
-                'width': 1,
-                'line-color': 'rgba(148,163,184,.25)',
-                'target-arrow-color': 'rgba(148,163,184,.4)',
+                'width': 1.5,
+                'line-color': 'rgba(148,163,184,.45)',
+                'target-arrow-color': 'rgba(148,163,184,.6)',
                 'target-arrow-shape': 'triangle',
-                'arrow-scale': 0.6,
+                'arrow-scale': 0.75,
                 'curve-style': 'bezier',
+                'opacity': 0.8,
               },
             },
-            // v4.5 — Ponte edges (teoria↔teoria) usano pair color dalla palette
-            // BiconoLab. Defensive: se nessuna pair derivabile, fallback sul default.
+            // Ponte edges (teoria↔teoria) — pair color dalla palette BiconoLab
             {
               selector: 'edge[?isPonte]',
               style: {
                 'line-color': (ele) => ele.data('pairColor') || '#64748b',
                 'target-arrow-color': (ele) => ele.data('pairColor') || '#64748b',
-                'width': 2,
-                'opacity': 0.85,
+                'width': 2.5,
+                'opacity': 0.9,
               },
             },
-            // Covers edges (report→tension): cyan tenue, semantica diversa dai ponti
+            // Covers edges (report→tension): cyan tenue, dashed
             {
               selector: 'edge[type = "covers"]',
               style: {
-                'line-color': 'rgba(34,211,238,.3)',
-                'target-arrow-color': 'rgba(34,211,238,.5)',
+                'line-color': 'rgba(34,211,238,.5)',
+                'target-arrow-color': 'rgba(34,211,238,.7)',
                 'line-style': 'dashed',
+                'width': 1.5,
               },
             },
-            // Edge labels — visibili quando il toggle "Mostra tutti i nomi" e' on
-            // o sempre per i ponti (sono utili: mostrano la pair).
+            // Edge labels
             {
               selector: 'edge[label]',
               style: {
                 'label': 'data(label)',
-                'font-size': 9,
+                'font-size': 10,
+                'font-weight': 500,
                 'font-family': 'ui-monospace, monospace',
-                'color': '#cbd5e1',
-                'text-background-color': 'rgba(15,23,42,.85)',
+                'color': '#e2e8f0',
+                'text-background-color': 'rgba(8,8,12,.92)',
                 'text-background-opacity': 1,
-                'text-background-padding': '2px',
+                'text-background-padding': '3px',
                 'text-rotation': 'autorotate',
                 'text-opacity': 1,
               },
             },
             {
               selector: 'edge:selected',
-              style: { 'line-color': '#a78bfa', 'width': 2.5 },
+              style: { 'line-color': '#a78bfa', 'target-arrow-color': '#a78bfa', 'width': 3 },
             },
           ],
           layout: {
-            name: 'cose',
+            // Refactor 03/05 sera: switch a fcose (più stabile per knowledge
+            // graph con dimensioni variabili teorie/tensioni/report).
+            name: typeof cytoscapeFcose !== 'undefined' ? 'fcose' : 'cose',
             animate: false,
+            quality: 'proof',
+            randomize: true,
+            fit: true,
+            padding: 60,
             nodeRepulsion: 9000,
-            idealEdgeLength: 90,
-            padding: 40,
-            fit: true,                 // auto-fit on initial layout
+            idealEdgeLength: 110,
+            edgeElasticity: 0.45,
+            gravity: 0.25,
+            gravityRange: 3.8,
+            numIter: 2500,
+            tile: false,
+            // Fallback cose
+            componentSpacing: 80,
+            initialTemp: 220,
+            coolingFactor: 0.95,
           },
           minZoom: 0.3,
           maxZoom: 3,
