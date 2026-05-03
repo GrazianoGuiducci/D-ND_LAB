@@ -15,6 +15,9 @@
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked@14.1.4/marked.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/cytoscape@3.30.4/dist/cytoscape.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/layout-base@2.0.1/layout-base.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/cose-base@2.2.0/cose-base.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/cytoscape-fcose@2.2.0/cytoscape-fcose.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
   <style>
     /* Palette d-nd.com (port da /opt/d-nd_com/styles/main.css).
@@ -1166,7 +1169,7 @@
               </div>
               <div class="flex items-center gap-2" x-show="incrocioMode === 'taxonomy'">
                 <span class="text-xs text-slate-300 font-mono" x-text="`${taxonomyMeta.n_groups || 0} gruppi · ${taxonomyMeta.n_nodes || 0} nodi · ${taxonomyMeta.n_bridges || 0} ponti`"></span>
-                <button @click="if (cyTax) { cyTax.layout({name:'cose', animate:true, nodeRepulsion:4500, idealEdgeLength:75, padding:60, componentSpacing:60, gravity:1.0, nestingFactor:1.0, numIter:2500, initialTemp:220, coolingFactor:0.95}).run(); setTimeout(() => cyTax && cyTax.fit(undefined, 60), 400); }" class="text-xs px-2 py-1 rounded bg-slate-800 hover:bg-slate-700" title="Relayout (spaziatura leggibile)">↻</button>
+                <button @click="if (cyTax) { cyTax.layout({name: typeof cytoscapeFcose !== 'undefined' ? 'fcose' : 'cose', animate:true, animationDuration:600, quality:'proof', randomize:true, fit:true, padding:80, nodeRepulsion:8000, idealEdgeLength:90, edgeElasticity:0.45, gravity:0.3, gravityCompound:1.0, gravityRangeCompound:1.5, gravityRange:3.8, nestingFactor:0.1, numIter:2500, tile:true, tilingPaddingVertical:30, tilingPaddingHorizontal:30}).run(); setTimeout(() => cyTax && cyTax.fit(undefined, 60), 700); }" class="text-xs px-2 py-1 rounded bg-slate-800 hover:bg-slate-700" title="Relayout (fcose, spaziatura ottimale)">↻</button>
                 <button @click="taxonomyFullscreen = !taxonomyFullscreen; $nextTick(() => { if (cyTax) { cyTax.resize(); cyTax.fit(undefined, taxonomyFullscreen ? 50 : 30); } })" class="text-xs px-2 py-1 rounded bg-slate-800 hover:bg-slate-700" title="Fullscreen">⛶</button>
                 <button @click="reloadTaxonomy().then(() => renderTaxonomy())" class="text-xs text-slate-300 hover:text-slate-300">refresh</button>
               </div>
@@ -1202,8 +1205,8 @@
 
             <!-- Mode: Trajectory — timeline cronologico dei cicli -->
             <div x-show="incrocioMode === 'trajectory'">
-              <div class="mb-2">
-                <p class="text-xs text-slate-300">Sequenza cronologica dei report. Colore = categoria verdict (constraint/discovery/null/refute). Altezza barra = n_flags del falsifier (verifica). Click → apri il report.</p>
+              <div class="mb-3">
+                <p class="text-xs text-slate-300">Sequenza dei cicli. Equispaced (la spaziatura è ordinale, non temporale — risolve l'ammasso quando i cicli si concentrano in giornate vicine). Click su card → apri il report.</p>
               </div>
 
               <template x-if="reports.length === 0">
@@ -1212,10 +1215,26 @@
 
               <template x-if="reports.length > 0">
                 <div>
-                  <!-- Timeline SVG — innerHTML generato in JS (template x-for
-                       in SVG namespace ha bug noti con Alpine). -->
-                  <div class="bg-slate-950 rounded-lg p-4 overflow-x-auto">
-                    <div x-html="trajectoryHtml()" @click="onTrajectoryClick($event)"></div>
+                  <!-- Step bar equispaced (refactor 03/05 sera, sostituisce
+                       SVG timeline che si schiacciava su date dense). -->
+                  <div class="bg-slate-950 border border-slate-800 rounded-lg p-3 overflow-x-auto">
+                    <div class="flex items-stretch gap-1 min-w-max">
+                      <template x-for="(p, i) in trajectoryPoints()" :key="p.filename">
+                        <button @click="openReportFromTrajectory(p.filename)"
+                                class="flex flex-col items-center gap-1 px-3 py-2 rounded transition hover:bg-slate-800 group min-w-[88px]"
+                                :title="`${p.title}\n${p.verdictCategory} · ${p.n_flags} flag · ${p.shortDate}`">
+                          <span class="text-[9px] font-mono text-slate-300" x-text="p.shortDate"></span>
+                          <div class="flex items-center gap-1.5">
+                            <span class="w-3.5 h-3.5 rounded-full ring-2 ring-slate-900 transition group-hover:scale-110 inline-block"
+                                  :style="`background:${p.color}; box-shadow: 0 0 8px ${p.color}55`"></span>
+                            <span class="text-[10px] font-mono text-slate-300" x-text="`#${i + 1}`"></span>
+                          </div>
+                          <template x-if="p.n_flags > 0">
+                            <span class="text-[9px] text-rose-400" x-text="`⚠${p.n_flags}`"></span>
+                          </template>
+                        </button>
+                      </template>
+                    </div>
                   </div>
 
                   <!-- Legend categorie verdict -->
@@ -1224,20 +1243,23 @@
                     <div class="flex items-center gap-1.5"><i class="legend-dot" style="background:#34d399"></i><span class="text-slate-300">DISCOVERY</span></div>
                     <div class="flex items-center gap-1.5"><i class="legend-dot" style="background:#fbbf24"></i><span class="text-slate-300">PARTIAL / REFUTE</span></div>
                     <div class="flex items-center gap-1.5"><i class="legend-dot" style="background:#94a3b8"></i><span class="text-slate-300">NULL / OTHER</span></div>
-                    <span class="text-slate-300 ml-auto italic">Altezza barra ∝ n_flags falsifier</span>
+                    <span class="text-slate-300 ml-auto italic">⚠N = flag dal falsifier</span>
                   </div>
 
-                  <!-- Cards lista cronologica per dettaglio testuale -->
-                  <div class="mt-4 grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                    <template x-for="p in trajectoryPoints()" :key="p.filename">
-                      <button @click="openReportFromTrajectory(p.filename)" class="text-left bg-slate-800/40 hover:bg-slate-800 rounded p-2 transition border border-slate-700/50">
-                        <div class="flex items-center justify-between text-[10px] font-mono text-slate-300">
-                          <span x-text="p.shortDate"></span>
-                          <span class="px-1.5 rounded text-[9px]" :style="`background:${p.color}30; color:${p.color}`" x-text="p.verdictCategory"></span>
+                  <!-- Cards lista cronologica con dettaglio (vista primaria) -->
+                  <div class="mt-4 grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    <template x-for="(p, i) in trajectoryPoints()" :key="p.filename">
+                      <button @click="openReportFromTrajectory(p.filename)"
+                              class="text-left bg-slate-900 hover:bg-slate-800 hover:border-cyan-700 rounded p-3 transition border border-slate-700/50 flex flex-col gap-2 min-h-[110px]">
+                        <div class="flex items-center justify-between text-[11px]">
+                          <span class="font-mono text-slate-300" x-text="`#${i + 1} · ${p.shortDate}`"></span>
+                          <span class="px-2 py-0.5 rounded text-[10px] font-mono uppercase tracking-wider"
+                                :style="`background:${p.color}25; color:${p.color}; border: 1px solid ${p.color}55;`"
+                                x-text="p.verdictCategory"></span>
                         </div>
-                        <div class="text-xs text-slate-200 mt-1 line-clamp-2" x-text="p.title"></div>
+                        <div class="text-xs text-slate-100 line-clamp-3 leading-relaxed flex-1" x-text="p.title"></div>
                         <template x-if="p.n_flags > 0">
-                          <div class="text-[10px] text-rose-400 mt-1" x-text="`⚠ ${p.n_flags} flag dal falsifier`"></div>
+                          <div class="text-[11px] text-rose-400 font-medium" x-text="`⚠ ${p.n_flags} flag dal falsifier`"></div>
                         </template>
                       </button>
                     </template>
@@ -2301,6 +2323,11 @@
       runWs: null,
 
       async init() {
+        // Registra plugin Cytoscape (fcose layout — più stabile per grafi
+        // piccoli con clustering, refactor 03/05 sera).
+        if (typeof cytoscape !== 'undefined' && typeof cytoscapeFcose !== 'undefined') {
+          try { cytoscape.use(cytoscapeFcose); } catch (e) { /* already registered */ }
+        }
         try {
           this.health = await fetch('/api/health').then(r => r.json());
           this.domains = await fetch('/api/domains').then(r => r.json());
@@ -3273,22 +3300,33 @@
             },
           ],
           layout: {
-            name: 'cose',
+            // Refactor 03/05 sera (operatore: "non credo che ce la caviamo
+            // così, forse va rivisto il modo con cui vengono visualizzati?"):
+            // switch da 'cose' (instabile con grafi compound piccoli, esce dal
+            // viewport) a 'fcose' (faster cose, stabile con cluster).
+            name: typeof cytoscapeFcose !== 'undefined' ? 'fcose' : 'cose',
             animate: false,
-            // Layout aggiornato 03/05 sera (operatore: "nodi troppo piccoli o
-            // termini sovrapposti"). Spaziatura più generosa, edge più visibili,
-            // label leggibili senza sovrapposizione.
-            nodeRepulsion: 4500,         // più repulsione → più spazio per label
-            idealEdgeLength: 75,          // edge più lunghi → meno crowding
-            padding: 60,                  // padding generoso
-            componentSpacing: 60,         // separazione tra componenti
-            nestingFactor: 1.0,           // parent rispettano figli
-            gravity: 1.0,                 // gravità moderata (no compressione)
-            numIter: 2500,                // più iterazioni = più stabile
+            quality: 'proof',          // best layout iterations
+            randomize: true,           // start from random → stabile
+            fit: true,
+            padding: 80,
+            nodeRepulsion: 8000,       // forte repulsion → spazio per label
+            idealEdgeLength: 90,       // edge medio
+            edgeElasticity: 0.45,
+            nestingFactor: 0.1,        // parent compound stretti
+            gravity: 0.3,              // bassa gravità globale = no schiacciamento
+            gravityRangeCompound: 1.5,
+            gravityCompound: 1.0,      // gravità intra-cluster (tieni i membri vicini)
+            gravityRange: 3.8,
+            numIter: 2500,
+            tile: true,                // riempie spazio
+            tilingPaddingVertical: 30,
+            tilingPaddingHorizontal: 30,
+            // Fallback cose per browser senza fcose plugin
+            componentSpacing: 80,
             initialTemp: 220,
             coolingFactor: 0.95,
             minTemp: 1.0,
-            fit: true,
           },
           minZoom: 0.3,
           maxZoom: 3,
