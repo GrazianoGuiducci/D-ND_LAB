@@ -797,8 +797,8 @@
             <span><span class="text-cyan-400" x-text="d.n_tensions"></span> tensions</span>
             <span><span class="text-cyan-400" x-text="d.n_reports"></span> reports</span>
           </div>
-          <template x-if="d.direzione">
-            <p class="mt-3 text-xs italic text-slate-300 line-clamp-2" x-text="'→ ' + d.direzione"></p>
+          <template x-if="d.direzione || d.direzione_en">
+            <p class="mt-3 text-xs italic text-slate-300 line-clamp-2" x-text="'→ ' + ((this.lang === 'en' && d.direzione_en) ? d.direzione_en : (d.direzione || ''))"></p>
           </template>
 
           <!-- Controlli dominio (UI placeholder — gestione futura).
@@ -1788,7 +1788,7 @@
               <h4 class="text-xs uppercase tracking-wider text-slate-300 mt-5 mb-2" data-i18n="dash.detail.seedH4">Seed</h4>
               <div class="text-xs space-y-1 text-slate-400">
                 <div><span class="text-slate-300" data-i18n="dash.detail.piano">piano:</span> <span class="font-mono text-cyan-400" x-text="seed.piano ?? '?'"></span></div>
-                <div class="italic line-clamp-3" x-text="seed.direzione || '—'"></div>
+                <div class="italic line-clamp-3" x-text="(this.lang === 'en' && seed.direzione_en) ? seed.direzione_en : (seed.direzione || '—')"></div>
               </div>
             </div>
           </template>

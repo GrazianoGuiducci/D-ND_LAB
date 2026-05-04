@@ -223,6 +223,7 @@ async def list_domains_endpoint(request: Request) -> list[dict[str, Any]]:
                 "n_tensions": len(seed.get("tensioni", []) or []),
                 "n_reports": _count_reports(d),
                 "direzione": (seed.get("direzione", "") or "")[:200],
+                "direzione_en": (seed.get("direzione_en", "") or "")[:200],
             })
         except cfg.ConfigError as e:
             out.append({"id": d, "error": str(e)})
