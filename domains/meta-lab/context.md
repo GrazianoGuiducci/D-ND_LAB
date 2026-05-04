@@ -56,6 +56,28 @@ col compute disponibile. Numpy/scipy/pandas OK; GPU/cluster/dataset
 proprietari NO al primo cycle. Se il dominio richiede dati esterni, il
 template deve includere fallback su dataset open o synthetic.
 
+**Due stili di tool sono supportati** (scegli uno per tool, dichiara nel MML):
+
+1. **CLI standalone** (default consigliato): `tools/exp_x.py` con `def main()`
+   e `if __name__ == "__main__":`. L'agent del lab figlio lo invoca via
+   `shell_exec`. Path Posix nel `config.json` (`"module": "tools/exp_x.py"`).
+   Il sistema riconosce automaticamente lo style dal path (presenza di '/'
+   o suffisso '.py') e lo surface nel system_prompt come comando bash —
+   l'agent non deve "importarlo".
+
+2. **Python module con `build(domain)`** (quando serve registrazione MCP):
+   `domains/<lab>/tools/x.py` esposto come modulo Python con
+   `def build(domain) -> {schema, fn}`. Path dotted nel config
+   (`"module": "domains.physics.tools.m_spectro"`). L'agent lo vede come
+   tool MCP nativo. Da usare quando serve schema strutturato per il
+   tool-calling LLM.
+
+Style 1 è più semplice e adatto al primo cycle (output JSON dall'agent
+analizzato come testo). Style 2 richiede più boilerplate ma è più
+integrato. Il meta-lab di default genera Style 1 — se un dominio
+richiede Style 2, dichiararlo esplicitamente nel report del cycle e
+includere `def build(domain)` nei tool.
+
 **M4 — Naive baseline esistente**
 Lo Stage 4 PoC runner ha bisogno di naive vs informed-by-finding per A/B.
 Il dominio deve avere un metodo standard contro cui il modus D-ND può
@@ -105,6 +127,18 @@ seed.json + context.md + about.md + assertions.py.
    - "Il modello D-ND — nucleo" — invariante, copia da physics
    - "Confine epistemico" — cosa il dominio deve falsificare prima di accumulare
    - Sezioni dominio-specifiche (corpus, fonti, vincoli compute)
+   - **"Tools custom del lab — come invocarli"** (NUOVO, obbligatorio se
+     il lab figlio ha tools_custom): per ciascun `tools/exp_*.py` Style 1,
+     dichiara esplicitamente:
+     - nome tool + descrizione 1-riga
+     - comando di invocazione: `python3 /opt/D-ND_LAB/domains/<lab>/tools/exp_x.py [args]`
+     - quando l'agent dovrebbe invocarlo durante il cycle (trigger contestuale)
+     - cosa restituisce (formato output: stdout testo o `--json`)
+     Questa sezione è critica: il sistema MML+skill_loader è ORA letto da
+     `core/agent.py` al runtime (Phase 2.A.7, 2026-05-04, commit ed51b8b).
+     L'agent del lab figlio vede i tool come comandi shell, non come
+     moduli importable. Il context.md deve riflettere questa realtà —
+     altrimenti l'agent ne parla a voce nel report invece di eseguirli.
 
 6. **Generazione about.md** (IT) + about.en.md (EN) — copy visitor-facing
    onesta: cosa fa il lab, perché esiste, come si usa. NON è il prompt
