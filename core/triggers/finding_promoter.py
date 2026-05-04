@@ -96,6 +96,12 @@ LLM_PROVIDER_CHAIN = [
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY") or os.environ.get("LLM_API_KEY", "")
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 OPENROUTER_MODEL = os.environ.get("OPENROUTER_MODEL") or os.environ.get("LLM_MODEL", "deepseek/deepseek-v4-pro")
+OPENROUTER_FALLBACK_CHAIN = [
+    s.strip() for s in os.environ.get(
+        "OPENROUTER_FALLBACK_CHAIN",
+        "z-ai/glm-5.1,moonshotai/kimi-k2.6,x-ai/grok-4.3"
+    ).split(",") if s.strip()
+]
 
 
 # Pre-flight cache (refactor 04/05 — speculare a lab_agent.sh + translate_tensions.py):
@@ -163,7 +169,7 @@ def _via_codex_cli(prompt: str, timeout: int) -> str | None:
         return None
     try:
         r = subprocess.run(
-            ["codex", "exec", "-", "--non-interactive"],
+            ["codex", "exec", "--skip-git-repo-check", "--full-auto", "-"],
             input=prompt, capture_output=True, text=True, timeout=timeout,
         )
         if r.returncode == 0 and (r.stdout or "").strip():
@@ -190,30 +196,42 @@ def _via_claude_cli(prompt: str, timeout: int) -> str | None:
 
 
 def _via_openrouter(prompt: str, timeout: int) -> str | None:
+    """OpenRouter HTTP — cascata operatore 04/05:
+    primary OPENROUTER_MODEL (deepseek-v4-pro) → fallback chain
+    (glm-5.1, kimi-k2.6, grok-4.3). Se 400/404 prova next.
+    """
     if not OPENROUTER_API_KEY:
         return None
     import urllib.request
     import urllib.error
-    payload = json.dumps({
-        "model": OPENROUTER_MODEL,
-        "messages": [{"role": "user", "content": prompt}],
-        "temperature": 0.3,
-        "max_tokens": 2000,
-    }).encode("utf-8")
-    req = urllib.request.Request(
-        OPENROUTER_URL,
-        data=payload,
-        headers={
-            "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-            "Content-Type": "application/json",
-        },
-    )
-    try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
-            data = json.loads(resp.read().decode("utf-8"))
-            return data["choices"][0]["message"]["content"]
-    except (urllib.error.HTTPError, urllib.error.URLError, KeyError):
-        return None
+    cascade = [OPENROUTER_MODEL] + [m for m in OPENROUTER_FALLBACK_CHAIN if m != OPENROUTER_MODEL]
+    last_model = cascade[-1] if cascade else OPENROUTER_MODEL
+    for model in cascade:
+        payload = json.dumps({
+            "model": model,
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": 0.3,
+            "max_tokens": 2000,
+        }).encode("utf-8")
+        req = urllib.request.Request(
+            OPENROUTER_URL,
+            data=payload,
+            headers={
+                "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+                "Content-Type": "application/json",
+            },
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+                return data["choices"][0]["message"]["content"]
+        except urllib.error.HTTPError as e:
+            if e.code in (400, 404) and model != last_model:
+                continue  # try next in cascade
+            return None
+        except (urllib.error.URLError, KeyError):
+            return None
+    return None
 
 
 _PROVIDERS = {
