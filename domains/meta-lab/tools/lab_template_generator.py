@@ -92,6 +92,59 @@ def validate_specs(specs: dict[str, Any]) -> list[str]:
     return errors
 
 
+def _ensure_quick_reference_in_context(
+    context_md: str,
+    external_apis: list[dict[str, Any]],
+) -> tuple[str, bool]:
+    """Phase 2.C.3: garantisce Quick Reference Table nel context.md se ci
+    sono external_apis dichiarate nel MML.
+
+    Pattern hermes (drug-discovery): l'agent del lab figlio ha bisogno di
+    un manuale rapido Task→Endpoint→Notes per non googlare API durante
+    il cycle. Questa funzione:
+    - Se external_apis è vuoto → ritorna context_md invariato.
+    - Se external_apis ha elementi E context_md contiene già una sezione
+      'Quick Reference' (case insensitive) → ritorna invariato (l'agent
+      ha rispettato il pattern, fiducia).
+    - Se external_apis ha elementi E nessuna sezione esiste → appende
+      una sezione minima generata dai dati MML in coda al context_md.
+      Garanzia di coerenza, anche se l'agent l'ha dimenticata.
+
+    Ritorna (context_md_finale, was_appended).
+    """
+    if not external_apis:
+        return context_md, False
+    lower = context_md.lower()
+    if "quick reference" in lower or "external apis" in lower or "external_apis" in lower:
+        return context_md, False
+
+    rows: list[str] = []
+    for api in external_apis:
+        name = api.get("name", "?")
+        base_url = api.get("base_url", "?")
+        auth = "yes" if api.get("auth_required") else "no"
+        purpose = api.get("purpose", "")
+        rate = api.get("rate_limit_notes", "")
+        notes_parts: list[str] = []
+        if purpose:
+            notes_parts.append(purpose)
+        if rate:
+            notes_parts.append(f"rate: {rate}")
+        notes = "; ".join(notes_parts) or ""
+        rows.append(f"| {name} | `{base_url}` | {auth} | {notes} |")
+
+    section = (
+        "\n\n## Quick Reference — External APIs\n\n"
+        "Auto-generated from MML `external_apis` (Phase 2.C.3 generator helper).\n"
+        "L'agent invoca queste API via `shell_exec` (curl o python3 -c \"import requests; ...\").\n\n"
+        "| API | Base URL | Auth | Notes |\n"
+        "|-----|----------|------|-------|\n"
+        + "\n".join(rows)
+        + "\n"
+    )
+    return context_md.rstrip() + section, True
+
+
 def _build_config(specs: dict[str, Any]) -> dict[str, Any]:
     """Costruisce config.json dal pattern D-ND_LAB neutro."""
     return {
@@ -137,7 +190,14 @@ def write_template(specs: dict[str, Any], dry_run: bool = False, force: bool = F
     files_to_write: list[tuple[Path, str]] = []
     files_to_write.append((target_dir / "config.json",
                            json.dumps(_build_config(specs), indent=2, ensure_ascii=False) + "\n"))
-    files_to_write.append((target_dir / "context.md", specs["context_md"]))
+    # Phase 2.C.3: assicura Quick Reference Table nel context.md se MML
+    # dichiara external_apis. Pattern hermes — surface le API come manuale
+    # rapido pronto all'uso per l'agent del lab figlio.
+    external_apis = specs.get("mml_json", {}).get("external_apis", []) or []
+    context_md, qr_appended = _ensure_quick_reference_in_context(
+        specs["context_md"], external_apis,
+    )
+    files_to_write.append((target_dir / "context.md", context_md))
     files_to_write.append((target_dir / "about.md", specs["about_it"]))
     files_to_write.append((target_dir / "about.en.md", specs["about_en"]))
     files_to_write.append((target_dir / "seed_tensions.json",

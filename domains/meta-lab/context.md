@@ -171,10 +171,12 @@ seed.json + context.md + about.md + assertions.py.
        capture-insight + assertion-verifier per lab di scoperta)
      - Per ogni skill, spiega `rationale` (perché serve a QUESTO lab)
    - `tools_custom` — i `tools/exp_*.py` che hai generato al passo 6
-   - `external_apis` (pattern hermes drug-discovery) — preferire endpoint
-     pubblici no-auth quando il dominio è data-centric (es. biology →
-     ChEMBL+PubChem, finance → yfinance, security → MISP/CIRCL).
-     Se il dominio richiede auth, dichiararlo + escalation operatore
+   - `external_apis` (pattern hermes drug-discovery, vedere sezione
+     dedicata "Pattern hermes — external_apis no-auth" sotto). Per
+     domini data-centric, identificare 3-7 endpoint pubblici no-auth
+     pertinenti al dominio. Generare oggetti `{name, base_url, auth_required,
+     purpose, rate_limit_notes}` per ciascuno. Se il dominio non è
+     data-centric (es. lab di funzione, lab matematica pura), array vuoto.
    - `modus_invocation`:
      - `cycle_pattern`: default 'autopsy → build_field → agent →
        bias_corrector → report_falsifier → bicono_extractor → SSP'
@@ -199,6 +201,87 @@ seed.json + context.md + about.md + assertions.py.
     - External APIs dichiarate (no-auth dove possibile)
     - Verifica M1-M6
     - Verdict: TEMPLATE_VALID | TEMPLATE_NEEDS_REFINEMENT | DOMAIN_NOT_OF_LEVERAGE
+
+## Pattern hermes — external_apis no-auth
+
+Origine: `nousresearch/hermes-agent` (drug-discovery skill). Pattern:
+ogni lab di **dominio data-centric** dichiara un catalogo di API pubbliche
+no-auth nel proprio MML, e include una **Quick Reference Table** nel
+context.md del lab figlio che mappa direttamente Task → API → Endpoint.
+
+**Perché**: l'agent del lab figlio non perde tempo a "scoprire come
+ottenere dati" al primo cycle. Sa già quali endpoint sono pertinenti
+e li può chiamare via `shell_exec` (curl/python requests) senza
+configurazione. Out-of-box installable = M3 (Tools eseguibili
+out-of-box) passato senza attrito.
+
+### Quando applicare
+
+Domini data-centric tipici e cataloghi suggeriti (non esaustivi —
+proponi quello che il dominio specifico richiede):
+
+| Dominio | API pubbliche no-auth (esempi) | Purpose |
+|---|---|---|
+| **biology / drug-discovery** | PubChem, ChEMBL, OpenTargets, OpenFDA, UniProt, Ensembl REST | compound lookup, target-drug interactions, protein info, FDA adverse events |
+| **finance / markets** | yfinance, FRED API, CoinGecko, World Bank API | quote/historical, macro indicators, crypto prices, country economic data |
+| **security / threat-intel** | MISP feeds pubblici, CIRCL CVE, AbuseIPDB pubblico, Phishtank, OTX AlienVault | indicator-of-compromise lookup, CVE details, IP reputation, phishing URLs |
+| **climate / environment** | NOAA, NASA POWER, OpenWeather (limitato no-auth), WorldClim | weather/climate data, solar/wind, biome classification |
+| **research-papers** | arXiv API, OpenAlex, Crossref, Semantic Scholar | paper metadata, citations graph, abstracts |
+| **geospatial** | OpenStreetMap Overpass, GeoNames, Natural Earth | mappe vettoriali, place names, country boundaries |
+| **media / archive** | Wikipedia API, Wikidata SPARQL, Internet Archive Wayback | structured knowledge, historical web snapshots |
+
+Domini **non data-centric** (lab di funzione, matematica pura, lab
+publishing su archivi interni) hanno `external_apis: []`. Esempi
+attuali: meta-lab, ops-decisions, physics, editorial. Niente da aggiungere.
+
+### Regole di selezione API
+
+1. **No-auth first**: API pubbliche senza credenziali sono preferite.
+   Out-of-box, niente setup, M3 passa al primo cycle.
+2. **Auth-required solo se indispensabile**: se il dominio richiede
+   un'API con auth (es. Twitter API v2, NCBI con email obbligatoria),
+   dichiararla con `auth_required: true` + nota in `purpose` che
+   spiega l'escalation richiesta all'operatore per ottenere credenziali.
+3. **Rate limits documentati**: ogni API ha rate limits — annotarli
+   in `rate_limit_notes` (es. "PubChem: 5 req/s soft limit",
+   "CoinGecko free: 10-50 req/min"). L'agent rispetta i limiti.
+4. **Purpose esplicito per task del lab**: non "PubChem provides
+   compound data", ma "look up canonical SMILES given a compound name
+   for the molecular regularity tension".
+5. **Fallback su synthetic/cached**: se l'API è giù o rate-limited,
+   il template deve avere un fallback dataset locale o synthetic.
+   Niente cycle che si bloccano per network.
+
+### Quick Reference Table — obbligatoria nel context.md del lab figlio
+
+Quando `external_apis` non è vuoto, il `context.md` del lab figlio
+DEVE includere una sezione "Quick Reference — External APIs" con
+tabella Task → Endpoint → Notes. Esempio per biology:
+
+```markdown
+## Quick Reference — External APIs
+
+| Task | Endpoint | Auth | Notes |
+|------|----------|------|-------|
+| Compound by name | `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/aspirin/JSON` | no | PubChem REST |
+| Compound by SMILES | `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/smiles/CC.../JSON` | no | URL-encode SMILES |
+| Target-drug | `https://www.ebi.ac.uk/chembl/api/data/molecule.json?...` | no | ChEMBL bulk JSON |
+| Drug-target assoc | `https://api.platform.opentargets.org/api/v4/...` | no | OpenTargets GraphQL |
+
+Invocazione tipica via shell_exec:
+- `curl -s "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/aspirin/JSON"`
+- `python3 -c "import requests; print(requests.get(URL).json())"`
+```
+
+Questa tabella è il "manuale operativo" del lab — l'agent non deve
+googlare "come si chiama l'API per X" durante il cycle. Pattern
+speculare alla sezione "Tools custom — come invocarli" (Style 1
+shell-invocable): entrambe surfaceano risorse pronte all'uso.
+
+Se M3 falsifier dovesse fallire (es. API tutte auth-required senza
+fallback), proponi cristallizzazione "dominio richiede skill o API
+che il sistema non possiede ancora" — non installare il template.
+Decisione operatore se aggiungere skill/credenziali al kernel.
 
 ## M6 — MML coherence (sesta meta-lente)
 
