@@ -468,6 +468,16 @@ non blocca le prime 2 modalità.
 del meta-lab. Il meta-lab ha bisogno di sapere che esiste il MML per
 generarlo nei lab figli — context.md del meta-lab va esteso prima.
 
+**D6** (cycle 2026-05-04 15:33): primo lab nato autonomamente dal meta-lab.
+Cycle 11min 0-error ha generato `domains/ops-decisions/` (8 file + 2 tools
+custom + MML completo, 10 skills attive 7 runtime + 3 kernel, 9 condensato
+axioms proiettati). Falsifier meta TEMPLATE_VALID 6/6 PASS. Pattern Phase
+2.A → 2.B validato end-to-end. A8 piena + A15 incarnati operativamente.
+Commit `da487c9`. Le 5 cristallizzazioni emerse dal cycle (CORPUS_HAS_
+AXIOMATIC_STRUCTURE, INCIDENT_CORPUS_TOO_SMALL, ...) sono state generate
+dal seed_integrator del cycle stesso, non scritte a mano — il sistema
+cristallizza la propria esperienza autonomamente.
+
 ---
 
 ## 7. Cosa NON facciamo (scope limit)
