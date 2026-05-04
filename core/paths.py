@@ -84,8 +84,23 @@ def domain_config_path(domain: str) -> Path:
 
 
 def domain_context_path(domain: str) -> Path:
-    """Domain content (axioms, condensate, anti-patterns)."""
+    """Domain content (axioms, condensate, anti-patterns) — agent prompt source.
+    NOTA: questo è il file letto dall'agent Claude Code/codex come prompt
+    sistema durante il cycle. NON usare per UI pubblica — vedere
+    domain_about_path() per la copy visitor-facing.
+    """
     return domain_dir(domain) / "context.md"
+
+
+def domain_about_path(domain: str, lang: str = "it") -> Path:
+    """Visitor-facing description (UI dashboard tab Info).
+    Refactor 04/05 — separato da context.md per evitare che il prompt
+    agente appaia in UI pubblica. Lang: 'it' (default) o 'en'.
+    Fallback chain (in get_context_intro): about.<lang>.md → about.md → context.md.
+    """
+    if lang and lang != "it":
+        return domain_dir(domain) / f"about.{lang}.md"
+    return domain_dir(domain) / "about.md"
 
 
 def domain_tools_dir(domain: str) -> Path:

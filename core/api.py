@@ -664,15 +664,33 @@ async def get_report_diff(domain: str, filename: str, request: Request) -> dict[
 
 
 @app.get("/api/domains/{domain}/context_intro")
-async def get_context_intro(domain: str, request: Request) -> dict[str, Any]:
-    """Estrae la prima sezione 'identity' del context.md del dominio.
-    Usato dalla sezione descrittiva top della dashboard ('cosa accade qui').
-    Heuristic: cerca '## Identity' / '## Chi sei' / '## Identita'; se assente,
-    prende il primo paragrafo dopo il titolo H1 (non blockquote)."""
+async def get_context_intro(domain: str, request: Request, lang: str = "it") -> dict[str, Any]:
+    """Estrae la prima sezione 'identity'/'about' del file descrittivo del dominio.
+    Usato dalla dashboard tab Info ('cosa fa questo lab' visitor-facing).
+
+    Refactor 04/05 — fallback chain (priorità):
+      1. domains/<d>/about.<lang>.md (es. about.en.md per lang=en)
+      2. domains/<d>/about.md (it default visitor-facing)
+      3. domains/<d>/context.md (legacy, contiene anche prompt agente)
+
+    Il fallback a context.md è solo per retro-compat: i nuovi domini
+    devono avere about.md per evitare di esporre il prompt agente in UI.
+
+    Heuristic estrazione: cerca '## About' / '## Identity' / '## Chi sei' /
+    '## Identita'; se assente, prende il primo paragrafo dopo il titolo H1.
+    """
     await _check_auth(request)
     _validate_domain(domain)
-    ctx_path = paths.domain_context_path(domain)
-    if not ctx_path.exists():
+
+    # Fallback chain: about.<lang>.md → about.md → context.md
+    candidates = []
+    if lang and lang != "it":
+        candidates.append(paths.domain_about_path(domain, lang))
+    candidates.append(paths.domain_about_path(domain, "it"))
+    candidates.append(paths.domain_context_path(domain))
+
+    ctx_path = next((p for p in candidates if p.exists()), None)
+    if ctx_path is None:
         return {"intro": "", "title": ""}
     text = ctx_path.read_text(errors="replace")
     title_m = re.search(r"^#\s+(.+)$", text, re.MULTILINE)

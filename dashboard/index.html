@@ -952,7 +952,7 @@
             <span class="text-amber-400">●</span>
             <span>Early access</span>
           </button>
-          <p class="text-[10px] text-slate-300 mt-2 leading-relaxed">Il lab e' in collaudo. Per provarlo o adattarlo a un dominio specifico, scrivi.</p>
+          <p class="text-[10px] text-slate-300 mt-2 leading-relaxed" data-i18n="dash.sb.collaudo">Il lab e' in collaudo. Per provarlo o adattarlo a un dominio specifico, scrivi.</p>
         </div>
       </aside>
 
@@ -1704,7 +1704,7 @@
               </div>
               <!-- Quick action: load trace di questo cycle -->
               <button @click="loadCycleTrace(selectedScopertaSsp.cycle_ts)"
-                      class="detail-action text-cyan-300 mt-2">→ Carica trace di questo cycle</button>
+                      class="detail-action text-cyan-300 mt-2" data-i18n="dash.detail.loadTrace">→ Carica trace di questo cycle</button>
             </div>
           </template>
 
@@ -1753,7 +1753,7 @@
                 </div>
               </template>
               <button @click="loadCycleTrace(selectedProdottoSsp.discovery_cycle_ts)"
-                      class="detail-action text-cyan-300 mt-2">→ Carica trace del cycle generatore</button>
+                      class="detail-action text-cyan-300 mt-2" data-i18n="dash.detail.loadTraceGen">→ Carica trace del cycle generatore</button>
             </div>
           </template>
 
@@ -1777,7 +1777,7 @@
                   <button @click="openReportFromNode()" class="detail-action text-purple-300">→ Apri report in Agente</button>
                 </template>
                 <button @click="zoomToSelectedNode()" class="detail-action text-cyan-300" data-i18n="dash.detail.exploreGraph">→ Esplora nel grafo</button>
-                <button @click="askAboutSelectedNode()" class="detail-action text-slate-300">→ Chiedi alla chat</button>
+                <button @click="askAboutSelectedNode()" class="detail-action text-slate-300" data-i18n="dash.detail.askChat">→ Chiedi alla chat</button>
               </div>
             </div>
           </template>
@@ -2415,8 +2415,16 @@
 
       async init() {
         // Listener cambio lingua (i18n.js dispatcha CustomEvent dnd-lang-change)
-        window.addEventListener('dnd-lang-change', (e) => {
+        window.addEventListener('dnd-lang-change', async (e) => {
           this.lang = e.detail.lang;
+          // Re-fetch contenuti language-specific (about.md → tab Info)
+          if (this.activeDomain) {
+            try {
+              this.contextIntro = await fetch(
+                `/api/domains/${this.activeDomain}/context_intro?lang=${encodeURIComponent(this.lang || 'it')}`
+              ).then(r => r.json());
+            } catch (_) { /* noop on fetch fail */ }
+          }
         });
         // Registra plugin Cytoscape (fcose layout — più stabile per grafi
         // piccoli con clustering, refactor 03/05 sera).
@@ -2655,7 +2663,7 @@
       async reloadContextIntro() {
         if (!this.activeDomain) return;
         try {
-          this.contextIntro = await fetch(`/api/domains/${this.activeDomain}/context_intro`).then(r => r.json());
+          this.contextIntro = await fetch(`/api/domains/${this.activeDomain}/context_intro?lang=${encodeURIComponent(this.lang || 'it')}`).then(r => r.json());
         } catch (e) {
           console.error('context intro load failed', e);
           this.contextIntro = { title: '', intro: '' };
