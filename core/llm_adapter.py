@@ -94,6 +94,69 @@ class AdapterConfig:
 # ---------------------------------------------------------------------------
 
 
+# Pre-flight cache (refactor 04/05 — speculare a lab_agent.sh):
+# evita timeout intero per ogni chiamata quando un provider è auth-failed.
+# Reset a None per forzare ricontrollo (es. dopo codex login interattivo).
+_CODEX_PREFLIGHT_OK: bool | None = None
+_CLAUDE_PREFLIGHT_OK: bool | None = None
+
+
+def _claude_preflight_check() -> bool:
+    """30s ping a claude per detect 401/hung silenzioso. Cached."""
+    global _CLAUDE_PREFLIGHT_OK
+    if _CLAUDE_PREFLIGHT_OK is not None:
+        return _CLAUDE_PREFLIGHT_OK
+    if not shutil.which("claude"):
+        _CLAUDE_PREFLIGHT_OK = False
+        return False
+    try:
+        r = subprocess.run(
+            ["claude", "--print", "Reply only: ok"],
+            capture_output=True, text=True, timeout=30,
+        )
+        out = (r.stdout or "") + (r.stderr or "")
+        if any(s.lower() in out.lower() for s in (
+            "401", "unauthorized", "sign in", "please log in", "invalid_grant",
+        )):
+            _CLAUDE_PREFLIGHT_OK = False
+            return False
+        if r.returncode == 0 and not (r.stdout or "").strip():
+            _CLAUDE_PREFLIGHT_OK = False
+            return False
+        _CLAUDE_PREFLIGHT_OK = True
+        return True
+    except (subprocess.TimeoutExpired, FileNotFoundError):
+        _CLAUDE_PREFLIGHT_OK = False
+        return False
+
+
+def _codex_preflight_check() -> bool:
+    """30s ping a codex per detect 401/refresh_token_reused. Cached."""
+    global _CODEX_PREFLIGHT_OK
+    if _CODEX_PREFLIGHT_OK is not None:
+        return _CODEX_PREFLIGHT_OK
+    if not shutil.which("codex"):
+        _CODEX_PREFLIGHT_OK = False
+        return False
+    try:
+        r = subprocess.run(
+            ["codex", "exec", "--skip-git-repo-check", "echo ok"],
+            capture_output=True, text=True, timeout=30,
+        )
+        out = (r.stdout or "") + (r.stderr or "")
+        if any(s in out for s in (
+            "401 Unauthorized", "refresh_token_reused",
+            "token_invalidated", "sign in again",
+        )):
+            _CODEX_PREFLIGHT_OK = False
+            return False
+        _CODEX_PREFLIGHT_OK = True
+        return True
+    except (subprocess.TimeoutExpired, FileNotFoundError):
+        _CODEX_PREFLIGHT_OK = False
+        return False
+
+
 def _run_via_claude_cli(
     system_prompt: str,
     user_message: str,
@@ -112,6 +175,8 @@ def _run_via_claude_cli(
     """
     if not shutil.which("claude"):
         raise RuntimeError("claude CLI not found in PATH")
+    if not _claude_preflight_check():
+        raise RuntimeError("claude CLI pre-flight failed (auth/hung)")
 
     full_prompt = (
         f"{system_prompt}\n\n---\n\n{user_message}" if system_prompt else user_message
@@ -168,6 +233,8 @@ def _run_via_codex_cli(
     """
     if not shutil.which("codex"):
         raise RuntimeError("codex CLI not found in PATH")
+    if not _codex_preflight_check():
+        raise RuntimeError("codex CLI pre-flight failed (auth: refresh_token_reused?)")
 
     full_prompt = (
         f"{system_prompt}\n\n---\n\n{user_message}" if system_prompt else user_message

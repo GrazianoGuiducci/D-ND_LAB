@@ -98,8 +98,68 @@ OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 OPENROUTER_MODEL = os.environ.get("OPENROUTER_MODEL") or os.environ.get("LLM_MODEL", "deepseek/deepseek-v4-pro")
 
 
-def _via_codex_cli(prompt: str, timeout: int) -> str | None:
+# Pre-flight cache (refactor 04/05 — speculare a lab_agent.sh + translate_tensions.py):
+# evita 300s di timeout per ogni chiamata quando un provider è auth-failed.
+_CODEX_PREFLIGHT: bool | None = None
+_CLAUDE_PREFLIGHT: bool | None = None
+
+
+def _codex_preflight() -> bool:
+    global _CODEX_PREFLIGHT
+    if _CODEX_PREFLIGHT is not None:
+        return _CODEX_PREFLIGHT
     if not shutil.which("codex"):
+        _CODEX_PREFLIGHT = False
+        return False
+    try:
+        r = subprocess.run(
+            ["codex", "exec", "--skip-git-repo-check", "echo ok"],
+            capture_output=True, text=True, timeout=30,
+        )
+        out = (r.stdout or "") + (r.stderr or "")
+        if any(s in out for s in (
+            "401 Unauthorized", "refresh_token_reused",
+            "token_invalidated", "sign in again",
+        )):
+            _CODEX_PREFLIGHT = False
+            return False
+        _CODEX_PREFLIGHT = True
+        return True
+    except (subprocess.TimeoutExpired, FileNotFoundError):
+        _CODEX_PREFLIGHT = False
+        return False
+
+
+def _claude_preflight() -> bool:
+    global _CLAUDE_PREFLIGHT
+    if _CLAUDE_PREFLIGHT is not None:
+        return _CLAUDE_PREFLIGHT
+    if not shutil.which("claude"):
+        _CLAUDE_PREFLIGHT = False
+        return False
+    try:
+        r = subprocess.run(
+            ["claude", "--print", "Reply only: ok"],
+            capture_output=True, text=True, timeout=30,
+        )
+        out = (r.stdout or "") + (r.stderr or "")
+        if any(s.lower() in out.lower() for s in (
+            "401", "unauthorized", "sign in", "please log in", "invalid_grant",
+        )):
+            _CLAUDE_PREFLIGHT = False
+            return False
+        if r.returncode == 0 and not (r.stdout or "").strip():
+            _CLAUDE_PREFLIGHT = False
+            return False
+        _CLAUDE_PREFLIGHT = True
+        return True
+    except (subprocess.TimeoutExpired, FileNotFoundError):
+        _CLAUDE_PREFLIGHT = False
+        return False
+
+
+def _via_codex_cli(prompt: str, timeout: int) -> str | None:
+    if not _codex_preflight():
         return None
     try:
         r = subprocess.run(
@@ -114,7 +174,7 @@ def _via_codex_cli(prompt: str, timeout: int) -> str | None:
 
 
 def _via_claude_cli(prompt: str, timeout: int) -> str | None:
-    if not shutil.which("claude"):
+    if not _claude_preflight():
         return None
     try:
         r = subprocess.run(
