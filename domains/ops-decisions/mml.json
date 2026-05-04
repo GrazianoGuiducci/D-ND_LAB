@@ -1,0 +1,133 @@
+{
+  "$schema": "../../mml.schema.json",
+  "lab": "ops-decisions",
+  "version": "0.1.0-alpha",
+
+  "identity": {
+    "type": "function",
+    "level": "ground",
+    "responsibility": "Lab di funzione ground-level che trasforma friction operativa in regole strutturali. Due facce: incident regeneration (Riparazione Regressiva su incident_*.md) e decision archeology (cristallizzazione automatica da corpus decisionale operatore)."
+  },
+
+  "kernel_refs": {
+    "mmsp_entities": [
+      "MMS_Master",
+      "Aethelred_v3.1",
+      "OCC_v1.0",
+      "SACS-PS"
+    ],
+    "kernel_files": [
+      "kernel/reference/Kernel_Semantico_Autopoietico_Reiterativo_KSAR.md",
+      "kernel/reference/MMSP1/D-ND_PrimaryRules.md"
+    ],
+    "condensato_axioms_used": ["A2", "A4", "A5", "A8", "A9", "A10", "A12", "A14", "A15"]
+  },
+
+  "skills_attive": [
+    {
+      "name": "consapevolezza-condensato",
+      "source": ".claude/skills/consapevolezza-condensato.md",
+      "trigger": "on cycle init",
+      "rationale": "Il lab proietta 9 assiomi nel dominio ops. Skill core per riconoscere quale assioma si applica a ogni incident/decisione analizzata.",
+      "category": "identity"
+    },
+    {
+      "name": "cascata",
+      "source": ".claude/skills/cascata.md",
+      "trigger": "after every rule proposal",
+      "rationale": "Ogni regola proposta ha cascata potenziale su tutti i nodi. Il lab deve tracciare dove la regola propagherebbe prima di proporla.",
+      "category": "orchestration"
+    },
+    {
+      "name": "cec",
+      "source": ".claude/skills/cec.md",
+      "trigger": "before declaring candidate rule",
+      "rationale": "Crivello operativo: la regola proposta e davvero dipolare o e descrizione narrativa? CEC filtra prima della proposta.",
+      "category": "logic"
+    },
+    {
+      "name": "autologica-operativa",
+      "source": ".claude/skills/autologica-operativa.md",
+      "trigger": "on every analysis step",
+      "rationale": "Il lab studia il sistema — autologica e il modus fondante. f(f(x)) dove x = decisione operativa.",
+      "category": "cognitive"
+    },
+    {
+      "name": "eval",
+      "source": ".claude/skills/eval.md",
+      "trigger": "after assertions run",
+      "rationale": "Le 6 assertions del lab devono produrre PASS/FAIL/SKIP reali. Eval verifica che il lab non si fidi alla cieca.",
+      "category": "maintenance"
+    },
+    {
+      "name": "capture-insight",
+      "source": ".claude/skills/capture-insight.md",
+      "trigger": "during corpus exploration",
+      "rationale": "Il lab legge ~100 file di memoria. Capture-insight cristallizza i pattern emergenti durante la lettura, non dopo.",
+      "category": "cognitive"
+    },
+    {
+      "name": "auto-learn",
+      "source": ".claude/skills/auto-learn.md",
+      "trigger": "after incident analysis",
+      "rationale": "Dopo aver analizzato un incident, il lab applica Autologica Preventiva — cosa potrebbe rompersi nello stesso modo li vicino? Auto-learn registra il vicinato del bug.",
+      "category": "cognitive"
+    },
+    {
+      "name": "guru",
+      "source": "kernel/reference/skills/agent_skills_guru.md",
+      "trigger": "during decision archaeology",
+      "rationale": "Il lab accede alla memoria operatore. Guru e la skill kernel per applicare conoscenza contestuale dell'operatore alle decisioni analizzate.",
+      "category": "identity"
+    },
+    {
+      "name": "observer",
+      "source": "kernel/reference/skills/agent_skills_observer.md",
+      "trigger": "before any classification",
+      "rationale": "A4 modus: osservare prima di classificare. Observer skill garantisce che il lab legga il territorio (file reali) prima di produrre la mappa (classificazione).",
+      "category": "cognitive"
+    },
+    {
+      "name": "forgia",
+      "source": "kernel/reference/skills/agent_skills_forgia.md",
+      "trigger": "on rule crystallization",
+      "rationale": "Quando un pattern supera il falsifier e diventa regola candidata, forgia lo cristallizza nel formato corretto per proposta all'operatore.",
+      "category": "constructive"
+    }
+  ],
+
+  "tools_custom": [
+    {
+      "name": "exp_incident_regressor",
+      "path": "tools/exp_incident_regressor.py",
+      "description": "Classifica incident come det=+1 (toppa) o det=-1 (fix strutturale). Verifica ricorrenza per famiglia.",
+      "executable_inline": true
+    },
+    {
+      "name": "exp_decision_archaeologist",
+      "path": "tools/exp_decision_archaeologist.py",
+      "description": "Estrae pattern decisionali dal corpus operatore, clusterizza per assioma, propone regole candidate.",
+      "executable_inline": true
+    }
+  ],
+
+  "external_apis": [],
+
+  "modus_invocation": {
+    "cycle_pattern": "corpus_read -> incident_regression -> decision_archaeology -> pattern_clustering -> candidate_rule_proposal -> falsifier(recurrence_check + corpus_match) -> rule_proposal_to_cowork",
+    "skill_invocation_strategy": "lazy",
+    "fallback_provider_chain": ["codex-cli", "claude-cli", "openrouter"],
+    "preferred_runtime": "any"
+  },
+
+  "conoscenza_lab": {
+    "tensioni_attive_count": 5,
+    "cycles_completed": 0,
+    "last_finding": null,
+    "last_cycle_ts": null,
+    "domain_specific_notes": "Generated by meta-lab cycle 20260504_1533. Template validated M1-M6. First live cycle pending."
+  },
+
+  "_generated_by": "meta-lab",
+  "_generated_at": "2026-05-04T15:33:00Z"
+}

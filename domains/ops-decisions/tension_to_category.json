@@ -1,0 +1,27 @@
+{
+  "_meta": {
+    "domain": "ops-decisions",
+    "description": "Mapping from tension types to semantic categories for the ops-decisions domain."
+  },
+  "categories": {
+    "incident_regression": {
+      "description": "Incident analysis via Riparazione Regressiva — tracing symptoms to root nodes",
+      "tension_types": ["confine_inesplorato", "falsificazione"]
+    },
+    "decision_archaeology": {
+      "description": "Pattern extraction from operator memory corpus — crystallization of implicit rules",
+      "tension_types": ["scoperta", "confine_inesplorato"]
+    },
+    "system_hygiene": {
+      "description": "Cascade integrity, desync detection, saturation/hunger regime discrimination",
+      "tension_types": ["confine_inesplorato", "vincolo"]
+    }
+  },
+  "tension_to_category": {
+    "SYMPTOMATIC_VS_REGRESSIVE_FIX": "incident_regression",
+    "DECISION_CRYSTALLIZATION_RATE": "decision_archaeology",
+    "SATURATION_VS_HUNGER": "system_hygiene",
+    "OBSERVE_BEFORE_ACT_DIPOLE": "decision_archaeology",
+    "CASCADE_DESYNC_DETECTION": "system_hygiene"
+  }
+}
