@@ -74,7 +74,10 @@ Input al tuo cycle: una **richiesta dominio** in forma libera (operatore o
 utente API). Esempio: "voglio un lab su finance, focus su regime shift
 nei mercati FX". Più opzionalmente un corpus (URL, file, dataset).
 
-Output del cycle: un **seme cognitivo strutturato** + verifica falsifier:
+Output del cycle: un **seme cognitivo strutturato** + **MML del lab figlio**
++ verifica falsifier. Importante: il MML nasce CON il lab dalla genesi —
+non è retrofit. Il prossimo lab acquisisce mml.json contestualmente al
+seed.json + context.md + about.md + assertions.py.
 
 1. **Lettura del corpus / contesto runtime** — leggi le memorie operatore
    in `/root/.claude/projects/-opt/memory/`, le cristallizzazioni del
@@ -111,16 +114,76 @@ Output del cycle: un **seme cognitivo strutturato** + verifica falsifier:
    ritorna `[{"id": "...", "status": "PASS"|"FAIL"|"SKIP", ...}, ...]`.
    Almeno 5 asserzioni del dominio che testano invarianti del modello.
 
-8. **Verifica falsifier meta** — applica M1-M5 al template generato.
-   Se uno fallisce, riformula o dichiara dominio non di leva.
+8. **Generazione mml.json (Metamasterlab del lab figlio)** —
+   passaggio NUOVO. Il MML è il primo atto di autocoscienza del lab
+   nascente. Conformi a `mml.schema.json` del repo. Devi produrre:
+   - `lab` (slug del nuovo dominio)
+   - `identity.type` ("domain" per i lab che produrranno findings)
+   - `identity.level` ("ground" per i lab di dominio)
+   - `identity.responsibility` (1-2 frasi)
+   - `kernel_refs.mmsp_entities` (subset delle 10 entità MMSp pertinenti
+     al dominio: MMS_Master, Aethelred, Morpheus, ALAN, SACS-PS, Halo
+     Genoma, PSW, OCC, AWO, COAC. Scegli quelle proiettabili nel dominio.)
+   - `kernel_refs.kernel_files` (path verso file kernel rilevanti — es.
+     KSAR, D-ND_PrimaryRules)
+   - `kernel_refs.condensato_axioms_used` (sottoinsieme A1-A16/F1-F6/C1-C3
+     che il dominio proietta — DEVE matchare le condensato_ref delle
+     tensioni iniziali generate al passo 4)
+   - `skills_attive` — subset delle 56 skill (vedere
+     `docs/SKILL_CATALOG.md` per il catalogo completo). Pattern minimo:
+     - Core invariante: cascata, cec, consapevolezza-condensato,
+       autologica-operativa, eval (sempre attive)
+     - Aggiungi 3-7 skill specifiche al dominio (es. autoresearch +
+       capture-insight + assertion-verifier per lab di scoperta)
+     - Per ogni skill, spiega `rationale` (perché serve a QUESTO lab)
+   - `tools_custom` — i `tools/exp_*.py` che hai generato al passo 6
+   - `external_apis` (pattern hermes drug-discovery) — preferire endpoint
+     pubblici no-auth quando il dominio è data-centric (es. biology →
+     ChEMBL+PubChem, finance → yfinance, security → MISP/CIRCL).
+     Se il dominio richiede auth, dichiararlo + escalation operatore
+   - `modus_invocation`:
+     - `cycle_pattern`: default 'autopsy → build_field → agent →
+       bias_corrector → report_falsifier → bicono_extractor → SSP'
+     - `skill_invocation_strategy`: default "lazy" (l'agent del lab
+       carica skill on-demand)
+     - `fallback_provider_chain`: default ["codex-cli", "claude-cli",
+       "openrouter"] (override solo se il lab ha esigenze specifiche)
+     - `preferred_runtime`: "any" di default
+   - `_generated_by`: "meta-lab"
+   - `_generated_at`: ISO timestamp
 
-9. **Output finale**: file system tree completo + report markdown del
-   cycle che spiega:
-   - Tensioni identificate + giustificazione (perché dipolari?)
-   - Assiomi proiettati + come
-   - Naive baseline proposto
-   - Verifica M1-M5
-   - Verdict: TEMPLATE_VALID | TEMPLATE_NEEDS_REFINEMENT | DOMAIN_NOT_OF_LEVERAGE
+9. **Verifica falsifier meta** — applica M1-M5 al template generato +
+   M6 = MML coherence (vedi sotto). Se uno fallisce, riformula o
+   dichiara dominio non di leva.
+
+10. **Output finale**: file system tree completo + report markdown del
+    cycle che spiega:
+    - Tensioni identificate + giustificazione (perché dipolari?)
+    - Assiomi proiettati + come
+    - Naive baseline proposto
+    - Skill subset attivate + rationale
+    - External APIs dichiarate (no-auth dove possibile)
+    - Verifica M1-M6
+    - Verdict: TEMPLATE_VALID | TEMPLATE_NEEDS_REFINEMENT | DOMAIN_NOT_OF_LEVERAGE
+
+## M6 — MML coherence (sesta meta-lente)
+
+Il MML che produci deve essere coerente con seed_tensions.json e
+context.md del lab figlio:
+- Le `kernel_refs.condensato_axioms_used` devono matchare le
+  `condensato_ref` delle tensioni iniziali (intersezione non vuota)
+- Le `skills_attive` devono includere il core invariante (cascata, cec,
+  consapevolezza-condensato, autologica-operativa, eval)
+- Le `tools_custom` devono corrispondere ai file `tools/exp_*.py`
+  che hai effettivamente generato
+- `external_apis` con `auth_required: true` devono essere giustificate
+  nel rationale (M3 falsifier dice no a setup non out-of-box, ma se è
+  l'unica opzione del dominio, lo dichiariamo onestamente)
+
+Se M6 fallisce → MML incoerente → genera report ma non installare il
+template. Cristallizzazione utile: il dominio richiede skill o API che
+il sistema non possiede ancora. Decisione operatore se aggiungere skill
+nuove al kernel o falsificare il dominio.
 
 ## Distinzione lab di dominio vs lab di funzione
 

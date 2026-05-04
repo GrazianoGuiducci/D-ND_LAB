@@ -275,6 +275,81 @@ def _check_m5_auto_increment(template_dir: Path) -> dict[str, Any]:
     }
 
 
+# ─── M6: MML coherence ───────────────────────────────────────────
+
+def _check_m6_mml_coherence(template_dir: Path) -> dict[str, Any]:
+    """Verifica coerenza tra mml.json e seed_tensions.json + tools/.
+    - mml.json esiste (richiesto per lab generati dal meta-lab)
+    - lab field matcha directory name
+    - kernel_refs.condensato_axioms_used interseca tensioni condensato_ref
+    - skills_attive include core invariante
+    - tools_custom esistono nei file system
+    """
+    mml_file = template_dir / "mml.json"
+    if not mml_file.exists():
+        # Lab pre-meta-lab senza MML: non bloccante, ma SKIP
+        return {
+            "id": "M6",
+            "status": "SKIP",
+            "detail": "mml.json mancante (lab pre-meta-lab o retrofit pendente)",
+            "metric": 0,
+        }
+    try:
+        mml = json.loads(mml_file.read_text())
+    except Exception as e:
+        return {"id": "M6", "status": "FAIL", "detail": f"mml.json parse error: {e}",
+                "metric": 0}
+
+    issues = []
+    # lab matcha directory
+    if mml.get("lab") != template_dir.name:
+        issues.append(f"lab='{mml.get('lab')}' ≠ dir='{template_dir.name}'")
+    # required fields
+    for fld in ("identity", "kernel_refs", "skills_attive", "modus_invocation"):
+        if fld not in mml:
+            issues.append(f"campo richiesto mancante: {fld}")
+    # kernel_refs vs tensioni
+    seed_file = template_dir / "seed_tensions.json"
+    if seed_file.exists():
+        try:
+            seed = json.loads(seed_file.read_text())
+            tensioni_refs = set()
+            for t in seed.get("tensioni", []):
+                ref = t.get("condensato_ref")
+                if ref:
+                    for r in ref.split(","):
+                        tensioni_refs.add(r.strip())
+            mml_axioms = set(mml.get("kernel_refs", {}).get("condensato_axioms_used", []) or [])
+            if tensioni_refs and mml_axioms and not tensioni_refs.intersection(mml_axioms):
+                issues.append(f"kernel_refs.condensato_axioms_used {sorted(mml_axioms)} "
+                              f"non interseca tensioni refs {sorted(tensioni_refs)}")
+        except Exception:
+            pass
+    # core skills invariante
+    skills = [s.get("name") for s in mml.get("skills_attive", []) if isinstance(s, dict)]
+    core_invariant = {"cascata", "cec", "consapevolezza-condensato",
+                      "autologica-operativa", "eval"}
+    missing_core = core_invariant - set(skills)
+    # Per il meta-lab stesso e i lab pre-existing, alcune mancanze sono OK
+    if template_dir.name in ("meta-lab", "physics", "editorial") and len(missing_core) <= 3:
+        pass  # tollerato per lab esistenti
+    elif missing_core:
+        issues.append(f"core invariante mancante: {sorted(missing_core)}")
+    # tools_custom path verification
+    for tc in mml.get("tools_custom", []) or []:
+        if isinstance(tc, dict) and "path" in tc:
+            tp = template_dir / tc["path"]
+            if not tp.exists():
+                issues.append(f"tools_custom path non esiste: {tc['path']}")
+
+    if not issues:
+        return {"id": "M6", "status": "PASS",
+                "detail": f"MML coerente con seed+tools+core ({len(skills)} skills attive)",
+                "metric": len(skills)}
+    return {"id": "M6", "status": "FAIL",
+            "detail": "; ".join(issues), "metric": 0}
+
+
 # ─── Verifica top-level (interfaccia standard) ───────────────────
 
 def verifica_asserzioni() -> list[dict[str, Any]]:
@@ -293,6 +368,7 @@ def verifica_asserzioni() -> list[dict[str, Any]]:
         _check_m3_tools_runnable(template_dir),
         _check_m4_naive_baseline(template_dir),
         _check_m5_auto_increment(template_dir),
+        _check_m6_mml_coherence(template_dir),
     ]
 
 

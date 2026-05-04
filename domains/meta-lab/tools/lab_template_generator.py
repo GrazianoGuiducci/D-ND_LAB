@@ -56,6 +56,7 @@ SLUG_FIELDS_REQUIRED = {
     "seed_tensions_json",
     "tension_to_category_json",
     "assertions_py",
+    "mml_json",  # Refactor P2.A.5: MML nasce con il lab dalla genesi
 }
 
 
@@ -77,6 +78,17 @@ def validate_specs(specs: dict[str, Any]) -> list[str]:
         errors.append("seed_tensions_json deve essere dict")
     elif len(seed.get("tensioni", [])) < 3:
         errors.append("seed_tensions_json deve avere ≥3 tensioni iniziali")
+    # mml_json deve avere campi minimi (refactor P2.A.5)
+    mml = specs.get("mml_json", {})
+    if not isinstance(mml, dict):
+        errors.append("mml_json deve essere dict")
+    else:
+        for fld in ("lab", "version", "identity", "kernel_refs",
+                    "skills_attive", "modus_invocation"):
+            if fld not in mml:
+                errors.append(f"mml_json manca campo richiesto: {fld}")
+        if mml.get("lab") and slug and mml["lab"] != slug:
+            errors.append(f"mml_json.lab='{mml.get('lab')}' != domain_slug='{slug}'")
     return errors
 
 
@@ -133,6 +145,9 @@ def write_template(specs: dict[str, Any], dry_run: bool = False, force: bool = F
     files_to_write.append((target_dir / "tension_to_category.json",
                            json.dumps(specs["tension_to_category_json"], indent=2, ensure_ascii=False) + "\n"))
     files_to_write.append((target_dir / "assertions.py", specs["assertions_py"]))
+    # mml.json (refactor P2.A.5: MML nasce con il lab dalla genesi)
+    files_to_write.append((target_dir / "mml.json",
+                           json.dumps(specs["mml_json"], indent=2, ensure_ascii=False) + "\n"))
 
     # Optional: tools/exp_*.py iniziali
     for exp in specs.get("tools_exp_files", []) or []:
