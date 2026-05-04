@@ -1701,7 +1701,7 @@
               </div>
               <!-- Quick action: load trace di questo cycle -->
               <button @click="loadCycleTrace(selectedScopertaSsp.cycle_ts)"
-                      class="detail-action text-cyan-300 mt-2" data-i18n="dash.detail.loadTrace">→ Carica trace di questo cycle</button>
+                      class="detail-action text-cyan-300 mt-2" x-text="t('dash.detail.loadTrace', '→ Carica trace di questo cycle')">→ Carica trace di questo cycle</button>
             </div>
           </template>
 
@@ -1750,7 +1750,7 @@
                 </div>
               </template>
               <button @click="loadCycleTrace(selectedProdottoSsp.discovery_cycle_ts)"
-                      class="detail-action text-cyan-300 mt-2" data-i18n="dash.detail.loadTraceGen">→ Carica trace del cycle generatore</button>
+                      class="detail-action text-cyan-300 mt-2" x-text="t('dash.detail.loadTraceGen', '→ Carica trace del cycle generatore')">→ Carica trace del cycle generatore</button>
             </div>
           </template>
 
@@ -1771,10 +1771,10 @@
               </template>
               <div class="space-y-1.5">
                 <template x-if="selectedNode.type === 'report' && selectedNodeFilename()">
-                  <button @click="openReportFromNode()" class="detail-action text-purple-300">→ Apri report in Agente</button>
+                  <button @click="openReportFromNode()" class="detail-action text-purple-300" x-text="t('dash.detail.openReport', '→ Apri report in Agente')">→ Apri report in Agente</button>
                 </template>
-                <button @click="zoomToSelectedNode()" class="detail-action text-cyan-300" data-i18n="dash.detail.exploreGraph">→ Esplora nel grafo</button>
-                <button @click="askAboutSelectedNode()" class="detail-action text-slate-300" data-i18n="dash.detail.askChat">→ Chiedi alla chat</button>
+                <button @click="zoomToSelectedNode()" class="detail-action text-cyan-300" x-text="t('dash.detail.exploreGraph', '→ Esplora nel grafo')">→ Esplora nel grafo</button>
+                <button @click="askAboutSelectedNode()" class="detail-action text-slate-300" x-text="t('dash.detail.askChat', '→ Chiedi alla chat')">→ Chiedi alla chat</button>
               </div>
             </div>
           </template>
@@ -2414,14 +2414,21 @@
         // Listener cambio lingua (i18n.js dispatcha CustomEvent dnd-lang-change)
         window.addEventListener('dnd-lang-change', async (e) => {
           this.lang = e.detail.lang;
-          // Re-fetch contenuti language-specific (about.md → tab Info)
+          // Re-fetch contenuti language-specific al cambio lingua:
+          // 1. about.md → tab Info (via context_intro endpoint con ?lang=)
+          // 2. seed.json → sidebar Detail Seed (per pickup direzione_en se aggiunta server-side)
+          // 3. domains list → home view domain card hero (per pickup direzione_en)
           if (this.activeDomain) {
             try {
               this.contextIntro = await fetch(
                 `/api/domains/${this.activeDomain}/context_intro?lang=${encodeURIComponent(this.lang || 'it')}`
               ).then(r => r.json());
+              this.seed = await fetch(`/api/domains/${this.activeDomain}/seed`).then(r => r.json());
             } catch (_) { /* noop on fetch fail */ }
           }
+          try {
+            this.domains = await fetch('/api/domains').then(r => r.json());
+          } catch (_) { /* noop */ }
         });
         // Registra plugin Cytoscape (fcose layout — più stabile per grafi
         // piccoli con clustering, refactor 03/05 sera).
