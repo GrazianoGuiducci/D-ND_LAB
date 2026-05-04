@@ -857,10 +857,10 @@
           <div class="rz-grip"></div>
         </div>
         <!-- v#8 — title verticale visible solo quando collapsed -->
-        <div class="sb-title-vertical">CAMPO</div>
+        <div class="sb-title-vertical" data-i18n="dash.sb.campoVertical">CAMPO</div>
         <!-- Su mobile, il toggle desktop e' nascosto e si usa questo close X -->
         <div class="flex items-center justify-between mb-2" style="margin-top:-4px">
-          <h3 class="text-xs uppercase tracking-wider text-slate-300 mt-1" x-show="sidebarLeftOpen || mobileDrawer === 'left'">Campo</h3>
+          <h3 class="text-xs uppercase tracking-wider text-slate-300 mt-1" x-show="sidebarLeftOpen || mobileDrawer === 'left'" data-i18n="dash.sb.campo">Campo</h3>
           <button @click="closeMobileDrawer()" class="mobile-close-btn text-slate-400 hover:text-slate-200 px-2 py-1 rounded text-base" title="Chiudi">×</button>
         </div>
         <div x-show="sidebarLeftOpen || mobileDrawer === 'left'" class="pt-1">
@@ -877,13 +877,13 @@
           </div>
 
           <!-- Freschezza -->
-          <h4 class="text-xs uppercase tracking-wider text-slate-300 mt-5 mb-2">Freschezza</h4>
+          <h4 class="text-xs uppercase tracking-wider text-slate-300 mt-5 mb-2" data-i18n="dash.sb.freschezza">Freschezza</h4>
           <div class="space-y-0">
             <div class="stat-row" @mouseenter="showStatTip('oggi', $event)" @mouseleave="hideStatTip()"><span class="text-slate-400" data-i18n="dash.stats.oggi">oggi</span><span class="stat-num text-green-400" x-text="freshnessStats().today"></span></div>
             <div class="stat-row" @mouseenter="showStatTip('fresche', $event)" @mouseleave="hideStatTip()"><span class="text-slate-400" data-i18n="dash.stats.fresche">fresche (7d)</span><span class="stat-num text-cyan-400" x-text="freshnessStats().fresh"></span></div>
             <div class="stat-row" @mouseenter="showStatTip('ghost', $event)" @mouseleave="hideStatTip()"><span class="text-slate-400" data-i18n="dash.stats.ghost">ghost urgenti</span><span class="stat-num text-amber-400" x-text="freshnessStats().ghosts"></span></div>
             <div class="stat-row cursor-pointer hover:bg-slate-800/40 -mx-1 px-1 rounded" @click="activeTab = 'agente'; reportsFilter = 'cimitero'" @mouseenter="showStatTip('cimitero', $event)" @mouseleave="hideStatTip()">
-              <span class="text-slate-400">🪦 cimitero</span>
+              <span class="text-slate-400">🪦 <span data-i18n="dash.stats.cimitero">cimitero</span></span>
               <span class="stat-num text-slate-300" x-text="cimiteroCount()"></span>
             </div>
           </div>
@@ -891,8 +891,8 @@
           <!-- v4.8 — Counter-pole (falsifier per-lens summary) -->
           <template x-if="falsifierSummary.n_total_flags > 0">
             <div>
-              <h4 class="text-xs uppercase tracking-wider text-slate-300 mt-5 mb-2">Counter-pole</h4>
-              <div class="text-[10px] text-slate-300 mb-2" x-text="`${falsifierSummary.n_total_flags} flag su ${falsifierSummary.n_reports_checked} report`"></div>
+              <h4 class="text-xs uppercase tracking-wider text-slate-300 mt-5 mb-2" data-i18n="dash.sb.counterPole">Counter-pole</h4>
+              <div class="text-[10px] text-slate-300 mb-2" x-text="`${falsifierSummary.n_total_flags} ${t('dash.sb.flagOn', 'flag su')} ${falsifierSummary.n_reports_checked} ${t('dash.sb.reports', 'report')}`"></div>
               <div class="space-y-1">
                 <template x-for="lens in ['L1','L2','L3','L4','L5']" :key="lens">
                   <div class="flex items-center justify-between gap-1.5 text-[11px]">
@@ -913,35 +913,35 @@
           <!-- v4.9 — Bias corrector (A8 autologica interna pre-falsifier) -->
           <template x-if="correctorSummary.n_total_applied > 0">
             <div>
-              <h4 class="text-xs uppercase tracking-wider text-slate-300 mt-5 mb-2">Bias corrector</h4>
-              <div class="text-[10px] text-slate-300 mb-2" x-text="`${correctorSummary.n_total_applied} riformulati / ${correctorSummary.n_total_proposed} proposti su ${correctorSummary.n_reports_checked} report`"></div>
+              <h4 class="text-xs uppercase tracking-wider text-slate-300 mt-5 mb-2" data-i18n="dash.sb.biasCorrector">Bias corrector</h4>
+              <div class="text-[10px] text-slate-300 mb-2" x-text="`${correctorSummary.n_total_applied} ${t('dash.sb.riformulati', 'riformulati')} / ${correctorSummary.n_total_proposed} ${t('dash.sb.proposiOn', 'proposti su')} ${correctorSummary.n_reports_checked} ${t('dash.sb.reports', 'report')}`"></div>
               <div class="space-y-1">
                 <template x-for="lens in ['L1','L3','L4']" :key="lens">
                   <div class="flex items-center justify-between gap-1.5 text-[11px]">
                     <span class="font-mono text-slate-300" x-text="lens"></span>
-                    <span class="text-slate-300 truncate flex-1" x-text="lens === 'L1' ? 'Assoluti su dati biased' : lens === 'L3' ? 'Silent patching' : 'Edge case rounded'"></span>
+                    <span class="text-slate-300 truncate flex-1" x-text="t(`dash.sb.bcLens.${lens}`, lens === 'L1' ? 'Assoluti su dati biased' : lens === 'L3' ? 'Silent patching' : 'Edge case rounded')"></span>
                     <span class="font-mono text-emerald-300" x-text="correctorSummary.by_lens?.[lens] || 0"></span>
                   </div>
                 </template>
               </div>
-              <div class="text-[9px] text-slate-300 mt-2 italic">A8 autologica — pre-falsifier</div>
+              <div class="text-[9px] text-slate-300 mt-2 italic" data-i18n="dash.sb.a8note">A8 autologica — pre-falsifier</div>
             </div>
           </template>
 
           <!-- Legenda -->
-          <h4 class="text-xs uppercase tracking-wider text-slate-300 mt-5 mb-2">Legenda</h4>
+          <h4 class="text-xs uppercase tracking-wider text-slate-300 mt-5 mb-2" data-i18n="dash.sb.legenda">Legenda</h4>
           <div class="space-y-1.5 text-xs text-slate-400">
-            <div class="flex items-center gap-2" @mouseenter="showStatTip('legend_tensione', $event)" @mouseleave="hideStatTip()"><i class="legend-dot" style="background:#22d3ee"></i> tensione</div>
-            <div class="flex items-center gap-2" @mouseenter="showStatTip('legend_report', $event)" @mouseleave="hideStatTip()"><i class="legend-dot" style="background:#a78bfa"></i> report</div>
-            <div class="flex items-center gap-2" @mouseenter="showStatTip('legend_teoria', $event)" @mouseleave="hideStatTip()"><i class="legend-dot" style="background:#34d399"></i> teoria</div>
-            <div class="flex items-center gap-2" @mouseenter="showStatTip('legend_ghost', $event)" @mouseleave="hideStatTip()"><i class="legend-dot" style="background:#fbbf24"></i> ghost</div>
-            <div class="flex items-center gap-2" @mouseenter="showStatTip('legend_scoperta', $event)" @mouseleave="hideStatTip()"><i class="legend-dot" style="background:#f472b6"></i> scoperta</div>
+            <div class="flex items-center gap-2" @mouseenter="showStatTip('legend_tensione', $event)" @mouseleave="hideStatTip()"><i class="legend-dot" style="background:#22d3ee"></i> <span data-i18n="dash.sb.legend.tensione">tensione</span></div>
+            <div class="flex items-center gap-2" @mouseenter="showStatTip('legend_report', $event)" @mouseleave="hideStatTip()"><i class="legend-dot" style="background:#a78bfa"></i> <span data-i18n="dash.sb.legend.report">report</span></div>
+            <div class="flex items-center gap-2" @mouseenter="showStatTip('legend_teoria', $event)" @mouseleave="hideStatTip()"><i class="legend-dot" style="background:#34d399"></i> <span data-i18n="dash.sb.legend.teoria">teoria</span></div>
+            <div class="flex items-center gap-2" @mouseenter="showStatTip('legend_ghost', $event)" @mouseleave="hideStatTip()"><i class="legend-dot" style="background:#fbbf24"></i> <span data-i18n="dash.sb.legend.ghost">ghost</span></div>
+            <div class="flex items-center gap-2" @mouseenter="showStatTip('legend_scoperta', $event)" @mouseleave="hideStatTip()"><i class="legend-dot" style="background:#f472b6"></i> <span data-i18n="dash.sb.legend.scoperta">scoperta</span></div>
           </div>
 
           <!-- Label toggle -->
           <label class="flex items-center gap-2 mt-5 text-xs text-slate-400 cursor-pointer">
             <input type="checkbox" x-model="showAllLabels" @change="updateGraphLabels()">
-            <span>Mostra tutti i nomi</span>
+            <span data-i18n="dash.sb.showLabels">Mostra tutti i nomi</span>
           </label>
 
           <!-- Run cycle disabled in production demo (29/04). Sostituito da CTA early access
@@ -964,8 +964,8 @@
           <div class="bg-slate-900 border border-slate-800 rounded-lg p-4">
             <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
               <h2 class="text-lg font-medium flex items-center gap-2">
-                <span>Knowledge graph</span>
-                <span class="text-xs text-slate-300 font-mono" x-show="graphStats.n_nodes !== undefined" x-text="`${graphStats.n_nodes ?? 0} nodes · ${graphStats.n_edges ?? 0} edges`"></span>
+                <span data-i18n="dash.graph.kg">Knowledge graph</span>
+                <span class="text-xs text-slate-300 font-mono" x-show="graphStats.n_nodes !== undefined" x-text="`${graphStats.n_nodes ?? 0} ${t('dash.graph.nodes', 'nodes')} · ${graphStats.n_edges ?? 0} ${t('dash.graph.edges', 'edges')}`"></span>
               </h2>
               <div class="flex items-center gap-2">
                 <template x-if="selectedNode">
@@ -976,7 +976,7 @@
                 </template>
                 <button @click="resetGraphLayout()" class="text-xs px-2 py-1 rounded bg-slate-800 hover:bg-slate-700" title="Relayout">↻</button>
                 <button @click="setGraphFullscreen(true)" class="text-xs px-2 py-1 rounded bg-slate-800 hover:bg-slate-700" title="Fullscreen (F)">⛶</button>
-                <button @click="reloadGraph().then(() => renderGraph())" class="text-xs text-slate-300 hover:text-slate-300">refresh</button>
+                <button @click="reloadGraph().then(() => renderGraph())" class="text-xs text-slate-300 hover:text-slate-300" data-i18n="dash.graph.refresh">refresh</button>
               </div>
             </div>
             <div class="graph-viz-wrap" :class="graphFullscreen && 'fullscreen'">
@@ -990,7 +990,7 @@
               <button x-show="graphFullscreen" @click="setGraphFullscreen(false)" class="graph-fs-close">✕ Esci (ESC)</button>
             </div>
             <div class="graph-legend">
-              <span class="text-slate-300 italic">Click su un nodo → contesto chat + dettaglio destra</span>
+              <span class="text-slate-300 italic" data-i18n="dash.graph.clickNode">Click su un nodo → contesto chat + dettaglio destra</span>
             </div>
           </div>
         </div>
@@ -1229,10 +1229,10 @@
                         class="px-3 py-1 rounded text-xs font-medium transition">↗ Trajectory</button>
               </div>
               <div class="flex items-center gap-2" x-show="incrocioMode === 'taxonomy'">
-                <span class="text-xs text-slate-300 font-mono" x-text="`${taxonomyMeta.n_groups || 0} gruppi · ${taxonomyMeta.n_nodes || 0} nodi · ${taxonomyMeta.n_bridges || 0} ponti`"></span>
+                <span class="text-xs text-slate-300 font-mono" x-text="`${taxonomyMeta.n_groups || 0} ${t('dash.tax.gruppi', 'gruppi')} · ${taxonomyMeta.n_nodes || 0} ${t('dash.tax.nodi', 'nodi')} · ${taxonomyMeta.n_bridges || 0} ${t('dash.tax.ponti', 'ponti')}`"></span>
                 <button @click="if (cyTax) { cyTax.layout({name: typeof cytoscapeFcose !== 'undefined' ? 'fcose' : 'cose', animate:true, animationDuration:600, quality:'proof', randomize:true, fit:true, padding:80, nodeRepulsion:8000, idealEdgeLength:90, edgeElasticity:0.45, gravity:0.3, gravityCompound:1.0, gravityRangeCompound:1.5, gravityRange:3.8, nestingFactor:0.1, numIter:2500, tile:true, tilingPaddingVertical:30, tilingPaddingHorizontal:30}).run(); setTimeout(() => cyTax && cyTax.fit(undefined, 60), 700); }" class="text-xs px-2 py-1 rounded bg-slate-800 hover:bg-slate-700" title="Relayout (fcose, spaziatura ottimale)">↻</button>
                 <button @click="taxonomyFullscreen = !taxonomyFullscreen; $nextTick(() => { if (cyTax) { cyTax.resize(); cyTax.fit(undefined, taxonomyFullscreen ? 50 : 30); } })" class="text-xs px-2 py-1 rounded bg-slate-800 hover:bg-slate-700" title="Fullscreen">⛶</button>
-                <button @click="reloadTaxonomy().then(() => renderTaxonomy())" class="text-xs text-slate-300 hover:text-slate-300">refresh</button>
+                <button @click="reloadTaxonomy().then(() => renderTaxonomy())" class="text-xs text-slate-300 hover:text-slate-300" data-i18n="dash.graph.refresh">refresh</button>
               </div>
               <div class="flex items-center gap-2" x-show="incrocioMode === 'trajectory'">
                 <span class="text-xs text-slate-300 font-mono" x-text="`${reports.length} cicli`"></span>
@@ -1668,7 +1668,7 @@
           <div class="rz-grip"></div>
         </div>
         <!-- v#8 — title verticale visible solo quando collapsed -->
-        <div class="sb-title-vertical">DETTAGLIO</div>
+        <div class="sb-title-vertical" data-i18n="dash.sb.dettaglio">DETTAGLIO</div>
         <div class="flex items-center justify-between mb-2" style="margin-top:-4px">
           <button @click="closeMobileDrawer()" class="mobile-close-btn text-slate-400 hover:text-slate-200 px-2 py-1 rounded text-base" title="Chiudi">×</button>
           <h3 class="text-xs uppercase tracking-wider text-slate-300 mt-1 ml-auto" x-show="sidebarRightOpen || mobileDrawer === 'right'">Dettaglio</h3>
@@ -1678,7 +1678,7 @@
           <!-- Empty state contestuale: dipende dal tab attivo. -->
           <template x-if="!selectedNode && !selectedScopertaSsp && !selectedProdottoSsp">
             <p class="text-slate-300 text-xs italic py-4"
-               x-text="activeTab === 'prodotti' ? 'Click su una scoperta o prodotto per vedere il dettaglio qui.' : (activeTab === 'grafo' ? 'Click su un nodo del grafo per vedere il dettaglio qui.' : (activeTab === 'agente' ? 'Apri un report per vedere il dettaglio del cycle qui.' : 'Seleziona un elemento per vedere il dettaglio qui.'))"></p>
+               x-text="activeTab === 'prodotti' ? t('dash.detail.click.scoperta', 'Click su una scoperta o prodotto per vedere il dettaglio qui.') : (activeTab === 'grafo' ? t('dash.detail.click.grafo', 'Click su un nodo del grafo per vedere il dettaglio qui.') : (activeTab === 'agente' ? t('dash.detail.click.agente', 'Apri un report per vedere il dettaglio del cycle qui.') : t('dash.detail.click.default', 'Seleziona un elemento per vedere il dettaglio qui.')))"></p>
           </template>
 
           <!-- Dettaglio scoperta SSP selezionata (tab Prodotti) -->
@@ -1776,7 +1776,7 @@
                 <template x-if="selectedNode.type === 'report' && selectedNodeFilename()">
                   <button @click="openReportFromNode()" class="detail-action text-purple-300">→ Apri report in Agente</button>
                 </template>
-                <button @click="zoomToSelectedNode()" class="detail-action text-cyan-300">→ Esplora nel grafo</button>
+                <button @click="zoomToSelectedNode()" class="detail-action text-cyan-300" data-i18n="dash.detail.exploreGraph">→ Esplora nel grafo</button>
                 <button @click="askAboutSelectedNode()" class="detail-action text-slate-300">→ Chiedi alla chat</button>
               </div>
             </div>
@@ -1790,7 +1790,7 @@
             <div>
               <h4 class="text-xs uppercase tracking-wider text-slate-300 mt-5 mb-2">Seed</h4>
               <div class="text-xs space-y-1 text-slate-400">
-                <div><span class="text-slate-300">piano:</span> <span class="font-mono text-cyan-400" x-text="seed.piano ?? '?'"></span></div>
+                <div><span class="text-slate-300" data-i18n="dash.detail.piano">piano:</span> <span class="font-mono text-cyan-400" x-text="seed.piano ?? '?'"></span></div>
                 <div class="italic line-clamp-3" x-text="seed.direzione || '—'"></div>
               </div>
             </div>
@@ -1972,11 +1972,11 @@
          x-data>
       <template x-if="hoverNode">
         <div>
-          <span class="nt-type" :class="`chip-type-${hoverNode?.type}`" x-text="hoverNode?.type || '?'"></span>
+          <span class="nt-type" :class="`chip-type-${hoverNode?.type}`" x-text="hoverNode?.type ? t(`dash.nodeType.${hoverNode.type}`, hoverNode.type) : '?'"></span>
           <div class="nt-title" x-text="hoverNode?.label || hoverNode?.id"></div>
           <div class="nt-meta">
             <template x-if="hoverNode?.intensity !== undefined && hoverNode?.intensity !== null">
-              <span x-text="`intensity ${((hoverNode?.intensity||0)*100).toFixed(0)}%`"></span>
+              <span x-text="`${t('dash.tooltip.intensity', 'intensity')} ${((hoverNode?.intensity||0)*100).toFixed(0)}%`"></span>
             </template>
             <template x-if="hoverNode?.maturity">
               <span x-text="` · ${hoverNode?.maturity}`"></span>
@@ -1990,10 +1990,10 @@
           </template>
           <div class="nt-actions">
             <template x-if="hoverNode?.type === 'report' && (hoverNode?.file || hoverNode?.filename)">
-              <button class="nt-action" @click="openReportFromHover()">→ Apri</button>
+              <button class="nt-action" @click="openReportFromHover()" x-text="t('dash.tooltip.apri', '→ Apri')"></button>
             </template>
-            <button class="nt-action" @click="zoomToHover()">→ Esplora</button>
-            <button class="nt-action" @click="askAboutHover()">→ Chat</button>
+            <button class="nt-action" @click="zoomToHover()" x-text="t('dash.tooltip.esplora', '→ Esplora')"></button>
+            <button class="nt-action" @click="askAboutHover()" x-text="t('dash.tooltip.chat', '→ Chat')"></button>
           </div>
         </div>
       </template>
