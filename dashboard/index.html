@@ -1275,7 +1275,7 @@
             <!-- Mode: Trajectory — timeline cronologico dei cicli -->
             <div x-show="incrocioMode === 'trajectory'">
               <div class="mb-3">
-                <p class="text-xs text-slate-300">Sequenza dei cicli. Equispaced (la spaziatura è ordinale, non temporale — risolve l'ammasso quando i cicli si concentrano in giornate vicine). Click su card → apri il report.</p>
+                <p class="text-xs text-slate-300" data-i18n="dash.tax.trajectoryDesc">Sequenza dei cicli. Equispaced (la spaziatura è ordinale, non temporale — risolve l'ammasso quando i cicli si concentrano in giornate vicine). Click su card → apri il report.</p>
               </div>
 
               <template x-if="reports.length === 0">
@@ -1553,70 +1553,67 @@
             <div class="border-t border-slate-800 pt-4">
               <h3 class="text-sm font-medium text-purple-300 mb-2" data-i18n="dash.info.howRead">Come si legge la dashboard</h3>
               <ul class="text-sm text-slate-300 space-y-2 list-disc list-inside">
-                <li><strong data-i18n="dash.info.itemGrafo">Grafo</strong> — knowledge graph del dominio. Click su un nodo apre il dettaglio a destra; tooltip al hover con azioni rapide.</li>
-                <li><strong data-i18n="dash.info.itemBicono">Bicono</strong> — galleria delle scoperte: 4 poli (radici/singolare/invariante/campo) parsati dal report.</li>
-                <li><strong data-i18n="dash.info.itemAgente">Agente</strong> — lista cicli con verdict + flag dal counter-pole. Filter Cimitero per i report falsificati.</li>
-                <li><strong data-i18n="dash.info.itemTassonomia">Tassonomia</strong> — grafo d'insieme aggregato per pillar/type, con sub-mode Trajectory (timeline cronologica).</li>
-                <li><strong data-i18n="dash.info.itemProdotti">Prodotti</strong> — pipeline SSP (vedi sotto). Card per scoperta espandibile con applicazioni candidate, findings esclusi (review_required + skip), prodotti maturi con metriche A/B.</li>
-                <li><strong>Sidebar Dettaglio</strong> (destra) — info contestuali al tab attivo: dettaglio nodo selezionato (Grafo), seed corrente, e <em>cycle trace</em> in Info/Agente/Prodotti (timeline movements del cycle: status + durata + ssp_pipeline_status, da <code>cycle_trace_*.json</code>).</li>
-                <li><strong data-i18n="dash.info.itemChat">Chat</strong> (icona viola in basso a destra) — il lab risponde, può anche proporre azioni (inject tension, run cycle) che richiedono conferma.</li>
+                <li><strong data-i18n="dash.info.itemGrafo">Grafo</strong> — <span data-i18n="dash.info.body.grafo">knowledge graph del dominio. Click su un nodo apre il dettaglio a destra; tooltip al hover con azioni rapide.</span></li>
+                <li><strong data-i18n="dash.info.itemBicono">Bicono</strong> — <span data-i18n="dash.info.body.bicono">galleria delle scoperte: 4 poli (radici/singolare/invariante/campo) parsati dal report.</span></li>
+                <li><strong data-i18n="dash.info.itemAgente">Agente</strong> — <span data-i18n="dash.info.body.agente">lista cicli con verdict + flag dal counter-pole. Filter Cimitero per i report falsificati.</span></li>
+                <li><strong data-i18n="dash.info.itemTassonomia">Tassonomia</strong> — <span data-i18n="dash.info.body.tassonomia">grafo d'insieme aggregato per pillar/type, con sub-mode Trajectory (timeline cronologica).</span></li>
+                <li><strong data-i18n="dash.info.itemProdotti">Prodotti</strong> — <span data-i18n="dash.info.body.prodotti">pipeline SSP (vedi sotto). Card per scoperta espandibile con applicazioni candidate, findings esclusi (review_required + skip), prodotti maturi con metriche A/B.</span></li>
+                <li><strong data-i18n="dash.info.body.sidebar.h">Sidebar Dettaglio</strong> <span data-i18n="dash.info.body.sidebar.suffix">(destra) — info contestuali al tab attivo: dettaglio nodo selezionato (Grafo), seed corrente, e cycle trace in Info/Agente/Prodotti (timeline movements del cycle: status + durata + ssp_pipeline_status, da cycle_trace_*.json).</span></li>
+                <li><strong data-i18n="dash.info.itemChat">Chat</strong> <span data-i18n="dash.info.body.chat.suffix">(icona viola in basso a destra) — il lab risponde, può anche proporre azioni (inject tension, run cycle) che richiedono conferma.</span></li>
               </ul>
             </div>
 
             <!-- Pipeline SSP — sezione dedicata, descrive il flusso scoperta → prodotto -->
             <div id="info-ssp" class="border-t border-slate-800 pt-4">
               <h3 class="text-sm font-medium text-purple-300 mb-2" data-i18n="dash.info.pipelineSSP">Pipeline SSP — Scoperte / Soluzioni / Prodotti</h3>
-              <p class="text-xs text-slate-400 mb-3">
+              <p class="text-xs text-slate-400 mb-3" data-i18n="dash.info.ssp.intro">
                 Ogni cycle del lab non si ferma al report. Attraversa una pipeline a 4 stage che porta da scoperta scientifica a prodotto verificato empiricamente, in autonomia.
               </p>
               <div class="space-y-3 text-sm text-slate-300">
                 <div class="bg-slate-950 border-l-2 border-cyan-500 rounded p-3">
-                  <div class="font-medium text-cyan-300">Stage 1 — Scoperta</div>
+                  <div class="font-medium text-cyan-300" data-i18n="dash.info.ssp.stage1.h">Stage 1 — Scoperta</div>
                   <p class="text-xs text-slate-400 mt-1">
-                    Il cycle agente esplora una tensione, scrive un report con findings + verdict.
-                    <code class="text-cyan-400">on_crystallize.py</code> trasforma il report in <code>lab-note.draft.md</code> + <code>cycle-report.draft.md</code> con metadata YAML.
-                    Status: <span class="text-green-400 font-mono">mature_eligible</span> · <span class="text-yellow-400 font-mono">transitional</span> · <span class="text-orange-400 font-mono">pre_discovery</span>.
+                    <span data-i18n="dash.info.ssp.stage1.body.p1">Il cycle agente esplora una tensione, scrive un report con findings + verdict.</span>
+                    <code class="text-cyan-400">on_crystallize.py</code> <span data-i18n="dash.info.ssp.stage1.body.p2">trasforma il report in</span> <code>lab-note.draft.md</code> + <code>cycle-report.draft.md</code> <span data-i18n="dash.info.ssp.stage1.body.p3">con metadata YAML. Status:</span>
+                    <span class="text-green-400 font-mono">mature_eligible</span> · <span class="text-yellow-400 font-mono">transitional</span> · <span class="text-orange-400 font-mono">pre_discovery</span>.
                   </p>
                 </div>
                 <div class="bg-slate-950 border-l-2 border-purple-500 rounded p-3">
-                  <div class="font-medium text-purple-300">Stage 1.5 — Eligibility gate</div>
+                  <div class="font-medium text-purple-300" data-i18n="dash.info.ssp.stage15.h">Stage 1.5 — Eligibility gate</div>
                   <p class="text-xs text-slate-400 mt-1">
-                    <code class="text-cyan-400">finding_eligibility_gate.py</code> classifica ogni finding del report con classifier multi-segnale:
+                    <code class="text-cyan-400">finding_eligibility_gate.py</code> <span data-i18n="dash.info.ssp.stage15.body.p1">classifica ogni finding del report con classifier multi-segnale:</span>
                     <span class="font-mono text-green-400">applicative_finding</span>,
                     <span class="font-mono text-slate-300">literature_rediscovery</span>,
                     <span class="font-mono text-slate-300">methodology_note</span>,
                     <span class="font-mono text-slate-300">boundary_warning</span>,
                     <span class="font-mono text-slate-300">verdict_summary</span>,
                     <span class="font-mono text-slate-300">negative_result</span>,
-                    <span class="font-mono text-yellow-400">REVIEW_REQUIRED</span> (ambiguo).
-                    Niente skip silenzioso — tutto va in <code>finding_index.draft.json</code>.
+                    <span class="font-mono text-yellow-400">REVIEW_REQUIRED</span> <span data-i18n="dash.info.ssp.stage15.body.p2">(ambiguo). Niente skip silenzioso — tutto va in</span> <code>finding_index.draft.json</code>.
                   </p>
                 </div>
                 <div class="bg-slate-950 border-l-2 border-fuchsia-500 rounded p-3">
-                  <div class="font-medium text-fuchsia-300">Stage 2 — Application designer</div>
+                  <div class="font-medium text-fuchsia-300" data-i18n="dash.info.ssp.stage2.h">Stage 2 — Application designer</div>
                   <p class="text-xs text-slate-400 mt-1">
-                    Per ogni finding eligible, <code class="text-cyan-400">application_designer.py</code> propone 3 candidate: <span class="font-mono">library</span> (benchmark), <span class="font-mono">kernel</span> (cognitive prompt), <span class="font-mono">demo</span> (reproduction).
-                    Ognuno ha una <code>verification_spec</code> Stage 3 SPEC_ONLY (criteri success/falsification).
-                    Skip se gate non è <span class="font-mono text-green-400">mature_eligible</span> — niente prodotti su claim non maturi.
+                    <span data-i18n="dash.info.ssp.stage2.body.p1">Per ogni finding eligible,</span> <code class="text-cyan-400">application_designer.py</code> <span data-i18n="dash.info.ssp.stage2.body.p2">propone 3 candidate:</span> <span class="font-mono">library</span> <span data-i18n="dash.info.ssp.stage2.body.benchmark">(benchmark)</span>, <span class="font-mono">kernel</span> <span data-i18n="dash.info.ssp.stage2.body.kernel">(cognitive prompt)</span>, <span class="font-mono">demo</span> <span data-i18n="dash.info.ssp.stage2.body.demo">(reproduction)</span>.
+                    <span data-i18n="dash.info.ssp.stage2.body.p3">Ognuno ha una</span> <code>verification_spec</code> <span data-i18n="dash.info.ssp.stage2.body.p4">Stage 3 SPEC_ONLY (criteri success/falsification). Skip se gate non è</span> <span class="font-mono text-green-400">mature_eligible</span> <span data-i18n="dash.info.ssp.stage2.body.p5">— niente prodotti su claim non maturi.</span>
                   </p>
                 </div>
                 <div class="bg-slate-950 border-l-2 border-green-500 rounded p-3">
-                  <div class="font-medium text-green-300">Stage 4 — PoC runner empirico</div>
+                  <div class="font-medium text-green-300" data-i18n="dash.info.ssp.stage4.h">Stage 4 — PoC runner empirico</div>
                   <p class="text-xs text-slate-400 mt-1">
-                    <code class="text-cyan-400">stage4_poc_runner.py</code> chiude il loop: passa la verification_spec a un LLM (claude-cli OAuth) che scrive un <code>poc.py</code> standalone con metodo naive vs informed-by-finding.
-                    Lo script viene eseguito (sandboxed, max 90s, no network), produce <code>metrics.json</code>, il runner confronta vs criteri e scrive <code>verification.json</code> reale.
-                    Verdict: <span class="font-mono text-green-400">PASS</span> (delta &gt; 0.05), <span class="font-mono text-red-400">FAIL</span> (delta &lt; -0.05), <span class="font-mono text-yellow-400">INCONCLUSIVE</span> (marginale), <span class="font-mono text-slate-300">UNTESTABLE</span> (negative_result).
+                    <code class="text-cyan-400">stage4_poc_runner.py</code> <span data-i18n="dash.info.ssp.stage4.body.p1">chiude il loop: passa la verification_spec a un LLM (claude-cli OAuth) che scrive un</span> <code>poc.py</code> <span data-i18n="dash.info.ssp.stage4.body.p2">standalone con metodo naive vs informed-by-finding.</span>
+                    <span data-i18n="dash.info.ssp.stage4.body.p3">Lo script viene eseguito (sandboxed, max 90s, no network), produce</span> <code>metrics.json</code>, <span data-i18n="dash.info.ssp.stage4.body.p4">il runner confronta vs criteri e scrive</span> <code>verification.json</code> <span data-i18n="dash.info.ssp.stage4.body.p5">reale. Verdict:</span> <span class="font-mono text-green-400">PASS</span> <span data-i18n="dash.info.ssp.stage4.body.deltaPos">(delta > 0.05),</span> <span class="font-mono text-red-400">FAIL</span> <span data-i18n="dash.info.ssp.stage4.body.deltaNeg">(delta < -0.05),</span> <span class="font-mono text-yellow-400">INCONCLUSIVE</span> <span data-i18n="dash.info.ssp.stage4.body.marginal">(marginale),</span> <span class="font-mono text-slate-300">UNTESTABLE</span> (negative_result).
                   </p>
                 </div>
               </div>
-              <p class="text-xs text-slate-300 mt-3 italic">
-                Il movement <code>ssp_pipeline</code> esegue automaticamente Stage 1+1.5 ogni cycle, e Stage 2+4 solo per scoperte mature. Questo significa: lab notturno → mattina trovi scoperta + applicazioni + prodotti già verificati con metriche A/B reali. Niente intervento manuale.
+              <p class="text-xs text-slate-300 mt-3 italic" data-i18n="dash.info.ssp.footer">
+                Il movement ssp_pipeline esegue automaticamente Stage 1+1.5 ogni cycle, e Stage 2+4 solo per scoperte mature. Questo significa: lab notturno → mattina trovi scoperta + applicazioni + prodotti già verificati con metriche A/B reali. Niente intervento manuale.
               </p>
             </div>
 
             <div class="border-t border-slate-800 pt-4">
-              <h3 class="text-sm font-medium text-purple-300 mb-2">Pipeline movements</h3>
-              <p class="text-xs text-slate-400 mb-2">Ogni ciclo notturno esegue 20 movements in sequenza:</p>
+              <h3 class="text-sm font-medium text-purple-300 mb-2" data-i18n="dash.info.movements.h">Pipeline movements</h3>
+              <p class="text-xs text-slate-400 mb-2" data-i18n="dash.info.movements.intro">Ogni ciclo notturno esegue 20 movements in sequenza:</p>
               <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-1.5 text-[11px] font-mono">
                 <span class="bg-slate-800/50 rounded px-2 py-1">autopsy</span>
                 <span class="bg-slate-800/50 rounded px-2 py-1">build_field</span>
