@@ -1000,12 +1000,12 @@
           <div class="bg-slate-900 border border-slate-800 rounded-lg p-5">
             <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
               <div>
-                <h2 class="text-lg font-medium">Bicono — galleria delle scoperte</h2>
-                <p class="text-xs text-slate-300">Ogni report compila i propri 4 poli (radici · singolare · invariante · campo). Click → apri in Agente.</p>
+                <h2 class="text-lg font-medium" data-i18n="dash.bicono.h2">Bicono — galleria delle scoperte</h2>
+                <p class="text-xs text-slate-300" data-i18n="dash.bicono.lead">Ogni report compila i propri 4 poli (radici · singolare · invariante · campo). Click → apri in Agente.</p>
               </div>
               <label class="flex items-center gap-2 text-xs text-slate-400">
                 <input type="checkbox" x-model="biconoOnlyComplete">
-                <span>Solo bicono completi</span>
+                <span data-i18n="dash.bicono.onlyComplete">Solo bicono completi</span>
               </label>
             </div>
 
@@ -1069,15 +1069,15 @@
                 <span class="truncate" x-text="activeReportFilename
                   ? (() => {
                       const r = reports.find(x => x.filename === activeReportFilename);
-                      return r ? `${(r.title || r.filename).slice(0,70)}${r.n_flags > 0 ? ' ⚠'+r.n_flags : ''}${r.falsifier_coherent === true ? ' ✓' : ''}${isCimitero(r) ? ' 🪦' : ''}` : '— scegli un report —';
+                      return r ? `${(r.title || r.filename).slice(0,70)}${r.n_flags > 0 ? ' ⚠'+r.n_flags : ''}${r.falsifier_coherent === true ? ' ✓' : ''}${isCimitero(r) ? ' 🪦' : ''}` : t('dash.reports.placeholder', '— scegli un report —');
                     })()
-                  : '— scegli un report —'"></span>
+                  : t('dash.reports.placeholder', '— scegli un report —')"></span>
                 <span class="text-purple-400 text-xs ml-2 flex-shrink-0" x-text="reportsDropdownOpen ? '▴' : '▾'"></span>
               </button>
               <div x-show="reportsDropdownOpen" x-cloak x-transition.opacity.duration.120ms
                    class="absolute left-0 right-0 top-full mt-1 bg-slate-900 border border-slate-700 rounded shadow-2xl z-30 max-h-[400px] overflow-y-auto">
                 <button @click="activeReportFilename = ''; activeReport = null; reportsDropdownOpen = false"
-                        class="w-full text-left px-3 py-2 text-sm text-slate-300 italic hover:bg-slate-800 transition">— scegli un report —</button>
+                        class="w-full text-left px-3 py-2 text-sm text-slate-300 italic hover:bg-slate-800 transition" x-text="t('dash.reports.placeholder', '— scegli un report —')">— scegli un report —</button>
                 <template x-for="r in filteredReports()" :key="r.filename">
                   <button @click="activeReportFilename = r.filename; openReport(r.filename); reportsDropdownOpen = false"
                           :class="activeReportFilename === r.filename ? 'bg-purple-900/30 text-purple-200' : 'text-slate-200 hover:bg-slate-800'"
@@ -1223,10 +1223,10 @@
               <div class="flex items-center gap-1 bg-slate-950 rounded-lg p-1">
                 <button @click="setIncrocioMode('taxonomy')"
                         :class="incrocioMode === 'taxonomy' ? 'bg-purple-700/40 text-purple-200' : 'text-slate-400 hover:text-slate-200'"
-                        class="px-3 py-1 rounded text-xs font-medium transition">⬡ Tassonomia</button>
+                        class="px-3 py-1 rounded text-xs font-medium transition" x-text="t('dash.tab.taxonomyBtn', '⬡ Tassonomia')">⬡ Tassonomia</button>
                 <button @click="setIncrocioMode('trajectory')"
                         :class="incrocioMode === 'trajectory' ? 'bg-purple-700/40 text-purple-200' : 'text-slate-400 hover:text-slate-200'"
-                        class="px-3 py-1 rounded text-xs font-medium transition">↗ Trajectory</button>
+                        class="px-3 py-1 rounded text-xs font-medium transition" x-text="t('dash.tab.trajectoryBtn', '↗ Trajectory')">↗ Trajectory</button>
               </div>
               <div class="flex items-center gap-2" x-show="incrocioMode === 'taxonomy'">
                 <span class="text-xs text-slate-300 font-mono" x-text="`${taxonomyMeta.n_groups || 0} ${t('dash.tax.gruppi', 'gruppi')} · ${taxonomyMeta.n_nodes || 0} ${t('dash.tax.nodi', 'nodi')} · ${taxonomyMeta.n_bridges || 0} ${t('dash.tax.ponti', 'ponti')}`"></span>
@@ -1242,7 +1242,7 @@
             <!-- Mode: Tassonomia -->
             <div x-show="incrocioMode === 'taxonomy'">
               <div class="mb-2">
-                <p class="text-xs text-slate-300" x-text="taxonomyMeta.mode === 'pillars' ? 'Pillar mode: 5 teorie Q/T/G/E/R + cluster reports/tensioni' : (taxonomyMeta.mode === 'flat' ? 'Flat mode: gruppi per tipo (no teorie nel grafo attuale)' : '...')"></p>
+                <p class="text-xs text-slate-300" x-text="taxonomyMeta.mode === 'pillars' ? t('dash.tax.pillarMode', 'Pillar mode: 5 teorie Q/T/G/E/R + cluster reports/tensioni') : (taxonomyMeta.mode === 'flat' ? t('dash.tax.flatMode', 'Flat mode: gruppi per tipo (no teorie nel grafo attuale)') : '...')"></p>
               </div>
               <div class="taxonomy-viz-wrap" :class="taxonomyFullscreen && 'fullscreen'">
                 <div id="taxonomy-viz" style="width: 100%; height: 520px; background: #0d0e14; border-radius: 0.5rem;"></div>
@@ -1267,7 +1267,7 @@
                   </span>
                 </template>
                 <template x-if="taxonomyData.bridges && taxonomyData.bridges.length > 0">
-                  <span class="text-slate-300 italic" x-text="`+ ${taxonomyData.bridges.length} ponti cross-group`"></span>
+                  <span class="text-slate-300 italic" x-text="`+ ${taxonomyData.bridges.length} ${t('dash.tax.crossGroupSuffix', 'ponti cross-group')}`"></span>
                 </template>
               </div>
             </div>
@@ -1344,8 +1344,8 @@
         <div x-show="activeTab === 'prodotti'" x-transition.opacity.duration.150ms class="prodotti-pane">
           <div class="bg-slate-900 border border-slate-800 rounded-lg p-6 space-y-4">
             <div>
-              <h2 class="text-lg font-medium">Prodotti — pipeline SSP</h2>
-              <p class="text-xs text-slate-300 mt-1">
+              <h2 class="text-lg font-medium" data-i18n="dash.products.h2">Prodotti — pipeline SSP</h2>
+              <p class="text-xs text-slate-300 mt-1" data-i18n="dash.products.lead">
                 Scoperte (Stage 1) → Applicazioni candidate (Stage 2) → Prodotti maturi (Stage 4 verified).
                 Ogni scoperta espande in card. Pre-discovery / transitional pubblicate con disclaimer.
               </p>
@@ -1359,12 +1359,12 @@
                 <div class="text-xs text-slate-400 mt-1">lab-note + cycle-report drafts</div>
               </div>
               <div class="bg-slate-950 border border-slate-800 rounded p-3">
-                <div class="text-slate-300 text-xs uppercase tracking-wider">Applicazioni candidate</div>
+                <div class="text-slate-300 text-xs uppercase tracking-wider" data-i18n="dash.products.applicazioniCandidate">Applicazioni candidate</div>
                 <div class="text-2xl font-mono text-purple-400 mt-1" x-text="(applicazioniSsp.candidates || []).length"></div>
                 <div class="text-xs text-slate-400 mt-1">manifest.draft.json — Stage 2</div>
               </div>
               <div class="bg-slate-950 border border-slate-800 rounded p-3">
-                <div class="text-slate-300 text-xs uppercase tracking-wider">Prodotti maturi</div>
+                <div class="text-slate-300 text-xs uppercase tracking-wider" data-i18n="dash.products.prodottiMaturi">Prodotti maturi</div>
                 <div class="text-2xl font-mono text-green-400 mt-1" x-text="(prodottiSsp || []).length"></div>
                 <div class="text-xs text-slate-400 mt-1">verification.json reale — Stage 4</div>
               </div>
@@ -1373,7 +1373,7 @@
             <!-- Lista scoperte (raggruppa applicazioni per cycle_ts) -->
             <template x-if="(scoperteSsp || []).length > 0">
               <div class="space-y-3 mt-4">
-                <h3 class="text-sm font-medium text-slate-300">Scoperte (<span x-text="scoperteSsp.length"></span>)</h3>
+                <h3 class="text-sm font-medium text-slate-300"><span data-i18n="dash.products.scoperteCount">Scoperte</span> (<span x-text="scoperteSsp.length"></span>)</h3>
                 <template x-for="s in scoperteSsp" :key="s.dir">
                   <div class="bg-slate-950 border border-slate-800 rounded p-4 space-y-2 cursor-pointer hover:border-cyan-700 transition"
                        :class="selectedScopertaSsp?.dir === s.dir && 'border-cyan-600'"
@@ -1383,7 +1383,7 @@
                         <div class="text-sm font-medium text-slate-200" x-text="s.title_proposal || s.dir"></div>
                         <div class="text-xs text-slate-300 mt-1">
                           <span class="font-mono text-cyan-400" x-text="s.cycle_ts"></span> ·
-                          status: <span class="font-mono"
+                          <span data-i18n="dash.products.status">status:</span> <span class="font-mono"
                             :class="{
                               'text-green-400': s.status === 'mature',
                               'text-yellow-400': s.status === 'transitional',
@@ -1543,7 +1543,7 @@
           <div class="bg-slate-900 border border-slate-800 rounded-lg p-6 space-y-4">
             <div>
               <h2 class="text-lg font-medium" x-text="contextIntro.title || 'Info'"></h2>
-              <p class="text-xs text-slate-300 mt-1">Cosa fa questo lab, come leggere la dashboard, dove sono i dati. Letto dal context.md del dominio.</p>
+              <p class="text-xs text-slate-300 mt-1" data-i18n="dash.info.subtitle">Cosa fa questo lab, come leggere la dashboard, dove sono i dati. Letto dal context.md del dominio.</p>
             </div>
 
             <template x-if="contextIntro.intro">
@@ -1551,7 +1551,7 @@
             </template>
 
             <div class="border-t border-slate-800 pt-4">
-              <h3 class="text-sm font-medium text-purple-300 mb-2">Come si legge la dashboard</h3>
+              <h3 class="text-sm font-medium text-purple-300 mb-2" data-i18n="dash.info.howRead">Come si legge la dashboard</h3>
               <ul class="text-sm text-slate-300 space-y-2 list-disc list-inside">
                 <li><strong data-i18n="dash.info.itemGrafo">Grafo</strong> — knowledge graph del dominio. Click su un nodo apre il dettaglio a destra; tooltip al hover con azioni rapide.</li>
                 <li><strong data-i18n="dash.info.itemBicono">Bicono</strong> — galleria delle scoperte: 4 poli (radici/singolare/invariante/campo) parsati dal report.</li>
@@ -1565,7 +1565,7 @@
 
             <!-- Pipeline SSP — sezione dedicata, descrive il flusso scoperta → prodotto -->
             <div id="info-ssp" class="border-t border-slate-800 pt-4">
-              <h3 class="text-sm font-medium text-purple-300 mb-2">Pipeline SSP — Scoperte / Soluzioni / Prodotti</h3>
+              <h3 class="text-sm font-medium text-purple-300 mb-2" data-i18n="dash.info.pipelineSSP">Pipeline SSP — Scoperte / Soluzioni / Prodotti</h3>
               <p class="text-xs text-slate-400 mb-3">
                 Ogni cycle del lab non si ferma al report. Attraversa una pipeline a 4 stage che porta da scoperta scientifica a prodotto verificato empiricamente, in autonomia.
               </p>
@@ -1822,7 +1822,7 @@
             <div class="mt-5 border-t border-slate-800 pt-4">
               <div class="flex items-center justify-between mb-2">
                 <h4 class="text-xs uppercase tracking-wider text-slate-300">Cycle trace</h4>
-                <span class="text-[10px] text-slate-400" x-text="(cycleTraces || []).length + ' disponibili'"></span>
+                <span class="text-[10px] text-slate-400" x-text="(cycleTraces || []).length + ' ' + t('dash.cycle.disponibili', 'disponibili')"></span>
               </div>
               <template x-if="(cycleTraces || []).length === 0">
                 <p class="text-xs text-slate-400 italic">Nessun cycle_trace ancora. Scritto a fine cycle dal post-deploy 01/05.</p>
@@ -1837,13 +1837,13 @@
                             class="w-full bg-slate-950 border border-slate-700 hover:border-purple-700 rounded px-2 py-1 text-xs text-slate-200 text-left flex items-center justify-between transition">
                       <span class="truncate" x-text="activeCycleTrace
                         ? `${activeCycleTrace.cycle_ts} · ${activeCycleTrace.total_s}s · ${activeCycleTrace.n_ok}/${activeCycleTrace.n_movements}`
-                        : '— scegli un cycle —'"></span>
+                        : t('dash.cycle.placeholder', '— scegli un cycle —')"></span>
                       <span class="text-purple-400 text-xs ml-2 flex-shrink-0" x-text="cycleTraceDropdownOpen ? '▴' : '▾'"></span>
                     </button>
                     <div x-show="cycleTraceDropdownOpen" x-cloak x-transition.opacity.duration.120ms
                          class="absolute left-0 right-0 top-full mt-1 bg-slate-900 border border-slate-700 rounded shadow-2xl z-30 max-h-72 overflow-y-auto">
                       <button @click="activeCycleTrace = null; cycleTraceDropdownOpen = false"
-                              class="w-full text-left px-2 py-1.5 text-xs text-slate-300 italic hover:bg-slate-800 transition">— scegli un cycle —</button>
+                              class="w-full text-left px-2 py-1.5 text-xs text-slate-300 italic hover:bg-slate-800 transition" x-text="t('dash.cycle.placeholder', '— scegli un cycle —')">— scegli un cycle —</button>
                       <template x-for="t in cycleTraces" :key="t.cycle_ts">
                         <button @click="loadCycleTrace(t.cycle_ts); cycleTraceDropdownOpen = false"
                                 :class="activeCycleTrace?.cycle_ts === t.cycle_ts ? 'bg-purple-900/30 text-purple-200' : 'text-slate-200 hover:bg-slate-800'"
