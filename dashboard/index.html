@@ -571,6 +571,13 @@
       pointer-events: none;
       box-shadow: 0 4px 16px rgba(0,0,0,.4);
     }
+    /* Variant tip-below — tooltip sotto invece che sopra. Usato per
+       elementi nell'header (top: 0) dove tooltip up uscirebbe dal viewport. */
+    [data-tip].tip-below:hover::after,
+    .tip-below [data-tip]:hover::after {
+      bottom: auto;
+      top: calc(100% + 6px);
+    }
     /* Custom select coerente con .selector della home (custom chevron, no rendering OS). */
     select.dnd-select {
       appearance: none;
@@ -680,10 +687,12 @@
         </div>
       </div>
       <!-- Right cluster: Domains + breadcrumb + Sito dropdown + lang + esterni
-           (refactor 03/05 sera: pattern unificato col sito 4 pagine). -->
-      <nav class="flex items-center gap-2 text-sm flex-shrink-0">
+           (refactor 03/05 sera: pattern unificato col sito 4 pagine).
+           ml-auto: in home view le lab-tabs sono x-show=false e flex-1 non
+           riempie — ml-auto spinge il cluster a destra always. -->
+      <nav class="flex items-center gap-2 text-sm flex-shrink-0 ml-auto">
         <!-- Home dashboard (Domains list) -->
-        <button class="px-3 py-1 rounded hover:bg-slate-800 flex items-center gap-1.5"
+        <button class="tip-below px-3 py-1 rounded hover:bg-slate-800 flex items-center gap-1.5"
                 :class="{'bg-slate-800': view === 'home'}"
                 @click="view = 'home'"
                 data-tip="Torna alla lista Domini"
