@@ -240,8 +240,11 @@ def _run_via_codex_cli(
         f"{system_prompt}\n\n---\n\n{user_message}" if system_prompt else user_message
     )
 
-    # codex CLI accepts the prompt via stdin (-) for non-interactive mode
-    args = ["codex", "exec", "-", "--non-interactive"]
+    # codex CLI: --skip-git-repo-check evita check git repo nel cwd,
+    # --full-auto attiva sandbox workspace-write (può scrivere il report
+    # nel data dir del lab, fix 2026-05-04 cycle 1138).
+    # Il prompt viene passato via stdin attraverso input= di subprocess.run.
+    args = ["codex", "exec", "--skip-git-repo-check", "--full-auto", "-"]
 
     t0 = time.time()
     try:

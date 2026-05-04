@@ -19,6 +19,27 @@
     { "name": "python_exec", "type": "builtin" },
     { "name": "shell_exec", "type": "builtin" }
   ],
+  "movements": {
+    "autopsy":            { "enabled": true },
+    "build_field":        { "enabled": true },
+    "agent":              { "enabled": true },
+    "validate_seed":      { "enabled": true },
+    "verify_assertions":  { "enabled": true },
+    "structural_check":   { "enabled": false },
+    "build_lab_data":     { "enabled": true },
+    "build_graph":        { "enabled": false, "params": {"comment": "meta-lab non ha grafo numerico classico — disabilitato"} },
+    "sync":               { "enabled": false },
+    "verify_endpoints":   { "enabled": false },
+    "refiner":            { "enabled": true },
+    "semantic_bridge":    { "enabled": false },
+    "refresh_detector":   { "enabled": false },
+    "seed_integrator":    { "enabled": true },
+    "trajectory_evaluator": { "enabled": true },
+    "ssp_pipeline":       { "enabled": false, "params": {"comment": "meta-lab produce template, non findings scientifici — SSP non applicabile"} },
+    "bias_corrector":     { "enabled": true },
+    "report_falsifier":   { "enabled": true },
+    "bicono_extractor":   { "enabled": false }
+  },
   "capabilities": {
     "agent_role": "meta_seed_generator",
     "input_schema": {

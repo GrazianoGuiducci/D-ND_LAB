@@ -9,7 +9,7 @@
     "domain": {
       "type": "string",
       "description": "Domain identifier — must match the directory name under domains/.",
-      "pattern": "^[a-z][a-z0-9_]*$"
+      "pattern": "^[a-z][a-z0-9_-]*$"
     },
     "version": {
       "type": "string",
