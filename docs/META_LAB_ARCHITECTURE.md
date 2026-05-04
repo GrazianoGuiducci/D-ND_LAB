@@ -478,6 +478,40 @@ AXIOMATIC_STRUCTURE, INCIDENT_CORPUS_TOO_SMALL, ...) sono state generate
 dal seed_integrator del cycle stesso, non scritte a mano — il sistema
 cristallizza la propria esperienza autonomamente.
 
+**D7** (cycle 2026-05-04 18:30): gap diagnosticato — MML era costruito ma
+non vivo a runtime. Phase 2.A.7 (wire MML → agent) era implicita, saltata
+in fretta per validare end-to-end con 2.B. Ora chiusa esplicitamente.
+
+Diagnosi: dopo cycle 1608 di ops-decisions, falsifier ha colpito 4 flag
+(L5 prior art, L2 ratio ungrounded, L2 chi-square null, L3 F2 collision).
+Ispezione `core/agent.py` ha rivelato che il system_prompt era costruito
+solo da `context.md + agent_field_live.md` — `mml.json` mai letto,
+`skill_loader.load_skills_for_lab` mai invocato. Le 10 skill attive
+dichiarate nel MML di ops-decisions non erano viste dall'agent. I 2 tools
+custom erano dichiarati nel `config.json` con path Posix
+('tools/exp_*.py') ma `agent.py:83` li passava a `import_module` — che
+vuole dotted name, non path. Doppio gap: skill non attive + tool non
+invocabili come MCP.
+
+Fix (commit `ed51b8b`):
+- `core/agent.py` aggiunto `_build_mml_section(domain)` che legge MML
+  via `skill_loader` e renderizza sezione testuale "Skills attive +
+  Tools custom" iniettata nel `system_prompt` prima di field_live.
+- Skills: nome + trigger + rationale + path source per ognuna.
+- Tools custom: path completo + comando `python3 <full_path>`.
+  Surfaced come shell-invocable, non MCP — l'agent li chiama via
+  `shell_exec` quando serve evidenza eseguita anziché discorso.
+- Path resolution: se `module` ha '/' o `.py`, è standalone — log
+  info, skip import. Solo dotted names tentano `import_module + build`.
+- MML mancante = silent fallback (lab pre-2.A.7 invariati).
+
+Pattern: Auto-Learn applicato — detect (warning) → diagnose (codice)
+→ fix structurally (wire) → verify (live test) → propagate (questo D7
++ D-ND_BOOK §III + cristallizzazione memoria + cascata su lab futuri).
+
+Cascata: ogni lab futuro nato dal meta-lab avrà MML attivo dal primo
+cycle. ops-decisions cycle 2 (lanciato 18:33) è il primo test reale.
+
 ---
 
 ## 7. Cosa NON facciamo (scope limit)
