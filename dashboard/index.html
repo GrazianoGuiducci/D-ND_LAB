@@ -793,7 +793,7 @@
           </div>
           <p class="text-sm text-slate-400 mb-4 line-clamp-2" x-text="d.description"></p>
           <div class="flex justify-between text-xs text-slate-300 font-mono pt-3 border-t border-slate-800">
-            <span>piano: <span class="text-cyan-400" x-text="d.piano"></span></span>
+            <span><span data-i18n="dash.dom.piano">piano:</span> <span class="text-cyan-400" x-text="d.piano"></span></span>
             <span><span class="text-cyan-400" x-text="d.n_tensions"></span> tensions</span>
             <span><span class="text-cyan-400" x-text="d.n_reports"></span> reports</span>
           </div>
@@ -806,14 +806,14 @@
           <div class="mt-3 pt-3 border-t border-slate-800 grid grid-cols-2 gap-3 text-[10px]"
                @click.stop>
             <div>
-              <div class="text-slate-400 uppercase tracking-wider mb-1">Stato</div>
+              <div class="text-slate-400 uppercase tracking-wider mb-1" data-i18n="dash.dom.stato">Stato</div>
               <!-- Toggle Attivo/Disattivo (placeholder, sempre 'attivo' per ora). -->
               <button class="flex items-center gap-2 cursor-not-allowed opacity-70" disabled
                       data-tip="Gestione stato dominio · UI placeholder">
                 <span class="relative inline-block w-7 h-3.5 rounded-full bg-green-700/60">
                   <span class="absolute right-0.5 top-0.5 w-2.5 h-2.5 rounded-full bg-green-300"></span>
                 </span>
-                <span class="text-green-400 font-mono">Attivo</span>
+                <span class="text-green-400 font-mono" data-i18n="dash.dom.attivo">Attivo</span>
               </button>
             </div>
             <div>
@@ -1102,7 +1102,7 @@
             <div class="flex items-center gap-0.5 bg-slate-950 rounded p-0.5 text-[10px]">
               <button @click="reportsFilter = 'all'"
                       :class="reportsFilter === 'all' ? 'bg-slate-700 text-slate-100' : 'text-slate-400 hover:text-slate-200'"
-                      class="px-2 py-1 rounded transition" title="Tutti">Tutti</button>
+                      class="px-2 py-1 rounded transition" title="Tutti" data-i18n="dash.reports.tutti">Tutti</button>
               <button @click="reportsFilter = 'flagged'"
                       :class="reportsFilter === 'flagged' ? 'bg-rose-900/40 text-rose-200' : 'text-slate-400 hover:text-slate-200'"
                       class="px-2 py-1 rounded transition" title="Flagged dal falsifier">⚠</button>
@@ -1117,7 +1117,7 @@
               <template x-if="!activeReport">
                 <div class="h-full flex flex-col items-center justify-center text-center text-slate-300 py-12">
                   <div class="text-3xl text-slate-300 mb-3">⊙</div>
-                  <div class="text-sm">Seleziona un report dal menu in alto</div>
+                  <div class="text-sm" data-i18n="dash.reports.selectFromMenu">Seleziona un report dal menu in alto</div>
                   <div class="text-xs text-slate-400 mt-2 italic">Bicono · falsifier · ToC + markdown content</div>
                 </div>
               </template>
@@ -1354,7 +1354,7 @@
             <!-- Riepilogo SSP -->
             <div class="grid grid-cols-3 gap-3 mt-2 text-sm">
               <div class="bg-slate-950 border border-slate-800 rounded p-3">
-                <div class="text-slate-300 text-xs uppercase tracking-wider">Scoperte</div>
+                <div class="text-slate-300 text-xs uppercase tracking-wider" data-i18n="dash.tab.scoperte">Scoperte</div>
                 <div class="text-2xl font-mono text-cyan-400 mt-1" x-text="(scoperteSsp || []).length"></div>
                 <div class="text-xs text-slate-400 mt-1">lab-note + cycle-report drafts</div>
               </div>
@@ -1553,13 +1553,13 @@
             <div class="border-t border-slate-800 pt-4">
               <h3 class="text-sm font-medium text-purple-300 mb-2">Come si legge la dashboard</h3>
               <ul class="text-sm text-slate-300 space-y-2 list-disc list-inside">
-                <li><strong>Grafo</strong> — knowledge graph del dominio. Click su un nodo apre il dettaglio a destra; tooltip al hover con azioni rapide.</li>
-                <li><strong>Bicono</strong> — galleria delle scoperte: 4 poli (radici/singolare/invariante/campo) parsati dal report.</li>
-                <li><strong>Agente</strong> — lista cicli con verdict + flag dal counter-pole. Filter Cimitero per i report falsificati.</li>
-                <li><strong>Tassonomia</strong> — grafo d'insieme aggregato per pillar/type, con sub-mode Trajectory (timeline cronologica).</li>
-                <li><strong>Prodotti</strong> — pipeline SSP (vedi sotto). Card per scoperta espandibile con applicazioni candidate, findings esclusi (review_required + skip), prodotti maturi con metriche A/B.</li>
+                <li><strong data-i18n="dash.info.itemGrafo">Grafo</strong> — knowledge graph del dominio. Click su un nodo apre il dettaglio a destra; tooltip al hover con azioni rapide.</li>
+                <li><strong data-i18n="dash.info.itemBicono">Bicono</strong> — galleria delle scoperte: 4 poli (radici/singolare/invariante/campo) parsati dal report.</li>
+                <li><strong data-i18n="dash.info.itemAgente">Agente</strong> — lista cicli con verdict + flag dal counter-pole. Filter Cimitero per i report falsificati.</li>
+                <li><strong data-i18n="dash.info.itemTassonomia">Tassonomia</strong> — grafo d'insieme aggregato per pillar/type, con sub-mode Trajectory (timeline cronologica).</li>
+                <li><strong data-i18n="dash.info.itemProdotti">Prodotti</strong> — pipeline SSP (vedi sotto). Card per scoperta espandibile con applicazioni candidate, findings esclusi (review_required + skip), prodotti maturi con metriche A/B.</li>
                 <li><strong>Sidebar Dettaglio</strong> (destra) — info contestuali al tab attivo: dettaglio nodo selezionato (Grafo), seed corrente, e <em>cycle trace</em> in Info/Agente/Prodotti (timeline movements del cycle: status + durata + ssp_pipeline_status, da <code>cycle_trace_*.json</code>).</li>
-                <li><strong>Chat</strong> (icona viola in basso a destra) — il lab risponde, può anche proporre azioni (inject tension, run cycle) che richiedono conferma.</li>
+                <li><strong data-i18n="dash.info.itemChat">Chat</strong> (icona viola in basso a destra) — il lab risponde, può anche proporre azioni (inject tension, run cycle) che richiedono conferma.</li>
               </ul>
             </div>
 
@@ -1642,7 +1642,7 @@
             </div>
 
             <div class="border-t border-slate-800 pt-4">
-              <h3 class="text-sm font-medium text-purple-300 mb-2">Reference</h3>
+              <h3 class="text-sm font-medium text-purple-300 mb-2" data-i18n="dash.info.reference">Reference</h3>
               <div class="text-sm text-slate-300 space-y-1">
                 <div>· Repo: <a href="https://github.com/GrazianoGuiducci/D-ND_LAB" target="_blank" class="text-cyan-400 hover:underline">github.com/GrazianoGuiducci/D-ND_LAB</a></div>
                 <div>· Modello D-ND: f(x)=1+1/x · M=[[1,1],[1,0]] · det(M)=−1 · punto fisso φ</div>
@@ -1671,7 +1671,7 @@
         <div class="sb-title-vertical" data-i18n="dash.sb.dettaglio">DETTAGLIO</div>
         <div class="flex items-center justify-between mb-2" style="margin-top:-4px">
           <button @click="closeMobileDrawer()" class="mobile-close-btn text-slate-400 hover:text-slate-200 px-2 py-1 rounded text-base" title="Chiudi">×</button>
-          <h3 class="text-xs uppercase tracking-wider text-slate-300 mt-1 ml-auto" x-show="sidebarRightOpen || mobileDrawer === 'right'">Dettaglio</h3>
+          <h3 class="text-xs uppercase tracking-wider text-slate-300 mt-1 ml-auto" x-show="sidebarRightOpen || mobileDrawer === 'right'" data-i18n="dash.sb.dettaglioH3">Dettaglio</h3>
         </div>
         <div x-show="sidebarRightOpen || mobileDrawer === 'right'" class="pt-1">
 
@@ -1733,11 +1733,11 @@
               <template x-if="selectedProdottoSsp.metrics && selectedProdottoSsp.metrics.naive_score !== undefined">
                 <div class="grid grid-cols-3 gap-1 text-[10px] mt-2 pt-2 border-t border-slate-800">
                   <div>
-                    <div class="text-slate-400 uppercase tracking-wider">Naive</div>
+                    <div class="text-slate-400 uppercase tracking-wider" data-i18n="dash.detail.naive">Naive</div>
                     <div class="font-mono text-slate-300" x-text="(Number(selectedProdottoSsp.metrics.naive_score) || 0).toFixed(4)"></div>
                   </div>
                   <div>
-                    <div class="text-slate-400 uppercase tracking-wider">Informed</div>
+                    <div class="text-slate-400 uppercase tracking-wider" data-i18n="dash.detail.informed">Informed</div>
                     <div class="font-mono text-slate-300" x-text="(Number(selectedProdottoSsp.metrics.informed_score) || 0).toFixed(4)"></div>
                   </div>
                   <div>
@@ -1788,7 +1788,7 @@
                il seed sarebbe ridondante e ruba spazio. -->
           <template x-if="['grafo','bicono','incrocio'].includes(activeTab)">
             <div>
-              <h4 class="text-xs uppercase tracking-wider text-slate-300 mt-5 mb-2">Seed</h4>
+              <h4 class="text-xs uppercase tracking-wider text-slate-300 mt-5 mb-2" data-i18n="dash.detail.seedH4">Seed</h4>
               <div class="text-xs space-y-1 text-slate-400">
                 <div><span class="text-slate-300" data-i18n="dash.detail.piano">piano:</span> <span class="font-mono text-cyan-400" x-text="seed.piano ?? '?'"></span></div>
                 <div class="italic line-clamp-3" x-text="seed.direzione || '—'"></div>
@@ -1858,7 +1858,7 @@
                     <div class="space-y-2">
                       <div class="grid grid-cols-2 gap-1 text-[10px]">
                         <div>
-                          <div class="text-slate-400 uppercase tracking-wider">Total</div>
+                          <div class="text-slate-400 uppercase tracking-wider" data-i18n="dash.detail.total">Total</div>
                           <div class="font-mono text-slate-300" x-text="`${activeCycleTrace.total_s}s`"></div>
                         </div>
                         <div>
@@ -1933,7 +1933,7 @@
     <div id="sidebar-tip" class="sidebar-tip">
       <template x-if="sidebarTipSide === 'left'">
         <div>
-          <h5>Campo</h5>
+          <h5 data-i18n="dash.tip.campoH5">Campo</h5>
           <div class="stat-row flex justify-between"><span>teorie</span><span class="font-mono text-cyan-400" x-text="campoStats().teorie"></span></div>
           <div class="stat-row flex justify-between"><span>ponti</span><span class="font-mono text-cyan-400" x-text="campoStats().ponti"></span></div>
           <div class="stat-row flex justify-between"><span>vuoti</span><span class="font-mono text-cyan-400" x-text="campoStats().vuoti"></span></div>
@@ -1942,14 +1942,14 @@
           <div class="stat-row flex justify-between"><span>prodotti</span><span class="font-mono text-cyan-400" x-text="campoStats().prodotti"></span></div>
           <div class="stat-row flex justify-between"><span>cicli</span><span class="font-mono text-cyan-400" x-text="campoStats().cicli"></span></div>
           <div class="stat-row flex justify-between mt-2 pt-2 border-t border-slate-700"><span class="text-slate-300">oggi</span><span class="font-mono text-green-400" x-text="freshnessStats().today"></span></div>
-          <div class="text-[10px] text-slate-300 italic mt-2">click per espandere</div>
+          <div class="text-[10px] text-slate-300 italic mt-2" data-i18n="dash.sb.tipExpand">click per espandere</div>
         </div>
       </template>
       <template x-if="sidebarTipSide === 'right'">
         <div>
-          <h5>Dettaglio</h5>
+          <h5 data-i18n="dash.sb.dettaglioH3">Dettaglio</h5>
           <template x-if="!selectedNode">
-            <div class="text-[11px] text-slate-300 italic">Nessun nodo selezionato — click su un nodo del grafo.</div>
+            <div class="text-[11px] text-slate-300 italic" data-i18n="dash.sb.tipNoNode">Nessun nodo selezionato — click su un nodo del grafo.</div>
           </template>
           <template x-if="selectedNode">
             <div>
@@ -1960,7 +1960,7 @@
               </template>
             </div>
           </template>
-          <div class="text-[10px] text-slate-300 italic mt-2">click per espandere</div>
+          <div class="text-[10px] text-slate-300 italic mt-2" data-i18n="dash.sb.tipExpand">click per espandere</div>
         </div>
       </template>
     </div>
@@ -2097,7 +2097,7 @@
       <!-- Input -->
       <form @submit.prevent="sendChat()" class="border-t border-slate-700 p-2 flex gap-2 bg-slate-950/40">
         <input x-model="chatInput" :disabled="chatLoading" placeholder="Chiedi al lab…" class="flex-1 bg-slate-950 border border-slate-700 rounded px-3 py-2 text-xs focus:border-purple-500 outline-none">
-        <button type="submit" :disabled="chatLoading || !chatInput.trim()" class="px-3 py-2 rounded bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-xs font-medium">Send</button>
+        <button type="submit" :disabled="chatLoading || !chatInput.trim()" class="px-3 py-2 rounded bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-xs font-medium" data-i18n="dash.chat.send">Send</button>
       </form>
     </div>
   </div>
@@ -4072,19 +4072,19 @@
          aria-label="Menu mobile"
          :aria-hidden="!siteDrawerOpen">
     <div class="mobile-drawer-head">
-      <strong>Menu</strong>
+      <strong data-i18n="nav.menuLabel">Menu</strong>
       <button class="close-btn" @click="siteDrawerOpen = false" aria-label="Chiudi">✕</button>
     </div>
     <div class="mobile-drawer-section">
-      <h3>Sito</h3>
-      <a href="/" @click="siteDrawerOpen = false">Home</a>
-      <a href="/d-nd-lab.html" @click="siteDrawerOpen = false">D-ND_LAB</a>
-      <a href="/dashboard/" data-current @click="siteDrawerOpen = false">Dashboard</a>
-      <a href="/scoperte.html" @click="siteDrawerOpen = false">Scoperte</a>
-      <a href="/applications.html" @click="siteDrawerOpen = false">Applicazioni</a>
+      <h3 data-i18n="nav.drawerSito">Sito</h3>
+      <a href="/" @click="siteDrawerOpen = false" data-i18n="nav.siteHome">Home</a>
+      <a href="/d-nd-lab.html" @click="siteDrawerOpen = false" data-i18n="nav.siteDndLab">D-ND_LAB</a>
+      <a href="/dashboard/" data-current @click="siteDrawerOpen = false" data-i18n="nav.siteDashboard">Dashboard</a>
+      <a href="/scoperte.html" @click="siteDrawerOpen = false" data-i18n="nav.siteScoperte">Scoperte</a>
+      <a href="/applications.html" @click="siteDrawerOpen = false" data-i18n="nav.siteApplicazioni">Applicazioni</a>
     </div>
     <div class="mobile-drawer-section">
-      <h3>Esterno</h3>
+      <h3 data-i18n="nav.drawerEsterno">Esterno</h3>
       <a href="https://github.com/GrazianoGuiducci/D-ND_LAB" target="_blank" rel="noopener" data-external @click="siteDrawerOpen = false">GitHub</a>
       <a href="https://d-nd.com" target="_blank" rel="noopener" data-external @click="siteDrawerOpen = false">d-nd.com</a>
     </div>
@@ -4147,7 +4147,7 @@
       <!-- Body -->
       <div class="flex-1 overflow-y-auto p-5 text-sm">
         <template x-if="modaleCandidato.loading">
-          <div class="text-slate-400 italic">Caricamento manifest + sorgente…</div>
+          <div class="text-slate-400 italic" data-i18n="dash.modal.loading">Caricamento manifest + sorgente…</div>
         </template>
 
         <!-- Tab: Overview -->
@@ -4170,7 +4170,7 @@
                 <div class="text-slate-200" x-text="(candidateInManifest().verification_spec || {}).verifier_form || '—'"></div>
               </div>
               <div>
-                <div class="text-xs uppercase tracking-wider text-slate-300 mb-1">Status</div>
+                <div class="text-xs uppercase tracking-wider text-slate-300 mb-1" data-i18n="dash.modal.status">Status</div>
                 <div class="text-slate-200" x-text="(candidateInManifest().verification_spec || {}).status || 'SPEC_ONLY'"></div>
               </div>
             </div>
@@ -4299,13 +4299,13 @@
                       x-text="`${modaleCandidato.verification.verification.duration_s?.toFixed(1) || '?'}s`"></span>
               </div>
 
-              <div class="text-xs uppercase tracking-wider text-slate-300 mb-1">Reason</div>
+              <div class="text-xs uppercase tracking-wider text-slate-300 mb-1" data-i18n="dash.modal.reason">Reason</div>
               <div class="text-xs text-slate-200 mb-3 bg-slate-950 p-3 rounded border border-slate-800"
                    x-text="modaleCandidato.verification.verification.reason || '—'"></div>
 
               <template x-if="modaleCandidato.verification.verification.metrics">
                 <div>
-                  <div class="text-xs uppercase tracking-wider text-slate-300 mb-1">Metrics</div>
+                  <div class="text-xs uppercase tracking-wider text-slate-300 mb-1" data-i18n="dash.modal.metrics">Metrics</div>
                   <div class="grid grid-cols-2 gap-2 text-xs">
                     <template x-for="(value, key) in modaleCandidato.verification.verification.metrics" :key="key">
                       <div x-show="typeof value === 'number' || typeof value === 'string'"
@@ -4335,7 +4335,7 @@
           <span x-text="modaleCandidato.candidate?.dir || ''" class="font-mono"></span>
         </span>
         <button @click="closeCandidateModale()"
-                class="px-3 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200">Chiudi</button>
+                class="px-3 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200" data-i18n="dash.modal.chiudi">Chiudi</button>
       </div>
     </div>
   </div>
