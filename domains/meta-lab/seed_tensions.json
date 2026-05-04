@@ -1,0 +1,59 @@
+{
+  "_meta": {
+    "domain": "meta-lab",
+    "description": "Bootstrap tensions del meta-lab — tensioni strutturali su cosa rende un dominio di leva e cosa rende un template valido. Dopo cycle 1, seed.json le supera.",
+    "level": "meta — non sul materiale di un dominio ma sulla forma del lab stesso"
+  },
+  "tensioni": [
+    {
+      "tipo": "confine_inesplorato",
+      "id": "META_DOMAIN_OF_LEVERAGE",
+      "claim": "Dato un dominio target, dove vivono i dipoli aritmetici generativi (det≠0) vs illusori (det~0 dopo shuffle)? La firma non è nel termine ma nel comportamento del materiale sotto perturbation random. Un dominio è di leva se almeno una tensione del materiale resiste a shuffle uniforme con z>5σ.",
+      "intensita": 0.95,
+      "porta": "sessione_interattiva",
+      "condensato_ref": "A2,A10,F2,F5",
+      "vincolo": "VERIFY_BEFORE_SCAFFOLDING: il falsifier meta deve dichiarare M1-M5 PASS prima che il template venga installato. Domini che falliscono entrano nel cimitero come cristallizzazione, non come fallimento."
+    },
+    {
+      "tipo": "scoperta",
+      "id": "TEMPLATE_VS_SEED_DISTINCTION",
+      "claim": "Il valore del meta-lab non è scrivere file (config.json + struttura cartelle) — è produrre il seme cognitivo (tensioni iniziali + assiomi proiettati + naive baseline + assertions). Lo scaffolding fisso è invariante: tutti i lab D-ND hanno la stessa struttura di file. Il lavoro cognitivo è la formulazione precisa della prima domanda del lab nuovo.",
+      "intensita": 0.9,
+      "porta": "sessione_interattiva",
+      "condensato_ref": "A8,A11"
+    },
+    {
+      "tipo": "vincolo",
+      "id": "SELF_REGENERATE_FALSIFIER",
+      "claim": "Il primo test del meta-lab è rigenerare physics dal corpus interno. Se il seme rigenerato diverge sostantivamente da quello originale, il meta-lab non ha catturato il modus — è bug. Se il seme rigenerato + il primo cycle del lab rigenerato producono findings non equivalenti a quelli storici di physics, il meta-lab è incompleto.",
+      "intensita": 0.9,
+      "porta": "lab_self_test",
+      "condensato_ref": "A4,A8",
+      "falsifica_se": "diff strutturale > 30% sul seed cognitivo OR primo cycle del lab rigenerato fallisce M5"
+    },
+    {
+      "tipo": "scoperta_relazionale",
+      "id": "META_FALSIFIER_5_LENSES",
+      "claim": "Le 5 meta-lenti del falsifier meta-lab (M1 dipoli aritmetici, M2 assertions eseguibili, M3 tools out-of-box, M4 naive baseline, M5 auto-incremento informativo) sono asimmetriche rispetto alle 5 lenti standard del falsifier classico (L1-L5). Le lenti classiche falsificano findings scientifici; le meta-lenti falsificano la struttura che li produce. Un template che passa M1-M5 può ancora produrre cycle che falliscono L1-L5, ma un template che fallisce M1-M5 non potrà mai produrre cycle che passano L1-L5.",
+      "intensita": 0.85,
+      "porta": "sessione_interattiva",
+      "condensato_ref": "A2,A4,A8"
+    },
+    {
+      "tipo": "confine_inesplorato",
+      "id": "DOMAIN_TYPOLOGY",
+      "claim": "Non tutti i 'domini' sono lab D-ND. Distinzione: lab di sistema (es. organizzazione, ecosistema), lab di teoria (matematica, fisica, filosofia), lab di laboratorio applicato (biologia, chimica, ingegneria), lab editoriale/cognitivo (testo, semantica, narrazione). Il modus è invariante; cambia il materiale e la verifica empirica. Il meta-lab deve riconoscere il tipo prima di proporre tensioni.",
+      "intensita": 0.85,
+      "porta": "sessione_interattiva",
+      "condensato_ref": "A11,A14"
+    },
+    {
+      "tipo": "scoperta",
+      "id": "BOOTSTRAP_FROM_EXTERNAL",
+      "claim": "Il meta-lab non si auto-genera dal nulla. Il primo seme proviene dall'esterno: dall'esperienza accumulata (memoria operatore, lab physics ed editorial già funzionanti, condensato D-ND, 5 lenti del falsifier classico). Una volta radicato, può rigenerarsi e generare lab di dominio. Ma l'origine è esogena — atto cognitivo dell'operatore + agent.",
+      "intensita": 0.8,
+      "porta": "ground_truth",
+      "condensato_ref": "A15"
+    }
+  ]
+}

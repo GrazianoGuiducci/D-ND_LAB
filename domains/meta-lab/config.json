@@ -1,0 +1,43 @@
+{
+  "$schema": "../../config.schema.json",
+  "domain": "meta-lab",
+  "version": "0.1.0-alpha",
+  "title": "D-ND Meta-lab",
+  "description": "The first lab operating at system level — produces cognitive seeds (seed.json + context.md + about.md + assertions.py) for new domain labs. Output is not findings on a domain but templates that, once installed, generate domain labs that produce findings.",
+  "model": {
+    "context_file": "context.md",
+    "tension_to_category": "tension_to_category.json",
+    "seed_tensions": "seed_tensions.json"
+  },
+  "context": {
+    "data_dir": "meta-lab",
+    "max_turns": 30,
+    "timeout_seconds": 1800
+  },
+  "tools": [
+    { "name": "filesystem", "type": "builtin" },
+    { "name": "python_exec", "type": "builtin" },
+    { "name": "shell_exec", "type": "builtin" }
+  ],
+  "capabilities": {
+    "agent_role": "meta_seed_generator",
+    "input_schema": {
+      "domain_request": "free-form string describing the target domain",
+      "corpus_path": "optional path or URL to external corpus",
+      "tension_hints": "optional list of dipolar tensions the operator already sees"
+    },
+    "output_schema": {
+      "seed": "seed.json structure for target domain (domain, tensioni[], direzione, direzione_en)",
+      "context": "context.md prompt-system for target lab",
+      "about_it": "about.md visitor-facing IT",
+      "about_en": "about.en.md visitor-facing EN",
+      "assertions": "assertions.py with verifica_asserzioni()",
+      "validation_report": "M1-M5 falsifier meta verdict"
+    }
+  },
+  "_notes": {
+    "level": "meta — operates on system structure, not on a domain material",
+    "first_test": "regenerate physics from internal corpus and validate diff vs original",
+    "falsifier": "M1-M5 (vedi context.md). Domains failing 1+ go to cimitero come not-of-leverage."
+  }
+}
