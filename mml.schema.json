@@ -1,0 +1,199 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://d-nd.com/schemas/mml.schema.json",
+  "title": "Metamasterlab (MML) per-lab schema",
+  "description": "Schema canonico del file mml.json. Ogni lab D-ND (di dominio o di funzione) acquisisce un mml.json che dichiara il proprio orchestratore: quali mega skill del kernel sono attive, quali tools custom servono, quali API esterne sono dichiarate no-auth, e come l'agent del cycle invoca le risorse. Il MML è la proiezione di KTHIA sul lab specifico — figlio del meta-lab quando il lab è generato dal sistema, manuale per i lab esistenti pre-meta-lab.",
+  "type": "object",
+  "required": [
+    "lab",
+    "version",
+    "identity",
+    "kernel_refs",
+    "skills_attive",
+    "modus_invocation"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Riferimento allo schema (relativo dalla posizione del file)."
+    },
+    "lab": {
+      "type": "string",
+      "description": "Slug del lab (corrisponde a domains/<slug>/). Esempi: physics, editorial, meta-lab.",
+      "pattern": "^[a-z][a-z0-9-_]*$"
+    },
+    "version": {
+      "type": "string",
+      "description": "Versione semver del MML (indipendente dal versioning del lab stesso).",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(-[a-z0-9.]+)?$"
+    },
+    "identity": {
+      "type": "object",
+      "required": ["type", "level", "responsibility"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["domain", "function"],
+          "description": "domain = produce findings sul dominio; function = produce strutture per il sistema (es. meta-lab)."
+        },
+        "level": {
+          "type": "string",
+          "enum": ["ground", "meta", "trans-meta"],
+          "description": "ground = lab di dominio; meta = lab di funzione (meta-lab); trans-meta = orchestratore di meta-lab (futuro)."
+        },
+        "responsibility": {
+          "type": "string",
+          "description": "1-2 frasi su cosa il MML è responsabile di gestire per questo lab."
+        }
+      }
+    },
+    "kernel_refs": {
+      "type": "object",
+      "description": "Riferimenti alle entità MMSp e ai file kernel pertinenti per il lab.",
+      "properties": {
+        "mmsp_entities": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "Nome dell'entità MMSp (es. MMS_Master, Aethelred_v3.1, Morpheus_v1.0, OCC_v1.0)."
+          }
+        },
+        "kernel_files": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "Path relativo al repo MM_D-ND di file kernel rilevanti."
+          }
+        },
+        "condensato_axioms_used": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Z][0-9]+$"
+          },
+          "description": "Sottoinsieme degli A1-A16 / F1-F6 / C1-C3 che il lab proietta nel suo dominio."
+        }
+      }
+    },
+    "skills_attive": {
+      "type": "array",
+      "description": "Subset delle mega skill (kernel+runtime) che il MML attiva per questo lab. Pattern lazy: l'agent del cycle vede solo queste, non tutte.",
+      "items": {
+        "type": "object",
+        "required": ["name", "source", "rationale"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Slug della skill (es. cascata, scenario-projector, autoresearch)."
+          },
+          "source": {
+            "type": "string",
+            "description": "Path della skill: kernel/reference/skills/agent_skills_*.md (sorgente kernel) o .claude/skills/<slug>.md (runtime). Il loader risolve a runtime."
+          },
+          "trigger": {
+            "type": "string",
+            "description": "Quando la skill si attiva (es. 'after every significant modification', 'on cycle init', 'on user invocation')."
+          },
+          "rationale": {
+            "type": "string",
+            "description": "Perché questa skill serve a questo lab specifico — link alla tensione o al modus."
+          },
+          "category": {
+            "type": "string",
+            "enum": ["cognitive", "constructive", "orchestration", "logic", "output", "optimization", "identity", "research", "maintenance"]
+          }
+        }
+      }
+    },
+    "tools_custom": {
+      "type": "array",
+      "description": "Tools specifici del dominio (non skill globali). Esempio: tools/exp_two_layer_universality.py per physics.",
+      "items": {
+        "type": "object",
+        "required": ["name", "path", "description"],
+        "properties": {
+          "name": { "type": "string" },
+          "path": { "type": "string", "description": "Relative al lab dir, es. tools/exp_*.py" },
+          "description": { "type": "string" },
+          "executable_inline": {
+            "type": "boolean",
+            "description": "Se true, il tool è eseguibile sandboxed senza setup (M3 falsifier)."
+          }
+        }
+      }
+    },
+    "external_apis": {
+      "type": "array",
+      "description": "API esterne dichiarate per il lab. Pattern hermes: preferire endpoint no-auth per template installable out-of-box.",
+      "items": {
+        "type": "object",
+        "required": ["name", "base_url"],
+        "properties": {
+          "name": { "type": "string" },
+          "base_url": { "type": "string", "format": "uri" },
+          "auth_required": {
+            "type": "boolean",
+            "default": false,
+            "description": "Se true, il lab richiede credenziali — escalation operatore per setup. Se false, out-of-box installable (preferito)."
+          },
+          "purpose": {
+            "type": "string",
+            "description": "A che scopo il lab usa questa API."
+          },
+          "rate_limit_notes": { "type": "string" }
+        }
+      }
+    },
+    "modus_invocation": {
+      "type": "object",
+      "required": ["cycle_pattern"],
+      "properties": {
+        "cycle_pattern": {
+          "type": "string",
+          "description": "Sequenza tipica del cycle del lab. Default: 'autopsy → build_field → agent → bias_corrector → report_falsifier → bicono_extractor → SSP'. Lab di funzione possono avere pattern diverso."
+        },
+        "skill_invocation_strategy": {
+          "type": "string",
+          "enum": ["lazy", "eager", "hybrid"],
+          "default": "lazy",
+          "description": "lazy = skill caricata on-demand dall'agent; eager = tutte caricate al boot del cycle; hybrid = subset eager + altre lazy."
+        },
+        "fallback_provider_chain": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["claude-cli", "codex-cli", "openrouter", "openai", "anthropic", "ollama-local"]
+          },
+          "description": "Override del LLM_PROVIDER_CHAIN globale per questo lab specifico."
+        },
+        "preferred_runtime": {
+          "type": "string",
+          "enum": ["any", "claude-code", "codex", "hermes", "standalone"],
+          "default": "any",
+          "description": "Se il lab richiede caratteristiche specifiche di un runtime agent."
+        }
+      }
+    },
+    "conoscenza_lab": {
+      "type": "object",
+      "description": "Stato di conoscenza del lab — popolato/aggiornato dai cycle, non scritto manualmente.",
+      "properties": {
+        "tensioni_attive_count": { "type": "integer", "minimum": 0 },
+        "cycles_completed": { "type": "integer", "minimum": 0 },
+        "last_finding": { "type": ["string", "null"] },
+        "last_cycle_ts": { "type": ["string", "null"] },
+        "domain_specific_notes": { "type": "string" }
+      }
+    },
+    "_generated_by": {
+      "type": "string",
+      "enum": ["meta-lab", "manual", "hand-edited", "retrofit"],
+      "description": "Provenance del MML. meta-lab = nato dal cycle; manual = scritto a mano da operatore; retrofit = aggiunto a lab pre-esistente."
+    },
+    "_generated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "additionalProperties": false
+}
