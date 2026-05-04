@@ -6,6 +6,8 @@
   <title>D-ND_LAB</title>
   <!-- Nav styles condivisi col sito (lab.d-nd.com) — site-nav-wrap dropdown + external-nav -->
   <link rel="stylesheet" href="/assets/css/nav.css" />
+  <script src="/assets/js/translations.js"></script>
+  <script src="/assets/js/i18n.js" defer></script>
   <meta name="description" content="Dashboard operativa del Lab D-ND: domini, cycle, report, graph, seeds e movimenti.">
   <link rel="icon" href="/assets/favicon.ico">
   <meta property="og:type" content="website">
@@ -640,9 +642,9 @@
       <div class="flex items-center gap-3 flex-shrink-0">
         <a href="/" class="flex items-center gap-2 text-slate-100 hover:text-cyan-300 transition" title="Lab D-ND">
           <img src="/assets/logos/logo_40px.jpg" alt="D-ND" class="w-7 h-7 rounded shadow ring-1 ring-white/10">
-          <span class="text-xl font-light tracking-tight">D-ND_LAB</span>
+          <span class="text-xl font-light tracking-tight" data-i18n="dash.brand">D-ND_LAB</span>
         </a>
-        <span class="text-xs text-slate-300 uppercase tracking-wider hidden sm:inline">dashboard</span>
+        <span class="text-xs text-slate-300 uppercase tracking-wider hidden sm:inline" data-i18n="dash.brandSub">dashboard</span>
         <!-- Version label rimosso dalla toolbar (operatore: 'occupa spazio e non serve').
              Resta visibile in tab Info → Reference. -->
       </div>
@@ -651,7 +653,7 @@
       <nav class="lab-tabs flex-1" x-show="view === 'domain' && activeDomain">
         <template x-for="tab in TABS" :key="tab.id">
           <button class="lab-tab" :class="activeTab === tab.id && 'active'" @click="setActiveTab(tab.id)">
-            <span class="tab-icon" x-text="tab.icon"></span><span x-text="tab.label"></span>
+            <span class="tab-icon" x-text="tab.icon"></span><span x-text="t(tab.labelKey, tab.label)"></span>
           </button>
         </template>
       </nav>
@@ -662,7 +664,7 @@
            @click.outside="tabsDropdownOpen = false">
         <button @click="tabsDropdownOpen = !tabsDropdownOpen"
                 class="w-full bg-slate-900 border border-slate-700 hover:border-purple-700 focus:border-purple-500 rounded px-3 py-1.5 text-sm text-slate-200 text-left flex items-center justify-between transition">
-          <span class="truncate" x-text="(TABS.find(t => t.id === activeTab) || {}).label || 'Tab'"></span>
+          <span class="truncate" x-text="(() => { const tab = TABS.find(x => x.id === activeTab); return tab ? t(tab.labelKey, tab.label) : t('dash.tab.fallback', 'Tab'); })()"></span>
           <span class="text-purple-400 text-xs ml-2 flex-shrink-0" x-text="tabsDropdownOpen ? '▴' : '▾'"></span>
         </button>
         <div x-show="tabsDropdownOpen" x-cloak x-transition.opacity.duration.120ms
@@ -672,23 +674,24 @@
                     :class="activeTab === tab.id ? 'bg-purple-900/30 text-purple-200' : 'text-slate-200 hover:bg-slate-800'"
                     class="w-full text-left px-3 py-2 text-sm transition border-t border-slate-800 first:border-t-0 flex items-center gap-2">
               <span class="text-purple-400" x-text="tab.icon"></span>
-              <span x-text="tab.label"></span>
+              <span x-text="t(tab.labelKey, tab.label)"></span>
             </button>
           </template>
         </div>
       </div>
-      <!-- Right cluster: Domains + breadcrumb + Sito dropdown + esterni
+      <!-- Right cluster: Domains + breadcrumb + Sito dropdown + lang + esterni
            (refactor 03/05 sera: pattern unificato col sito 4 pagine). -->
       <nav class="flex items-center gap-2 text-sm flex-shrink-0">
         <!-- Home dashboard (Domains list) -->
         <button class="px-3 py-1 rounded hover:bg-slate-800 flex items-center gap-1.5"
                 :class="{'bg-slate-800': view === 'home'}"
                 @click="view = 'home'"
-                data-tip="Torna alla lista Domini">
+                data-tip="Torna alla lista Domini"
+                data-i18n-attr="dash.nav.toolTip:data-tip">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0">
             <path d="M3 9.5L12 3l9 6.5V21a1 1 0 0 1-1 1h-5v-7h-6v7H4a1 1 0 0 1-1-1V9.5z"/>
           </svg>
-          <span>Domains</span>
+          <span data-i18n="dash.nav.domains">Domains</span>
         </button>
         <template x-if="activeDomain">
           <div class="flex items-center gap-1">
@@ -704,15 +707,21 @@
              @click.outside="siteOpen = false"
              @keydown.escape="siteOpen = false">
           <button class="site-nav-trigger" @click="siteOpen = !siteOpen" :aria-expanded="siteOpen">
-            Sito <span class="caret">▾</span>
+            <span data-i18n="nav.siteTrigger">Sito</span> <span class="caret">▾</span>
           </button>
           <div class="site-nav-panel" role="menu">
-            <a href="/">Home</a>
-            <a href="/d-nd-lab.html">D-ND_LAB</a>
-            <a href="/dashboard/" data-current>Dashboard</a>
-            <a href="/scoperte.html">Scoperte</a>
-            <a href="/applications.html">Applicazioni</a>
+            <a href="/" data-i18n="nav.siteHome">Home</a>
+            <a href="/d-nd-lab.html" data-i18n="nav.siteDndLab">D-ND_LAB</a>
+            <a href="/dashboard/" data-current data-i18n="nav.siteDashboard">Dashboard</a>
+            <a href="/scoperte.html" data-i18n="nav.siteScoperte">Scoperte</a>
+            <a href="/applications.html" data-i18n="nav.siteApplicazioni">Applicazioni</a>
           </div>
+        </div>
+
+        <!-- Language switcher IT/EN — pattern speculare alle altre 4 pagine -->
+        <div class="lang-switcher" role="group" aria-label="Language">
+          <button data-lang="it" aria-pressed="true">IT</button>
+          <button data-lang="en" aria-pressed="false">EN</button>
         </div>
 
         <!-- Layer 3: Esterni (>1280px) -->
@@ -738,32 +747,31 @@
          Layered disclosure: tagline + 3 frasi + link discreti per audience
          tecniche, prodotto, modello (V3/V4/V5). -->
     <div class="mb-10 max-w-3xl">
-      <h1 class="text-3xl md:text-4xl font-light tracking-tight">
+      <h1 class="text-3xl md:text-4xl font-light tracking-tight" data-i18n="dash.hero.h1">
         A lab that thinks, then critiques itself.
       </h1>
-      <p class="text-slate-400 mt-4 leading-relaxed">
+      <p class="text-slate-400 mt-4 leading-relaxed" data-i18n="dash.hero.lead">
         Un sistema cognitivo autonomo. Ogni notte sceglie una domanda
         di ricerca, prova a rispondere, viene auto-corretto da un
         secondo polo asimmetrico, e i claim che resistono entrano in
         un seme che evolve. Quello che vedi sotto è ciò che ha
-        trovato — e, nel <em>cimitero</em>, ciò che ha scartato.
+        trovato — e, nel cimitero, ciò che ha scartato.
       </p>
-      <p class="text-slate-300 text-sm mt-3 leading-relaxed">
+      <p class="text-slate-300 text-sm mt-3 leading-relaxed" data-i18n="dash.hero.lead2">
         La struttura sotto è generica. Lo stesso sistema può girare
         su matematica, finanza, biologia, ricerca aziendale. Qui
-        gira su <span class="text-slate-300">fisica/matematica</span>
-        come prova del modello.
+        gira su fisica/matematica come prova del modello.
       </p>
 
       <!-- Entry points discreti per audience diverse -->
       <div class="flex flex-wrap gap-3 mt-6 text-xs">
-        <a href="https://d-nd.com/manifesto" class="px-3 py-1.5 rounded border border-slate-700 hover:border-purple-600 text-slate-400 hover:text-slate-200 transition">
+        <a href="https://d-nd.com/manifesto" class="px-3 py-1.5 rounded border border-slate-700 hover:border-purple-600 text-slate-400 hover:text-slate-200 transition" data-i18n="dash.entry.modello">
           Il modello D-ND →
         </a>
-        <a href="https://github.com/GrazianoGuiducci/D-ND_LAB" class="px-3 py-1.5 rounded border border-slate-700 hover:border-purple-600 text-slate-400 hover:text-slate-200 transition">
+        <a href="https://github.com/GrazianoGuiducci/D-ND_LAB" class="px-3 py-1.5 rounded border border-slate-700 hover:border-purple-600 text-slate-400 hover:text-slate-200 transition" data-i18n="dash.entry.architettura">
           Architettura (codice) →
         </a>
-        <a href="mailto:info@d-nd.com?subject=Lab custom per il mio dominio" class="px-3 py-1.5 rounded border border-slate-700 hover:border-amber-600 text-slate-400 hover:text-amber-300 transition">
+        <a href="mailto:info@d-nd.com?subject=Lab custom per il mio dominio" class="px-3 py-1.5 rounded border border-slate-700 hover:border-amber-600 text-slate-400 hover:text-amber-300 transition" data-i18n="dash.entry.labCustom">
           Lab custom per il tuo dominio →
         </a>
       </div>
@@ -771,8 +779,8 @@
 
     <!-- Sezione domini -->
     <div class="mb-3 flex items-baseline justify-between">
-      <h2 class="text-sm uppercase tracking-wider text-slate-300">Domini attivi</h2>
-      <span class="text-xs text-slate-400">scegli un dominio per entrare nel campo vivo</span>
+      <h2 class="text-sm uppercase tracking-wider text-slate-300" data-i18n="dash.section.dominiAttivi">Domini attivi</h2>
+      <span class="text-xs text-slate-400" data-i18n="dash.section.dominiSubtitle">scegli un dominio per entrare nel campo vivo</span>
     </div>
 
     <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -859,21 +867,21 @@
 
           <!-- Stats -->
           <div class="space-y-0">
-            <div class="stat-row" @mouseenter="showStatTip('teorie', $event)" @mouseleave="hideStatTip()"><span class="text-slate-400">teorie</span><span class="stat-num" x-text="campoStats().teorie"></span></div>
-            <div class="stat-row" @mouseenter="showStatTip('ponti', $event)" @mouseleave="hideStatTip()"><span class="text-slate-400">ponti</span><span class="stat-num" x-text="campoStats().ponti"></span></div>
-            <div class="stat-row" @mouseenter="showStatTip('vuoti', $event)" @mouseleave="hideStatTip()"><span class="text-slate-400">vuoti</span><span class="stat-num" x-text="campoStats().vuoti"></span></div>
-            <div class="stat-row" @mouseenter="showStatTip('scoperte', $event)" @mouseleave="hideStatTip()"><span class="text-slate-400">scoperte</span><span class="stat-num" x-text="campoStats().scoperte"></span></div>
-            <div class="stat-row" @mouseenter="showStatTip('applicazioni', $event)" @mouseleave="hideStatTip()"><span class="text-slate-400">applicazioni</span><span class="stat-num" x-text="campoStats().applicazioni"></span></div>
-            <div class="stat-row" @mouseenter="showStatTip('prodotti', $event)" @mouseleave="hideStatTip()"><span class="text-slate-400">prodotti</span><span class="stat-num" x-text="campoStats().prodotti"></span></div>
-            <div class="stat-row" @mouseenter="showStatTip('cicli', $event)" @mouseleave="hideStatTip()"><span class="text-slate-400">cicli</span><span class="stat-num" x-text="campoStats().cicli"></span></div>
+            <div class="stat-row" @mouseenter="showStatTip('teorie', $event)" @mouseleave="hideStatTip()"><span class="text-slate-400" data-i18n="dash.stats.teorie">teorie</span><span class="stat-num" x-text="campoStats().teorie"></span></div>
+            <div class="stat-row" @mouseenter="showStatTip('ponti', $event)" @mouseleave="hideStatTip()"><span class="text-slate-400" data-i18n="dash.stats.ponti">ponti</span><span class="stat-num" x-text="campoStats().ponti"></span></div>
+            <div class="stat-row" @mouseenter="showStatTip('vuoti', $event)" @mouseleave="hideStatTip()"><span class="text-slate-400" data-i18n="dash.stats.vuoti">vuoti</span><span class="stat-num" x-text="campoStats().vuoti"></span></div>
+            <div class="stat-row" @mouseenter="showStatTip('scoperte', $event)" @mouseleave="hideStatTip()"><span class="text-slate-400" data-i18n="dash.stats.scoperte">scoperte</span><span class="stat-num" x-text="campoStats().scoperte"></span></div>
+            <div class="stat-row" @mouseenter="showStatTip('applicazioni', $event)" @mouseleave="hideStatTip()"><span class="text-slate-400" data-i18n="dash.stats.applicazioni">applicazioni</span><span class="stat-num" x-text="campoStats().applicazioni"></span></div>
+            <div class="stat-row" @mouseenter="showStatTip('prodotti', $event)" @mouseleave="hideStatTip()"><span class="text-slate-400" data-i18n="dash.stats.prodotti">prodotti</span><span class="stat-num" x-text="campoStats().prodotti"></span></div>
+            <div class="stat-row" @mouseenter="showStatTip('cicli', $event)" @mouseleave="hideStatTip()"><span class="text-slate-400" data-i18n="dash.stats.cicli">cicli</span><span class="stat-num" x-text="campoStats().cicli"></span></div>
           </div>
 
           <!-- Freschezza -->
           <h4 class="text-xs uppercase tracking-wider text-slate-300 mt-5 mb-2">Freschezza</h4>
           <div class="space-y-0">
-            <div class="stat-row" @mouseenter="showStatTip('oggi', $event)" @mouseleave="hideStatTip()"><span class="text-slate-400">oggi</span><span class="stat-num text-green-400" x-text="freshnessStats().today"></span></div>
-            <div class="stat-row" @mouseenter="showStatTip('fresche', $event)" @mouseleave="hideStatTip()"><span class="text-slate-400">fresche (7d)</span><span class="stat-num text-cyan-400" x-text="freshnessStats().fresh"></span></div>
-            <div class="stat-row" @mouseenter="showStatTip('ghost', $event)" @mouseleave="hideStatTip()"><span class="text-slate-400">ghost urgenti</span><span class="stat-num text-amber-400" x-text="freshnessStats().ghosts"></span></div>
+            <div class="stat-row" @mouseenter="showStatTip('oggi', $event)" @mouseleave="hideStatTip()"><span class="text-slate-400" data-i18n="dash.stats.oggi">oggi</span><span class="stat-num text-green-400" x-text="freshnessStats().today"></span></div>
+            <div class="stat-row" @mouseenter="showStatTip('fresche', $event)" @mouseleave="hideStatTip()"><span class="text-slate-400" data-i18n="dash.stats.fresche">fresche (7d)</span><span class="stat-num text-cyan-400" x-text="freshnessStats().fresh"></span></div>
+            <div class="stat-row" @mouseenter="showStatTip('ghost', $event)" @mouseleave="hideStatTip()"><span class="text-slate-400" data-i18n="dash.stats.ghost">ghost urgenti</span><span class="stat-num text-amber-400" x-text="freshnessStats().ghosts"></span></div>
             <div class="stat-row cursor-pointer hover:bg-slate-800/40 -mx-1 px-1 rounded" @click="activeTab = 'agente'; reportsFilter = 'cimitero'" @mouseenter="showStatTip('cimitero', $event)" @mouseleave="hideStatTip()">
               <span class="text-slate-400">🪦 cimitero</span>
               <span class="stat-num text-slate-300" x-text="cimiteroCount()"></span>
@@ -2260,17 +2268,23 @@
   // v3 — tab definitions, mirrors LabGraph.tsx:216 activeTab values.
   // v4.11 — INCROCIO ora ospita il taxonomic graph.
   // UI fix #5 — Info tab al posto della card intro (operatore: "ruba spazio").
+  // Refactor i18n 04/05: ogni tab porta `labelKey` (lookup translations.js)
+  // + `label` (fallback IT se i18n non caricato). Render via t(key, fallback)
+  // helper Alpine reactive su lang change.
   const TABS = [
-    { id: 'grafo',    icon: '⬢', label: 'Grafo' },
-    { id: 'bicono',   icon: '◇', label: 'Bicono' },
-    { id: 'agente',   icon: '⊙', label: 'Agente' },
-    { id: 'incrocio', icon: '✕', label: 'Tassonomia' },
-    { id: 'prodotti', icon: '✦', label: 'Prodotti' },
-    { id: 'info',     icon: 'ⓘ', label: 'Info' },
+    { id: 'grafo',    icon: '⬢', labelKey: 'dash.tab.grafo',    label: 'Grafo' },
+    { id: 'bicono',   icon: '◇', labelKey: 'dash.tab.bicono',   label: 'Bicono' },
+    { id: 'agente',   icon: '⊙', labelKey: 'dash.tab.agente',   label: 'Agente' },
+    { id: 'incrocio', icon: '✕', labelKey: 'dash.tab.incrocio', label: 'Tassonomia' },
+    { id: 'prodotti', icon: '✦', labelKey: 'dash.tab.prodotti', label: 'Prodotti' },
+    { id: 'info',     icon: 'ⓘ', labelKey: 'dash.tab.info',     label: 'Info' },
   ];
 
   function dashboard() {
     return {
+      // i18n state (refactor 04/05) — reactive on `dnd-lang-change` event
+      lang: (window.i18n && typeof window.i18n.getLang === 'function') ? window.i18n.getLang() : 'it',
+
       // State
       view: 'home',
       health: {},
@@ -2385,7 +2399,25 @@
       runLog: '',
       runWs: null,
 
+      // i18n helper — Alpine reactive lookup. `this.lang` è dipendenza:
+      // quando cambia (via listener su dnd-lang-change), Alpine re-render
+      // tutti i x-text="t(...)". Fallback al label IT se i18n non caricato.
+      t(key, fallback) {
+        // eslint-disable-next-line no-unused-expressions
+        this.lang;  // dependency tracking — leggere lang per re-render reattivo
+        if (window.i18n && typeof window.i18n.t === 'function') {
+          const v = window.i18n.t(key);
+          // i18n.t ritorna la key stessa se non trova match → usa fallback in tal caso
+          return (v === key && fallback) ? fallback : v;
+        }
+        return fallback || key;
+      },
+
       async init() {
+        // Listener cambio lingua (i18n.js dispatcha CustomEvent dnd-lang-change)
+        window.addEventListener('dnd-lang-change', (e) => {
+          this.lang = e.detail.lang;
+        });
         // Registra plugin Cytoscape (fcose layout — più stabile per grafi
         // piccoli con clustering, refactor 03/05 sera).
         if (typeof cytoscape !== 'undefined' && typeof cytoscapeFcose !== 'undefined') {
