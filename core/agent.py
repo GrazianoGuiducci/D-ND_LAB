@@ -25,10 +25,74 @@ import logging
 from typing import Any
 
 from core import config as cfg
-from core import llm_adapter, paths, tools
+from core import llm_adapter, paths, skill_loader, tools
 from core.lab_agent import CycleContext, register_movement
 
 logger = logging.getLogger(__name__)
+
+
+def _build_mml_section(domain: str) -> str:
+    """Build a system_prompt section from the lab MML (mml.json).
+
+    Reads skills_attive + tools_custom and renders a human-readable
+    section telling the agent which skills/tools the lab declares as
+    pertinent for its modus, with trigger and rationale. Tools custom
+    are exposed as shell-invocable scripts (the agent uses shell_exec
+    to run them — no MCP registration needed).
+
+    Returns empty string if mml.json missing or malformed (silent).
+    The cycle still works without MML — same as pre-2.A.7 behaviour.
+    """
+    try:
+        skills = skill_loader.load_skills_for_lab(domain, runtime="auto")
+    except Exception as e:
+        logger.warning("MML wire skipped — skill_loader failed: %s", e)
+        return ""
+
+    mml_raw = skill_loader._read_mml(domain) or {}
+    tools_custom = mml_raw.get("tools_custom", []) or []
+
+    if not skills and not tools_custom:
+        return ""
+
+    lines: list[str] = ["## Lab MML — skills attive e tools custom", ""]
+
+    if skills:
+        lines.append(
+            "Il MML del lab dichiara le skill seguenti come pertinenti al "
+            "modus del lab. Applica ognuna al trigger indicato durante il "
+            "cycle. Le skill vivono nei loro file sorgente — segui il "
+            "rationale, non riformulare."
+        )
+        lines.append("")
+        for s in skills:
+            lines.append(f"- **{s.name}** (`{s.source_kind}`)")
+            if s.trigger:
+                lines.append(f"  - trigger: {s.trigger}")
+            if s.rationale:
+                lines.append(f"  - rationale: {s.rationale}")
+            lines.append(f"  - source: `{s.source_path}`")
+        lines.append("")
+
+    if tools_custom:
+        domain_dir = skill_loader.DOMAINS_DIR / domain
+        lines.append(
+            "Tools custom del lab (script CLI eseguibili via "
+            "`shell_exec`, non tool MCP — l'agent li invoca direttamente "
+            "quando serve evidenza eseguita anziché discorso):"
+        )
+        lines.append("")
+        for t in tools_custom:
+            name = t.get("name", "?")
+            rel_path = t.get("path", "?")
+            desc = t.get("description", "")
+            full_path = domain_dir / rel_path
+            lines.append(f"- **{name}** — {desc}")
+            lines.append(f"  - path: `{full_path}`")
+            lines.append(f"  - invoke: `python3 {full_path} [args]`")
+        lines.append("")
+
+    return "\n".join(lines).rstrip()
 
 
 def agent(ctx: CycleContext) -> None:
@@ -47,6 +111,9 @@ def agent(ctx: CycleContext) -> None:
     system_prompt_parts: list[str] = []
     if context_path.exists():
         system_prompt_parts.append(context_path.read_text())
+    mml_section = _build_mml_section(ctx.domain)
+    if mml_section:
+        system_prompt_parts.append(mml_section)
     system_prompt_parts.append(field_path.read_text())
     system_prompt = "\n\n---\n\n".join(system_prompt_parts)
 
@@ -71,6 +138,13 @@ def agent(ctx: CycleContext) -> None:
     # imports its module and calls module.build(domain) to get a ToolEntry.
     # This lets domains expose specialized tools (archive_search, voice_check,
     # m_spectro, etc.) without polluting core.
+    #
+    # Two declaration styles supported:
+    #   1. Dotted module path ("domains.physics.tools.m_spectro") — Python
+    #      module exposing build(domain) → MCP-style tool. Loaded into tool_set.
+    #   2. Posix path ending in .py ("tools/exp_incident_regressor.py") —
+    #      standalone CLI script. NOT registered as MCP tool — the agent
+    #      invokes it via shell_exec, surfaced in the MML section above.
     for tool_decl in ctx.config.get("tools", []):
         if tool_decl.get("type") != "domain":
             continue
@@ -78,6 +152,15 @@ def agent(ctx: CycleContext) -> None:
         if not module_name:
             logger.warning("domain tool without module: %s", tool_decl)
             continue
+        # Style 2: standalone script — let the agent invoke via shell_exec.
+        if "/" in module_name or module_name.endswith(".py"):
+            logger.info(
+                "domain tool %s is a standalone script (%s) — surfaced via MML, "
+                "invoked by agent via shell_exec",
+                tool_decl.get("name"), module_name,
+            )
+            continue
+        # Style 1: dotted module — import and register as MCP tool.
         try:
             import importlib
             mod = importlib.import_module(module_name)
