@@ -114,6 +114,7 @@ MOVEMENT_ORDER: list[str] = [
     "refresh_detector",
     "seed_integrator",
     "trajectory_evaluator",
+    "promotion_proposer",  # NEW (05/05) — G3 Fine B: estrae proposte di promozione finding → skill/hook/regola sistemica (no apply automatico, atto Approve operatore)
     "ssp_pipeline",        # NEW (01/05) — chiude scoperta → prodotto: crystallize+eligibility+designer+stage4
     "notify",
 ]
@@ -285,4 +286,5 @@ from core import bicono_extractor as _bicono_extractor  # noqa: E402, F401  # NE
 from core import verify_assertions as _verify_assertions  # noqa: E402, F401  # NEW 29/04
 from core import ssp_pipeline as _ssp_pipeline  # noqa: E402, F401  # NEW 01/05 — scoperta→prodotto
 from core import trajectory_apply as _trajectory_apply  # noqa: E402, F401  # NEW 05/05 — chiude loop A8+A15
-# 18 movements registered (added trajectory_apply 05/05 — applies log-only trajectory_evaluator decisions).
+from core import promotion_proposer as _promotion_proposer  # noqa: E402, F401  # NEW 05/05 — G3 promotion pipeline
+# 19 movements registered (added promotion_proposer 05/05 — extracts cycle finding → system rules/skills/hooks).

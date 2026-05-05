@@ -38,6 +38,7 @@
     "refresh_detector":   { "enabled": false },
     "seed_integrator":    { "enabled": true },
     "trajectory_evaluator": { "enabled": true },
+    "promotion_proposer": { "enabled": true, "params": {"comment": "G3 Fine B: estrae proposte di promozione finding → skill/hook/regola sistemica. Output in data/<lab>/promotions/. Operatore decide apply (no automatico)."} },
     "ssp_pipeline":       { "enabled": false, "params": {"comment": "lab di funzione — output sono regole, non prodotti SSP"} },
     "bias_corrector":     { "enabled": true },
     "report_falsifier":   { "enabled": true },
