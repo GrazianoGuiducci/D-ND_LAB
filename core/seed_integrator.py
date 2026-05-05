@@ -33,7 +33,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from core import config as cfg
+from core import aeternitas, config as cfg
 from core import paths
 from core.lab_agent import CycleContext, register_movement
 
@@ -139,6 +139,39 @@ def seed_integrator(ctx: CycleContext) -> None:
         "fonti_esterne": seed.get("fonti_esterne", []),
     }
 
+    # ── Aeternitas gate (Phase 2.A.7+ propagation 05/05) ─────────
+    # Verify P0/P1/P5 invariants pre-crystallization. Default mode
+    # 'warn': log decision + reason, do NOT block write. Set
+    # movements.seed_integrator.params.aeternitas_mode='hard' for veto.
+    # Visibility: every cycle leaves trace in data/<domain>/aeternitas/.
+    aeternitas_mode = str(params.get("aeternitas_mode", "warn")).lower()
+    aeternitas_result = aeternitas.verify_invariants(seed, new_seed)
+    aeternitas_log_path = aeternitas.log_decision(
+        ctx.domain, ctx.timestamp, aeternitas_result
+    )
+    decision = aeternitas_result["decision"]
+    if decision == "VETO":
+        if aeternitas_mode == "hard":
+            logger.error(
+                "aeternitas: VETO (hard mode) — seed write blocked. Reason: %s",
+                aeternitas_result["reason"],
+            )
+            ctx.metrics.setdefault("seed_integrator", {}).update(
+                aeternitas_decision="VETO",
+                aeternitas_reason=aeternitas_result["reason"],
+                aeternitas_mode=aeternitas_mode,
+                seed_written=False,
+            )
+            return
+        logger.warning(
+            "aeternitas: VETO (warn mode, write proceeds) — Reason: %s",
+            aeternitas_result["reason"],
+        )
+    elif decision == "WARN":
+        logger.info("aeternitas: WARN — %s", aeternitas_result["reason"])
+    else:
+        logger.info("aeternitas: PROCEED — %s", aeternitas_result["reason"])
+
     # Atomic write: write to .tmp, rename
     tmp_path = seed_path.with_suffix(".json.tmp")
     tmp_path.write_text(json.dumps(new_seed, indent=2, ensure_ascii=False, default=str))
@@ -149,6 +182,11 @@ def seed_integrator(ctx: CycleContext) -> None:
         new_piano=new_piano,
         n_tensions=len(tensioni),
         direzione=direzione[:80],
+        aeternitas_decision=decision,
+        aeternitas_reason=aeternitas_result["reason"],
+        aeternitas_mode=aeternitas_mode,
+        aeternitas_log=str(aeternitas_log_path) if aeternitas_log_path else None,
+        seed_written=True,
     )
     logger.info(
         "seed_integrator: piano %s → %s, %d tensions, direction='%s...'",
