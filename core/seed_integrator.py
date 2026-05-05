@@ -215,6 +215,15 @@ def _tensions_from_assertions(assertion_metrics: dict[str, Any]) -> list[dict[st
 
     out: list[dict[str, Any]] = []
 
+    # Lignaggio condensato per tensioni auto-generate (P0 aeternitas).
+    # Mapping universale derivato dal modello D-ND:
+    # - contraddizione (FAIL): A2 confine necessario + A4 modus + C2 falsifier
+    # - bloccato (SKIP): A6 zero mobile + A7 singolarità operatore
+    # - simmetria_sospetta (META): A4 modus + A12 vincolo sovrapposizione + C2
+    REF_FAIL = "A2,A4,C2"
+    REF_SKIP = "A6,A7"
+    REF_META_ALL_PASS = "A4,A12,C2"
+
     # FAIL → tensione contraddizione (massima intensità)
     for r in results:
         if not isinstance(r, dict):
@@ -228,6 +237,8 @@ def _tensions_from_assertions(assertion_metrics: dict[str, Any]) -> list[dict[st
                 "intensità": 1.0,
                 "nota": "verify_assertions FAIL — claim del modello vs dato divergono. O il claim va corretto o il test e' sbagliato.",
                 "fonte": r.get("source", "verify_assertions"),
+                "condensato_ref": REF_FAIL,
+                "porta": "verify_assertions_FAIL",
             })
         elif r.get("status") == "SKIP":
             # Tracciato ma intensità più bassa — è potenziale bloccato, non contraddizione
@@ -239,6 +250,8 @@ def _tensions_from_assertions(assertion_metrics: dict[str, Any]) -> list[dict[st
                 "intensità": 0.4,
                 "nota": "verify_assertions SKIP — il test non si e' eseguito (manca prerequisito).",
                 "fonte": r.get("source", "verify_assertions"),
+                "condensato_ref": REF_SKIP,
+                "porta": "verify_assertions_SKIP",
             })
 
     # Tutti PASS su >5 test → simmetria sospetta (META anti-tautologica)
@@ -252,6 +265,8 @@ def _tensions_from_assertions(assertion_metrics: dict[str, Any]) -> list[dict[st
             "intensità": 0.5,
             "nota": "Convergenza univoca su tutti i test = segnale ambiguo. I test stanno verificando contenuto o struttura? Possibile shuffle/null check necessario.",
             "fonte": "verify_assertions META",
+            "condensato_ref": REF_META_ALL_PASS,
+            "porta": "verify_assertions_META_ALL_PASS",
         })
 
     return out
