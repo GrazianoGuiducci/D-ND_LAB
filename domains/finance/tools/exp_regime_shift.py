@@ -15,15 +15,59 @@ from typing import Any
 import numpy as np
 
 
-def synthetic_returns(n: int, seed: int) -> np.ndarray:
+def synthetic_returns(n: int, seed: int, mode: str = "realistic") -> np.ndarray:
+    """Return synthetic series.
+
+    Modes:
+    - "ideal" (legacy): hardcoded bull/bear with linear shock transition.
+      Effect_z under D-ND orientation score is enormous (~50-60). Useful
+      ONLY as sanity check that the pipeline produces a clear DND_DELTA
+      verdict on a known-engineered case. NOT evidence of real regime.
+    - "realistic" (default): heteroskedastic GARCH-like noise + smooth
+      sigmoid transition + Student-t fat tails. Effect_z falls to ~3-15
+      range — informative but not implausibly perfect. Closer to what
+      real markets look like in finite samples.
+    """
     rng = np.random.default_rng(seed)
     split = n // 2
-    bull = rng.normal(0.0011, 0.0075, split)
-    bear = rng.normal(-0.0016, 0.0185, n - split)
-    transition = np.zeros(n)
-    width = min(12, n - split)
-    transition[split:split + width] = np.linspace(-0.012, -0.045, width)
-    return np.concatenate([bull, bear]) + transition
+
+    if mode == "ideal":
+        bull = rng.normal(0.0011, 0.0075, split)
+        bear = rng.normal(-0.0016, 0.0185, n - split)
+        transition = np.zeros(n)
+        width = min(12, n - split)
+        transition[split:split + width] = np.linspace(-0.012, -0.045, width)
+        return np.concatenate([bull, bear]) + transition
+
+    # "realistic" mode (default)
+    # Smooth sigmoid transition between regimes (no hard step)
+    t = np.arange(n)
+    transition_center = split
+    transition_width = max(20, n // 25)
+    blend = 1.0 / (1.0 + np.exp((t - transition_center) / transition_width))
+    # blend = 1 in bull region, 0 in bear region, smooth in between
+    mu_bull, mu_bear = 0.0008, -0.0011
+    sigma_bull, sigma_bear = 0.0080, 0.0165
+    mu = blend * mu_bull + (1 - blend) * mu_bear
+    base_sigma = blend * sigma_bull + (1 - blend) * sigma_bear
+
+    # GARCH-like heteroskedasticity: vol cluster around shocks
+    df = 5.0  # Student-t degrees of freedom (fat tails)
+    innov = rng.standard_t(df, size=n)
+    # Vol clustering: |innov_{t-1}| influences sigma_t
+    sigma = np.zeros(n)
+    sigma[0] = base_sigma[0]
+    persistence = 0.85
+    arch_effect = 0.10
+    for i in range(1, n):
+        sigma[i] = np.sqrt(
+            (1 - persistence - arch_effect) * base_sigma[i] ** 2
+            + persistence * sigma[i - 1] ** 2
+            + arch_effect * (innov[i - 1] * sigma[i - 1]) ** 2
+        )
+    returns = mu + sigma * innov / np.sqrt(df / (df - 2))  # t-scaled to unit-ish var
+
+    return returns
 
 
 def orientation_score(returns: np.ndarray) -> float:
@@ -58,8 +102,13 @@ def cassini_residue(returns: np.ndarray) -> float:
     return float(np.mean(residues))
 
 
-def run_experiment(n: int = 768, seed: int = 42, shuffles: int = 128) -> dict[str, Any]:
-    returns = synthetic_returns(n=n, seed=seed)
+def run_experiment(
+    n: int = 768,
+    seed: int = 42,
+    shuffles: int = 128,
+    mode: str = "realistic",
+) -> dict[str, Any]:
+    returns = synthetic_returns(n=n, seed=seed, mode=mode)
     ordered = abs(orientation_score(returns))
 
     rng = np.random.default_rng(seed + 1000)
@@ -88,6 +137,7 @@ def run_experiment(n: int = 768, seed: int = 42, shuffles: int = 128) -> dict[st
         "n": n,
         "seed": seed,
         "shuffles": shuffles,
+        "mode": mode,
         "ordered": ordered,
         "shuffle_mean": shuffle_mean,
         "shuffle_std": shuffle_std,
@@ -100,6 +150,14 @@ def run_experiment(n: int = 768, seed: int = 42, shuffles: int = 128) -> dict[st
         "verdict": verdict,
         "null_baseline": "shuffle returns: same distribution, destroyed order",
         "naive_baseline": "static VaR 95% + realized volatility",
+        "_caveat": (
+            "Synthetic data, NOT real-market evidence of regime. "
+            "Use mode='realistic' (default) for GARCH+t-noise+sigmoid "
+            "transition. mode='ideal' is a sanity check on engineered "
+            "bull/bear with hard transition — produces enormous effect_z "
+            "(~50-60) but is tautological by construction. Real evidence "
+            "requires running on yfinance/CoinGecko data in cycle 2+."
+        ),
     }
 
 
@@ -108,10 +166,16 @@ def main() -> None:
     parser.add_argument("--n", type=int, default=768)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--shuffles", type=int, default=128)
+    parser.add_argument(
+        "--mode",
+        choices=["realistic", "ideal"],
+        default="realistic",
+        help="realistic: GARCH+t-noise+sigmoid (default, informative). ideal: engineered bull/bear sanity check (tautological).",
+    )
     parser.add_argument("--json", action="store_true", help="emit machine-readable JSON")
     args = parser.parse_args()
 
-    summary = run_experiment(n=args.n, seed=args.seed, shuffles=args.shuffles)
+    summary = run_experiment(n=args.n, seed=args.seed, shuffles=args.shuffles, mode=args.mode)
     if args.json:
         print(json.dumps(summary, indent=2, sort_keys=True))
         return

@@ -120,15 +120,21 @@ def _check_cassini_residue_computable() -> dict[str, Any]:
 
 
 def _check_tool_summary() -> dict[str, Any]:
+    """Sanity check: il tool gira e produce summary completo.
+
+    Usa mode='ideal' (engineered bull/bear con hard transition) per
+    garantire DND_DELTA stabile come sanity check del pipeline.
+    Nel cycle reale, l'agent userà mode='realistic' (default CLI).
+    """
     module = _load_exp_module()
-    summary = module.run_experiment(n=512, seed=17, shuffles=64)
+    summary = module.run_experiment(n=512, seed=17, shuffles=64, mode="ideal")
     required = {"ordered", "shuffle_mean", "effect_z", "var_95", "realized_vol", "verdict"}
     missing = sorted(required - set(summary))
     ok = not missing and summary["verdict"] in {"DND_DELTA", "NO_DELTA"}
     return _result(
         "F_DND_05",
         "PASS" if ok else "FAIL",
-        "tool returned required summary" if ok else f"missing={missing}",
+        "tool returned required summary (mode=ideal sanity check)" if ok else f"missing={missing}",
         {k: summary.get(k) for k in sorted(required)},
     )
 

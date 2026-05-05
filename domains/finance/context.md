@@ -63,6 +63,44 @@ Quando una finestra di mercato sembra passare da bull a bear o viceversa,
 il segnale conserva orientamento sotto M oppure e' soltanto realized
 volatility vista in ritardo?
 
+## Prior art e posizionamento D-ND
+
+Il regime detection nei mercati finanziari ha una letteratura ricca. Il
+lab D-ND non sostituisce questi framework — opera su un asse diverso
+(orientamento dell'operatore M) e li usa come baseline informate.
+
+Framework di riferimento (cita nei tuoi report quando applicabili):
+
+- **Hamilton (1989) — Markov-Switching**: regime come stato latente con
+  transizioni probabilistiche P(s_t | s_{t-1}). Cattura cambi di media/
+  varianza ma assume struttura discreta dei regimi. **D-ND vs Hamilton**:
+  l'orientamento M e' continuo, non discreto; misura come la mappa
+  lagged change segno-orientato sotto shuffle, non se uno stato e'
+  "bull" o "bear" per definizione.
+- **Bai-Perron change-point detection**: rileva break strutturali in
+  serie storiche via test multipli. **D-ND vs Bai-Perron**: change-point
+  cerca rotture di parametri; il lab D-ND cerca conservazione di
+  orientamento sotto operatore M — il break e' un caso particolare di
+  perdita di orientamento.
+- **HMM continuous-state (Kalman, Particle filter)**: state-space con
+  osservazione rumorosa di stato latente continuo. **D-ND vs HMM**:
+  l'HMM richiede modello generativo esplicito (transition + emission
+  matrix); D-ND richiede solo che l'operatore M abbia firma diversa
+  vs surrogato shuffle.
+- **Realized volatility / RV-based regime**: misura puramente vol-of-vol.
+  **D-ND vs RV**: il lab include realized vol come naive baseline; il
+  finding D-ND deve mostrare delta misurabile RISPETTO a RV, non solo
+  riprodurre RV.
+- **Markov memory layers (research interno MM_D-ND, paper in
+  preparazione)**: kernel z=12,813 ha rivelato struttura layered
+  Markov. **D-ND vs Markov memory**: il lab finance applica lo stesso
+  modus al dominio mercati — coerenza interna del sistema D-ND.
+
+Posizionamento del lab: D-ND finance non promette migliore prediction
+accuracy; promette **test strutturale** che distingue regime reale da
+illusione statistica. Il valore e' l'onesta' del null baseline, non
+la potenza predittiva.
+
 ## Baseline e metodo
 
 Naive baseline:
@@ -136,6 +174,32 @@ successivo. Non aspettare un intervento manuale per recepire correzioni gia'
 decise dal sistema.
 
 ## Come operare nel cycle
+
+**Step 0 — Onesta' del primo cycle (LEGGI PRIMA DI QUALSIASI ALTRO ATTO)**:
+
+Il `tools/exp_regime_shift.py` di default usa `mode='realistic'`
+(GARCH+Student-t+sigmoid transition). C'e' anche `mode='ideal'` —
+NON usarlo nel report come evidenza: e' un sanity check tautologico
+del pipeline (regime engineered con effect_z ~50-60 garantito per
+construction). Usalo solo se vuoi dimostrare che il pipeline funziona
+contro un caso noto-positivo.
+
+Il primo cycle gira **senza rete** su synthetic mode='realistic'. Il
+verdict ottenuto (DND_DELTA o NO_DELTA) NON e' evidenza di regime
+reale di mercato — e' evidenza che il pipeline distingue serie con
+struttura da serie senza struttura (null shuffle). Per evidenza di
+mercato reale serve ciclare su yfinance/CoinGecko (cycle 2+) con
+fetch live.
+
+Promuovi finding solo quando:
+1. il delta D-ND >= 3σ contro shuffle (effect_z visibile)
+2. il finding e' verificato su almeno una serie reale (non solo
+   synthetic)
+3. la naive baseline (VaR + RV) e' esplicita nel report
+4. il prior art e' citato (Hamilton/Bai-Perron/HMM/RV — dove
+   applicabile)
+
+**Step operativo**:
 
 Espandi il campo leggendo seed, report precedenti e dati disponibili.
 Taglia una sola domanda. Esegui un tool o scrivi un esperimento riusabile.
