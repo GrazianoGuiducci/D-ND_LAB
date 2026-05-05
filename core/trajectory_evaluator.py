@@ -221,6 +221,124 @@ def trajectory_evaluator(ctx: CycleContext) -> None:
 # ─── Context assembly ──────────────────────────────────────────────
 
 
+def _compute_ia(ctx: CycleContext) -> dict[str, Any]:
+    """Compute IA (Indice di Attrito) ∈ [0,1] from cycle metrics.
+
+    IA è il dual di ρ (Indice di Realtà): misura quanto il cycle è
+    incoerente / a rischio / in stallo. Soglie kairos-sys:
+    - IA ≤ 0.3 → Regime RISONANZA (sistema solido, evolution costruttiva)
+    - 0.3 < IA ≤ 0.7 → Regime MAIEUTIC (zona grigia, forza emergenza
+      con domande)
+    - IA > 0.7 → Regime DISTRUZIONE (sistema compiacente o rotto,
+      distruggi presupposti)
+
+    Aggregazione:
+    - 1 - rho (più ρ basso → più attrito)
+    - + n_high_flags / max(1, n_total_flags) × 0.4 (high flags gravano)
+    - + 0.3 se aeternitas_decision == "VETO"
+    Clamp [0,1].
+    """
+    rho = None
+    veritas_metrics = ctx.metrics.get("veritas_score", {}) or {}
+    if isinstance(veritas_metrics, dict):
+        rho = veritas_metrics.get("rho")
+    if rho is None:
+        # Fallback: read latest veritas log file
+        try:
+            v_dir = paths.domain_data_dir(ctx.domain) / "veritas"
+            if v_dir.is_dir():
+                files = sorted(v_dir.glob(f"veritas_{ctx.timestamp}*.json"))
+                if not files:
+                    files = sorted(v_dir.glob("veritas_*.json"))
+                if files:
+                    v = json.loads(files[-1].read_text())
+                    rho = v.get("rho")
+        except Exception:
+            rho = None
+
+    # n_high_flags fraction
+    falsifier_metrics = ctx.metrics.get("report_falsifier", {}) or {}
+    flags = falsifier_metrics.get("flags") or []
+    if not flags:
+        try:
+            fal_path = paths.domain_data_dir(ctx.domain) / "falsifier" / f"falsifier_{ctx.timestamp}.json"
+            if fal_path.exists():
+                fal = json.loads(fal_path.read_text())
+                flags = fal.get("flags", []) or []
+        except Exception:
+            flags = []
+    n_high = sum(1 for f in flags if isinstance(f, dict) and f.get("severity") == "high")
+    n_total_flags = len(flags)
+    high_fraction = n_high / max(1, n_total_flags)
+
+    # Aeternitas VETO penalty
+    seed_metrics = ctx.metrics.get("seed_integrator", {}) or {}
+    aet_decision = seed_metrics.get("aeternitas_decision", "PROCEED")
+    aet_veto = 1.0 if aet_decision == "VETO" else 0.0
+
+    # Aggregate IA
+    rho_term = (1.0 - rho) if rho is not None else 0.5
+    ia = rho_term + high_fraction * 0.4 + aet_veto * 0.3
+    ia = max(0.0, min(1.0, ia))
+
+    if ia <= 0.3:
+        regime = "RISONANZA"
+        regime_hint = (
+            "Sistema solido. Cerca evoluzione costruttiva — costruisci "
+            "ponti tra modello condiviso e anomalia. Decision suggerita: "
+            "NEXT_CYCLE o CRYSTALLIZE se finding maturo."
+        )
+    elif ia <= 0.7:
+        regime = "MAIEUTIC"
+        regime_hint = (
+            "Zona grigia, dissonanza media. Forza emergenza con domande. "
+            "Decision suggerita: REDESIGN se direzione chiara, NEXT_CYCLE "
+            "con tensione meta su 'che presupposto stiamo dando per scontato?'"
+        )
+    else:
+        regime = "DISTRUZIONE"
+        regime_hint = (
+            "Sistema compiacente o rotto. Distruggi presupposti, applica "
+            "vuoto, osserva substrato. Decision suggerita: REDESIGN forte "
+            "verso confine precedentemente non esplorato, oppure ESCALATE "
+            "se l'operatore deve decidere."
+        )
+
+    return {
+        "ia": round(ia, 4),
+        "rho": round(rho, 4) if rho is not None else None,
+        "n_high_flags": n_high,
+        "n_total_flags": n_total_flags,
+        "aeternitas_decision": aet_decision,
+        "regime_suggested": regime,
+        "regime_hint": regime_hint,
+    }
+
+
+def _build_kairos_block(ctx: CycleContext) -> str:
+    """Construct the kairos signals block for the evaluator context."""
+    k = _compute_ia(ctx)
+    rho_str = f"{k['rho']}" if k["rho"] is not None else "(not computed)"
+    block = (
+        "### KAIROS quantitative signals (auto-computed)\n\n"
+        f"- **IA (Indice di Attrito)**: {k['ia']} ∈ [0,1]\n"
+        f"- **ρ (Indice di Realtà, da veritas)**: {rho_str}\n"
+        f"- **Falsifier high-severity flags**: {k['n_high_flags']} / "
+        f"{k['n_total_flags']}\n"
+        f"- **Aeternitas decision**: {k['aeternitas_decision']}\n\n"
+        f"**Regime suggerito (kairos-sys)**: {k['regime_suggested']}\n\n"
+        f"_Hint_: {k['regime_hint']}\n\n"
+        "Questi sono segnali quantitativi — usali come prior, non come "
+        "vincolo. La tua decision space resta libera "
+        "(STOP_FOR_REVIEW/NEXT_CYCLE/REDESIGN/ESCALATE/CRYSTALLIZE/OTHER); "
+        "il regime kairos suggerisce dove la dissonanza è più alta o "
+        "più bassa, ma il giudizio integrale è tuo.\n"
+    )
+    # Stash kairos result in metrics for log
+    ctx.metrics.setdefault("trajectory_evaluator", {}).setdefault("kairos", k)
+    return block
+
+
 def _build_context(ctx: CycleContext, params: dict[str, Any]) -> str:
     """Assemble what the evaluator reads. Universal core + domain plugin.
 
@@ -268,6 +386,15 @@ def _build_context(ctx: CycleContext, params: dict[str, Any]) -> str:
 
     # 5. CURRENT CYCLE
     parts.append("## CURRENT CYCLE\n")
+
+    # 5.0 KAIROS quantitative signals — IA + ρ + regime suggestion
+    # (Atto E 05/05): porta i segnali quantitativi del cycle nel
+    # contesto del valutatore. Il LLM puo' usare il regime suggerito
+    # da kairos come prior nella decision space — non lo sostituisce.
+    kairos_block = _build_kairos_block(ctx)
+    if kairos_block:
+        parts.append(kairos_block)
+
     report_md = paths.reports_dir(ctx.domain) / f"agent_{ctx.timestamp}.md"
     if report_md.exists():
         parts.append(f"### Agent report\n\n{report_md.read_text()[:5000]}\n")
