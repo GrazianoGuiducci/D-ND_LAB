@@ -23,6 +23,7 @@
   ],
   "movements": {
     "autopsy":            { "enabled": true },
+    "trajectory_apply":   { "enabled": true, "params": {"comment": "chiude loop A8+A15 — applica log-only REDESIGN al seed prima di build_field"} },
     "build_field":        { "enabled": true },
     "agent":              { "enabled": true },
     "validate_seed":      { "enabled": true },

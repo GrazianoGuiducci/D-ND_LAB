@@ -96,6 +96,7 @@ class CycleContext:
 # Ordered list — the dispatch sequence.
 MOVEMENT_ORDER: list[str] = [
     "autopsy",
+    "trajectory_apply",   # NEW (05/05) — chiude loop A8+A15: legge ultima trajectory_evaluator decision e applica al seed prima di build_field
     "build_field",
     "agent",
     "bias_corrector",     # NEW (29/04) — A8 autologica interna: rewrite biased claims pre-falsifier
@@ -283,4 +284,5 @@ from core import bias_corrector as _bias_corrector  # noqa: E402, F401  # NEW 29
 from core import bicono_extractor as _bicono_extractor  # noqa: E402, F401  # NEW 29/04
 from core import verify_assertions as _verify_assertions  # noqa: E402, F401  # NEW 29/04
 from core import ssp_pipeline as _ssp_pipeline  # noqa: E402, F401  # NEW 01/05 — scoperta→prodotto
-# 17 movements registered (added report_falsifier as asymmetric counter-pole to agent).
+from core import trajectory_apply as _trajectory_apply  # noqa: E402, F401  # NEW 05/05 — chiude loop A8+A15
+# 18 movements registered (added trajectory_apply 05/05 — applies log-only trajectory_evaluator decisions).
