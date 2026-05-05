@@ -113,7 +113,7 @@ def _test_decision_archaeologist_runs() -> dict[str, Any]:
 
 
 def _test_dipolar_non_trivial() -> dict[str, Any]:
-    """M1: Dipolar classification is non-trivial (not all one class)."""
+    """M1: Regressive node classification is non-trivial."""
     tool_path = os.path.join(
         os.path.dirname(__file__), "tools", "exp_incident_regressor.py"
     )
@@ -130,19 +130,36 @@ def _test_dipolar_non_trivial() -> dict[str, Any]:
         data = json.loads(result.stdout)
         classifications = set()
         for inc in data.get("incidents", []):
-            classifications.add(inc["fix_classification"])
+            classifications.add(inc["node_class"])
+
+        incident_count = data.get("total_incidents", 0)
+        confidence = "exploratory" if incident_count < 5 else "sample-aware"
 
         if len(classifications) >= 2:
             return {
                 "status": "PASS",
-                "detail": f"Found {len(classifications)} distinct classifications: {classifications}",
-                "metric": len(classifications),
+                "detail": (
+                    f"Found {len(classifications)} distinct node classes: "
+                    f"{classifications} (N={incident_count}, confidence={confidence})"
+                ),
+                "metric": {
+                    "distinct_node_classes": len(classifications),
+                    "incident_count": incident_count,
+                    "confidence": confidence,
+                },
             }
         elif len(classifications) == 1:
             return {
                 "status": "FAIL",
-                "detail": f"All incidents classified as {classifications} — no dipole",
-                "metric": 1,
+                "detail": (
+                    f"All incidents classified as node {classifications} "
+                    f"(N={incident_count}, confidence={confidence}) — no dipole"
+                ),
+                "metric": {
+                    "distinct_node_classes": 1,
+                    "incident_count": incident_count,
+                    "confidence": confidence,
+                },
             }
         return {"status": "SKIP", "detail": "No incidents to classify", "metric": 0}
     except Exception as e:
@@ -240,8 +257,8 @@ ASSERTIONS = [
     },
     {
         "id": "OD_DIPOLAR_M1",
-        "claim": "Incident classification produces >= 2 distinct classes (M1 dipole non-trivial)",
-        "source": "meta-lab M1 + seed SYMPTOMATIC_VS_REGRESSIVE_FIX",
+        "claim": "Incident node_class produces >= 2 distinct regressive nodes (M1 dipole non-trivial)",
+        "source": "meta-lab M1 + seed INCIDENT_CLASSIFICATION_EXECUTABLE_CONTRACT",
         "test": _test_dipolar_non_trivial,
     },
     {

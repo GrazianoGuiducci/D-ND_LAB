@@ -36,6 +36,12 @@ def parse_incident(filepath: str) -> dict:
         "suggested_fixes": [],
         "has_structural_fix": False,
         "fix_classification": "UNRESOLVED",
+        "node_class": "UNKNOWN_NODE",
+        "fix_class": "UNRESOLVED",
+        "fix_source": "none",
+        "fix_text_class": "UNRESOLVED",
+        "commit_fix_class": "UNOBSERVED",
+        "recurrence_family": "unknown",
     }
 
     # Extract timestamp
@@ -58,6 +64,7 @@ def parse_incident(filepath: str) -> dict:
 
     # Classify: does the fix address root cause or symptom?
     content_lower = content.lower()
+    error_text = " ".join(result["errors"]).lower()
     structural_markers = [
         "execstartpre",
         "pre-flight",
@@ -83,10 +90,47 @@ def parse_incident(filepath: str) -> dict:
 
     if structural_score > symptomatic_score:
         result["fix_classification"] = "det=-1"
+        result["fix_text_class"] = "det=-1"
         result["has_structural_fix"] = True
     elif symptomatic_score > 0:
         result["fix_classification"] = "det=+1"
+        result["fix_text_class"] = "det=+1"
     # else remains UNRESOLVED
+
+    result["fix_class"] = result["fix_text_class"]
+    if result["suggested_fixes"]:
+        result["fix_source"] = "incident_suggested_fixes"
+
+    codex_exit = None
+    claude_exit = None
+    codex_match = re.search(r"codex exit=(\d+)", error_text)
+    claude_match = re.search(r"claude exit=(\d+)", error_text)
+    if codex_match:
+        codex_exit = int(codex_match.group(1))
+    if claude_match:
+        claude_exit = int(claude_match.group(1))
+
+    has_primary_report = "## verdict" in content_lower and "## bicono" in content_lower
+    has_seed_write_boundary = any(
+        marker in content_lower
+        for marker in [
+            "non ho aggiornato",
+            "read-only",
+            "vincolo read-only",
+            "seed",
+            "seme.json",
+        ]
+    )
+
+    if codex_exit == 42 or "auth_fail" in content_lower:
+        result["node_class"] = "AUTH_BOUNDARY"
+        result["recurrence_family"] = "auth_boundary"
+    elif codex_exit == 0 and has_primary_report and has_seed_write_boundary:
+        result["node_class"] = "CLOSURE_WRITE_BOUNDARY"
+        result["recurrence_family"] = "closure_write_boundary"
+    elif claude_exit == 124 or "timeout" in error_text:
+        result["node_class"] = "FALLBACK_TIMEOUT"
+        result["recurrence_family"] = "fallback_timeout"
 
     return result
 
@@ -96,24 +140,17 @@ def classify_incident_family(incidents: list[dict]) -> dict:
     families = defaultdict(list)
 
     for inc in incidents:
-        # Simple family classification by error keywords
-        error_text = " ".join(inc["errors"]).lower()
-        if "auth" in error_text or "login" in error_text:
-            family = "auth_failure"
-        elif "exit=124" in error_text or "timeout" in error_text:
-            family = "timeout"
-        elif "port" in error_text or "pid" in error_text or "orphan" in error_text:
-            family = "process_orphan"
-        else:
-            family = "other"
+        family = inc.get("recurrence_family") or "unknown"
         families[family].append(inc)
 
     analysis = {}
     for family, members in families.items():
-        classifications = [m["fix_classification"] for m in members]
+        classifications = [m["fix_class"] for m in members]
+        node_classes = sorted({m["node_class"] for m in members})
         analysis[family] = {
             "count": len(members),
             "classifications": classifications,
+            "node_classes": node_classes,
             "recurrence_after_symptomatic": (
                 classifications.count("det=+1") > 1
             ),
@@ -150,6 +187,15 @@ def main():
     unresolved = sum(
         1 for i in incidents if i["fix_classification"] == "UNRESOLVED"
     )
+    node_classes = sorted({i["node_class"] for i in incidents})
+    recurrence_families = sorted({i["recurrence_family"] for i in incidents})
+    required_split_keys = [
+        "node_class",
+        "fix_source",
+        "fix_text_class",
+        "commit_fix_class",
+        "recurrence_family",
+    ]
 
     summary = {
         "total_incidents": total,
@@ -157,6 +203,11 @@ def main():
         "det_plus_1_fixes": det_plus,
         "unresolved": unresolved,
         "ratio_structural": det_minus / total if total > 0 else 0,
+        "node_class_count": len(node_classes),
+        "node_classes": node_classes,
+        "recurrence_families": recurrence_families,
+        "split_contract_keys": required_split_keys,
+        "split_schema_coverage": f"{len(required_split_keys)}/{len(required_split_keys)}",
         "family_analysis": family_analysis,
         "incidents": incidents,
     }
