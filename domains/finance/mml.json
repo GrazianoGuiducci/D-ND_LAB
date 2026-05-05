@@ -1,0 +1,218 @@
+{
+  "$schema": "../../mml.schema.json",
+  "lab": "finance",
+  "version": "0.1.0-alpha",
+  "identity": {
+    "type": "domain",
+    "level": "ground",
+    "responsibility": "Lab di dominio per regime shift finanziari. Mantiene coerenza tra seed, null baseline, tool sintetici/no-network e fonti dati pubbliche per produrre finding pacchettizzabili su bull/bear dipoles."
+  },
+  "kernel_refs": {
+    "mmsp_entities": [
+      "MMS_Master",
+      "Aethelred",
+      "Morpheus",
+      "ALAN",
+      "OCC"
+    ],
+    "kernel_files": [
+      "kernel/reference/Kernel_Semantico_Autopoietico_Reiterativo_KSAR.md",
+      "kernel/reference/MMSP1/D-ND_PrimaryRules.md",
+      "kernel/reference/MMSP1/00_Assioma_di_Invarianza_Ontologica.md"
+    ],
+    "condensato_axioms_used": [
+      "A1",
+      "A2",
+      "A3",
+      "A4",
+      "A5",
+      "A8",
+      "A14",
+      "F1",
+      "F4"
+    ]
+  },
+  "skills_attive": {
+    "validation_layer": [
+      {
+        "name": "assertion-verifier",
+        "source": ".claude/skills/assertion-verifier.md",
+        "trigger": "before promoting a regime-shift claim",
+        "rationale": "Il lab deve impedire promozioni senza PASS/FAIL/SKIP numerici su baseline e null shuffle.",
+        "category": "maintenance"
+      }
+    ],
+    "processing_layer": [
+      {
+        "name": "autoresearch",
+        "source": ".claude/skills/autoresearch.md",
+        "trigger": "during market data exploration",
+        "rationale": "Serve per generare varianti di test e surrogati senza fissarsi su un solo asset o finestra.",
+        "category": "research"
+      },
+      {
+        "name": "capture-insight",
+        "source": ".claude/skills/capture-insight.md",
+        "trigger": "when ordered-vs-shuffle delta appears or disappears",
+        "rationale": "Cristallizza nel seed il vincolo emerso dal confronto regime/noise.",
+        "category": "cognitive"
+      }
+    ],
+    "output_layer": [
+      {
+        "name": "paper-deployer",
+        "source": ".claude/skills/paper-deployer.md",
+        "trigger": "on application_eligible finance finding",
+        "rationale": "Trasforma finding validati in note o kernel leggibili senza gonfiare claim finanziari.",
+        "category": "output"
+      },
+      {
+        "name": "publish-safe",
+        "source": ".claude/skills/publish-safe.md",
+        "trigger": "before public output",
+        "rationale": "Il dominio finance richiede copy prudente: nessuna promessa di rendimento, solo struttura verificata.",
+        "category": "output"
+      }
+    ],
+    "observation_layer": [
+      {
+        "name": "audit-system",
+        "source": ".claude/skills/audit-system.md",
+        "trigger": "after data-source or tool changes",
+        "rationale": "Controlla che API, fallback e tool restino eseguibili out-of-box.",
+        "category": "maintenance"
+      }
+    ],
+    "generation_layer": [
+      {
+        "name": "forgia",
+        "source": "kernel/reference/skills/agent_skills_forgia.md",
+        "trigger": "when a verified finding becomes a finance kernel",
+        "rationale": "Forgia il pacchetto dnd_kernel_finance_regime_shift con esempio, claim e axiom_refs.",
+        "category": "constructive"
+      }
+    ],
+    "domain_layer": [
+      {
+        "name": "research-lab",
+        "source": "kernel/reference/skills/agent_skills_research_lab.md",
+        "trigger": "on cycle init",
+        "rationale": "Finance qui e' lab di ricerca quantitativa: produce finding falsificabili, non segnali trading non verificati.",
+        "category": "research"
+      },
+      {
+        "name": "dnd-method",
+        "source": ".claude/skills/dnd-method.md",
+        "trigger": "when translating D-ND invariants into market metrics",
+        "rationale": "Mantiene il passaggio A1/A2/F1/F4 dai numeri del kernel alle serie finanziarie.",
+        "category": "logic"
+      }
+    ],
+    "identity_layer": [
+      {
+        "name": "observer",
+        "source": "kernel/reference/skills/agent_skills_observer.md",
+        "trigger": "before interpreting a market metric",
+        "rationale": "Osserva il delta ordinato-vs-shuffle prima di nominare il regime.",
+        "category": "cognitive"
+      },
+      {
+        "name": "vulcan",
+        "source": "kernel/reference/skills/agent_skills_vulcan.md",
+        "trigger": "when finance narrative risks exceeding evidence",
+        "rationale": "Taglia linguaggio predittivo non supportato e riporta il lab a metriche falsificabili.",
+        "category": "identity"
+      }
+    ],
+    "runtime_patterns": [
+      {
+        "name": "cascata",
+        "source": ".claude/skills/cascata.md",
+        "trigger": "after every verified finance finding",
+        "rationale": "Propaga findings in seed, report e kernel prodotto.",
+        "category": "orchestration"
+      },
+      {
+        "name": "cec",
+        "source": ".claude/skills/cec.md",
+        "trigger": "before declaring TEMPLATE_VALID or finding valid",
+        "rationale": "Filtra se il dipolo bull/bear e' generativo o solo descrittivo.",
+        "category": "logic"
+      },
+      {
+        "name": "consapevolezza-condensato",
+        "source": ".claude/skills/consapevolezza-condensato.md",
+        "trigger": "on cycle init",
+        "rationale": "Richiama A1/A2/F1/F4 prima della traduzione in metriche finance.",
+        "category": "identity"
+      },
+      {
+        "name": "autologica-operativa",
+        "source": ".claude/skills/autologica-operativa.md",
+        "trigger": "on every experiment design",
+        "rationale": "Converte la tensione astratta regime/noise in esperimento eseguibile.",
+        "category": "cognitive"
+      },
+      {
+        "name": "eval",
+        "source": ".claude/skills/eval.md",
+        "trigger": "after assertions.py or exp_regime_shift.py run",
+        "rationale": "Verifica che i test siano realmente eseguiti e non solo descritti.",
+        "category": "maintenance"
+      }
+    ]
+  },
+  "tools_custom": [
+    {
+      "name": "exp_regime_shift",
+      "path": "tools/exp_regime_shift.py",
+      "description": "Synthetic bull/bear regime-shift A/B experiment with shuffle null baseline, VaR and realized volatility.",
+      "executable_inline": true
+    }
+  ],
+  "external_apis": [
+    {
+      "name": "Yahoo Finance chart endpoint",
+      "base_url": "https://query1.finance.yahoo.com/v8/finance/chart/",
+      "auth_required": false,
+      "purpose": "Fetch OHLCV-like chart data for equity, ETF and some FX symbols when yfinance-style data is needed.",
+      "rate_limit_notes": "Unofficial public endpoint; use lightly and cache. Synthetic fallback is mandatory."
+    },
+    {
+      "name": "FRED graph CSV",
+      "base_url": "https://fred.stlouisfed.org/graph/fredgraph.csv",
+      "auth_required": false,
+      "purpose": "Fetch public macro series such as DGS10 for regime context without API key.",
+      "rate_limit_notes": "Public CSV endpoint; advanced FRED API may require key."
+    },
+    {
+      "name": "CoinGecko public API",
+      "base_url": "https://api.coingecko.com/api/v3/",
+      "auth_required": false,
+      "purpose": "Fetch crypto market chart data for BTC/ETH regime tests.",
+      "rate_limit_notes": "Free public tier has variable rate limits; cache or fallback synthetic."
+    },
+    {
+      "name": "World Bank Indicators API",
+      "base_url": "https://api.worldbank.org/v2/",
+      "auth_required": false,
+      "purpose": "Fetch low-frequency macro indicators for country context in finance reports.",
+      "rate_limit_notes": "Public no-auth API; pagination applies."
+    }
+  ],
+  "modus_invocation": {
+    "cycle_pattern": "autopsy -> build_field -> agent -> bias_corrector -> report_falsifier -> bicono_extractor -> SSP",
+    "skill_invocation_strategy": "lazy",
+    "fallback_provider_chain": ["codex-cli", "claude-cli", "openrouter"],
+    "preferred_runtime": "any"
+  },
+  "conoscenza_lab": {
+    "tensioni_attive_count": 5,
+    "cycles_completed": 0,
+    "last_finding": null,
+    "last_cycle_ts": null,
+    "domain_specific_notes": "Generated by meta-lab cycle 20260505_1205. First cycle must use synthetic/no-network fallback before external APIs."
+  },
+  "_generated_by": "meta-lab",
+  "_generated_at": "2026-05-05T12:05:00Z"
+}

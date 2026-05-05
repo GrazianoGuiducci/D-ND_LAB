@@ -1,0 +1,47 @@
+{
+  "domain": "finance",
+  "direzione": "Misurare se i regime shift di mercato sono dipoli bull/bear con orientamento preservato da M o illusioni che collassano a det~0 dopo shuffle.",
+  "direzione_en": "Measure whether market regime shifts are bull/bear dipoles whose orientation is preserved by M, or illusions that collapse to det~0 after shuffling.",
+  "tensioni": [
+    {
+      "tipo": "scoperta",
+      "id": "REGIME_DIPOLE_DET",
+      "claim": "Una finestra di mercato con regime reale mostra dipolo bull/bear generativo: la mappa lagged return -> next return ha determinante orientato lontano da zero; il random walk surrogato perde orientamento e tende a det~0.",
+      "intensita": 1.0,
+      "porta": "market_microstructure",
+      "condensato_ref": "A1,A2"
+    },
+    {
+      "tipo": "metodo",
+      "id": "CASSINI_RESIDUE_RETURNS",
+      "claim": "Sui rendimenti log-spaced, il residuo Cassini funziona come diagnostica di convergenza: un regime informativo deve ridurre il residuo rispetto a finestre shuffle con stessa distribuzione.",
+      "intensita": 0.9,
+      "porta": "scale_signature",
+      "condensato_ref": "F1,A3"
+    },
+    {
+      "tipo": "baseline",
+      "id": "STATIC_VAR_VS_DND_SPLIT",
+      "claim": "La naive baseline e' VaR statico + realized volatility; il metodo D-ND deve produrre delta misurabile separando regime e noise con operatore M e null baseline shuffle.",
+      "intensita": 0.85,
+      "porta": "risk_baseline",
+      "condensato_ref": "A4,F4"
+    },
+    {
+      "tipo": "vincolo",
+      "id": "NO_NETWORK_FIRST_CYCLE",
+      "claim": "Il primo cycle deve girare senza rete su dataset sintetico o cache locale; yfinance, FRED e CoinGecko sono reference operative, non dipendenze obbligatorie.",
+      "intensita": 0.8,
+      "porta": "runtime_boundary",
+      "condensato_ref": "A2,A14"
+    },
+    {
+      "tipo": "prodotto",
+      "id": "KERNEL_FINANCE_PACKAGING",
+      "claim": "Un finding valido deve poter diventare dnd_kernel_finance_regime_shift: protocollo A/B naive vs D-ND per hedge fund, family office e advisory.",
+      "intensita": 0.75,
+      "porta": "maturation",
+      "condensato_ref": "A5,A8"
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "REGIME_DIPOLE_DET": "regime_shift",
+  "CASSINI_RESIDUE_RETURNS": "scale_signature",
+  "STATIC_VAR_VS_DND_SPLIT": "baseline_ab",
+  "NO_NETWORK_FIRST_CYCLE": "runtime_constraint",
+  "KERNEL_FINANCE_PACKAGING": "product_kernel"
+}
