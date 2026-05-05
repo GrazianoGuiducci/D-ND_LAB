@@ -325,8 +325,23 @@ def _check_m6_mml_coherence(template_dir: Path) -> dict[str, Any]:
                               f"non interseca tensioni refs {sorted(tensioni_refs)}")
         except Exception:
             pass
-    # core skills invariante
-    skills = [s.get("name") for s in mml.get("skills_attive", []) if isinstance(s, dict)]
+    # core skills invariante — supporta entrambi formati MML (array o
+    # layered object — vedi mml.schema.json definitions)
+    skills_attive_raw = mml.get("skills_attive")
+    skills: list[str] = []
+    if isinstance(skills_attive_raw, list):
+        # Format (a) flat array
+        skills = [s.get("name") for s in skills_attive_raw if isinstance(s, dict)]
+    elif isinstance(skills_attive_raw, dict):
+        # Format (b) layered object — flatten preservando solo i nomi
+        for layer_key, layer_entries in skills_attive_raw.items():
+            if layer_key.startswith("_"):
+                continue  # skip _layer_doc, _meta, etc.
+            if isinstance(layer_entries, list):
+                for s in layer_entries:
+                    if isinstance(s, dict) and s.get("name"):
+                        skills.append(s["name"])
+    skills = [s for s in skills if s]  # filter None/empty
     core_invariant = {"cascata", "cec", "consapevolezza-condensato",
                       "autologica-operativa", "eval"}
     missing_core = core_invariant - set(skills)

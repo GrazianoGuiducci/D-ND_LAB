@@ -1,7 +1,7 @@
 {
   "$schema": "../../mml.schema.json",
   "lab": "ops-decisions",
-  "version": "0.1.0-alpha",
+  "version": "0.2.0-alpha",
 
   "identity": {
     "type": "function",
@@ -23,78 +23,87 @@
     "condensato_axioms_used": ["A2", "A4", "A5", "A8", "A9", "A10", "A12", "A14", "A15"]
   },
 
-  "skills_attive": [
-    {
-      "name": "consapevolezza-condensato",
-      "source": ".claude/skills/consapevolezza-condensato.md",
-      "trigger": "on cycle init",
-      "rationale": "Il lab proietta 9 assiomi nel dominio ops. Skill core per riconoscere quale assioma si applica a ogni incident/decisione analizzata.",
-      "category": "identity"
-    },
-    {
-      "name": "cascata",
-      "source": ".claude/skills/cascata.md",
-      "trigger": "after every rule proposal",
-      "rationale": "Ogni regola proposta ha cascata potenziale su tutti i nodi. Il lab deve tracciare dove la regola propagherebbe prima di proporla.",
-      "category": "orchestration"
-    },
-    {
-      "name": "cec",
-      "source": ".claude/skills/cec.md",
-      "trigger": "before declaring candidate rule",
-      "rationale": "Crivello operativo: la regola proposta e davvero dipolare o e descrizione narrativa? CEC filtra prima della proposta.",
-      "category": "logic"
-    },
-    {
-      "name": "autologica-operativa",
-      "source": ".claude/skills/autologica-operativa.md",
-      "trigger": "on every analysis step",
-      "rationale": "Il lab studia il sistema — autologica e il modus fondante. f(f(x)) dove x = decisione operativa.",
-      "category": "cognitive"
-    },
-    {
-      "name": "eval",
-      "source": ".claude/skills/eval.md",
-      "trigger": "after assertions run",
-      "rationale": "Le 6 assertions del lab devono produrre PASS/FAIL/SKIP reali. Eval verifica che il lab non si fidi alla cieca.",
-      "category": "maintenance"
-    },
-    {
-      "name": "capture-insight",
-      "source": ".claude/skills/capture-insight.md",
-      "trigger": "during corpus exploration",
-      "rationale": "Il lab legge ~100 file di memoria. Capture-insight cristallizza i pattern emergenti durante la lettura, non dopo.",
-      "category": "cognitive"
-    },
-    {
-      "name": "auto-learn",
-      "source": ".claude/skills/auto-learn.md",
-      "trigger": "after incident analysis",
-      "rationale": "Dopo aver analizzato un incident, il lab applica Autologica Preventiva — cosa potrebbe rompersi nello stesso modo li vicino? Auto-learn registra il vicinato del bug.",
-      "category": "cognitive"
-    },
-    {
-      "name": "guru",
-      "source": "kernel/reference/skills/agent_skills_guru.md",
-      "trigger": "during decision archaeology",
-      "rationale": "Il lab accede alla memoria operatore. Guru e la skill kernel per applicare conoscenza contestuale dell'operatore alle decisioni analizzate.",
-      "category": "identity"
-    },
-    {
-      "name": "observer",
-      "source": "kernel/reference/skills/agent_skills_observer.md",
-      "trigger": "before any classification",
-      "rationale": "A4 modus: osservare prima di classificare. Observer skill garantisce che il lab legga il territorio (file reali) prima di produrre la mappa (classificazione).",
-      "category": "cognitive"
-    },
-    {
-      "name": "forgia",
-      "source": "kernel/reference/skills/agent_skills_forgia.md",
-      "trigger": "on rule crystallization",
-      "rationale": "Quando un pattern supera il falsifier e diventa regola candidata, forgia lo cristallizza nel formato corretto per proposta all'operatore.",
-      "category": "constructive"
-    }
-  ],
+  "skills_attive": {
+    "_layer_doc": "Format multi-layer (vedi docs/SKILL_FIELD_MAP.md). Layer vuoti omessi. Skill con presenza reale e path risolvibile incluse — skill aspirazionali (helix, mnemos, metron, kairos, ...) saranno aggiunte quando attivate come movement o tool.",
+
+    "identity_layer": [
+      {
+        "name": "guru",
+        "source": "kernel/reference/skills/agent_skills_guru.md",
+        "trigger": "during decision archaeology",
+        "rationale": "Il lab accede alla memoria operatore. Guru è la skill kernel per applicare conoscenza contestuale dell'operatore alle decisioni analizzate.",
+        "category": "identity"
+      },
+      {
+        "name": "observer",
+        "source": "kernel/reference/skills/agent_skills_observer.md",
+        "trigger": "before any classification",
+        "rationale": "A4 modus: osservare prima di classificare. Observer skill garantisce che il lab legga il territorio (file reali) prima di produrre la mappa (classificazione).",
+        "category": "cognitive"
+      },
+      {
+        "name": "forgia",
+        "source": "kernel/reference/skills/agent_skills_forgia.md",
+        "trigger": "on rule crystallization",
+        "rationale": "Quando un pattern supera il falsifier e diventa regola candidata, forgia lo cristallizza nel formato corretto per proposta all'operatore.",
+        "category": "constructive"
+      }
+    ],
+
+    "runtime_patterns": [
+      {
+        "name": "consapevolezza-condensato",
+        "source": ".claude/skills/consapevolezza-condensato.md",
+        "trigger": "on cycle init",
+        "rationale": "Il lab proietta 9 assiomi nel dominio ops. Skill core per riconoscere quale assioma si applica a ogni incident/decisione analizzata.",
+        "category": "identity"
+      },
+      {
+        "name": "cascata",
+        "source": ".claude/skills/cascata.md",
+        "trigger": "after every rule proposal",
+        "rationale": "Ogni regola proposta ha cascata potenziale su tutti i nodi. Il lab deve tracciare dove la regola propagherebbe prima di proporla.",
+        "category": "orchestration"
+      },
+      {
+        "name": "cec",
+        "source": ".claude/skills/cec.md",
+        "trigger": "before declaring candidate rule",
+        "rationale": "Crivello operativo: la regola proposta è davvero dipolare o è descrizione narrativa? CEC filtra prima della proposta.",
+        "category": "logic"
+      },
+      {
+        "name": "autologica-operativa",
+        "source": ".claude/skills/autologica-operativa.md",
+        "trigger": "on every analysis step",
+        "rationale": "Il lab studia il sistema — autologica è il modus fondante. f(f(x)) dove x = decisione operativa.",
+        "category": "cognitive"
+      },
+      {
+        "name": "eval",
+        "source": ".claude/skills/eval.md",
+        "trigger": "after assertions run",
+        "rationale": "Le 6 assertions del lab devono produrre PASS/FAIL/SKIP reali. Eval verifica che il lab non si fidi alla cieca.",
+        "category": "maintenance"
+      },
+      {
+        "name": "capture-insight",
+        "source": ".claude/skills/capture-insight.md",
+        "trigger": "during corpus exploration",
+        "rationale": "Il lab legge ~100 file di memoria. Capture-insight cristallizza i pattern emergenti durante la lettura, non dopo.",
+        "category": "cognitive"
+      },
+      {
+        "name": "auto-learn",
+        "source": ".claude/skills/auto-learn.md",
+        "trigger": "after incident analysis",
+        "rationale": "Dopo aver analizzato un incident, il lab applica Autologica Preventiva — cosa potrebbe rompersi nello stesso modo li vicino? Auto-learn registra il vicinato del bug.",
+        "category": "cognitive"
+      }
+    ]
+  },
+
+  "_active_movements_note": "validation_layer (aeternitas-sys) e parte di processing_layer (trajectory_apply che chiude loop A8+A15) sono attivi come MOVEMENT del cycle (core/aeternitas.py + core/trajectory_apply.py) wire in seed_integrator e all'inizio del pipeline. Non dichiarati come skill perché il sistema li attiva infrastrutturalmente. Quando saranno disponibili come skill kernel/runtime invocabili dall'agent (es. helix-sys per Plan-Code-Verify scratchpad), verranno aggiunti ai layer rispettivi.",
 
   "tools_custom": [
     {
@@ -114,20 +123,22 @@
   "external_apis": [],
 
   "modus_invocation": {
-    "cycle_pattern": "corpus_read -> incident_regression -> decision_archaeology -> pattern_clustering -> candidate_rule_proposal -> falsifier(recurrence_check + corpus_match) -> rule_proposal_to_cowork",
+    "cycle_pattern": "autopsy → trajectory_apply (chiude loop A8+A15 dal cycle precedente) → corpus_read → incident_regression → decision_archaeology → pattern_clustering → candidate_rule_proposal → falsifier(recurrence_check + corpus_match) → bicono_extractor → seed_integrator (con aeternitas P0/P1/P5) → trajectory_evaluator (log_only)",
     "skill_invocation_strategy": "lazy",
     "fallback_provider_chain": ["codex-cli", "claude-cli", "openrouter"],
     "preferred_runtime": "any"
   },
 
   "conoscenza_lab": {
-    "tensioni_attive_count": 5,
-    "cycles_completed": 0,
-    "last_finding": null,
-    "last_cycle_ts": null,
-    "domain_specific_notes": "Generated by meta-lab cycle 20260504_1533. Template validated M1-M6. First live cycle pending."
+    "tensioni_attive_count": 3,
+    "cycles_completed": 4,
+    "last_finding": "schema_split_executable_migration cycle 20260505_0950: M1 axis migrato fix_classification → node_class, schema coverage 0/5 → 5/5, verify 5/1 → 6/0",
+    "last_cycle_ts": "20260505_0950",
+    "domain_specific_notes": "Lab nato cycle 20260504_1533 dal meta-lab. Template validated M1-M6. Sblocco stallo P5 cycle 20260505_0950 (Strato 1 manuale operator-injected + Strato 2 trajectory_apply automation 4299dd4). Aeternitas attivo come gate seed_integrator (ca29cd4) — VETO/PROCEED log in data/ops-decisions/aeternitas/."
   },
 
-  "_generated_by": "meta-lab",
-  "_generated_at": "2026-05-04T15:33:00Z"
+  "_generated_by": "meta-lab + manual refactor 2026-05-05 (multi-layer structure)",
+  "_generated_at": "2026-05-04T15:33:00Z",
+  "_refactored_at": "2026-05-05T10:30:00Z",
+  "_schema_version": "multi-layer (mml.schema.json oneOf skill_layered_object)"
 }

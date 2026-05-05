@@ -76,34 +76,15 @@
       }
     },
     "skills_attive": {
-      "type": "array",
-      "description": "Subset delle mega skill (kernel+runtime) che il MML attiva per questo lab. Pattern lazy: l'agent del cycle vede solo queste, non tutte.",
-      "items": {
-        "type": "object",
-        "required": ["name", "source", "rationale"],
-        "properties": {
-          "name": {
-            "type": "string",
-            "description": "Slug della skill (es. cascata, scenario-projector, autoresearch)."
-          },
-          "source": {
-            "type": "string",
-            "description": "Path della skill: kernel/reference/skills/agent_skills_*.md (sorgente kernel) o .claude/skills/<slug>.md (runtime). Il loader risolve a runtime."
-          },
-          "trigger": {
-            "type": "string",
-            "description": "Quando la skill si attiva (es. 'after every significant modification', 'on cycle init', 'on user invocation')."
-          },
-          "rationale": {
-            "type": "string",
-            "description": "Perché questa skill serve a questo lab specifico — link alla tensione o al modus."
-          },
-          "category": {
-            "type": "string",
-            "enum": ["cognitive", "constructive", "orchestration", "logic", "output", "optimization", "identity", "research", "maintenance"]
-          }
+      "description": "Subset delle mega skill (kernel+runtime) che il MML attiva per questo lab. Pattern lazy: l'agent del cycle vede solo queste, non tutte. Due formati supportati: (a) flat array (legacy/semplice), (b) object per layer (canonico — vedi docs/SKILL_FIELD_MAP.md per i 9 layer del sistema cognitivo).",
+      "oneOf": [
+        {
+          "$ref": "#/definitions/skill_array"
+        },
+        {
+          "$ref": "#/definitions/skill_layered_object"
         }
-      }
+      ]
     },
     "tools_custom": {
       "type": "array",
@@ -195,5 +176,96 @@
       "format": "date-time"
     }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+
+  "definitions": {
+    "skill_entry": {
+      "type": "object",
+      "required": ["name", "source", "rationale"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Slug della skill (es. cascata, scenario-projector, autoresearch)."
+        },
+        "source": {
+          "type": "string",
+          "description": "Path della skill: kernel/reference/skills/agent_skills_*.md (sorgente kernel) o .claude/skills/<slug>.md (runtime). Il loader risolve a runtime."
+        },
+        "trigger": {
+          "type": "string",
+          "description": "Quando la skill si attiva (es. 'after every significant modification', 'on cycle init', 'on user invocation')."
+        },
+        "rationale": {
+          "type": "string",
+          "description": "Perché questa skill serve a questo lab specifico — link alla tensione o al modus."
+        },
+        "category": {
+          "type": "string",
+          "enum": ["cognitive", "constructive", "orchestration", "logic", "output", "optimization", "identity", "research", "maintenance"]
+        }
+      }
+    },
+    "skill_array": {
+      "type": "array",
+      "description": "Formato (a) — array flat di skill, senza distinzione di layer.",
+      "items": { "$ref": "#/definitions/skill_entry" }
+    },
+    "skill_layered_object": {
+      "type": "object",
+      "description": "Formato (b) — skill organizzate per layer cognitivo (vedi SKILL_FIELD_MAP.md). Ogni layer è opzionale; lab non-data-centric possono lasciare layer vuoti. Il loader normalizza in flat list preservando il layer come metadata.",
+      "properties": {
+        "validation_layer": {
+          "type": "array",
+          "description": "L1 — gatekeeping ingresso (veritas-sys per ρ-score, aeternitas-sys per veto seme).",
+          "items": { "$ref": "#/definitions/skill_entry" }
+        },
+        "processing_layer": {
+          "type": "array",
+          "description": "L2 — processamento cognitivo (helix Plan-Code-Verify, fractal decomposizione, mnemos memoria, kairos motore evolutivo).",
+          "items": { "$ref": "#/definitions/skill_entry" }
+        },
+        "output_layer": {
+          "type": "array",
+          "description": "L3 — filtro finale (metron densità, scribe generatore prompt).",
+          "items": { "$ref": "#/definitions/skill_entry" }
+        },
+        "observation_layer": {
+          "type": "array",
+          "description": "L4 — auto-monitoring (coherence allineamento, triage allocazione).",
+          "items": { "$ref": "#/definitions/skill_entry" }
+        },
+        "interface_layer": {
+          "type": "array",
+          "description": "L5 — interfaccia umano↔sistema (dev_delegate, conductor, observer-sys).",
+          "items": { "$ref": "#/definitions/skill_entry" }
+        },
+        "generation_layer": {
+          "type": "array",
+          "description": "L6 — generazione di nuove entità (forgia, autogen, genesis, factory).",
+          "items": { "$ref": "#/definitions/skill_entry" }
+        },
+        "emergency_layer": {
+          "type": "array",
+          "description": "L7 — recovery + lateral thinking (lazarus, morpheus, navigator).",
+          "items": { "$ref": "#/definitions/skill_entry" }
+        },
+        "domain_layer": {
+          "type": "array",
+          "description": "L8 — skill domain-specific (research-lab, dnd-method, maturation-pipeline, siteman, ...).",
+          "items": { "$ref": "#/definitions/skill_entry" }
+        },
+        "identity_layer": {
+          "type": "array",
+          "description": "L9 — persona/identity skill MMSp (guru, observer, vulcan).",
+          "items": { "$ref": "#/definitions/skill_entry" }
+        },
+        "runtime_patterns": {
+          "type": "array",
+          "description": "L10 — pattern operativi domain-agnostic (cascata, cec, eval, autologica-operativa, autoresearch, capture-insight).",
+          "items": { "$ref": "#/definitions/skill_entry" }
+        }
+      },
+      "additionalProperties": false
+    }
+  }
 }

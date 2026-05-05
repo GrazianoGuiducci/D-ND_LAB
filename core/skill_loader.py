@@ -112,6 +112,60 @@ def _read_mml(lab_slug: str) -> dict[str, Any] | None:
         return None
 
 
+# Layer ordering canonico (vedi SKILL_FIELD_MAP.md). Determina l'ordine di
+# attivazione: validation → processing → output → osservazione → interface →
+# generation → emergency → domain → identity → runtime patterns.
+LAYER_ORDER = [
+    "validation_layer",
+    "processing_layer",
+    "output_layer",
+    "observation_layer",
+    "interface_layer",
+    "generation_layer",
+    "emergency_layer",
+    "domain_layer",
+    "identity_layer",
+    "runtime_patterns",
+]
+
+
+def _normalize_skills_attive(
+    skills_attive: Any,
+) -> list[tuple[dict[str, Any], str | None]]:
+    """Normalizza skills_attive nei due formati supportati dal mml.schema.json:
+
+    - Formato (a) flat array: ritorna [(entry, None), ...] con layer=None
+    - Formato (b) layered object: ritorna [(entry, layer_name), ...] in
+      ordine LAYER_ORDER, preservando il layer come metadata
+
+    Layer sconosciuti (non in LAYER_ORDER) vengono inclusi in coda con
+    layer name as-is. Input malformato → []. Idempotente.
+    """
+    if isinstance(skills_attive, list):
+        return [(e, None) for e in skills_attive if isinstance(e, dict)]
+    if not isinstance(skills_attive, dict):
+        return []
+    out: list[tuple[dict[str, Any], str | None]] = []
+    seen_layers: set[str] = set()
+    # Ordered layers first
+    for layer in LAYER_ORDER:
+        entries = skills_attive.get(layer)
+        if not isinstance(entries, list):
+            continue
+        for e in entries:
+            if isinstance(e, dict):
+                out.append((e, layer))
+        seen_layers.add(layer)
+    # Trailing custom layers (non-canonical names — extension future-proof)
+    for layer, entries in skills_attive.items():
+        if layer in seen_layers or not isinstance(entries, list):
+            continue
+        for e in entries:
+            if isinstance(e, dict):
+                out.append((e, layer))
+    return out
+
+
 def load_skills_for_lab(
     lab_slug: str,
     runtime: RuntimeTarget = "auto",
@@ -120,15 +174,18 @@ def load_skills_for_lab(
     """Carica le skill del lab in base al suo MML.
     Se mml.json mancante o malformato, ritorna lista vuota (nessun
     lazy-loaded subset disponibile).
+
+    Supporta entrambi i formati di skills_attive:
+    - flat array (legacy)
+    - layered object per i 9 layer del sistema cognitivo (canonico,
+      vedi mml.schema.json definitions.skill_layered_object)
     """
     mml = _read_mml(lab_slug)
     if not mml:
         return []
-    skills_attive = mml.get("skills_attive", []) or []
+    normalized = _normalize_skills_attive(mml.get("skills_attive"))
     out: list[Skill] = []
-    for entry in skills_attive:
-        if not isinstance(entry, dict):
-            continue
+    for entry, layer in normalized:
         name = entry.get("name")
         if not name:
             continue
@@ -143,6 +200,12 @@ def load_skills_for_lab(
                 body = path.read_text(encoding="utf-8", errors="replace")
             except OSError:
                 body = ""
+        metadata: dict[str, Any] = {
+            "mml_lab": lab_slug,
+            "runtime_target": runtime,
+        }
+        if layer:
+            metadata["layer"] = layer
         out.append(Skill(
             name=name,
             source_path=path,
@@ -151,7 +214,7 @@ def load_skills_for_lab(
             rationale=entry.get("rationale", ""),
             trigger=entry.get("trigger", ""),
             category=entry.get("category", ""),
-            metadata={"mml_lab": lab_slug, "runtime_target": runtime},
+            metadata=metadata,
         ))
     return out
 

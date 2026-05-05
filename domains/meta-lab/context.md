@@ -169,13 +169,48 @@ seed.json + context.md + about.md + assertions.py.
    - `kernel_refs.condensato_axioms_used` (sottoinsieme A1-A16/F1-F6/C1-C3
      che il dominio proietta — DEVE matchare le condensato_ref delle
      tensioni iniziali generate al passo 4)
-   - `skills_attive` — subset delle 56 skill (vedere
-     `docs/SKILL_CATALOG.md` per il catalogo completo). Pattern minimo:
-     - Core invariante: cascata, cec, consapevolezza-condensato,
-       autologica-operativa, eval (sempre attive)
-     - Aggiungi 3-7 skill specifiche al dominio (es. autoresearch +
-       capture-insight + assertion-verifier per lab di scoperta)
-     - Per ogni skill, spiega `rationale` (perché serve a QUESTO lab)
+   - `skills_attive` — subset delle 113 skill totali (vedere
+     `docs/SKILL_CATALOG.md` + `docs/SKILL_FIELD_MAP.md` per i 9 layer
+     del sistema cognitivo MMSp).
+
+     **Formato canonico: layered object** (vedi `mml.schema.json`
+     definitions.skill_layered_object). Skill organizzate per layer
+     funzionale:
+
+     ```json
+     {
+       "validation_layer": [...],     // veritas, aeternitas — gate
+       "processing_layer": [...],     // helix, fractal, mnemos, kairos
+       "output_layer": [...],         // metron, scribe — filtro finale
+       "observation_layer": [...],    // coherence, triage — auto-monitoring
+       "interface_layer": [...],      // dev_delegate, conductor, observer-sys
+       "generation_layer": [...],     // forgia, autogen, genesis
+       "emergency_layer": [...],      // lazarus, morpheus, navigator
+       "domain_layer": [...],         // research-lab, dnd-method, siteman
+       "identity_layer": [...],       // guru, observer-sys, vulcan
+       "runtime_patterns": [...]      // cascata, cec, eval, autologica-op
+     }
+     ```
+
+     Layer vuoti omessi. Backward-compat: il vecchio array flat è
+     accettato dal loader ma il formato layered è preferito (più chiaro,
+     supporta diagnostica per layer in skill_loader).
+
+     **Pattern minimo per lab di dominio nuovo**:
+     - `runtime_patterns`: cascata, cec, consapevolezza-condensato,
+       autologica-operativa, eval (core invariante — sempre presenti)
+     - `identity_layer`: 1-3 persona MMSp pertinenti (guru per lab
+       teorici, observer per lab di osservazione, scribe per lab di
+       generazione)
+     - `domain_layer`: skill domain-specific se esistono
+       (research-lab per lab scientifici, siteman per lab gestione sito,
+       publisher per lab di pubblicazione)
+     - Layer aspirazionali (validation, processing, output) possono
+       essere dichiarati anche se le skill non sono ancora attive come
+       movement — diventano "promesse" che il sistema mantiene quando
+       le attiva
+     - Per ogni skill, spiega `rationale` (perché serve a QUESTO lab,
+       non in generale) + `trigger` (quando la skill si attiva nel cycle)
    - `tools_custom` — i `tools/exp_*.py` che hai generato al passo 6
    - `external_apis` (pattern hermes drug-discovery, vedere sezione
      dedicata "Pattern hermes — external_apis no-auth" sotto). Per
