@@ -146,7 +146,42 @@ def _ensure_quick_reference_in_context(
 
 
 def _build_config(specs: dict[str, Any]) -> dict[str, Any]:
-    """Costruisce config.json dal pattern D-ND_LAB neutro."""
+    """Costruisce config.json dal pattern D-ND_LAB neutro.
+
+    Movement defaults coerenti con MOVEMENT_ORDER di core/lab_agent.py:
+    - autopsy + trajectory_apply (Strato 2 A8+A15) + agent + falsifier +
+      bicono + verify + integrator + trajectory_evaluator + ssp +
+      bias_corrector enabled
+    - structural_check + build_graph + sync + verify_endpoints +
+      semantic_bridge + refresh_detector disabled (lab-specific opt-in)
+
+    Specs può sovrascrivere via specs["movements_override"].
+    """
+    default_movements = {
+        "autopsy":              {"enabled": True},
+        "trajectory_apply":     {"enabled": True, "params": {"comment": "chiude loop A8+A15 — applica log-only REDESIGN al seed prima di build_field"}},
+        "build_field":          {"enabled": True},
+        "agent":                {"enabled": True},
+        "bias_corrector":       {"enabled": True},
+        "report_falsifier":     {"enabled": True},
+        "bicono_extractor":     {"enabled": True},
+        "validate_seed":        {"enabled": True},
+        "verify_assertions":    {"enabled": True},
+        "structural_check":     {"enabled": False},
+        "build_lab_data":       {"enabled": True},
+        "build_graph":          {"enabled": False},
+        "sync":                 {"enabled": False},
+        "verify_endpoints":     {"enabled": False},
+        "refiner":              {"enabled": True},
+        "semantic_bridge":      {"enabled": False},
+        "refresh_detector":     {"enabled": False},
+        "seed_integrator":      {"enabled": True},
+        "trajectory_evaluator": {"enabled": True},
+        "ssp_pipeline":         {"enabled": False, "params": {"comment": "abilita per lab di dominio scoperta-prodotto; disable per lab di funzione"}},
+        "notify":               {"enabled": True},
+    }
+    movements = specs.get("movements_override", default_movements)
+
     return {
         "$schema": "../../config.schema.json",
         "domain": specs["domain_slug"],
@@ -168,6 +203,7 @@ def _build_config(specs: dict[str, Any]) -> dict[str, Any]:
             {"name": "python_exec", "type": "builtin"},
             {"name": "shell_exec", "type": "builtin"}
         ],
+        "movements": movements,
         "_generated_by": "meta-lab",
         "_generated_at": specs.get("generated_at", ""),
     }

@@ -127,6 +127,12 @@ seed.json + context.md + about.md + assertions.py.
    - "Il modello D-ND — nucleo" — invariante, copia da physics
    - "Confine epistemico" — cosa il dominio deve falsificare prima di accumulare
    - Sezioni dominio-specifiche (corpus, fonti, vincoli compute)
+   - **Loop A8+A15 attivo**: il lab figlio nasce con `trajectory_apply`
+     enabled (Strato 2, 05/05). Significa che le decisioni REDESIGN del
+     trajectory_evaluator (confidence=high, action=modify_seme/direzione)
+     vengono **applicate automaticamente** al seed all'inizio del cycle
+     successivo. NON scrivere "il sistema log decisioni ma serve operatore
+     per applicarle" — quel pattern è obsoleto post-trajectory_apply.
    - **"Tools custom del lab — come invocarli"** (NUOVO, obbligatorio se
      il lab figlio ha tools_custom): per ciascun `tools/exp_*.py` Style 1,
      dichiara esplicitamente:
