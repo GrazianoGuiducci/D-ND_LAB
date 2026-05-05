@@ -1,12 +1,30 @@
 # AI-Lab D-ND Finance
 
-Questo lab studia i regime shift nei mercati come oggetti strutturali, non come etichette narrative. Il suo primo confine e' semplice: distinguere un dipolo bull/bear generativo da una sequenza che sembra avere regime solo perche' la guardiamo dopo il fatto.
+> **Il regime esiste solo se sopravvive allo shuffle.**
+
+Questo lab studia i regime shift nei mercati come **oggetti strutturali**, non come etichette narrative. Il suo primo confine è semplice: distinguere un dipolo bull/bear generativo da una sequenza che sembra avere regime solo perché la guardiamo dopo il fatto.
+
+## Come opera
 
 Il lab confronta sempre due poli:
 
-- mercato ordinato: rendimenti con memoria locale, cambio di stato e orientamento misurabile;
-- controllo ingenuo: VaR statico, realized volatility e surrogati shuffle con stessa distribuzione ma ordine distrutto.
+- **mercato ordinato** — rendimenti con memoria locale, cambio di stato e orientamento misurabile sotto l'operatore M;
+- **controllo ingenuo** — VaR statico, realized volatility e surrogati shuffle con stessa distribuzione ma ordine distrutto.
 
-Se il segnale sparisce nello shuffle, il regime non e' una parola: e' una struttura. Se non sparisce, il lab non promuove il finding.
+Se il segnale sopravvive allo shuffle, il regime non è una parola: è struttura. Se non sopravvive, il lab **non promuove** il finding.
 
-Il primo uso e' operativo: costruire kernel verificabili per regime shift su FX, crypto ed equity, con fallback sintetico quando i dati esterni non sono disponibili. Le API pubbliche servono a portare dati reali nel cycle; non sostituiscono il null test.
+## Cosa ottieni
+
+- **Finding A/B** verificabili: D-ND vs naive baseline, con effect-size (z-score) misurabile contro shuffle
+- **Verdict trasparente** ad ogni cycle: `DND_DELTA` (regime reale) o `NO_DELTA` (illusione)
+- **Kernel pacchettizzato** (target maturazione): `dnd_kernel_finance_regime_shift`, protocollo replicabile per hedge fund, family office, advisory finanziaria
+
+## Confine epistemico
+
+Il lab non promette previsioni di prezzo. Misura **struttura del regime** — un livello sopra rispetto a "indovinare la direzione". Cinque condizioni necessarie per ogni finding promosso: metrica reale + null baseline shuffle + naive baseline (VaR + vol) + delta D-ND ≥ 3σ + fallimento dichiarato quando il delta è assente.
+
+Il primo cycle gira **sandboxed senza rete** su dataset sintetico. Le API pubbliche (yfinance, FRED, CoinGecko, World Bank) portano dati reali nei cycle successivi — non sostituiscono il null test.
+
+---
+
+*Status: alpha · Validato dal falsifier meta M1-M6 6/6 PASS · Pronto per il primo cycle reale.*
