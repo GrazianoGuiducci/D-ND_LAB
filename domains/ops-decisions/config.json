@@ -37,6 +37,7 @@
     "semantic_bridge":    { "enabled": false },
     "refresh_detector":   { "enabled": false },
     "seed_integrator":    { "enabled": true },
+    "veritas_score":      { "enabled": true, "params": {"comment": "G2: ρ ∈ [0,1] da 3 vettori (telemetrica/logico-storica/conferma). Decision band SCARTO/SOSPENSIONE/COLLASSO. Output in data/<lab>/veritas/."} },
     "trajectory_evaluator": { "enabled": true },
     "promotion_proposer": { "enabled": true, "params": {"comment": "G3 Fine B: estrae proposte di promozione finding → skill/hook/regola sistemica. Output in data/<lab>/promotions/. Operatore decide apply (no automatico)."} },
     "ssp_pipeline":       { "enabled": false, "params": {"comment": "lab di funzione — output sono regole, non prodotti SSP"} },

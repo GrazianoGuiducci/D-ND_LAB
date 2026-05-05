@@ -113,6 +113,7 @@ MOVEMENT_ORDER: list[str] = [
     "semantic_bridge",
     "refresh_detector",
     "seed_integrator",
+    "veritas_score",        # NEW (05/05) — G2: ρ ∈ [0,1] da 3 vettori (V_a telemetrica + V_b logico-storica + V_c conferma). Decision band SCARTO/SOSPENSIONE/COLLASSO. Termometro qualità del cycle.
     "trajectory_evaluator",
     "promotion_proposer",  # NEW (05/05) — G3 Fine B: estrae proposte di promozione finding → skill/hook/regola sistemica (no apply automatico, atto Approve operatore)
     "ssp_pipeline",        # NEW (01/05) — chiude scoperta → prodotto: crystallize+eligibility+designer+stage4
@@ -287,4 +288,5 @@ from core import verify_assertions as _verify_assertions  # noqa: E402, F401  # 
 from core import ssp_pipeline as _ssp_pipeline  # noqa: E402, F401  # NEW 01/05 — scoperta→prodotto
 from core import trajectory_apply as _trajectory_apply  # noqa: E402, F401  # NEW 05/05 — chiude loop A8+A15
 from core import promotion_proposer as _promotion_proposer  # noqa: E402, F401  # NEW 05/05 — G3 promotion pipeline
-# 19 movements registered (added promotion_proposer 05/05 — extracts cycle finding → system rules/skills/hooks).
+from core import veritas_score as _veritas_score  # noqa: E402, F401  # NEW 05/05 — G2 ρ-score termometro qualità
+# 20 movements registered (added veritas_score 05/05 — ρ aggregato 3 vettori + decision band).
