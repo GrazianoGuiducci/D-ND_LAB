@@ -159,7 +159,7 @@ def _build_config(specs: dict[str, Any]) -> dict[str, Any]:
     """
     default_movements = {
         "autopsy":              {"enabled": True},
-        "trajectory_apply":     {"enabled": True, "params": {"comment": "chiude loop A8+A15 — applica log-only REDESIGN al seed prima di build_field"}},
+        "trajectory_apply":     {"enabled": True, "params": {"comment": "Loop A8+A15: applica log-only REDESIGN al seed prima di build_field"}},
         "build_field":          {"enabled": True},
         "agent":                {"enabled": True},
         "bias_corrector":       {"enabled": True},
@@ -176,7 +176,9 @@ def _build_config(specs: dict[str, Any]) -> dict[str, Any]:
         "semantic_bridge":      {"enabled": False},
         "refresh_detector":     {"enabled": False},
         "seed_integrator":      {"enabled": True},
+        "veritas_score":        {"enabled": True, "params": {"comment": "G2 termometro qualità ρ ∈ [0,1] da 3 vettori. Decision band SCARTO/SOSPENSIONE/COLLASSO."}},
         "trajectory_evaluator": {"enabled": True},
+        "promotion_proposer":   {"enabled": True, "params": {"comment": "G3 estrae proposte di promozione finding → skill/hook/regola sistemica. Output in data/<lab>/promotions/. NO apply automatico."}},
         "ssp_pipeline":         {"enabled": False, "params": {"comment": "abilita per lab di dominio scoperta-prodotto; disable per lab di funzione"}},
         "notify":               {"enabled": True},
     }

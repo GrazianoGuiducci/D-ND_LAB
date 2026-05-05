@@ -38,7 +38,9 @@
     "semantic_bridge": {"enabled": false},
     "refresh_detector": {"enabled": false},
     "seed_integrator": {"enabled": true},
+    "veritas_score": {"enabled": true, "params": {"comment": "G2 termometro qualità ρ ∈ [0,1] da 3 vettori — V_a telemetrica + V_b logico-storica + V_c conferma. Decision band SCARTO/SOSPENSIONE/COLLASSO."}},
     "trajectory_evaluator": {"enabled": true},
+    "promotion_proposer": {"enabled": true, "params": {"comment": "G3 estrae proposte di promozione finding → skill/hook/regola sistemica. Output in data/finance/promotions/. NO apply automatico."}},
     "ssp_pipeline": {"enabled": true},
     "notify": {"enabled": true}
   },

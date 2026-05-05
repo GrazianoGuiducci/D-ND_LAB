@@ -151,12 +151,20 @@ Output: JSON su stdout con metriche `ordered`, `shuffle_mean`,
 Queste API sono dichiarate per dati reali no-auth o best-effort. Il primo
 cycle non dipende dalla rete.
 
-| Task | Endpoint | Auth | Notes |
-|------|----------|------|-------|
-| OHLCV equity/FX via yfinance | `https://query1.finance.yahoo.com/v8/finance/chart/SPY?range=1y&interval=1d` | no | Endpoint usato da yfinance; rispettare rate limit non ufficiali e fallback synthetic. |
-| Macro risk context via FRED | `https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS10` | no | CSV pubblico per Treasury yield; alcuni endpoint FRED avanzati richiedono API key. |
-| Crypto prices via CoinGecko | `https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=365` | no | Free tier con rate limit variabile; usare cache/synthetic se limitato. |
-| Country macro via World Bank | `https://api.worldbank.org/v2/country/US/indicator/NY.GDP.MKTP.KD.ZG?format=json` | no | Contesto macro annuale; non adatto a intraday regime. |
+| Task | Endpoint | Auth | Status (pre-flight 05/05) | Notes |
+|------|----------|------|---|-------|
+| OHLCV equity/FX via yfinance | `https://query1.finance.yahoo.com/v8/finance/chart/SPY?range=1y&interval=1d` | no | ✓ reachable (~0.4s) | Endpoint usato da yfinance; rispettare rate limit non ufficiali e fallback synthetic. |
+| Macro risk context via FRED | `https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS10` | no | ⚠ timeout (5s) — verifica al cycle 2 | CSV pubblico per Treasury yield; alcuni endpoint FRED avanzati richiedono API key. |
+| Crypto prices via CoinGecko | `https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=365` | no | ✓ reachable (~0.1s) | Free tier con rate limit variabile; usare cache/synthetic se limitato. |
+| Country macro via World Bank | `https://api.worldbank.org/v2/country/US/indicator/NY.GDP.MKTP.KD.ZG?format=json` | no | ⚠ timeout (5s) — verifica al cycle 2 | Contesto macro annuale; non adatto a intraday regime. |
+
+**Pre-flight check 05/05 13:02 UTC**: 2/4 API raggiungibili dal VPS
+TM3 (yfinance + CoinGecko ✓ · FRED + World Bank timeout). I timeout
+possono essere transitori (5s timeout stretto) o richiedere User-Agent
+specifico. Cycle 1 gira synthetic-only by design, non dipende dalla
+rete. Cycle 2+ verifica nuovamente prima di usare FRED/World Bank;
+se persistono timeout, restano fallback (yfinance+CoinGecko coprono
+equity/FX/crypto, sufficiente per il primo finding di mercato reale).
 
 Invocazione tipica via shell:
 
