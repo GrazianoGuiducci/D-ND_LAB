@@ -924,6 +924,8 @@ _LAB_FOOTER_HTML = """\
     </div>
   </div>
 </footer>
+<!-- DOMUS chat widget (THIA esteso per consapevolezza dei cycle del lab) -->
+<script src="/assets/js/domus-widget.js" defer></script>
 """
 
 
