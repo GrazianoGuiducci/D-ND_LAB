@@ -542,13 +542,32 @@
 
     /* v4.9 — Fullscreen graph modal. Pattern dal sito (LabGraph.tsx 2 modes
        compatto + fullscreen). Wrapper toggles a fixed inset 0 + z-40,
-       il graph riempie il viewport. ESC + X chiudono. */
+       il graph riempie il viewport. ESC + X chiudono.
+       Animation cubic-bezier — entrata smooth (port da LabGraph.tsx
+       lab-motion-fullscreen-in / labFsIn keyframe). */
+    @keyframes labFsIn {
+      from { opacity: 0; transform: scale(0.985); }
+      to   { opacity: 1; transform: scale(1); }
+    }
     .graph-viz-wrap { position: relative; }
-    .graph-viz-wrap.fullscreen { position: fixed; inset: 0; z-index: 40; background: #0d0e14; padding: 16px; border-radius: 0; }
+    .graph-viz-wrap.fullscreen {
+      position: fixed; inset: 0; z-index: 40;
+      background: #0d0e14; padding: 16px; border-radius: 0;
+      animation: labFsIn 360ms cubic-bezier(0.16, 1, 0.3, 1) both;
+      transform-origin: center center;
+    }
     .graph-viz-wrap.fullscreen #graph-viz { height: calc(100vh - 32px); border-radius: 0.5rem; }
     .taxonomy-viz-wrap { position: relative; }
-    .taxonomy-viz-wrap.fullscreen { position: fixed; inset: 0; z-index: 40; background: #0d0e14; padding: 16px; border-radius: 0; }
+    .taxonomy-viz-wrap.fullscreen {
+      position: fixed; inset: 0; z-index: 40;
+      background: #0d0e14; padding: 16px; border-radius: 0;
+      animation: labFsIn 360ms cubic-bezier(0.16, 1, 0.3, 1) both;
+      transform-origin: center center;
+    }
     .taxonomy-viz-wrap.fullscreen #taxonomy-viz { height: calc(100vh - 32px) !important; border-radius: 0.5rem; }
+    @media (prefers-reduced-motion: reduce) {
+      .graph-viz-wrap.fullscreen, .taxonomy-viz-wrap.fullscreen { animation: none; }
+    }
 
     /* Custom tooltip via data-tip — coerente con stile sito d-nd.com.
        Sostituisce title="..." HTML nativo (rendering OS-default ingestibile). */
@@ -990,10 +1009,17 @@
             </div>
             <div class="graph-viz-wrap" :class="graphFullscreen && 'fullscreen'">
               <div id="graph-viz"></div>
+              <!-- Banner seed concettuale: visibile quando lab è vuoto e
+                   abbiamo popolato con il grafo del modello D-ND -->
+              <div x-show="(graphData?.graph?.nodes?.length || 0) === 0"
+                   class="absolute top-3 left-3 right-3 sm:right-auto sm:max-w-md bg-purple-500/10 border border-purple-500/30 rounded-md px-3 py-2 text-xs text-purple-200 backdrop-blur-sm z-10 pointer-events-none">
+                <span class="font-semibold">Seed concettuale</span> · il lab non ha ancora prodotto dati. Il grafo mostra il modello D-ND con il dominio come keyword centrale. Esegui un cycle per popolarlo con dati reali.
+              </div>
               <!-- Floating controls visibili in fullscreen (refactor 03/05 sera) -->
               <div x-show="graphFullscreen" class="graph-fs-controls">
                 <span class="label" x-text="`${graphStats.n_nodes ?? 0}n · ${graphStats.n_edges ?? 0}e`"></span>
-                <button @click="resetGraphLayout()" title="Relayout (fcose)">↻ relayout</button>
+                <button @click="resetGraphLayout()" title="Relayout (fcose, rispetta nodi pinnati)">↻ relayout</button>
+                <button @click="unpinAllGraphNodes(); resetGraphLayout()" title="Sblocca tutti i nodi pinnati + relayout">⌖ unpin</button>
                 <button @click="reloadGraph().then(() => renderGraph())" title="Refresh dati">⟳ refresh</button>
               </div>
               <button x-show="graphFullscreen" @click="setGraphFullscreen(false)" class="graph-fs-close">✕ Esci (ESC)</button>
@@ -2761,8 +2787,15 @@
           };
         });
         if (nodes.length === 0) {
-          container.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#64748b;font-size:14px">Graph is empty — run a cycle to populate it.</div>';
-          return;
+          // Seed concettuale D-ND: invece di mostrare grafo vuoto, popoliamo
+          // con un'immagine concettuale che parte dal modello — assiomi,
+          // dipoli, biconi — più il dominio attivo come keyword centrale
+          // (l'intento del lab). L'utente vede subito la forma del sistema
+          // anche prima del primo cycle. Marker `seed:true` distingue questi
+          // nodi dai nodi reali del campo vivo.
+          const seed = this._buildConceptualSeedGraph(this.activeDomain);
+          nodes.push(...seed.nodes);
+          edges.push(...seed.edges);
         }
         this.cy = cytoscape({
           container,
@@ -2925,6 +2958,10 @@
         // Drag persistence — Cytoscape mouseout fires quando il cursore lascia il
         // bbox del nodo durante il drag → label flicker. Grab/free events
         // mantengono l'opacita' a 1 durante il movimento, restore al free.
+        // + Drag-fix: nodo draggato resta fissato (pinned) — il prossimo
+        //   relayout NON lo riposiziona. Pattern equivalente a fx/fy del
+        //   simulate D3-like di LabGraph.tsx (sito d-nd.com). resetGraphLayout()
+        //   resetta i pinned così l'utente può ottenere un nuovo arrangement.
         this.cy.on('grab', 'node', (evt) => {
           evt.target.style('text-opacity', 1);
           this.hideNodeTooltip();   // niente tooltip durante drag
@@ -2933,6 +2970,15 @@
           if (!evt.target.selected() && !this.showAllLabels) {
             evt.target.style('text-opacity', 0);
           }
+          // Drag-fix: nodo manualmente posizionato → marca come 'pinned'.
+          // resetGraphLayout() skippa pinned via fixedNodeConstraint (fcose)
+          // → l'utente può comporre layout custom che il relayout rispetta.
+          // grabbable resta true → si può sempre ri-draggare per rilasciare.
+          try {
+            const n = evt.target;
+            n.addClass('pinned');
+            n.scratch('_pinnedPos', { x: n.position('x'), y: n.position('y') });
+          } catch (e) { /* defensive */ }
         });
       },
 
@@ -3094,16 +3140,102 @@
         return s.length > n ? s.slice(0, n - 1) + '…' : s;
       },
 
+      // Seed concettuale: quando il grafo del lab è vuoto, mostriamo un
+      // "immagine concettuale che si crea" — il dominio (intent del lab)
+      // come keyword centrale + i concetti del modello D-ND (assiomi,
+      // dipoli, biconi) che orbitano intorno. Pattern: A1+A10+A14 — la
+      // regola, il dipolo, la cascata. Niente dati hardcoded relativi al
+      // particolare dominio: solo il grafo del modello + il nome del lab
+      // come ente centrale, così il sistema "rappresenta l'istanza
+      // generale" prima ancora di avere dati propri.
+      _buildConceptualSeedGraph(domain) {
+        const intent = (domain || 'lab').replace(/[-_]/g, ' ');
+        // Nodi-seed: il dominio centrale + 4 enti del modello D-ND.
+        // Type=teoria per i 4 enti (sfere grandi, label-letter), così il
+        // styling cytoscape esistente li renderizza in modo coerente.
+        const seedNodes = [
+          // Centrale: l'intent del lab — type="ghost" per distinguerlo
+          // visivamente dai nodi reali (giallo/amber) ma resta interattivo.
+          { id: '__seed_intent__', label: intent, type: 'tensione',
+            intensity: 1.0, seed: true, _doc: 'Intent del lab — keyword centrale' },
+          // 4 enti del modello D-ND: regola, dipolo, bicono, cascata
+          { id: '__seed_regola__', label: 'regola D-ND', type: 'teoria',
+            seed: true, _doc: 'f(x)=1+1/x · M=[[1,1],[1,0]] · det=−1 · punto fisso φ' },
+          { id: '__seed_dipolo__', label: 'dipolo', type: 'teoria',
+            seed: true, _doc: 'A10 — autovalori M: φ (futuro) e −1/φ (passato). Area preservata, segno distingue.' },
+          { id: '__seed_bicono__', label: 'bicono', type: 'teoria',
+            seed: true, _doc: '4 poli: radici · singolare · invariante · campo. Forma del finding.' },
+          { id: '__seed_cascata__', label: 'cascata', type: 'teoria',
+            seed: true, _doc: 'A14 — ciò che si scopre vive nel seme, non nel nodo. Il seme propaga senza centro.' },
+          // Nodi-attrazione: 3 invarianti del ciclo di lab
+          { id: '__seed_tensione__', label: 'tensione', type: 'tensione',
+            intensity: 0.7, seed: true, _doc: 'Domanda non risolta che muove il cycle.' },
+          { id: '__seed_finding__', label: 'finding', type: 'scoperta',
+            seed: true, _doc: 'Risultato che ha superato il falsifier — entra nel seme.' },
+          { id: '__seed_cimitero__', label: 'cimitero', type: 'ghost',
+            seed: true, _doc: 'Ciò che è stato falsificato — registrato, non scomparso.' },
+        ];
+        // Archi: l'intent connesso a tutto (regola+dipolo+bicono+cascata),
+        // più la triade del ciclo (tensione → finding | cimitero) e i
+        // ponti tra enti del modello.
+        const seedEdges = [
+          { source: '__seed_intent__', target: '__seed_regola__', type: 'rel', label: 'opera con' },
+          { source: '__seed_intent__', target: '__seed_dipolo__', type: 'rel', label: 'osserva' },
+          { source: '__seed_intent__', target: '__seed_bicono__', type: 'rel', label: 'cristallizza in' },
+          { source: '__seed_intent__', target: '__seed_cascata__', type: 'rel', label: 'propaga via' },
+          { source: '__seed_intent__', target: '__seed_tensione__', type: 'rel', label: 'parte da' },
+          { source: '__seed_tensione__', target: '__seed_finding__', type: 'ponte', label: 'cycle →' },
+          { source: '__seed_tensione__', target: '__seed_cimitero__', type: 'ponte', label: 'falsifier →' },
+          { source: '__seed_finding__', target: '__seed_cascata__', type: 'rel', label: 'entra nel seme' },
+          { source: '__seed_regola__', target: '__seed_dipolo__', type: 'rel', label: 'genera' },
+          { source: '__seed_dipolo__', target: '__seed_bicono__', type: 'rel', label: 'organizza in' },
+        ];
+        // Trasforma in formato cytoscape (data wrapper + label troncato).
+        const wrap = (n) => ({
+          data: {
+            id: n.id,
+            label: this._truncate(n.label || n.id, 30),
+            type: n.type || 'unknown',
+            letter: n.type === 'teoria' ? (n.label || '?').toString().charAt(0).toUpperCase() : '',
+            size: n.type === 'teoria' ? 42
+                : n.type === 'tensione' ? Math.round(12 + (n.intensity || 0.5) * 12)
+                : 14,
+            full: n,
+            seed: true,
+          },
+        });
+        const wrapEdge = (e, i) => ({
+          data: {
+            id: 'eseed' + i,
+            source: e.source,
+            target: e.target,
+            type: e.type || 'rel',
+            label: e.label || '',
+            seed: true,
+          },
+        });
+        return {
+          nodes: seedNodes.map(wrap),
+          edges: seedEdges.map(wrapEdge, this),
+        };
+      },
+
       resetGraphLayout() {
         if (!this.cy) return;
-        // Refactor 03/05 sera: fcose stesso pattern di renderGraph init
-        // (operatore: "il relayout un po' meno"). Animato per UX.
+        // Drag-fix integration: pinned nodes (manualmente draggati dall'utente)
+        // restano nella posizione attuale. Solo gli altri vengono ri-arrangiati
+        // dal layout. Pattern fxNodes per fcose: nodeId + posizione fissa.
+        const fixedNodeConstraint = [];
+        this.cy.nodes('.pinned').forEach((n) => {
+          const p = n.scratch('_pinnedPos') || { x: n.position('x'), y: n.position('y') };
+          fixedNodeConstraint.push({ nodeId: n.id(), position: { x: p.x, y: p.y } });
+        });
         this.cy.layout({
           name: typeof cytoscapeFcose !== 'undefined' ? 'fcose' : 'cose',
           animate: true,
           animationDuration: 600,
           quality: 'proof',
-          randomize: true,
+          randomize: fixedNodeConstraint.length === 0,
           fit: true,
           padding: 40,                    // ridotto da 60 → nodi più grandi nel viewport
           nodeRepulsion: 9000,
@@ -3113,12 +3245,22 @@
           gravityRange: 3.8,
           numIter: 2500,
           tile: false,
+          fixedNodeConstraint: fixedNodeConstraint.length ? fixedNodeConstraint : undefined,
           // Fallback cose
           componentSpacing: 80,
           initialTemp: 220,
           coolingFactor: 0.95,
         }).run();
         setTimeout(() => this.cy && this.cy.fit(undefined, 40), 700);
+      },
+
+      // Unpin all (chiamabile da pulsante "Reset positions" se serve in futuro).
+      unpinAllGraphNodes() {
+        if (!this.cy) return;
+        this.cy.nodes('.pinned').forEach((n) => {
+          n.removeClass('pinned');
+          n.removeScratch('_pinnedPos');
+        });
       },
 
       // v4.9 — fullscreen toggle. Cytoscape resize automatico nel container
