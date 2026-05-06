@@ -819,6 +819,268 @@ async def get_narrative(domain: str, cycle_ts: str, request: Request) -> dict[st
     return _parse_narrative_file(narr_path)
 
 
+# ─── i18n minimal per pagine /n (server-rendered FastAPI) ─────────────────
+# Le pagine statiche di lab.d-nd.com usano translations.js + cookie i18nextLng.
+# Le pagine /n sono server-rendered; replichiamo lo stesso pattern lato server:
+# query param ?lang=en o cookie i18nextLng=en → render EN. Default 'it'.
+
+_N_I18N: dict[str, dict[str, str]] = {
+    "it": {
+        "html_lang": "it",
+        "og_locale": "it_IT",
+        # Header nav
+        "nav_brand_aria": "Lab D-ND home",
+        "nav_sections_aria": "Sezioni Lab D-ND",
+        "nav_external_aria": "Risorse esterne",
+        "nav_cycle": "Cycle",
+        "nav_scoperte": "Scoperte",
+        "nav_applications": "Applicazioni",
+        "nav_dashboard": "Dashboard",
+        "nav_start": "Inizia",
+        # Footer
+        "footer_question": "Hai un dominio simile?",
+        "footer_cta": "Crea il tuo Lab →",
+        "footer_brand_subtitle": "sistemi cognitivi operativi",
+        "footer_link_start": "Inizia",
+        "footer_link_home": "Home Lab",
+        "footer_link_dashboard": "Dashboard",
+        # Master index /n/
+        "master_meta_title": "Cycle dei lab · Lab D-ND",
+        "master_meta_desc": "I lab D-ND in produzione: ogni cycle è una iterazione di ricerca tradotta in narrazione di 200 parole con verdetto strutturale.",
+        "master_og_title": "Cycle dei lab D-ND",
+        "master_og_desc": "I lab in produzione, ogni cycle tradotto in narrazione leggibile con verdetto strutturale.",
+        "master_ctx_where": "Cycle dei lab D-ND",
+        "master_ctx_purpose": "Log pubblico dei lab in produzione: cosa girano, cosa hanno trovato, cosa hanno scartato.",
+        "master_ctx_cta": "Lab simile sul tuo dominio? Inizia →",
+        "master_eyebrow": "Cycle dei lab",
+        "master_h1": "Cosa fanno i lab quando girano.",
+        "master_lead": "Ogni cycle è un'iterazione di ricerca: il lab sceglie una domanda, prova una risposta, la mette sotto critica strutturale. Qui leggi cosa ha trovato — narrazione di 200 parole, verdetto trasparente: schema regge, sospeso onesto, falsificato.",
+        "physics_master_label": "master · d-nd.com",
+        "physics_master_h2": "physics",
+        "physics_master_desc": "Master lab della fisica: dove il modello D-ND viene sviluppato e validato.",
+        "physics_master_last": "Lab di ricerca privato, finding pubblicati su d-nd.com/ai-lab. Apri il master ↗",
+        "card_no_narrative": "Nessun cycle narrato finora.",
+        "card_pending_narrative": "Cycle in attesa di narrazione.",
+        "card_default_desc": "Lab D-ND di dominio.",
+        # Lab index /n/<domain>/
+        "lab_meta_title_fmt": "Cycle del lab {lab} · Lab D-ND",
+        "lab_og_title_fmt": "Cycle del lab {lab}",
+        "lab_ctx_where_fmt": "Lab {lab}",
+        "lab_ctx_purpose": "Tutti i cycle pubblici di questo lab. Ogni voce è un'iterazione narrata con verdetto.",
+        "lab_eyebrow": "Cycle del lab",
+        "lab_empty": "Nessun cycle narrato finora per questo lab.",
+        "lab_words_unit": "parole",
+        # Narrative single cycle /n/<domain>/<ts>
+        "narr_meta_title_fmt": "{title} · Lab D-ND {lab}",
+        "narr_ctx_where_fmt": "{lab} · cycle {cycle_ts}",
+        "narr_ctx_purpose": "Una singola iterazione di ricerca, narrata. Verdetto strutturale e link al report tecnico.",
+        "narr_eyebrow_fmt": "Lab D-ND · {lab}",
+        "narr_prev_link": "← Cycle precedente",
+        "narr_next_link": "Cycle successivo →",
+        "narr_up_link_fmt": "↑ Tutti i cycle di {lab}",
+        "narr_meta_cycle": "Cycle",
+        "narr_meta_aeternitas": "Aeternitas",
+        "narr_meta_veritas": "Veritas",
+        "narr_meta_trajectory": "Trajectory",
+        "narr_tech_report_pre": "Narrazione di un cycle tecnico del lab D-ND. Il ",
+        "narr_tech_report_link": "report tecnico originale",
+        "narr_tech_report_post": " con dati, falsifier flags e bicono resta consultabile.",
+        "narr_default_title_fmt": "Cycle {cycle_ts} · {domain}",
+        # Verdict labels (da _verdict_label)
+        "verdict_falsificazione": "Falsificazione",
+        "verdict_redesign": "Il sistema chiede di riprogettare",
+        "verdict_collasso": "Lo schema regge",
+        "verdict_sospensione": "Sospeso · onesto",
+        "verdict_scarto": "Bassa qualità",
+        "verdict_default": "Cycle completato",
+        # Domain leads (descrizione brevi)
+        "lead_bio-rhythms": "Regime detection in biosegnali cardiaci e circadiani.",
+        "lead_finance": "Regime detection nei mercati FX, crypto, equity.",
+        "lead_ops-decisions": "Friction operativa trasformata in regole strutturali.",
+        "lead_editorial": "Distillazione dei contenuti che reggono il peso.",
+        "lead_meta-lab": "Il lab che genera lab — produce semi cognitivi.",
+        # Lang toggle
+        "lang_toggle_en": "EN",
+        "lang_toggle_it": "IT",
+    },
+    "en": {
+        "html_lang": "en",
+        "og_locale": "en_US",
+        # Header nav
+        "nav_brand_aria": "Lab D-ND home",
+        "nav_sections_aria": "Lab D-ND sections",
+        "nav_external_aria": "External resources",
+        "nav_cycle": "Cycles",
+        "nav_scoperte": "Findings",
+        "nav_applications": "Applications",
+        "nav_dashboard": "Dashboard",
+        "nav_start": "Start",
+        # Footer
+        "footer_question": "Got a similar domain?",
+        "footer_cta": "Create your Lab →",
+        "footer_brand_subtitle": "operational cognitive systems",
+        "footer_link_start": "Start",
+        "footer_link_home": "Lab Home",
+        "footer_link_dashboard": "Dashboard",
+        # Master index /n/
+        "master_meta_title": "Lab cycles · Lab D-ND",
+        "master_meta_desc": "D-ND labs in production: every cycle is a research iteration translated into a 200-word narrative with structural verdict.",
+        "master_og_title": "D-ND lab cycles",
+        "master_og_desc": "Labs in production, each cycle translated into a readable narrative with structural verdict.",
+        "master_ctx_where": "D-ND lab cycles",
+        "master_ctx_purpose": "Public log of labs in production: what they run, what they find, what they discard.",
+        "master_ctx_cta": "Similar lab on your domain? Start →",
+        "master_eyebrow": "Lab cycles",
+        "master_h1": "What labs do when they run.",
+        "master_lead": "Every cycle is a research iteration: the lab picks a question, tries an answer, runs it through structural critique. Here you read what it found — 200-word narrative, transparent verdict: schema holds, honest suspension, falsified.",
+        "physics_master_label": "master · d-nd.com",
+        "physics_master_h2": "physics",
+        "physics_master_desc": "Physics master lab: where the D-ND model is developed and validated.",
+        "physics_master_last": "Private research lab, findings published on d-nd.com/ai-lab. Open the master ↗",
+        "card_no_narrative": "No narrated cycles yet.",
+        "card_pending_narrative": "Cycle awaiting narrative.",
+        "card_default_desc": "Domain D-ND lab.",
+        # Lab index /n/<domain>/
+        "lab_meta_title_fmt": "Cycles of lab {lab} · Lab D-ND",
+        "lab_og_title_fmt": "Cycles of lab {lab}",
+        "lab_ctx_where_fmt": "Lab {lab}",
+        "lab_ctx_purpose": "All public cycles of this lab. Each entry is an iteration narrated with verdict.",
+        "lab_eyebrow": "Lab cycles",
+        "lab_empty": "No narrated cycles yet for this lab.",
+        "lab_words_unit": "words",
+        # Narrative single cycle /n/<domain>/<ts>
+        "narr_meta_title_fmt": "{title} · Lab D-ND {lab}",
+        "narr_ctx_where_fmt": "{lab} · cycle {cycle_ts}",
+        "narr_ctx_purpose": "A single research iteration, narrated. Structural verdict and link to the technical report.",
+        "narr_eyebrow_fmt": "Lab D-ND · {lab}",
+        "narr_prev_link": "← Previous cycle",
+        "narr_next_link": "Next cycle →",
+        "narr_up_link_fmt": "↑ All cycles of {lab}",
+        "narr_meta_cycle": "Cycle",
+        "narr_meta_aeternitas": "Aeternitas",
+        "narr_meta_veritas": "Veritas",
+        "narr_meta_trajectory": "Trajectory",
+        "narr_tech_report_pre": "Narrative of a technical D-ND lab cycle. The ",
+        "narr_tech_report_link": "original technical report",
+        "narr_tech_report_post": " with data, falsifier flags and bicono remains available.",
+        "narr_default_title_fmt": "Cycle {cycle_ts} · {domain}",
+        # Verdict labels
+        "verdict_falsificazione": "Falsified",
+        "verdict_redesign": "System asks to redesign",
+        "verdict_collasso": "Schema holds",
+        "verdict_sospensione": "Suspended · honest",
+        "verdict_scarto": "Low quality",
+        "verdict_default": "Cycle completed",
+        # Domain leads
+        "lead_bio-rhythms": "Regime detection in cardiac and circadian biosignals.",
+        "lead_finance": "Regime detection in FX, crypto, equity markets.",
+        "lead_ops-decisions": "Operational friction turned into structural rules.",
+        "lead_editorial": "Distillation of content that holds weight.",
+        "lead_meta-lab": "The lab that generates labs — produces cognitive seeds.",
+        # Lang toggle
+        "lang_toggle_en": "EN",
+        "lang_toggle_it": "IT",
+    },
+}
+
+
+def _resolve_lang(request) -> str:
+    """Resolve current language: ?lang=en query param > cookie i18nextLng > 'it'.
+
+    Same cookie name used by lab.d-nd.com static pages (translations.js client side),
+    so toggling on / and on /n/ stays consistent across the surface.
+    """
+    try:
+        q = (request.query_params.get("lang") or "").lower().strip()
+        if q in _N_I18N:
+            return q
+        cookie = (request.cookies.get("i18nextLng") or "").lower().strip()
+        if cookie.startswith("en"):
+            return "en"
+        if cookie.startswith("it"):
+            return "it"
+    except Exception:
+        pass
+    return "it"
+
+
+def _t(lang: str, key: str, **fmt: Any) -> str:
+    """Translate helper. Falls back to 'it' on missing key, then key itself."""
+    pack = _N_I18N.get(lang) or _N_I18N["it"]
+    val = pack.get(key) or _N_I18N["it"].get(key) or key
+    if fmt:
+        try:
+            return val.format(**fmt)
+        except (KeyError, IndexError):
+            return val
+    return val
+
+
+def _lang_toggle_html(lang: str, current_path: str) -> str:
+    """Render IT/EN toggle that preserves current path. Sets ?lang=xx (cookie persists via JS on click would be ideal, ma per ora query string è sufficiente — il cookie viene comunque settato dal sito statico)."""
+    other = "en" if lang == "it" else "it"
+    other_label = _t(lang, "lang_toggle_" + other)
+    sep = "&" if "?" in current_path else "?"
+    return (
+        f'<a href="{html_escape(current_path)}{sep}lang={other}" '
+        f'style="margin-left:14px;color:var(--muted);font-size:12px;font-weight:600;letter-spacing:.06em;" '
+        f'aria-label="Switch to {other.upper()}">{html_escape(other_label)}</a>'
+    )
+
+
+def _render_lab_header(lang: str, cycle_active: bool, current_path: str = "/n/") -> str:
+    """Render header HTML — replaces _LAB_HEADER_HTML constant with i18n + lang toggle."""
+    active_attr = ' class="active"' if cycle_active else ''
+    return (
+        '<header class="site-header">\n'
+        '  <div class="shell nav">\n'
+        f'    <a class="brand" href="https://lab.d-nd.com/" aria-label="{_t(lang, "nav_brand_aria")}">\n'
+        '      <img src="/assets/logos/logo_40px.jpg" alt="D-ND" />\n'
+        '      <span>Lab D-ND</span>\n'
+        '    </a>\n'
+        f'    <nav class="page-nav" aria-label="{_t(lang, "nav_sections_aria")}">\n'
+        f'      <a href="/n/"{active_attr}>{_t(lang, "nav_cycle")}</a>\n'
+        f'      <a href="/scoperte.html">{_t(lang, "nav_scoperte")}</a>\n'
+        f'      <a href="/applications.html">{_t(lang, "nav_applications")}</a>\n'
+        f'      <a href="/dashboard/">{_t(lang, "nav_dashboard")}</a>\n'
+        f'      <a href="/start.html">{_t(lang, "nav_start")}</a>\n'
+        '    </nav>\n'
+        '    <div class="nav-spacer"></div>\n'
+        f'    <nav class="external-nav" aria-label="{_t(lang, "nav_external_aria")}">\n'
+        '      <a href="https://d-nd.com" target="_blank" rel="noopener noreferrer">d-nd.com</a>\n'
+        f'      {_lang_toggle_html(lang, current_path)}\n'
+        '    </nav>\n'
+        '  </div>\n'
+        '</header>\n'
+    )
+
+
+def _render_lab_footer(lang: str) -> str:
+    """Render footer HTML — replaces _LAB_FOOTER_HTML constant with i18n."""
+    return (
+        '<footer class="site-footer">\n'
+        '  <div class="shell" style="padding: 18px 0; border-top: 1px solid rgba(34, 211, 238, 0.18); border-bottom: 1px solid rgba(34, 211, 238, 0.18); margin-bottom: 24px; text-align: center;">\n'
+        f'    <span style="color: var(--ink, #f4f5fa); font-size: 15px;">{_t(lang, "footer_question")} &nbsp;</span>\n'
+        f'    <a href="/start.html" style="display: inline-block; padding: 8px 16px; background: rgba(34, 211, 238, 0.12); border: 1px solid rgba(34, 211, 238, 0.55); border-radius: 6px; color: #22d3ee; font-weight: 600; text-decoration: none; font-size: 14px; margin-left: 6px;">{_t(lang, "footer_cta")}</a>\n'
+        '  </div>\n'
+        '  <div class="shell footer-row">\n'
+        '    <div class="footer-brand">\n'
+        '      <img src="/assets/logos/logo_40px.jpg" alt="D-ND" />\n'
+        f'      <span><strong>Lab D-ND</strong> — {_t(lang, "footer_brand_subtitle")}</span>\n'
+        '    </div>\n'
+        '    <div>\n'
+        f'      <a href="/start.html">{_t(lang, "footer_link_start")}</a> ·\n'
+        f'      <a href="https://lab.d-nd.com/">{_t(lang, "footer_link_home")}</a> ·\n'
+        f'      <a href="/dashboard/">{_t(lang, "footer_link_dashboard")}</a> ·\n'
+        '      <a href="https://d-nd.com" target="_blank" rel="noopener noreferrer">d-nd.com</a>\n'
+        '    </div>\n'
+        '  </div>\n'
+        '</footer>\n'
+        '<!-- DOMUS chat widget (THIA esteso per consapevolezza dei cycle del lab) -->\n'
+        '<script src="/assets/js/domus-widget.js" defer></script>\n'
+    )
+
+
 _LAB_BASE_STYLES = """\
   :root {{
     color-scheme: dark;
@@ -931,18 +1193,18 @@ _LAB_FOOTER_HTML = """\
 
 _NARRATIVE_HTML_TEMPLATE = """\
 <!DOCTYPE html>
-<html lang="it">
+<html lang="{html_lang}">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{title} · Lab D-ND {lab}</title>
+<title>{meta_title}</title>
 <meta name="description" content="{meta_desc}">
 <meta property="og:title" content="{title}">
 <meta property="og:description" content="{meta_desc}">
 <meta property="og:type" content="article">
 <meta property="og:image" content="https://lab.d-nd.com/assets/logos/logo_90px.jpg">
 <meta property="og:url" content="https://lab.d-nd.com/n/{lab}/{cycle_ts}">
-<meta property="og:locale" content="it_IT">
+<meta property="og:locale" content="{og_locale}">
 <meta property="og:site_name" content="Lab D-ND">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="{title}">
@@ -1026,16 +1288,16 @@ _NARRATIVE_HTML_TEMPLATE = """\
 </style>
 </head>
 <body>
-""" + _LAB_HEADER_HTML.replace("{cycle_active}", ' class="active"') + """
+{header_html}
 <div class="lab-context-bar">
   <div class="ctx-shell">
-    <span class="ctx-where">{lab} · cycle {cycle_ts}</span>
-    <span class="ctx-purpose">Una singola iterazione di ricerca, narrata. Verdetto strutturale e link al report tecnico.</span>
-    <a href="/start.html" class="ctx-cta">Lab simile sul tuo dominio? Inizia →</a>
+    <span class="ctx-where">{ctx_where}</span>
+    <span class="ctx-purpose">{ctx_purpose}</span>
+    <a href="/start.html" class="ctx-cta">{ctx_cta}</a>
   </div>
 </div>
 <main class="shell">
-  <div class="eyebrow">Lab D-ND · {lab}</div>
+  <div class="eyebrow">{eyebrow}</div>
   <h1>{title}</h1>
   <div class="verdict-pill">{verdict_label}</div>
   <article>
@@ -1043,20 +1305,20 @@ _NARRATIVE_HTML_TEMPLATE = """\
   </article>
   <nav class="cycle-nav">
     <span>{prev_link}</span>
-    <span class="nav-up"><a href="/n/{lab}/">↑ Tutti i cycle di {lab}</a></span>
+    <span class="nav-up"><a href="/n/{lab}/">{up_link_label}</a></span>
     <span style="text-align:right">{next_link}</span>
   </nav>
   <div class="cycle-meta">
     <dl>
-      <dt>Cycle</dt><dd>{cycle_ts}</dd>
-      <dt>Aeternitas</dt><dd>{aeternitas}</dd>
-      <dt>Veritas</dt><dd>{verdict_band}</dd>
-      <dt>Trajectory</dt><dd>{trajectory_decision}</dd>
+      <dt>{meta_label_cycle}</dt><dd>{cycle_ts}</dd>
+      <dt>{meta_label_aeternitas}</dt><dd>{aeternitas}</dd>
+      <dt>{meta_label_veritas}</dt><dd>{verdict_band}</dd>
+      <dt>{meta_label_trajectory}</dt><dd>{trajectory_decision}</dd>
     </dl>
-    <p>Narrazione di un cycle tecnico del lab D-ND. Il <a href="/api/domains/{lab}/reports/agent_{cycle_ts}.md">report tecnico originale</a> con dati, falsifier flags e bicono resta consultabile.</p>
+    <p>{tech_report_pre}<a href="/api/domains/{lab}/reports/agent_{cycle_ts}.md">{tech_report_link}</a>{tech_report_post}</p>
   </div>
 </main>
-""" + _LAB_FOOTER_HTML + """
+{footer_html}
 </body>
 </html>
 """
@@ -1085,18 +1347,18 @@ def _accent_for(aeternitas: str | None, band: str | None) -> str:
     return "#0a84ff"
 
 
-def _verdict_label(aeternitas: str | None, band: str | None, traj: str | None) -> str:
+def _verdict_label(aeternitas: str | None, band: str | None, traj: str | None, lang: str = "it") -> str:
     if aeternitas == "VETO":
-        return "Falsificazione"
+        return _t(lang, "verdict_falsificazione")
     if traj == "REDESIGN":
-        return "Il sistema chiede di riprogettare"
+        return _t(lang, "verdict_redesign")
     if band == "COLLASSO":
-        return "Lo schema regge"
+        return _t(lang, "verdict_collasso")
     if band == "SOSPENSIONE":
-        return "Sospeso · onesto"
+        return _t(lang, "verdict_sospensione")
     if band == "SCARTO":
-        return "Bassa qualità"
-    return "Cycle completato"
+        return _t(lang, "verdict_scarto")
+    return _t(lang, "verdict_default")
 
 
 def _list_narrative_files(domain: str) -> list[Path]:
@@ -1124,18 +1386,18 @@ def _adjacent_narratives(domain: str, cycle_ts: str) -> tuple[str | None, str | 
 
 _LAB_INDEX_HTML_TEMPLATE = """\
 <!DOCTYPE html>
-<html lang="it">
+<html lang="{html_lang}">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cycle del lab {lab} · Lab D-ND</title>
+<title>{meta_title}</title>
 <meta name="description" content="{lead}">
-<meta property="og:title" content="Cycle del lab {lab}">
+<meta property="og:title" content="{og_title}">
 <meta property="og:description" content="{lead}">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://lab.d-nd.com/n/{lab}/">
 <meta property="og:image" content="https://lab.d-nd.com/assets/logos/logo_90px.jpg">
-<meta property="og:locale" content="it_IT">
+<meta property="og:locale" content="{og_locale}">
 <link rel="icon" href="/assets/favicon.ico">
 <link rel="preconnect" href="https://rsms.me/">
 <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
@@ -1182,21 +1444,21 @@ _LAB_INDEX_HTML_TEMPLATE = """\
 </style>
 </head>
 <body>
-""" + _LAB_HEADER_HTML.replace("{cycle_active}", ' class="active"') + """
+{header_html}
 <div class="lab-context-bar">
   <div class="ctx-shell">
-    <span class="ctx-where">Lab {lab}</span>
-    <span class="ctx-purpose">Tutti i cycle pubblici di questo lab. Ogni voce è un'iterazione narrata con verdetto.</span>
-    <a href="/start.html" class="ctx-cta">Lab simile sul tuo dominio? Inizia →</a>
+    <span class="ctx-where">{ctx_where}</span>
+    <span class="ctx-purpose">{ctx_purpose}</span>
+    <a href="/start.html" class="ctx-cta">{ctx_cta}</a>
   </div>
 </div>
 <main class="shell">
-  <div class="eyebrow">Cycle del lab</div>
+  <div class="eyebrow">{eyebrow}</div>
   <h1>{lab}</h1>
   <p class="lead">{lead}</p>
   {body}
 </main>
-""" + _LAB_FOOTER_HTML + """
+{footer_html}
 </body>
 </html>
 """
@@ -1204,13 +1466,14 @@ _LAB_INDEX_HTML_TEMPLATE = """\
 
 @app.get("/n/{domain}/", response_class=HTMLResponse)
 @app.get("/n/{domain}", response_class=HTMLResponse)
-async def public_lab_index(domain: str) -> Any:
+async def public_lab_index(domain: str, request: Request) -> Any:
     """Public index of all narratives for a single lab."""
     if domain not in cfg.list_domains():
         raise HTTPException(404, "Unknown domain")
+    lang = _resolve_lang(request)
     files = _list_narrative_files(domain)
     if not files:
-        body_html = "<p style='color:var(--muted)'>Nessun cycle narrato finora per questo lab.</p>"
+        body_html = f"<p style='color:var(--muted)'>{html_escape(_t(lang, 'lab_empty'))}</p>"
     else:
         items: list[str] = []
         for f in files:
@@ -1219,7 +1482,7 @@ async def public_lab_index(domain: str) -> Any:
             body_text = parsed["body"]
             first_sent = re.split(r"(?<=[.!?])\s+", body_text, maxsplit=1)[0].strip()
             title = (first_sent[:120] + "…") if len(first_sent) > 122 else first_sent
-            label = _verdict_label(parsed.get("aeternitas"), parsed.get("verdict_band"), parsed.get("trajectory_decision"))
+            label = _verdict_label(parsed.get("aeternitas"), parsed.get("verdict_band"), parsed.get("trajectory_decision"), lang)
             accent = _accent_for(parsed.get("aeternitas"), parsed.get("verdict_band"))
             ts_pretty = ts[:8] + " · " + ts[9:11] + ":" + ts[11:13] if len(ts) >= 13 else ts
             items.append(
@@ -1229,39 +1492,42 @@ async def public_lab_index(domain: str) -> Any:
                 f"<div class='cycle-meta'>"
                 f"<span class='pill' style='background:{accent}'>{html_escape(label)}</span>"
                 f"<span>{html_escape(ts_pretty)}</span>"
-                f"<span>{parsed.get('word_count') or '—'} parole</span>"
+                f"<span>{parsed.get('word_count') or '—'} {html_escape(_t(lang, 'lab_words_unit'))}</span>"
                 f"</div>"
                 f"</a></li>"
             )
         body_html = "<ul class='cycle-list'>" + "\n".join(items) + "</ul>"
 
-    leads = {
-        "bio-rhythms": "Regime detection in biosegnali cardiaci e circadiani.",
-        "finance":      "Regime detection nei mercati FX, crypto, equity.",
-        "ops-decisions": "Friction operativa trasformata in regole strutturali.",
-        "editorial":    "Distillazione dei contenuti che reggono il peso.",
-        "meta-lab":     "Il lab che genera lab — produce semi cognitivi.",
-    }
-    lead = leads.get(domain, "Lab D-ND di dominio.")
+    lead = _t(lang, f"lead_{domain}") if f"lead_{domain}" in (_N_I18N.get(lang) or {}) else _t(lang, "card_default_desc")
     return HTMLResponse(_LAB_INDEX_HTML_TEMPLATE.format(
+        html_lang=_t(lang, "html_lang"),
+        og_locale=_t(lang, "og_locale"),
+        meta_title=_t(lang, "lab_meta_title_fmt", lab=domain),
+        og_title=_t(lang, "lab_og_title_fmt", lab=domain),
+        ctx_where=_t(lang, "lab_ctx_where_fmt", lab=domain),
+        ctx_purpose=_t(lang, "lab_ctx_purpose"),
+        ctx_cta=_t(lang, "master_ctx_cta"),
+        eyebrow=_t(lang, "lab_eyebrow"),
+        header_html=_render_lab_header(lang, cycle_active=True, current_path=f"/n/{domain}/"),
+        footer_html=_render_lab_footer(lang),
         lab=html_escape(domain), lead=html_escape(lead), body=body_html,
     ))
 
 
 _MASTER_INDEX_HTML_TEMPLATE = """\
 <!DOCTYPE html>
-<html lang="it">
+<html lang="{html_lang}">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cycle dei lab · Lab D-ND</title>
-<meta name="description" content="I lab D-ND in produzione: ogni cycle è una iterazione di ricerca tradotta in narrazione di 200 parole con verdetto strutturale.">
-<meta property="og:title" content="Cycle dei lab D-ND">
-<meta property="og:description" content="I lab in produzione, ogni cycle tradotto in narrazione leggibile con verdetto strutturale.">
+<title>{meta_title}</title>
+<meta name="description" content="{meta_desc}">
+<meta property="og:title" content="{og_title}">
+<meta property="og:description" content="{og_desc}">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://lab.d-nd.com/n/">
 <meta property="og:image" content="https://lab.d-nd.com/assets/logos/logo_90px.jpg">
-<meta property="og:locale" content="it_IT">
+<meta property="og:locale" content="{og_locale}">
 <link rel="icon" href="/assets/favicon.ico">
 <link rel="preconnect" href="https://rsms.me/">
 <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
@@ -1326,23 +1592,23 @@ _MASTER_INDEX_HTML_TEMPLATE = """\
 </style>
 </head>
 <body>
-""" + _LAB_HEADER_HTML.replace("{cycle_active}", ' class="active"') + """
+{header_html}
 <div class="lab-context-bar">
   <div class="ctx-shell">
-    <span class="ctx-where">Cycle dei lab D-ND</span>
-    <span class="ctx-purpose">Log pubblico dei lab in produzione: cosa girano, cosa hanno trovato, cosa hanno scartato.</span>
-    <a href="/start.html" class="ctx-cta">Lab simile sul tuo dominio? Inizia →</a>
+    <span class="ctx-where">{ctx_where}</span>
+    <span class="ctx-purpose">{ctx_purpose}</span>
+    <a href="/start.html" class="ctx-cta">{ctx_cta}</a>
   </div>
 </div>
 <main class="shell">
-  <div class="eyebrow">Cycle dei lab</div>
-  <h1>Cosa fanno i lab quando girano.</h1>
-  <p class="lead">Ogni cycle è un'iterazione di ricerca: il lab sceglie una domanda, prova una risposta, la mette sotto critica strutturale. Qui leggi cosa ha trovato — narrazione di 200 parole, verdetto trasparente: schema regge, sospeso onesto, falsificato.</p>
+  <div class="eyebrow">{eyebrow}</div>
+  <h1>{master_h1}</h1>
+  <p class="lead">{lead}</p>
   <div class="lab-grid">
     {cards}
   </div>
 </main>
-""" + _LAB_FOOTER_HTML + """
+{footer_html}
 </body>
 </html>
 """
@@ -1350,23 +1616,17 @@ _MASTER_INDEX_HTML_TEMPLATE = """\
 
 @app.get("/n/", response_class=HTMLResponse)
 @app.get("/n", response_class=HTMLResponse)
-async def public_master_index() -> Any:
+async def public_master_index(request: Request) -> Any:
     """Public master index — all labs with their latest narrative summary."""
-    leads = {
-        "bio-rhythms":   "Regime detection in biosegnali cardiaci e circadiani.",
-        "finance":       "Regime detection nei mercati FX, crypto, equity.",
-        "ops-decisions": "Friction operativa trasformata in regole strutturali.",
-        "editorial":     "Distillazione dei contenuti che reggono il peso.",
-        "meta-lab":      "Il lab che genera lab — produce semi cognitivi.",
-    }
+    lang = _resolve_lang(request)
     # Master physics lab: vive su d-nd.com (sviluppo del modello D-ND).
     # Card statica esterna in testa, prima dei lab installabili dinamici.
     physics_card = (
         "<div class='lab-card'>"
         "<a href='https://d-nd.com/ai-lab' target='_blank' rel='noopener noreferrer'>"
-        "<h2>physics <span style='font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--purple);margin-left:8px;'>master · d-nd.com</span></h2>"
-        "<div class='desc'>Master lab della fisica: dove il modello D-ND viene sviluppato e validato.</div>"
-        "<div class='last' style='color:var(--muted);font-style:italic;'>Lab di ricerca privato, finding pubblicati su d-nd.com/ai-lab. Apri il master ↗</div>"
+        f"<h2>{html_escape(_t(lang, 'physics_master_h2'))} <span style='font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--purple);margin-left:8px;'>{html_escape(_t(lang, 'physics_master_label'))}</span></h2>"
+        f"<div class='desc'>{html_escape(_t(lang, 'physics_master_desc'))}</div>"
+        f"<div class='last' style='color:var(--muted);font-style:italic;'>{html_escape(_t(lang, 'physics_master_last'))}</div>"
         "</a></div>"
     )
     cards: list[str] = [physics_card]
@@ -1380,7 +1640,7 @@ async def public_master_index() -> Any:
                 body_text = parsed["body"]
                 first_sent = re.split(r"(?<=[.!?])\s+", body_text, maxsplit=1)[0].strip()
                 snippet = (first_sent[:140] + "…") if len(first_sent) > 142 else first_sent
-                label = _verdict_label(parsed.get("aeternitas"), parsed.get("verdict_band"), parsed.get("trajectory_decision"))
+                label = _verdict_label(parsed.get("aeternitas"), parsed.get("verdict_band"), parsed.get("trajectory_decision"), lang)
                 accent = _accent_for(parsed.get("aeternitas"), parsed.get("verdict_band"))
                 ts_pretty = ts[:8] + " · " + ts[9:11] + ":" + ts[11:13] if len(ts) >= 13 else ts
                 last_html = (
@@ -1391,10 +1651,11 @@ async def public_master_index() -> Any:
                     f"</div></div>"
                 )
             except Exception:
-                last_html = "<div class='last' style='color:var(--muted)'>Cycle in attesa di narrazione.</div>"
+                last_html = f"<div class='last' style='color:var(--muted)'>{html_escape(_t(lang, 'card_pending_narrative'))}</div>"
         else:
-            last_html = "<div class='last' style='color:var(--muted)'>Nessun cycle narrato finora.</div>"
-        desc = leads.get(domain, "Lab D-ND di dominio.")
+            last_html = f"<div class='last' style='color:var(--muted)'>{html_escape(_t(lang, 'card_no_narrative'))}</div>"
+        desc_key = f"lead_{domain}"
+        desc = _t(lang, desc_key) if desc_key in (_N_I18N.get(lang) or {}) else _t(lang, "card_default_desc")
         cards.append(
             f"<div class='lab-card'>"
             f"<a href='/n/{html_escape(domain)}/'>"
@@ -1403,11 +1664,27 @@ async def public_master_index() -> Any:
             f"{last_html}"
             f"</a></div>"
         )
-    return HTMLResponse(_MASTER_INDEX_HTML_TEMPLATE.format(cards="\n".join(cards)))
+    return HTMLResponse(_MASTER_INDEX_HTML_TEMPLATE.format(
+        html_lang=_t(lang, "html_lang"),
+        og_locale=_t(lang, "og_locale"),
+        meta_title=_t(lang, "master_meta_title"),
+        meta_desc=_t(lang, "master_meta_desc"),
+        og_title=_t(lang, "master_og_title"),
+        og_desc=_t(lang, "master_og_desc"),
+        ctx_where=_t(lang, "master_ctx_where"),
+        ctx_purpose=_t(lang, "master_ctx_purpose"),
+        ctx_cta=_t(lang, "master_ctx_cta"),
+        eyebrow=_t(lang, "master_eyebrow"),
+        master_h1=_t(lang, "master_h1"),
+        lead=_t(lang, "master_lead"),
+        header_html=_render_lab_header(lang, cycle_active=True, current_path="/n/"),
+        footer_html=_render_lab_footer(lang),
+        cards="\n".join(cards),
+    ))
 
 
 @app.get("/n/{domain}/{cycle_ts}", response_class=HTMLResponse)
-async def public_narrative_page(domain: str, cycle_ts: str) -> Any:
+async def public_narrative_page(domain: str, cycle_ts: str, request: Request) -> Any:
     """Public-facing narrative page — Apple-like styled, mobile-first.
 
     URL canonico shareable (es. su LinkedIn, Twitter, embed).
@@ -1421,16 +1698,17 @@ async def public_narrative_page(domain: str, cycle_ts: str) -> Any:
     if not narr_path.exists():
         raise HTTPException(404, "No narrative for this cycle")
     parsed = _parse_narrative_file(narr_path)
+    lang = _resolve_lang(request)
 
     accent = _accent_for(parsed.get("aeternitas"), parsed.get("verdict_band"))
-    label = _verdict_label(parsed.get("aeternitas"), parsed.get("verdict_band"), parsed.get("trajectory_decision"))
+    label = _verdict_label(parsed.get("aeternitas"), parsed.get("verdict_band"), parsed.get("trajectory_decision"), lang)
 
     # Title: derive from body's first sentence cap, or fallback
     body = parsed["body"]
     first_sent = re.split(r"(?<=[.!?])\s+", body, maxsplit=1)[0].strip()
     title = (first_sent[:90] + "…") if len(first_sent) > 92 else first_sent
     if not title:
-        title = f"Cycle {cycle_ts} · {domain}"
+        title = _t(lang, "narr_default_title_fmt", cycle_ts=cycle_ts, domain=domain)
 
     # Render body paragraphs as <p> (paragraphs split on blank lines)
     paragraphs = [p.strip() for p in re.split(r"\n\s*\n", body) if p.strip()]
@@ -1438,10 +1716,27 @@ async def public_narrative_page(domain: str, cycle_ts: str) -> Any:
     meta_desc = (paragraphs[0] if paragraphs else title)[:200]
 
     older, newer = _adjacent_narratives(domain, cycle_ts)
-    prev_link = f"<a href='/n/{html_escape(domain)}/{older}'>← Cycle precedente</a>" if older else ""
-    next_link = f"<a href='/n/{html_escape(domain)}/{newer}'>Cycle successivo →</a>" if newer else ""
+    prev_link = f"<a href='/n/{html_escape(domain)}/{older}'>{html_escape(_t(lang, 'narr_prev_link'))}</a>" if older else ""
+    next_link = f"<a href='/n/{html_escape(domain)}/{newer}'>{html_escape(_t(lang, 'narr_next_link'))}</a>" if newer else ""
 
     return HTMLResponse(_NARRATIVE_HTML_TEMPLATE.format(
+        html_lang=_t(lang, "html_lang"),
+        og_locale=_t(lang, "og_locale"),
+        meta_title=_t(lang, "narr_meta_title_fmt", title=title, lab=domain),
+        ctx_where=_t(lang, "narr_ctx_where_fmt", lab=domain, cycle_ts=cycle_ts),
+        ctx_purpose=_t(lang, "narr_ctx_purpose"),
+        ctx_cta=_t(lang, "master_ctx_cta"),
+        eyebrow=_t(lang, "narr_eyebrow_fmt", lab=domain),
+        up_link_label=_t(lang, "narr_up_link_fmt", lab=domain),
+        meta_label_cycle=_t(lang, "narr_meta_cycle"),
+        meta_label_aeternitas=_t(lang, "narr_meta_aeternitas"),
+        meta_label_veritas=_t(lang, "narr_meta_veritas"),
+        meta_label_trajectory=_t(lang, "narr_meta_trajectory"),
+        tech_report_pre=_t(lang, "narr_tech_report_pre"),
+        tech_report_link=_t(lang, "narr_tech_report_link"),
+        tech_report_post=_t(lang, "narr_tech_report_post"),
+        header_html=_render_lab_header(lang, cycle_active=True, current_path=f"/n/{domain}/{cycle_ts}"),
+        footer_html=_render_lab_footer(lang),
         title=html_escape(title),
         meta_desc=html_escape(meta_desc),
         accent=accent,
