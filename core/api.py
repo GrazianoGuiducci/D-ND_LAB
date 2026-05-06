@@ -33,6 +33,7 @@ import threading
 import time
 import uuid
 from datetime import datetime, timezone
+from html import escape as html_escape
 from pathlib import Path
 from typing import Any, Callable
 
@@ -749,6 +750,709 @@ async def list_biconi(domain: str, request: Request, limit: int = 50) -> list[di
             "mtime": datetime.fromtimestamp(f.stat().st_mtime, tz=timezone.utc).isoformat(),
         })
     return out
+
+
+def _parse_narrative_file(path: Path) -> dict[str, Any]:
+    """Read a narrative_<ts>.md file and split frontmatter from body.
+
+    Returns dict with: cycle_ts, lab, word_count, verdict_band,
+    aeternitas, trajectory_decision, body (markdown text).
+    """
+    text = path.read_text(errors="replace")
+    front: dict[str, str] = {}
+    body = text
+    if text.startswith("---\n"):
+        end = text.find("\n---\n", 4)
+        if end > 0:
+            for line in text[4:end].splitlines():
+                if ":" in line:
+                    k, v = line.split(":", 1)
+                    front[k.strip()] = v.strip()
+            body = text[end + 5:].lstrip()
+    return {
+        "cycle_ts": front.get("cycle_ts", ""),
+        "lab": front.get("lab", ""),
+        "word_count": int(front["word_count"]) if front.get("word_count", "").isdigit() else None,
+        "verdict_band": front.get("verdict_band"),
+        "aeternitas": front.get("aeternitas"),
+        "trajectory_decision": front.get("trajectory_decision"),
+        "body": body.strip(),
+        "filename": path.name,
+        "mtime": datetime.fromtimestamp(path.stat().st_mtime, tz=timezone.utc).isoformat(),
+    }
+
+
+@app.get("/api/domains/{domain}/narratives")
+async def list_narratives(domain: str, request: Request, limit: int = 30) -> list[dict[str, Any]]:
+    """Return parsed narrative summaries for the domain (most recent first).
+
+    Each entry includes frontmatter fields (cycle_ts, verdict_band,
+    aeternitas, trajectory_decision, word_count) + body. Used by the
+    public-facing /n/<domain>/<ts> route and any external consumer
+    (LinkedIn embed, social card generator, etc.).
+    """
+    await _check_auth(request)
+    _validate_domain(domain)
+    narr_dir = paths.domain_data_dir(domain) / "narratives"
+    if not narr_dir.exists():
+        return []
+    files = sorted(narr_dir.glob("narrative_*.md"), key=lambda p: p.stat().st_mtime, reverse=True)[:limit]
+    out: list[dict[str, Any]] = []
+    for f in files:
+        try:
+            out.append(_parse_narrative_file(f))
+        except Exception:
+            continue
+    return out
+
+
+@app.get("/api/domains/{domain}/narratives/{cycle_ts}")
+async def get_narrative(domain: str, cycle_ts: str, request: Request) -> dict[str, Any]:
+    """Single narrative for one cycle. Used by frontend renderers."""
+    await _check_auth(request)
+    _validate_domain(domain)
+    if not re.fullmatch(r"\d{8}_\d{4,6}", cycle_ts):
+        raise HTTPException(400, "Invalid cycle_ts format")
+    narr_path = paths.domain_data_dir(domain) / "narratives" / f"narrative_{cycle_ts}.md"
+    if not narr_path.exists():
+        raise HTTPException(404, f"No narrative for {domain}/{cycle_ts}")
+    return _parse_narrative_file(narr_path)
+
+
+_LAB_BASE_STYLES = """\
+  :root {{
+    color-scheme: dark;
+    --void: #08080c; --void-2: #0d0e14;
+    --panel: #14151d; --panel-2: #1b1c25;
+    --line: rgba(220, 222, 232, .14);
+    --line-strong: rgba(220, 222, 232, .26);
+    --ink: #f4f5fa; --text: #d8dbe7;
+    --muted: #a5a9b9; --dim: #777d93;
+    --cyan: #22d3ee; --purple: #a78bfa;
+    --emerald: #34d399; --amber: #fbbf24;
+    --sky: #38bdf8; --danger: #fb7185;
+    --max: 1180px;
+    --radius: 8px;
+    --shadow: 0 24px 80px rgba(0, 0, 0, .48);
+    --accent: {accent};
+  }}
+  /* Context bar — orientamento + uscita verso funnel /start.html */
+  .lab-context-bar {{
+    border-bottom: 1px solid var(--line);
+    background: rgba(34, 211, 238, .04);
+    padding: 12px 0; font-size: 13px;
+  }}
+  .lab-context-bar .ctx-shell {{
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    width: min(var(--max), calc(100% - 44px)); margin: 0 auto;
+  }}
+  .lab-context-bar .ctx-where {{
+    color: var(--ink); font-weight: 600;
+    border-right: 1px solid var(--line); padding-right: 14px;
+  }}
+  .lab-context-bar .ctx-purpose {{ color: var(--muted); flex: 1; min-width: 200px; }}
+  .lab-context-bar .ctx-cta {{
+    color: var(--cyan); text-decoration: none; font-weight: 600;
+    padding: 5px 12px; border-radius: 6px;
+    border: 1px solid rgba(34, 211, 238, .42);
+    transition: border-color .14s, background .14s, color .14s;
+  }}
+  .lab-context-bar .ctx-cta:hover {{
+    border-color: var(--cyan); background: rgba(34, 211, 238, .1); color: var(--ink);
+  }}
+  @media (max-width: 760px) {{
+    .lab-context-bar .ctx-where {{ border-right: none; padding-right: 0; }}
+  }}
+  * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+  html {{ scroll-behavior: smooth; }}
+  body {{
+    background:
+      radial-gradient(circle at 16% 0%, rgba(34, 211, 238, .12), transparent 32rem),
+      radial-gradient(circle at 88% 14%, rgba(167, 139, 250, .14), transparent 34rem),
+      linear-gradient(180deg, #08080c 0%, #0b0c12 42%, #08080c 100%);
+    color: var(--text);
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }}
+  a {{ color: inherit; text-decoration: none; }}
+  a:hover {{ color: var(--ink); }}
+  .shell {{ width: min(var(--max), calc(100% - 44px)); margin: 0 auto; }}
+"""
+
+
+_LAB_HEADER_HTML = """\
+<header class="site-header">
+  <div class="shell nav">
+    <a class="brand" href="https://lab.d-nd.com/" aria-label="Lab D-ND home">
+      <img src="/assets/logos/logo_40px.jpg" alt="D-ND" />
+      <span>Lab D-ND</span>
+    </a>
+    <nav class="page-nav" aria-label="Sezioni Lab D-ND">
+      <a href="/n/"{cycle_active}>Cycle</a>
+      <a href="/scoperte.html">Scoperte</a>
+      <a href="/applications.html">Applicazioni</a>
+      <a href="/dashboard/">Dashboard</a>
+      <a href="/start.html">Inizia</a>
+    </nav>
+    <div class="nav-spacer"></div>
+    <nav class="external-nav" aria-label="Risorse esterne">
+      <a href="https://d-nd.com" target="_blank" rel="noopener noreferrer">d-nd.com</a>
+    </nav>
+  </div>
+</header>
+"""
+
+
+_LAB_FOOTER_HTML = """\
+<footer class="site-footer">
+  <div class="shell" style="padding: 18px 0; border-top: 1px solid rgba(34, 211, 238, 0.18); border-bottom: 1px solid rgba(34, 211, 238, 0.18); margin-bottom: 24px; text-align: center;">
+    <span style="color: var(--ink, #f4f5fa); font-size: 15px;">Hai un dominio simile? &nbsp;</span>
+    <a href="/start.html" style="display: inline-block; padding: 8px 16px; background: rgba(34, 211, 238, 0.12); border: 1px solid rgba(34, 211, 238, 0.55); border-radius: 6px; color: #22d3ee; font-weight: 600; text-decoration: none; font-size: 14px; margin-left: 6px;">Crea il tuo Lab →</a>
+  </div>
+  <div class="shell footer-row">
+    <div class="footer-brand">
+      <img src="/assets/logos/logo_40px.jpg" alt="D-ND" />
+      <span><strong>Lab D-ND</strong> — sistemi cognitivi operativi</span>
+    </div>
+    <div>
+      <a href="/start.html">Inizia</a> ·
+      <a href="https://lab.d-nd.com/">Home Lab</a> ·
+      <a href="/dashboard/">Dashboard</a> ·
+      <a href="https://d-nd.com" target="_blank" rel="noopener noreferrer">d-nd.com</a>
+    </div>
+  </div>
+</footer>
+"""
+
+
+_NARRATIVE_HTML_TEMPLATE = """\
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{title} · Lab D-ND {lab}</title>
+<meta name="description" content="{meta_desc}">
+<meta property="og:title" content="{title}">
+<meta property="og:description" content="{meta_desc}">
+<meta property="og:type" content="article">
+<meta property="og:image" content="https://lab.d-nd.com/assets/logos/logo_90px.jpg">
+<meta property="og:url" content="https://lab.d-nd.com/n/{lab}/{cycle_ts}">
+<meta property="og:locale" content="it_IT">
+<meta property="og:site_name" content="Lab D-ND">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="{title}">
+<meta name="twitter:description" content="{meta_desc}">
+<meta name="twitter:image" content="https://lab.d-nd.com/assets/logos/logo_90px.jpg">
+<link rel="icon" href="/assets/favicon.ico">
+<link rel="preconnect" href="https://rsms.me/">
+<link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+<link rel="stylesheet" href="/assets/css/nav.css">
+<style>
+""" + _LAB_BASE_STYLES + """\
+  main.shell {{ padding: 56px 0 96px; max-width: 760px; }}
+  .eyebrow {{
+    color: var(--cyan); font-size: 12px;
+    text-transform: uppercase; letter-spacing: 0.12em;
+    margin-bottom: 20px;
+  }}
+  h1 {{
+    color: var(--ink);
+    font-size: clamp(28px, 5vw, 42px);
+    font-weight: 700; letter-spacing: -0.02em;
+    margin-bottom: 28px; line-height: 1.18;
+  }}
+  .verdict-pill {{
+    display: inline-block; padding: 5px 14px;
+    border-radius: 999px;
+    background: var(--accent); color: var(--void);
+    font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    margin-bottom: 36px;
+  }}
+  article p {{
+    font-size: 17px; line-height: 1.65;
+    margin-bottom: 18px; color: var(--text);
+  }}
+  article p:first-child::first-letter {{
+    color: var(--accent);
+    font-weight: 700;
+  }}
+  .cycle-nav {{
+    display: flex; justify-content: space-between; gap: 16px;
+    margin: 56px 0 16px; padding: 16px 0;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    font-size: 14px; color: var(--muted);
+  }}
+  .cycle-nav a {{ color: var(--muted); }}
+  .cycle-nav a:hover {{ color: var(--cyan); }}
+  .cycle-nav .nav-up {{ text-align: center; flex: 1; }}
+  .cycle-meta {{
+    margin-top: 32px; padding-top: 24px;
+    border-top: 1px solid var(--line);
+    font-size: 13px; color: var(--muted);
+  }}
+  .cycle-meta dl {{
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 6px 16px; margin-bottom: 18px;
+  }}
+  .cycle-meta dt {{ color: var(--dim); }}
+  .cycle-meta dd {{ color: var(--text); }}
+  .cycle-meta a {{
+    color: var(--muted); text-decoration: underline;
+    text-decoration-color: var(--line);
+  }}
+  .cycle-meta a:hover {{ color: var(--cyan); text-decoration-color: var(--cyan); }}
+  .site-footer {{
+    border-top: 1px solid var(--line);
+    padding: 24px 0 32px; color: var(--dim); font-size: 13px;
+  }}
+  .footer-row {{ display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; align-items: center; }}
+  .footer-brand {{ display: flex; align-items: center; gap: 10px; }}
+  .footer-brand img {{ width: 22px; height: 22px; border-radius: 4px; }}
+  .site-footer a {{ color: var(--muted); }}
+  .site-footer a:hover {{ color: var(--ink); }}
+  @media (max-width: 760px) {{
+    main.shell {{ padding: 32px 0 64px; }}
+    article p {{ font-size: 16px; }}
+  }}
+""" + """
+</style>
+</head>
+<body>
+""" + _LAB_HEADER_HTML.replace("{cycle_active}", ' class="active"') + """
+<div class="lab-context-bar">
+  <div class="ctx-shell">
+    <span class="ctx-where">{lab} · cycle {cycle_ts}</span>
+    <span class="ctx-purpose">Una singola iterazione di ricerca, narrata. Verdetto strutturale e link al report tecnico.</span>
+    <a href="/start.html" class="ctx-cta">Lab simile sul tuo dominio? Inizia →</a>
+  </div>
+</div>
+<main class="shell">
+  <div class="eyebrow">Lab D-ND · {lab}</div>
+  <h1>{title}</h1>
+  <div class="verdict-pill">{verdict_label}</div>
+  <article>
+{body_html}
+  </article>
+  <nav class="cycle-nav">
+    <span>{prev_link}</span>
+    <span class="nav-up"><a href="/n/{lab}/">↑ Tutti i cycle di {lab}</a></span>
+    <span style="text-align:right">{next_link}</span>
+  </nav>
+  <div class="cycle-meta">
+    <dl>
+      <dt>Cycle</dt><dd>{cycle_ts}</dd>
+      <dt>Aeternitas</dt><dd>{aeternitas}</dd>
+      <dt>Veritas</dt><dd>{verdict_band}</dd>
+      <dt>Trajectory</dt><dd>{trajectory_decision}</dd>
+    </dl>
+    <p>Narrazione di un cycle tecnico del lab D-ND. Il <a href="/api/domains/{lab}/reports/agent_{cycle_ts}.md">report tecnico originale</a> con dati, falsifier flags e bicono resta consultabile.</p>
+  </div>
+</main>
+""" + _LAB_FOOTER_HTML + """
+</body>
+</html>
+"""
+
+_VERDICT_ACCENTS = {
+    # Aeternitas → color
+    ("PROCEED", "COLLASSO"):  "#34c759",   # verde — finding consolidato
+    ("PROCEED", "SOSPENSIONE"): "#ffd60a", # giallo — onesto ma in sospeso
+    ("PROCEED", "SCARTO"):    "#8e8e93",   # grigio — basso ρ
+    ("WARN", "*"):            "#ff9500",   # ambra — passa con attenzione
+    ("VETO", "*"):             "#ff453a",   # rosso — falsificazione
+}
+
+
+def _accent_for(aeternitas: str | None, band: str | None) -> str:
+    if aeternitas == "VETO":
+        return "#ff453a"
+    if aeternitas == "WARN":
+        return "#ff9500"
+    if aeternitas == "PROCEED":
+        if band == "COLLASSO":
+            return "#34c759"
+        if band == "SOSPENSIONE":
+            return "#ffd60a"
+        return "#8e8e93"
+    return "#0a84ff"
+
+
+def _verdict_label(aeternitas: str | None, band: str | None, traj: str | None) -> str:
+    if aeternitas == "VETO":
+        return "Falsificazione"
+    if traj == "REDESIGN":
+        return "Il sistema chiede di riprogettare"
+    if band == "COLLASSO":
+        return "Lo schema regge"
+    if band == "SOSPENSIONE":
+        return "Sospeso · onesto"
+    if band == "SCARTO":
+        return "Bassa qualità"
+    return "Cycle completato"
+
+
+def _list_narrative_files(domain: str) -> list[Path]:
+    narr_dir = paths.domain_data_dir(domain) / "narratives"
+    if not narr_dir.exists():
+        return []
+    return sorted(narr_dir.glob("narrative_*.md"), key=lambda p: p.stem.replace("narrative_", ""), reverse=True)
+
+
+def _adjacent_narratives(domain: str, cycle_ts: str) -> tuple[str | None, str | None]:
+    """Return (prev_ts, next_ts) — older and newer cycles for this domain.
+
+    'prev' means older (further back in time); 'next' means newer.
+    """
+    files = _list_narrative_files(domain)
+    timestamps = [f.stem.replace("narrative_", "") for f in files]
+    if cycle_ts not in timestamps:
+        return None, None
+    idx = timestamps.index(cycle_ts)
+    # files sorted newest first → idx=0 is newest, higher idx is older
+    newer = timestamps[idx - 1] if idx > 0 else None
+    older = timestamps[idx + 1] if idx + 1 < len(timestamps) else None
+    return older, newer
+
+
+_LAB_INDEX_HTML_TEMPLATE = """\
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cycle del lab {lab} · Lab D-ND</title>
+<meta name="description" content="{lead}">
+<meta property="og:title" content="Cycle del lab {lab}">
+<meta property="og:description" content="{lead}">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://lab.d-nd.com/n/{lab}/">
+<meta property="og:image" content="https://lab.d-nd.com/assets/logos/logo_90px.jpg">
+<meta property="og:locale" content="it_IT">
+<link rel="icon" href="/assets/favicon.ico">
+<link rel="preconnect" href="https://rsms.me/">
+<link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+<link rel="stylesheet" href="/assets/css/nav.css">
+<style>
+""" + _LAB_BASE_STYLES.replace("--accent: {accent};", "--accent: var(--cyan);") + """\
+  main.shell {{ padding: 56px 0 96px; max-width: 800px; }}
+  .eyebrow {{
+    color: var(--cyan); font-size: 12px;
+    text-transform: uppercase; letter-spacing: 0.12em;
+    margin-bottom: 16px;
+  }}
+  h1 {{
+    color: var(--ink);
+    font-size: clamp(32px, 5vw, 48px);
+    font-weight: 700; letter-spacing: -0.02em;
+    margin-bottom: 14px; line-height: 1.1;
+  }}
+  .lead {{ color: var(--text); font-size: 17px; line-height: 1.6; margin-bottom: 56px; max-width: 640px; }}
+  .cycle-list {{ list-style: none; }}
+  .cycle-list li {{ border-top: 1px solid var(--line); padding: 24px 0; }}
+  .cycle-list li:last-child {{ border-bottom: 1px solid var(--line); }}
+  .cycle-list a {{ display: block; color: var(--text); }}
+  .cycle-list a:hover h2 {{ color: var(--cyan); }}
+  .cycle-list h2 {{ font-size: 18px; font-weight: 600; margin-bottom: 10px; line-height: 1.4; color: var(--ink); }}
+  .cycle-meta {{ color: var(--muted); font-size: 13px; display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }}
+  .pill {{
+    display: inline-block; padding: 3px 10px; border-radius: 999px;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--void);
+  }}
+  .empty {{ color: var(--dim); font-size: 15px; padding: 32px 0; }}
+  .site-footer {{
+    border-top: 1px solid var(--line);
+    padding: 24px 0 32px; color: var(--dim); font-size: 13px;
+  }}
+  .footer-row {{ display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; align-items: center; }}
+  .footer-brand {{ display: flex; align-items: center; gap: 10px; }}
+  .footer-brand img {{ width: 22px; height: 22px; border-radius: 4px; }}
+  .site-footer a {{ color: var(--muted); }}
+  .site-footer a:hover {{ color: var(--ink); }}
+  @media (max-width: 760px) {{ main.shell {{ padding: 32px 0 64px; }} }}
+
+</style>
+</head>
+<body>
+""" + _LAB_HEADER_HTML.replace("{cycle_active}", ' class="active"') + """
+<div class="lab-context-bar">
+  <div class="ctx-shell">
+    <span class="ctx-where">Lab {lab}</span>
+    <span class="ctx-purpose">Tutti i cycle pubblici di questo lab. Ogni voce è un'iterazione narrata con verdetto.</span>
+    <a href="/start.html" class="ctx-cta">Lab simile sul tuo dominio? Inizia →</a>
+  </div>
+</div>
+<main class="shell">
+  <div class="eyebrow">Cycle del lab</div>
+  <h1>{lab}</h1>
+  <p class="lead">{lead}</p>
+  {body}
+</main>
+""" + _LAB_FOOTER_HTML + """
+</body>
+</html>
+"""
+
+
+@app.get("/n/{domain}/", response_class=HTMLResponse)
+@app.get("/n/{domain}", response_class=HTMLResponse)
+async def public_lab_index(domain: str) -> Any:
+    """Public index of all narratives for a single lab."""
+    if domain not in cfg.list_domains():
+        raise HTTPException(404, "Unknown domain")
+    files = _list_narrative_files(domain)
+    if not files:
+        body_html = "<p style='color:var(--muted)'>Nessun cycle narrato finora per questo lab.</p>"
+    else:
+        items: list[str] = []
+        for f in files:
+            parsed = _parse_narrative_file(f)
+            ts = parsed["cycle_ts"]
+            body_text = parsed["body"]
+            first_sent = re.split(r"(?<=[.!?])\s+", body_text, maxsplit=1)[0].strip()
+            title = (first_sent[:120] + "…") if len(first_sent) > 122 else first_sent
+            label = _verdict_label(parsed.get("aeternitas"), parsed.get("verdict_band"), parsed.get("trajectory_decision"))
+            accent = _accent_for(parsed.get("aeternitas"), parsed.get("verdict_band"))
+            ts_pretty = ts[:8] + " · " + ts[9:11] + ":" + ts[11:13] if len(ts) >= 13 else ts
+            items.append(
+                f"<li>"
+                f"<a href='/n/{html_escape(domain)}/{html_escape(ts)}'>"
+                f"<h2>{html_escape(title)}</h2>"
+                f"<div class='cycle-meta'>"
+                f"<span class='pill' style='background:{accent}'>{html_escape(label)}</span>"
+                f"<span>{html_escape(ts_pretty)}</span>"
+                f"<span>{parsed.get('word_count') or '—'} parole</span>"
+                f"</div>"
+                f"</a></li>"
+            )
+        body_html = "<ul class='cycle-list'>" + "\n".join(items) + "</ul>"
+
+    leads = {
+        "bio-rhythms": "Regime detection in biosegnali cardiaci e circadiani.",
+        "finance":      "Regime detection nei mercati FX, crypto, equity.",
+        "ops-decisions": "Friction operativa trasformata in regole strutturali.",
+        "editorial":    "Distillazione dei contenuti che reggono il peso.",
+        "meta-lab":     "Il lab che genera lab — produce semi cognitivi.",
+    }
+    lead = leads.get(domain, "Lab D-ND di dominio.")
+    return HTMLResponse(_LAB_INDEX_HTML_TEMPLATE.format(
+        lab=html_escape(domain), lead=html_escape(lead), body=body_html,
+    ))
+
+
+_MASTER_INDEX_HTML_TEMPLATE = """\
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cycle dei lab · Lab D-ND</title>
+<meta name="description" content="I lab D-ND in produzione: ogni cycle è una iterazione di ricerca tradotta in narrazione di 200 parole con verdetto strutturale.">
+<meta property="og:title" content="Cycle dei lab D-ND">
+<meta property="og:description" content="I lab in produzione, ogni cycle tradotto in narrazione leggibile con verdetto strutturale.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://lab.d-nd.com/n/">
+<meta property="og:image" content="https://lab.d-nd.com/assets/logos/logo_90px.jpg">
+<meta property="og:locale" content="it_IT">
+<link rel="icon" href="/assets/favicon.ico">
+<link rel="preconnect" href="https://rsms.me/">
+<link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+<link rel="stylesheet" href="/assets/css/nav.css">
+<style>
+""" + _LAB_BASE_STYLES.replace("--accent: {accent};", "--accent: var(--cyan);") + """\
+  main.shell {{ padding: 56px 0 96px; max-width: 1080px; }}
+  .eyebrow {{
+    color: var(--cyan); font-size: 12px;
+    text-transform: uppercase; letter-spacing: 0.12em;
+    margin-bottom: 16px;
+  }}
+  h1 {{
+    color: var(--ink);
+    font-size: clamp(36px, 6vw, 54px);
+    font-weight: 700; letter-spacing: -0.02em;
+    margin-bottom: 18px; line-height: 1.06;
+  }}
+  .lead {{
+    color: var(--text); font-size: 18px; line-height: 1.55;
+    max-width: 680px; margin-bottom: 56px;
+  }}
+  .lab-grid {{
+    display: grid; gap: 24px;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  }}
+  .lab-card {{
+    border: 1px solid var(--line); border-radius: var(--radius);
+    background: rgba(13, 14, 20, 0.55);
+    padding: 24px; transition: border-color 200ms, background 200ms;
+  }}
+  .lab-card:hover {{ border-color: var(--cyan); background: rgba(13, 14, 20, 0.85); }}
+  .lab-card a {{ display: block; color: var(--text); }}
+  .lab-card h2 {{ color: var(--ink); font-size: 19px; font-weight: 600; margin-bottom: 6px; }}
+  .lab-card .desc {{ color: var(--muted); font-size: 14px; line-height: 1.5; margin-bottom: 18px; }}
+  .lab-card .last {{
+    font-size: 14px; line-height: 1.55;
+    padding-top: 14px; border-top: 1px solid var(--line);
+    color: var(--text);
+  }}
+  .lab-card .last-meta {{
+    color: var(--muted); font-size: 12px;
+    margin-top: 8px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+  }}
+  .pill {{
+    display: inline-block; padding: 2px 10px; border-radius: 999px;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--void);
+  }}
+  .site-footer {{
+    border-top: 1px solid var(--line);
+    padding: 24px 0 32px; color: var(--dim); font-size: 13px;
+    margin-top: 80px;
+  }}
+  .footer-row {{ display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; align-items: center; }}
+  .footer-brand {{ display: flex; align-items: center; gap: 10px; }}
+  .footer-brand img {{ width: 22px; height: 22px; border-radius: 4px; }}
+  .site-footer a {{ color: var(--muted); }}
+  .site-footer a:hover {{ color: var(--ink); }}
+  @media (max-width: 760px) {{ main.shell {{ padding: 32px 0 64px; }} }}
+
+</style>
+</head>
+<body>
+""" + _LAB_HEADER_HTML.replace("{cycle_active}", ' class="active"') + """
+<div class="lab-context-bar">
+  <div class="ctx-shell">
+    <span class="ctx-where">Cycle dei lab D-ND</span>
+    <span class="ctx-purpose">Log pubblico dei lab in produzione: cosa girano, cosa hanno trovato, cosa hanno scartato.</span>
+    <a href="/start.html" class="ctx-cta">Lab simile sul tuo dominio? Inizia →</a>
+  </div>
+</div>
+<main class="shell">
+  <div class="eyebrow">Cycle dei lab</div>
+  <h1>Cosa fanno i lab quando girano.</h1>
+  <p class="lead">Ogni cycle è un'iterazione di ricerca: il lab sceglie una domanda, prova una risposta, la mette sotto critica strutturale. Qui leggi cosa ha trovato — narrazione di 200 parole, verdetto trasparente: schema regge, sospeso onesto, falsificato.</p>
+  <div class="lab-grid">
+    {cards}
+  </div>
+</main>
+""" + _LAB_FOOTER_HTML + """
+</body>
+</html>
+"""
+
+
+@app.get("/n/", response_class=HTMLResponse)
+@app.get("/n", response_class=HTMLResponse)
+async def public_master_index() -> Any:
+    """Public master index — all labs with their latest narrative summary."""
+    leads = {
+        "bio-rhythms":   "Regime detection in biosegnali cardiaci e circadiani.",
+        "finance":       "Regime detection nei mercati FX, crypto, equity.",
+        "ops-decisions": "Friction operativa trasformata in regole strutturali.",
+        "editorial":     "Distillazione dei contenuti che reggono il peso.",
+        "meta-lab":      "Il lab che genera lab — produce semi cognitivi.",
+    }
+    # Master physics lab: vive su d-nd.com (sviluppo del modello D-ND).
+    # Card statica esterna in testa, prima dei lab installabili dinamici.
+    physics_card = (
+        "<div class='lab-card'>"
+        "<a href='https://d-nd.com/ai-lab' target='_blank' rel='noopener noreferrer'>"
+        "<h2>physics <span style='font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--purple);margin-left:8px;'>master · d-nd.com</span></h2>"
+        "<div class='desc'>Master lab della fisica: dove il modello D-ND viene sviluppato e validato.</div>"
+        "<div class='last' style='color:var(--muted);font-style:italic;'>Lab di ricerca privato, finding pubblicati su d-nd.com/ai-lab. Apri il master ↗</div>"
+        "</a></div>"
+    )
+    cards: list[str] = [physics_card]
+    for domain in cfg.list_domains():
+        files = _list_narrative_files(domain)
+        last_html = ""
+        if files:
+            try:
+                parsed = _parse_narrative_file(files[0])
+                ts = parsed["cycle_ts"]
+                body_text = parsed["body"]
+                first_sent = re.split(r"(?<=[.!?])\s+", body_text, maxsplit=1)[0].strip()
+                snippet = (first_sent[:140] + "…") if len(first_sent) > 142 else first_sent
+                label = _verdict_label(parsed.get("aeternitas"), parsed.get("verdict_band"), parsed.get("trajectory_decision"))
+                accent = _accent_for(parsed.get("aeternitas"), parsed.get("verdict_band"))
+                ts_pretty = ts[:8] + " · " + ts[9:11] + ":" + ts[11:13] if len(ts) >= 13 else ts
+                last_html = (
+                    f"<div class='last'>{html_escape(snippet)}"
+                    f"<div class='last-meta'>"
+                    f"<span class='pill' style='background:{accent}'>{html_escape(label)}</span>"
+                    f"<span>{html_escape(ts_pretty)}</span>"
+                    f"</div></div>"
+                )
+            except Exception:
+                last_html = "<div class='last' style='color:var(--muted)'>Cycle in attesa di narrazione.</div>"
+        else:
+            last_html = "<div class='last' style='color:var(--muted)'>Nessun cycle narrato finora.</div>"
+        desc = leads.get(domain, "Lab D-ND di dominio.")
+        cards.append(
+            f"<div class='lab-card'>"
+            f"<a href='/n/{html_escape(domain)}/'>"
+            f"<h2>{html_escape(domain)}</h2>"
+            f"<div class='desc'>{html_escape(desc)}</div>"
+            f"{last_html}"
+            f"</a></div>"
+        )
+    return HTMLResponse(_MASTER_INDEX_HTML_TEMPLATE.format(cards="\n".join(cards)))
+
+
+@app.get("/n/{domain}/{cycle_ts}", response_class=HTMLResponse)
+async def public_narrative_page(domain: str, cycle_ts: str) -> Any:
+    """Public-facing narrative page — Apple-like styled, mobile-first.
+
+    URL canonico shareable (es. su LinkedIn, Twitter, embed).
+    No auth check (volutamente pubblico — se vuoi private, usa l'endpoint API).
+    """
+    if domain not in cfg.list_domains():
+        raise HTTPException(404, "Unknown domain")
+    if not re.fullmatch(r"\d{8}_\d{4,6}", cycle_ts):
+        raise HTTPException(400, "Invalid cycle_ts format")
+    narr_path = paths.domain_data_dir(domain) / "narratives" / f"narrative_{cycle_ts}.md"
+    if not narr_path.exists():
+        raise HTTPException(404, "No narrative for this cycle")
+    parsed = _parse_narrative_file(narr_path)
+
+    accent = _accent_for(parsed.get("aeternitas"), parsed.get("verdict_band"))
+    label = _verdict_label(parsed.get("aeternitas"), parsed.get("verdict_band"), parsed.get("trajectory_decision"))
+
+    # Title: derive from body's first sentence cap, or fallback
+    body = parsed["body"]
+    first_sent = re.split(r"(?<=[.!?])\s+", body, maxsplit=1)[0].strip()
+    title = (first_sent[:90] + "…") if len(first_sent) > 92 else first_sent
+    if not title:
+        title = f"Cycle {cycle_ts} · {domain}"
+
+    # Render body paragraphs as <p> (paragraphs split on blank lines)
+    paragraphs = [p.strip() for p in re.split(r"\n\s*\n", body) if p.strip()]
+    body_html = "\n".join(f"    <p>{html_escape(p)}</p>" for p in paragraphs)
+    meta_desc = (paragraphs[0] if paragraphs else title)[:200]
+
+    older, newer = _adjacent_narratives(domain, cycle_ts)
+    prev_link = f"<a href='/n/{html_escape(domain)}/{older}'>← Cycle precedente</a>" if older else ""
+    next_link = f"<a href='/n/{html_escape(domain)}/{newer}'>Cycle successivo →</a>" if newer else ""
+
+    return HTMLResponse(_NARRATIVE_HTML_TEMPLATE.format(
+        title=html_escape(title),
+        meta_desc=html_escape(meta_desc),
+        accent=accent,
+        lab=html_escape(domain),
+        verdict_label=html_escape(label),
+        body_html=body_html,
+        cycle_ts=html_escape(cycle_ts),
+        aeternitas=html_escape(parsed.get("aeternitas") or "—"),
+        verdict_band=html_escape(parsed.get("verdict_band") or "—"),
+        trajectory_decision=html_escape(parsed.get("trajectory_decision") or "—"),
+        prev_link=prev_link,
+        next_link=next_link,
+    ))
 
 
 @app.get("/api/domains/{domain}/trajectory")
