@@ -212,18 +212,38 @@ def classify_finding(finding: dict) -> dict:
 
 
 def parse_key_findings(report_text: str) -> list[dict]:
-    m = re.search(r"##\s+Key [Ff]indings\s*\n(.+?)(?=\n##\s+|\Z)", report_text, re.S)
-    if not m:
-        return []
-    block = m.group(1)
-    findings = []
-    for fm in re.finditer(r"^\s*(\d+)\.\s+(\*\*[^*]+\*\*[^\n]*(?:\n(?!\s*\d+\.\s).*)*)", block, re.M):
-        idx = int(fm.group(1))
-        body = fm.group(2).strip()
-        title_m = re.match(r"\*\*([^*]+)\*\*", body)
-        title = title_m.group(1).strip() if title_m else body[:80]
-        findings.append({"idx": idx, "title": title, "body": body[:800]})
-    return findings
+    """Parse strutturale (speculare a MM_D-ND): cerca header semantici
+    candidati, prova a estrarre items numerati da ognuno, ritorna quello
+    che produce items validi. Pattern non lista-di-sinonimi (det=+1) ma
+    struttura di forma del finding (det=-1, riceve varianti future).
+    """
+    HEADER_CANDIDATES = [
+        r"##\s+(?:Key\s+|Main\s+)?[Ff]indings?\s*\n",
+        r"##\s+[Rr]isultat[io]\s*\n",
+        r"##\s+[Oo]utcome\s*\n",
+        r"##\s+(?:Key\s+|Main\s+)?[Rr]esult[si]?\s*\n",
+    ]
+
+    def _parse_items(block: str) -> list[dict]:
+        items = []
+        for fm in re.finditer(r"^\s*(\d+)\.\s+(.+?)(?=\n\s*\d+\.\s|\Z)", block, re.S | re.M):
+            idx = int(fm.group(1))
+            body = fm.group(2).strip()
+            title_m = re.match(r"\*\*([^*]+)\*\*", body)
+            if title_m:
+                title = title_m.group(1).strip().rstrip(".")
+            else:
+                sentence_m = re.match(r"([^\n.!?]+[.!?])", body)
+                title = sentence_m.group(1).strip() if sentence_m else body[:80].strip()
+            items.append({"idx": idx, "title": title, "body": body[:800]})
+        return items
+
+    for header_pattern in HEADER_CANDIDATES:
+        for m in re.finditer(header_pattern + r"(.+?)(?=\n##\s+|\Z)", report_text, re.S):
+            items = _parse_items(m.group(1))
+            if items:
+                return items
+    return []
 
 
 def find_scoperta_dir(cycle_ts: str) -> Path | None:
