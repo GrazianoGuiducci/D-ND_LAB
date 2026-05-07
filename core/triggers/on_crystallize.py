@@ -111,7 +111,11 @@ def parse_falsifier(path: Path) -> dict:
 
 
 def find_valutatore_decision(cycle_ts: str) -> dict | None:
-    """Cerca in valutatore_log.jsonl, fallback su lab_session_log.jsonl."""
+    """Cerca in valutatore_log.jsonl, fallback su lab_session_log.jsonl.
+
+    Ritorna decision + confidence + source + action (necessaria per gate
+    discriminator REDESIGN tipo B vs A — vedi gate_check).
+    """
     if VALUT_LOG.exists():
         for line in VALUT_LOG.read_text().splitlines():
             try:
@@ -119,7 +123,12 @@ def find_valutatore_decision(cycle_ts: str) -> dict | None:
             except json.JSONDecodeError:
                 continue
             if d.get("cycle_ref") == cycle_ts:
-                return {"decision": d.get("decision"), "confidence": d.get("confidence"), "source": "valutatore_log"}
+                return {
+                    "decision": d.get("decision"),
+                    "confidence": d.get("confidence"),
+                    "action": d.get("action"),
+                    "source": "valutatore_log",
+                }
     if SESSION_LOG.exists():
         for line in SESSION_LOG.read_text().splitlines():
             try:
@@ -129,35 +138,66 @@ def find_valutatore_decision(cycle_ts: str) -> dict | None:
             if d.get("cycle_ts") == cycle_ts:
                 v = d.get("valutatore", {})
                 if v.get("decision"):
-                    return {"decision": v.get("decision"), "confidence": v.get("confidence"), "source": "lab_session_log"}
+                    return {
+                        "decision": v.get("decision"),
+                        "confidence": v.get("confidence"),
+                        "action": v.get("action"),
+                        "source": "lab_session_log",
+                    }
     return None
 
 
 def gate_check(falsifier: dict, valutatore: dict | None) -> tuple[str, str]:
-    """Soglia adattiva (rev 01/05 — direttiva operatore: lab notturno deve
-    sempre produrre valore visibile).
+    """Soglia adattiva (rev 07/05 — regola operatore "cambia la parola, non il
+    valore": il valutatore produce risultanti distinte; il pipeline deve
+    riconoscerle, non calibrarle in un binario CRYSTALLIZE/non-CRYSTALLIZE).
 
     Ritorna: (status, message)
-      'mature_eligible' — 0 HIGH + valutatore CRYSTALLIZE high → app candidate generabili
-      'transitional'    — 1+ HIGH + valutatore CRYSTALLIZE → publish con visible_risks
-      'refinement_required' — valutatore non CRYSTALLIZE → niente publish, refinement file
-      'invalid'         — assenza entry valutatore o stato non riconosciuto
+      'mature_eligible'        — 0 HIGH + valutatore CRYSTALLIZE high → app candidate generabili
+      'transitional'           — 1+ HIGH + valutatore CRYSTALLIZE → publish con visible_risks
+      'provisional_discovery'  — 0 HIGH + valutatore REDESIGN/high con action.type=modify_seme su
+                                 direzione → scoperta-provvisoria + consecutio aperta. Pubblicabile
+                                 con disclaimer onesto: il finding c'è (falsifier coherent), ma il
+                                 sistema chiede di testarlo cross-perimetro prima di cristallizzare.
+                                 Diverso da 'refinement_required' (bug/infra): qui c'è valore
+                                 strutturale, non solo "ripeti meglio".
+      'refinement_required'    — REDESIGN ma con falsifier flag, oppure NEXT_CYCLE/none, o
+                                 altre decisioni non-promotive. Cycle in refinement loop senza
+                                 finding pronto da pubblicare.
+      'invalid'                — assenza entry valutatore o stato non riconosciuto
     """
     if not valutatore:
         return "invalid", "no valutatore entry — cycle non valutato"
     decision = valutatore.get("decision", "")
-    if decision != "CRYSTALLIZE":
-        return "refinement_required", (
-            f"valutatore decision={decision} → cycle in refinement loop, niente publish"
+    confidence = valutatore.get("confidence", "")
+    if decision == "CRYSTALLIZE":
+        if falsifier["n_high"] > 0:
+            return "transitional", (
+                f"{falsifier['n_high']} HIGH flag → publish come transitional con "
+                f"visible_risks dichiarati. NO applicazioni candidate."
+            )
+        return "mature_eligible", (
+            f"0 HIGH + CRYSTALLIZE → eligible per applicazioni "
+            f"(valutatore source: {valutatore.get('source')})"
         )
-    if falsifier["n_high"] > 0:
-        return "transitional", (
-            f"{falsifier['n_high']} HIGH flag → publish come transitional con "
-            f"visible_risks dichiarati. NO applicazioni candidate."
-        )
-    return "mature_eligible", (
-        f"0 HIGH + CRYSTALLIZE → eligible per applicazioni "
-        f"(valutatore source: {valutatore.get('source')})"
+    # Discriminazione REDESIGN: tipo B (saturazione/maturazione, finding presente) vs
+    # tipo A (bug/infra, niente finding). Distinzione tramite falsifier coherent + high
+    # confidence + action.type=modify_seme su direzione (segnale di consecutio strutturale,
+    # non patch tecnica).
+    if decision == "REDESIGN" and confidence == "high" and falsifier["n_high"] == 0:
+        action = valutatore.get("action") or {}
+        action_type = action.get("type") if isinstance(action, dict) else None
+        detail = action.get("detail") if isinstance(action, dict) else None
+        field = detail.get("field") if isinstance(detail, dict) else None
+        if action_type == "modify_seme" and field == "direzione":
+            return "provisional_discovery", (
+                "0 HIGH + REDESIGN/high + modify_seme/direzione → scoperta provvisoria "
+                "con consecutio strutturale. Publish come provisional con direzione successiva "
+                "marcata. Il finding è valido ma chiede test cross-perimetro prima di "
+                "cristallizzare. App candidate NON generabili finché consecutio chiusa."
+            )
+    return "refinement_required", (
+        f"valutatore decision={decision}/{confidence} → cycle in refinement loop, niente publish"
     )
 
 
@@ -257,7 +297,7 @@ def render_lab_note_skeleton(ctx: dict) -> str:
     status = ctx.get("draft_status", "draft")
     transitional_banner = ""
     high_block = "  - none"
-    if status in ("transitional", "pre_discovery") and fals["high_flags"]:
+    if status in ("transitional", "pre_discovery", "provisional_discovery") and fals["high_flags"]:
         items = [f'  - "{normalize_visible_risk(f).replace(chr(34), chr(39))}"' for f in fals["high_flags"]]
         high_block = "\n".join(items)
     if status == "transitional":
@@ -266,6 +306,16 @@ def render_lab_note_skeleton(ctx: dict) -> str:
             f"{fals['n_high']} high flag su questo ciclo. La scoperta è esposta "
             "qui per trasparenza pubblica con i rischi dichiarati. Niente claim "
             "verified finché un cycle successivo non chiude il refinement loop.\n"
+        )
+    elif status == "provisional_discovery":
+        consecutio = ctx.get("pending_consecutio", "")[:200] or "[da definire — vedi action.detail nel valutatore log]"
+        transitional_banner = (
+            "\n> ◑ **STATO: PROVISIONAL DISCOVERY** — il finding è valido (falsifier "
+            "coherent, 0 HIGH) e il valutatore Lab ha indicato la **consecutio**: il "
+            "claim chiede test cross-perimetro prima di cristallizzare. Pubblicato qui "
+            "perché contiene risultante strutturale; verrà promosso a soluzione/prodotto "
+            "quando il cycle target chiude la consecutio.\n>\n"
+            f"> *Consecutio attesa*: {consecutio}\n"
         )
     elif status == "pre_discovery":
         valut = ctx.get("valutatore_decision", "non-CRYSTALLIZE")
@@ -301,7 +351,7 @@ provenance:
   falsifier_report: tools/data/reports/falsifier_{ctx['cycle_ts']}.json
   falsifier_verdict: {fals['verdict_label']}
   valutatore_decision: {ctx.get('valutatore_decision','unknown')}_{ctx.get('valutatore_confidence','unknown')}
-  gate_status: {ctx.get('gate_status','unknown')}
+  gate_status: {ctx.get('gate_status','unknown')}{(chr(10) + 'pending_consecutio: ' + json.dumps(ctx.get('pending_consecutio',''))) if ctx.get('pending_consecutio') else ''}
 target_route: lab.d-nd.com/lab-notes/{ctx['slug']}
 target_cms_category: lab-note
 title_proposal: "[TARGET — TM1 refinement] {ctx['report']['title']}"
@@ -350,8 +400,9 @@ def render_cycle_report_skeleton(ctx: dict) -> str:
     if fals["low_flags"]:
         parts.append(yaml_flag_lines(fals["low_flags"], "low"))
     flags_block = "\n".join(parts) if parts else "  - none"
-    # visible_risks include high E medium quando transitional o pre_discovery
-    show_high = status in ("transitional", "pre_discovery")
+    # visible_risks include high E medium quando transitional, pre_discovery,
+    # provisional_discovery
+    show_high = status in ("transitional", "pre_discovery", "provisional_discovery")
     risk_flags = (fals["high_flags"] if show_high else []) + fals["medium_flags"]
     visible = visible_risks_lines(risk_flags)
     transitional_banner = ""
@@ -360,6 +411,17 @@ def render_cycle_report_skeleton(ctx: dict) -> str:
             "\n> ⚠ **STATO: TRANSITIONAL** — falsifier ha rilevato "
             f"{fals['n_high']} HIGH flag. Pubblicato qui per trasparenza con "
             "high_flags esposti come visible_risks. Refinement loop attivato.\n"
+        )
+    elif status == "provisional_discovery":
+        consecutio = ctx.get("pending_consecutio", "")[:300] or "[vedi valutatore_log action.detail.new_value]"
+        transitional_banner = (
+            "\n> ◑ **STATO: PROVISIONAL DISCOVERY** — finding strutturale presente "
+            f"(falsifier coherent, 0 HIGH). Valutatore Lab ha emesso REDESIGN/high "
+            "con `modify_seme/direzione`: il claim **chiede test cross-perimetro** "
+            "prima di cristallizzare nel seme. Differenza con `pre_discovery`: qui "
+            "c'è risultante valida e direzione consecutio. App candidate non "
+            "generabili finché consecutio chiusa.\n>\n"
+            f"> *Consecutio attesa*: {consecutio}\n"
         )
     elif status == "pre_discovery":
         valut = ctx.get("valutatore_decision", "non-CRYSTALLIZE")
@@ -385,7 +447,7 @@ provenance:
   agent_report: tools/data/reports/agent_{ctx['cycle_ts']}.md
   falsifier_report: tools/data/reports/falsifier_{ctx['cycle_ts']}.json
   falsifier_verdict: {fals['verdict_label']}
-  valutatore_decision: {ctx.get('valutatore_decision','unknown')}_{ctx.get('valutatore_confidence','unknown')}
+  valutatore_decision: {ctx.get('valutatore_decision','unknown')}_{ctx.get('valutatore_confidence','unknown')}{(chr(10) + 'pending_consecutio: ' + json.dumps(ctx.get('pending_consecutio',''))) if ctx.get('pending_consecutio') else ''}
 target_route: lab.d-nd.com/cycles/{ctx['cycle_ts']}
 target_cms_category: cycle-report
 related_lab_note: lab-note.draft.md
@@ -471,15 +533,26 @@ def main():
         return 2
 
     # Direttiva operatore 01/05: lab notturno deve SEMPRE produrre valore.
-    # Anche refinement_required (valutatore non CRYSTALLIZE) produce scaffold,
-    # ma con status pre_discovery — visibile sul sito con disclaimer forte
-    # ("scoperta in elaborazione, non passa il valutatore"). Niente cycle muto.
+    # Direttiva operatore 07/05 ("cambia la parola, non il valore"):
+    # provisional_discovery — scoperta valida + consecutio aperta.
     if gate_status == "mature_eligible":
         draft_status = "draft"
     elif gate_status == "transitional":
         draft_status = "transitional"
+    elif gate_status == "provisional_discovery":
+        draft_status = "provisional_discovery"
     else:  # refinement_required
         draft_status = "pre_discovery"
+
+    # Per provisional_discovery: estrai la consecutio (new_direzione) dal
+    # valutatore log entry → la mostriamo in disclaimer + frontmatter.
+    pending_consecutio = ""
+    if gate_status == "provisional_discovery" and valutatore:
+        action = valutatore.get("action") or {}
+        if isinstance(action, dict):
+            detail = action.get("detail") or {}
+            if isinstance(detail, dict):
+                pending_consecutio = (detail.get("new_value") or "").strip()
 
     slug = slugify(report["title"])
     predecessor = find_predecessor(cycle_ts)
@@ -492,6 +565,7 @@ def main():
     ctx = {
         "cycle_ts": cycle_ts,
         "slug": slug,
+        "pending_consecutio": pending_consecutio,
         "report": report,
         "falsifier": falsifier,
         "seme_version": get_seme_version(),

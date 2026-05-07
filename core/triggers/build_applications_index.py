@@ -231,6 +231,7 @@ def build_index(lab_data: Path, target_domains: list[str]) -> dict:
     n_transitional = sum(1 for s in all_scoperte if s.get("status") == "transitional")
     n_draft = sum(1 for s in all_scoperte if s.get("status") == "draft")
     n_pre_discovery = sum(1 for s in all_scoperte if s.get("status") == "pre_discovery")
+    n_provisional = sum(1 for s in all_scoperte if s.get("status") == "provisional_discovery")
     n_archived = sum(1 for s in all_scoperte if s.get("status") == "archived")
 
     return {
@@ -242,6 +243,7 @@ def build_index(lab_data: Path, target_domains: list[str]) -> dict:
             "n_scoperte": len(all_scoperte),
             "n_scoperte_draft": n_draft,
             "n_scoperte_transitional": n_transitional,
+            "n_scoperte_provisional_discovery": n_provisional,
             "n_scoperte_pre_discovery": n_pre_discovery,
             "n_scoperte_archived": n_archived,
             "n_applications_candidate": len(all_candidates),
@@ -251,7 +253,7 @@ def build_index(lab_data: Path, target_domains: list[str]) -> dict:
         },
         "value_for_all_cycles": {
             "description": "Patrimonio permanente. Vale per tutti i cicli, accumula nel tempo.",
-            "scoperte_visible_n": n_draft + n_transitional + n_pre_discovery,
+            "scoperte_visible_n": n_draft + n_transitional + n_provisional + n_pre_discovery,
             "applications_candidate_n": len(all_candidates),
             "prodotti_maturi_n": len(all_prodotti),
         },

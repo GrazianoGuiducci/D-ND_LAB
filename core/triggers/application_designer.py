@@ -403,21 +403,31 @@ def main():
     cycle_report_path = scoperta_dir / "cycle-report.draft.md"
     print(f"  scoperta dir: {scoperta_dir.name}")
 
-    # Skip se transitional/pre_discovery — claim non maturi
-    # (sovrascrivibile con --force-pre-discovery per Stage 4 testing manuale)
+    # Skip se transitional/pre_discovery/provisional_discovery — claim non maturi
+    # (sovrascrivibile con --force-pre-discovery per Stage 4 testing manuale).
+    # Direttiva 07/05: provisional_discovery è scoperta valida + consecutio
+    # aperta — promovibile dopo che il cycle target chiude la consecutio.
     forced_pre_discovery = False
     if cycle_report_path.exists():
         cr_text = cycle_report_path.read_text()
         m = re.search(r"^status:\s*(\S+)", cr_text, re.M)
         scoperta_status = m.group(1).strip() if m else "draft"
-        if scoperta_status in ("transitional", "pre_discovery"):
+        if scoperta_status in ("transitional", "pre_discovery", "provisional_discovery"):
             if not args.force_pre_discovery:
-                reason = ("high flag nel falsifier" if scoperta_status == "transitional"
-                          else "valutatore non CRYSTALLIZE")
+                if scoperta_status == "transitional":
+                    reason = "high flag nel falsifier"
+                    next_step = "refinement tensions"
+                elif scoperta_status == "provisional_discovery":
+                    reason = "valutatore REDESIGN/high — finding valido ma consecutio aperta (test cross-perimetro richiesto)"
+                    next_step = "cycle target che esegue la consecutio"
+                else:
+                    reason = "valutatore non CRYSTALLIZE"
+                    next_step = "refinement tensions"
                 print(f"  scoperta status={scoperta_status} → SKIP application_designer")
                 print(f"  motivazione: {reason}; claim non affidabili per generare")
                 print(f"               applicazioni. La scoperta è comunque pubblicata")
                 print(f"               con visible_risks dichiarati e disclaimer.")
+                print(f"  → next cycle alimentato da: {next_step}")
                 print(f"               (--force-pre-discovery per generare comunque, marker presente)")
                 return 0
             else:
