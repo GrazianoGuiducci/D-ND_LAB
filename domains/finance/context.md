@@ -120,58 +120,146 @@ Metodo D-ND:
 
 ## Vincoli compute
 
-Il primo cycle deve girare sandboxed, senza network, sotto 90s per tool.
-Usa dataset sintetici o cache locale. Le API esterne sono reference operative
-per cycle successivi; se la rete o una dipendenza manca, il lab deve produrre
-comunque un risultato su synthetic fallback.
+- Cycle 1 ha girato sandboxed-only. Cycle 2+ può usare rete (yfinance +
+  CoinGecko via `market_data`); cache su disco evita re-fetch ridondanti.
+- Singolo tool: <120s. Cache TTL default 86400s (1 giorno).
+- Se la rete o una dipendenza manca, il lab deve produrre comunque un
+  risultato su synthetic fallback — la rete non è obbligatoria, è
+  abilitante.
+- Quando vuoi indagare la **sensibilità** del pipeline (non un finding
+  specifico), usa ensemble di seed sul synthetic — è economico e
+  rivela la distribuzione di effect_z.
 
 ## Tools custom del lab — come invocarli
 
 ### exp_regime_shift
 
-Descrizione: genera una serie sintetica con regime switch bull/bear, misura
-orientamento D-ND, VaR/realized volatility naive e null baseline shuffle.
+Descrizione: misura orientamento D-ND ordered-vs-shuffle. Funziona su
+synthetic (GARCH+t+sigmoid) o su dati reali OHLCV via `--from-market`.
 
-Comando:
+Comando synthetic (cycle 1 path):
 
 ```bash
 python3 /opt/D-ND_LAB/domains/finance/tools/exp_regime_shift.py --json
 ```
 
+Comando real-market (cycle 2+ path):
+
+```bash
+# SPY 2y daily via yfinance
+python3 /opt/D-ND_LAB/domains/finance/tools/exp_regime_shift.py \
+    --from-market yfinance:SPY --market-period 2y --json
+
+# Bitcoin 365d via CoinGecko
+python3 /opt/D-ND_LAB/domains/finance/tools/exp_regime_shift.py \
+    --from-market coingecko:bitcoin --market-days 365 --json
+```
+
+Quando si usa `--from-market`, il JSON di output include un campo
+`data_card` con provider, source_url, license, retrieval_ts, era_hint,
+n_obs. Cita il `data_card.source_url` e `data_card.retrieval_ts` nel
+report — è il tracciato di provenienza del dato.
+
 Trigger: invocalo quando il cycle deve testare `REGIME_DIPOLE_DET` o
-`STATIC_VAR_VS_DND_SPLIT`, oppure quando serve una baseline numerica prima di
-usare dati reali.
+`STATIC_VAR_VS_DND_SPLIT`. Per cycle 1 (sandbox) usa default synthetic.
+Per cycle 2+ usa `--from-market` su almeno 2 windows diverse o 2 asset
+diversi prima di promuovere un finding.
 
 Output: JSON su stdout con metriche `ordered`, `shuffle_mean`,
 `shuffle_std`, `effect_z`, `var_95`, `realized_vol`, `cassini_residue` e
-`verdict`.
+`verdict`. Più `data_card` se mode='real'.
+
+### market_data
+
+Descrizione: acquisizione OHLCV con caching su disco e data card di
+provenienza. Schema universale (numpy + dict, niente pandas esposto).
+Provider: `yfinance` (stocks/ETF/indices) e `coingecko` (crypto free tier).
+
+Comando standalone (utile per ispezione):
+
+```bash
+# Sommario SPY 1y
+python3 /opt/D-ND_LAB/domains/finance/tools/market_data.py \
+    --provider yfinance --symbol SPY --period 1y
+
+# Payload completo (open/high/low/close/volume/returns)
+python3 /opt/D-ND_LAB/domains/finance/tools/market_data.py \
+    --provider coingecko --symbol bitcoin --days 365 --json
+```
+
+Output cache: `data/finance/market_cache/<provider>_<symbol>_..._<hash>.json`
+con TTL 86400s. Il file include `data_card` first-class — non eliminare
+silenziosamente, è audit trail.
+
+Era hint (Numerai-style): la `data_card.era_hint` annota il quarter o
+range temporale del dato. Se vuoi shuffle entro era (anziché across),
+filtra le returns sul `dates` field prima dello shuffle.
+
+Da Python:
+
+```python
+from market_data import fetch
+d = fetch("yfinance", "SPY", period="1y")
+returns = d["returns"]      # np.ndarray, log-returns close-to-close
+meta = d["data_card"]       # provenance JSON
+```
 
 ## Quick Reference — External APIs
 
-Queste API sono dichiarate per dati reali no-auth o best-effort. Il primo
-cycle non dipende dalla rete.
+Per dati reali usa il tool `market_data` (sopra) — gestisce caching,
+data card, e provider abstraction. Non chiamare gli endpoint a mano:
+yfinance richiede crumb cookie che il lib gestisce, CoinGecko ha rate
+limits. Tabella sotto solo come reference se devi diagnosticare.
 
-| Task | Endpoint | Auth | Status (pre-flight 05/05) | Notes |
-|------|----------|------|---|-------|
-| OHLCV equity/FX via yfinance | `https://query1.finance.yahoo.com/v8/finance/chart/SPY?range=1y&interval=1d` | no | ✓ reachable (~0.4s) | Endpoint usato da yfinance; rispettare rate limit non ufficiali e fallback synthetic. |
-| Macro risk context via FRED | `https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS10` | no | ⚠ timeout (5s) — verifica al cycle 2 | CSV pubblico per Treasury yield; alcuni endpoint FRED avanzati richiedono API key. |
-| Crypto prices via CoinGecko | `https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=365` | no | ✓ reachable (~0.1s) | Free tier con rate limit variabile; usare cache/synthetic se limitato. |
-| Country macro via World Bank | `https://api.worldbank.org/v2/country/US/indicator/NY.GDP.MKTP.KD.ZG?format=json` | no | ⚠ timeout (5s) — verifica al cycle 2 | Contesto macro annuale; non adatto a intraday regime. |
+| Task | Provider del lab | Endpoint sottostante | Auth | Status (verifica 05/05) |
+|------|------------------|----------------------|------|-------------------------|
+| OHLCV stocks/ETF | `market_data --provider yfinance` | `query1.finance.yahoo.com/v8/...` | no (crumb gestito) | ✓ funziona end-to-end (verificato SPY 1y, 252 obs) |
+| Crypto prices | `market_data --provider coingecko` | `api.coingecko.com/api/v3/coins/.../market_chart` | no | ✓ funziona end-to-end (verificato BTC 365d, 366 obs) |
+| Stocks via Stooq CSV | ~~deprecato~~ | `stooq.com/q/d/l/...` | sì (apikey, da 2026) | ✗ non più free senza key |
+| Macro risk via FRED | non implementato | `fred.stlouisfed.org/graph/fredgraph.csv` | no (CSV) | ⚠ timeout intermittente; non usare in cycle critico |
+| Country macro World Bank | non implementato | `api.worldbank.org/v2/country/...` | no | ⚠ timeout intermittente; non rilevante per regime intraday |
 
-**Pre-flight check 05/05 13:02 UTC**: 2/4 API raggiungibili dal VPS
-TM3 (yfinance + CoinGecko ✓ · FRED + World Bank timeout). I timeout
-possono essere transitori (5s timeout stretto) o richiedere User-Agent
-specifico. Cycle 1 gira synthetic-only by design, non dipende dalla
-rete. Cycle 2+ verifica nuovamente prima di usare FRED/World Bank;
-se persistono timeout, restano fallback (yfinance+CoinGecko coprono
-equity/FX/crypto, sufficiente per il primo finding di mercato reale).
+Decisione di design: stocks via lib `yfinance` (gestisce crumb Yahoo);
+crypto via httpx diretto su CoinGecko (un endpoint, JSON pulito).
+Stooq era prima opzione (CSV no-auth) ma 2026-05-05 richiede apikey.
 
-Invocazione tipica via shell:
+## Cycle 1 verdict — apprendimento per cycle 2+
 
-```bash
-curl -s "https://query1.finance.yahoo.com/v8/finance/chart/SPY?range=1y&interval=1d"
-curl -s "https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=365"
-```
+Cycle `20260505_1323` ha girato la prima volta su synthetic
+realistic. Conclusione del lab (verbatim agent):
+
+> NO_DELTA. This is a valid negative cycle, not market evidence and
+> not an application-eligible finding. The only promotable output is
+> a constraint: require ordered-vs-shuffle separation before naming a
+> regime, and require real-market validation in cycle 2+ before any
+> finance claim is promoted.
+
+Effect_z synthetic = -0.18 (NO_DELTA). Aeternitas PROCEED, falsifier
+coherent True (0 flags). Veritas ρ=0.70 SOSPENSIONE.
+
+Cycle `20260505_1341` ha girato in parallelo con un modello diverso
+(deepseek-v4-pro). Approccio meta: ensemble 64 seed per
+caratterizzare la distribuzione di effect_z sul synthetic. Risultato:
+distribuzione effect_z (μ=1.31, σ=2.04, mediana=0.74), pass-rate al
+3σ = 15.6% a n=768. Verdict: la sensibilità del pipeline è ~√n sotto
+GARCH; un singolo NO_DELTA non falsifica il pipeline, è dentro la
+distribuzione attesa. Falsifier ha però segnato 1 flag high (confronto
+percentuali con denominatori diversi 64 vs 16) — onesto recuperarlo.
+
+**Constraint emerso da cycle 1**: il protocollo ordered-vs-shuffle
+funziona ma la sensibilità è bassa su finestre realistiche di
+mercato (n~250-1000). Per evitare false certezze:
+
+1. Non promuovere un singolo NO_DELTA come "no regime" — è dentro la
+   distribuzione del pipeline.
+2. Non promuovere un singolo DND_DELTA senza replica su altra finestra/
+   altro asset — può essere il 15% di pass-rate atteso da rumore.
+3. Per real-market: richiedere DND_DELTA su almeno **2 finestre
+   indipendenti** (es: 2 quarter diversi) e **2 asset diversi**
+   (es: SPY + BTC, profili volatilità diversi) prima di promuovere
+   come finding.
+4. Riportare sempre la `data_card` completa nei report — provenance
+   non è opzionale.
 
 ## Loop A8+A15 attivo
 

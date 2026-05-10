@@ -10,9 +10,14 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import os
+import sys
 from typing import Any
 
 import numpy as np
+
+# Permetti import di market_data quando il tool è chiamato dalla sua dir.
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 
 def synthetic_returns(n: int, seed: int, mode: str = "realistic") -> np.ndarray:
@@ -107,8 +112,21 @@ def run_experiment(
     seed: int = 42,
     shuffles: int = 128,
     mode: str = "realistic",
+    real_returns: np.ndarray | None = None,
+    real_meta: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    returns = synthetic_returns(n=n, seed=seed, mode=mode)
+    """Run ordered-vs-shuffle protocol.
+
+    Synthetic mode (default): generates returns via synthetic_returns().
+    Real mode: caller passes `real_returns` (np.ndarray) + `real_meta`
+    (data_card from market_data.fetch). This is the cycle 2+ path.
+    """
+    if real_returns is not None:
+        returns = np.asarray(real_returns, dtype=float)
+        n = len(returns)
+        mode = "real"
+    else:
+        returns = synthetic_returns(n=n, seed=seed, mode=mode)
     ordered = abs(orientation_score(returns))
 
     rng = np.random.default_rng(seed + 1000)
@@ -133,7 +151,7 @@ def run_experiment(
 
     verdict = "DND_DELTA" if effect_z > 3.0 and ordered > shuffle_mean else "NO_DELTA"
 
-    return {
+    out = {
         "n": n,
         "seed": seed,
         "shuffles": shuffles,
@@ -150,15 +168,25 @@ def run_experiment(
         "verdict": verdict,
         "null_baseline": "shuffle returns: same distribution, destroyed order",
         "naive_baseline": "static VaR 95% + realized volatility",
-        "_caveat": (
+    }
+    if mode == "real":
+        out["data_card"] = real_meta
+        out["_caveat"] = (
+            "Real-market data. Verdict applies to the specific window in "
+            "data_card. Shuffle null is sample-conditional; significance "
+            "must hold across multiple windows/eras to support a regime "
+            "claim. A single-window DND_DELTA is necessary, not sufficient."
+        )
+    else:
+        out["_caveat"] = (
             "Synthetic data, NOT real-market evidence of regime. "
             "Use mode='realistic' (default) for GARCH+t-noise+sigmoid "
             "transition. mode='ideal' is a sanity check on engineered "
             "bull/bear with hard transition — produces enormous effect_z "
             "(~50-60) but is tautological by construction. Real evidence "
             "requires running on yfinance/CoinGecko data in cycle 2+."
-        ),
-    }
+        )
+    return out
 
 
 def main() -> None:
@@ -173,9 +201,37 @@ def main() -> None:
         help="realistic: GARCH+t-noise+sigmoid (default, informative). ideal: engineered bull/bear sanity check (tautological).",
     )
     parser.add_argument("--json", action="store_true", help="emit machine-readable JSON")
+    parser.add_argument("--from-market", metavar="PROVIDER:SYMBOL",
+                        help="Use real OHLCV from market_data. Examples: "
+                             "yfinance:SPY, yfinance:QQQ, coingecko:bitcoin. "
+                             "Overrides --mode and --n (uses full available window).")
+    parser.add_argument("--market-period", default="1y",
+                        help="Period for yfinance (default 1y); ignored for coingecko")
+    parser.add_argument("--market-days", type=int, default=365,
+                        help="Days for coingecko (default 365); ignored for yfinance")
     args = parser.parse_args()
 
-    summary = run_experiment(n=args.n, seed=args.seed, shuffles=args.shuffles, mode=args.mode)
+    real_returns = None
+    real_meta = None
+    if args.from_market:
+        try:
+            provider, symbol = args.from_market.split(":", 1)
+        except ValueError:
+            print(f"--from-market expects PROVIDER:SYMBOL, got {args.from_market!r}",
+                  file=sys.stderr)
+            sys.exit(2)
+        from market_data import fetch  # type: ignore[import-not-found]
+        kwargs: dict[str, Any] = {}
+        if provider == "yfinance":
+            kwargs["period"] = args.market_period
+        else:
+            kwargs["days"] = args.market_days
+        d = fetch(provider, symbol, **kwargs)
+        real_returns = d["returns"]
+        real_meta = d["data_card"]
+
+    summary = run_experiment(n=args.n, seed=args.seed, shuffles=args.shuffles, mode=args.mode,
+                             real_returns=real_returns, real_meta=real_meta)
     if args.json:
         print(json.dumps(summary, indent=2, sort_keys=True))
         return
