@@ -1,0 +1,7 @@
+{
+  "RR_INTERVAL_DIPOLE": "regime_shift",
+  "RMSSD_VS_DND_SPLIT": "baseline_ab",
+  "CASSINI_RESIDUE_BIOSIGNAL": "scale_signature",
+  "NO_NETWORK_FIRST_CYCLE": "runtime_constraint",
+  "KERNEL_BIO_PACKAGING": "product_kernel"
+}

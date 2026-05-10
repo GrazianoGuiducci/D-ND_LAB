@@ -1,0 +1,50 @@
+{
+  "$schema": "../../config.schema.json",
+  "domain": "bio-rhythms",
+  "version": "0.1.0-alpha",
+  "title": "AI-Lab D-ND Bio-Rhythms",
+  "description": "Lab di dominio per regime detection in biosegnali cardiaci e circadiani: dipolo normale/aritmia o veglia/sonno generativo contro shuffle surrogato.",
+  "model": {
+    "context_file": "context.md",
+    "tension_to_category": "tension_to_category.json",
+    "seed_tensions": "seed_tensions.json"
+  },
+  "context": {
+    "data_dir": "bio-rhythms",
+    "max_turns": 25,
+    "timeout_seconds": 1200
+  },
+  "tools": [
+    {"name": "filesystem", "type": "builtin"},
+    {"name": "python_exec", "type": "builtin"},
+    {"name": "shell_exec", "type": "builtin"}
+  ],
+  "movements": {
+    "autopsy": {"enabled": true},
+    "trajectory_apply": {"enabled": true, "params": {"comment": "Loop A8+A15: applica decisioni REDESIGN ad alta confidenza al seed prima del cycle successivo"}},
+    "build_field": {"enabled": true},
+    "agent": {"enabled": true},
+    "bias_corrector": {"enabled": true},
+    "report_falsifier": {"enabled": true},
+    "bicono_extractor": {"enabled": true},
+    "validate_seed": {"enabled": true},
+    "verify_assertions": {"enabled": true},
+    "structural_check": {"enabled": false},
+    "build_lab_data": {"enabled": true},
+    "build_graph": {"enabled": false},
+    "sync": {"enabled": false},
+    "verify_endpoints": {"enabled": false},
+    "refiner": {"enabled": true},
+    "semantic_bridge": {"enabled": false},
+    "refresh_detector": {"enabled": false},
+    "seed_integrator": {"enabled": true},
+    "veritas_score": {"enabled": true, "params": {"comment": "G2 termometro qualità ρ ∈ [0,1] da 3 vettori — V_a telemetrica + V_b logico-storica + V_c conferma. Decision band SCARTO/SOSPENSIONE/COLLASSO."}},
+    "trajectory_evaluator": {"enabled": true},
+    "promotion_proposer": {"enabled": true, "params": {"comment": "G3 estrae proposte di promozione finding → skill/hook/regola sistemica. Output in data/bio-rhythms/promotions/. NO apply automatico."}},
+    "ssp_pipeline": {"enabled": true},
+    "narrative_writer": {"enabled": true, "params": {"max_words": 200, "timeout_seconds": 90, "comment": "Distilla cycle output in narrativa Apple-like ~200 parole, leggibile da chi non sa nulla di AI."}},
+    "notify": {"enabled": true}
+  },
+  "_generated_by": "tm3-claude-code-manual",
+  "_generated_at": "2026-05-05T16:15:00Z"
+}

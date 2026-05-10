@@ -1,0 +1,47 @@
+{
+  "domain": "bio-rhythms",
+  "direzione": "Misurare se le transizioni nei biosegnali (normale → aritmia, veglia → sonno, espressione genica circadiana) sono dipoli orientati che M preserva, oppure illusioni che collassano dopo shuffle dei campioni.",
+  "direzione_en": "Measure whether transitions in biosignals (normal → arrhythmia, wake → sleep, circadian gene expression) are oriented dipoles preserved by M, or illusions that collapse after sample shuffling.",
+  "tensioni": [
+    {
+      "tipo": "scoperta",
+      "id": "RR_INTERVAL_DIPOLE",
+      "claim": "Una finestra di RR-intervals con regime cardiaco reale (normale-veglia → riposo-sonno o normale → aritmia) mostra dipolo orientato sotto M: la mappa lagged_RR -> next_RR ha determinante orientato lontano da zero; lo shuffle preservante distribuzione perde orientamento e tende a det~0.",
+      "intensita": 1.0,
+      "porta": "cardiac_microstructure",
+      "condensato_ref": "A1,A2"
+    },
+    {
+      "tipo": "metodo",
+      "id": "RMSSD_VS_DND_SPLIT",
+      "claim": "La naive baseline è RMSSD + SDNN (HRV time-domain classici); il metodo D-ND deve produrre delta misurabile separando regime e noise con operatore M e null baseline shuffle, NON limitarsi a riprodurre RMSSD.",
+      "intensita": 0.9,
+      "porta": "hrv_baseline",
+      "condensato_ref": "A4,F4"
+    },
+    {
+      "tipo": "metodo",
+      "id": "CASSINI_RESIDUE_BIOSIGNAL",
+      "claim": "Sui biosegnali (RR intervals, EEG epoch features), il residuo Cassini su lag log-spaced funziona come diagnostica di scala: un regime informativo deve ridurre il residuo rispetto a finestre shuffle con stessa distribuzione.",
+      "intensita": 0.85,
+      "porta": "scale_signature",
+      "condensato_ref": "F1,A3"
+    },
+    {
+      "tipo": "vincolo",
+      "id": "NO_NETWORK_FIRST_CYCLE",
+      "claim": "Il primo cycle deve girare senza rete su biosignal sintetico realistico (HRV con AR-1 noise + transizione regime); PhysioNet e NCBI GEO sono reference operative per cycle 2+, non dipendenze obbligatorie.",
+      "intensita": 0.8,
+      "porta": "runtime_boundary",
+      "condensato_ref": "A2,A14"
+    },
+    {
+      "tipo": "prodotto",
+      "id": "KERNEL_BIO_PACKAGING",
+      "claim": "Un finding valido deve poter diventare dnd_kernel_bio_rhythm_regime: protocollo A/B naive HRV vs D-ND per wearable health, sleep tracking, clinical decision support — senza overclaim diagnostico.",
+      "intensita": 0.75,
+      "porta": "maturation",
+      "condensato_ref": "A5,A8"
+    }
+  ]
+}
