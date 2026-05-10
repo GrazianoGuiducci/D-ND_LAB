@@ -267,7 +267,7 @@ Se un lab non serve più o ha problemi strutturali:
 
 ### Cosa ESISTE già (29/04)
 
-- ✓ Master codebase D-ND_LAB con 19 movements
+- ✓ Master codebase D-ND_LAB con 21 movements (incl. Aeternitas + Veritas gate, trajectory_apply A8+A15 loop, narrative_writer)
 - ✓ Domain physics demo con assertions + seed_tensions + context
 - ✓ Bridge chain LLM (codex→claude→openrouter)
 - ✓ A5 closure (verify_assertions + bicono_extractor + cimitero auto-write)

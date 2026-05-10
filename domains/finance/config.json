@@ -42,6 +42,7 @@
     "trajectory_evaluator": {"enabled": true},
     "promotion_proposer": {"enabled": true, "params": {"comment": "G3 estrae proposte di promozione finding → skill/hook/regola sistemica. Output in data/finance/promotions/. NO apply automatico."}},
     "ssp_pipeline": {"enabled": true},
+    "narrative_writer": {"enabled": true, "params": {"max_words": 200, "timeout_seconds": 90, "comment": "Distilla cycle output in narrativa Apple-like ~200 parole, leggibile da chi non sa nulla di AI."}},
     "notify": {"enabled": true}
   },
   "_generated_by": "meta-lab",

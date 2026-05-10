@@ -117,6 +117,7 @@ MOVEMENT_ORDER: list[str] = [
     "trajectory_evaluator",
     "promotion_proposer",  # NEW (05/05) — G3 Fine B: estrae proposte di promozione finding → skill/hook/regola sistemica (no apply automatico, atto Approve operatore)
     "ssp_pipeline",        # NEW (01/05) — chiude scoperta → prodotto: crystallize+eligibility+designer+stage4
+    "narrative_writer",    # NEW (05/05) — distilla cycle output in narrativa ~200 parole leggibile da chiunque (Apple-like, niente jargon)
     "notify",
 ]
 
@@ -289,4 +290,5 @@ from core import ssp_pipeline as _ssp_pipeline  # noqa: E402, F401  # NEW 01/05 
 from core import trajectory_apply as _trajectory_apply  # noqa: E402, F401  # NEW 05/05 — chiude loop A8+A15
 from core import promotion_proposer as _promotion_proposer  # noqa: E402, F401  # NEW 05/05 — G3 promotion pipeline
 from core import veritas_score as _veritas_score  # noqa: E402, F401  # NEW 05/05 — G2 ρ-score termometro qualità
-# 20 movements registered (added veritas_score 05/05 — ρ aggregato 3 vettori + decision band).
+from core import narrative_writer as _narrative_writer  # noqa: E402, F401  # NEW 05/05 — Apple-like distillation
+# 21 movements registered (added narrative_writer 05/05 — narrativa ~200 parole human-readable).

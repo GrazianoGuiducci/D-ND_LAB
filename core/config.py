@@ -70,6 +70,11 @@ def list_domains() -> list[str]:
 
     Returns the list of directory names that contain a config.json.
     Does not validate the configs — call load_domain_config to do that.
+
+    Skip rules (2026-05-05):
+    - Directory che iniziano con `_` sono escluse: convenzione per
+      strumenti che vivono in `domains/` ma non sono lab di dominio
+      (es. `_meta-prototyper/`, `_archive/`).
     """
     repo_root = paths._repo_root()
     domains_dir = repo_root / "domains"
@@ -77,7 +82,9 @@ def list_domains() -> list[str]:
         return []
     return sorted(
         d.name for d in domains_dir.iterdir()
-        if d.is_dir() and (d / "config.json").exists()
+        if d.is_dir()
+        and not d.name.startswith("_")
+        and (d / "config.json").exists()
     )
 
 

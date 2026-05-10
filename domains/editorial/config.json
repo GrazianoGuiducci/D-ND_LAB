@@ -51,6 +51,7 @@
     "refresh_detector":     { "enabled": true },
     "seed_integrator":      { "enabled": true },
     "trajectory_evaluator": { "enabled": true, "params": { "execute": false, "log_only": true } },
+    "narrative_writer":     { "enabled": true, "params": { "max_words": 200, "timeout_seconds": 90, "comment": "Distilla cycle output in narrativa Apple-like ~200 parole, leggibile da chiunque." } },
     "notify":               { "enabled": true }
   },
   "notify": {

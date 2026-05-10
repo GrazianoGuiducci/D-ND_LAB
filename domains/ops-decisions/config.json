@@ -43,6 +43,7 @@
     "ssp_pipeline":       { "enabled": false, "params": {"comment": "lab di funzione — output sono regole, non prodotti SSP"} },
     "bias_corrector":     { "enabled": true },
     "report_falsifier":   { "enabled": true },
-    "bicono_extractor":   { "enabled": true }
+    "bicono_extractor":   { "enabled": true },
+    "narrative_writer":   { "enabled": true, "params": {"max_words": 200, "timeout_seconds": 90, "comment": "Distilla cycle output in narrativa Apple-like ~200 parole, leggibile da chiunque."} }
   }
 }

@@ -130,6 +130,24 @@ def _claude_preflight_check() -> bool:
         return False
 
 
+def _codex_subprocess_env() -> dict[str, str]:
+    """Env per subprocess codex.
+
+    Se LAB_CODEX_HOME è settato (es. /root/.codex-lab), inietta CODEX_HOME
+    isolando l'auth del lab da quella di VSCode ChatGPT extension (che usa
+    ~/.codex/). Evita race su refresh token (refresh_token_reused) quando
+    extension e lab girano in parallelo.
+
+    Storico: 2026-05-05 cycle 1413 codex auth si rompe perché VSCode codex
+    app-server e lab CLI condividono ~/.codex/auth.json.
+    """
+    env = os.environ.copy()
+    lab_codex_home = env.get("LAB_CODEX_HOME")
+    if lab_codex_home:
+        env["CODEX_HOME"] = lab_codex_home
+    return env
+
+
 def _codex_preflight_check() -> bool:
     """30s ping a codex per detect 401/refresh_token_reused. Cached."""
     global _CODEX_PREFLIGHT_OK
@@ -142,6 +160,7 @@ def _codex_preflight_check() -> bool:
         r = subprocess.run(
             ["codex", "exec", "--skip-git-repo-check", "echo ok"],
             capture_output=True, text=True, timeout=30,
+            env=_codex_subprocess_env(),
         )
         out = (r.stdout or "") + (r.stderr or "")
         if any(s in out for s in (
@@ -255,6 +274,7 @@ def _run_via_codex_cli(
             text=True,
             timeout=config.timeout_seconds,
             check=False,
+            env=_codex_subprocess_env(),
         )
     except subprocess.TimeoutExpired as e:
         raise TimeoutError(

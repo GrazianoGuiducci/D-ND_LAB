@@ -103,6 +103,45 @@ def seed_integrator(ctx: CycleContext) -> None:
                     "seed_integrator: +tensione %s da verify_assertions (%s)",
                     nt.get("id"), nt.get("tipo"),
                 )
+
+    # ── Universal mapping: ogni tensione DEVE avere condensato_ref ─────
+    # Aggiunto 06/05 per chiudere VETO P0 (Lignaggio) ricorrente. Tensioni
+    # nuove generate dall'agent o da seed_tensions iniziali possono mancare
+    # di ref; senza ref Aeternitas P0 fallisce e blocca la promotion gate.
+    # Pattern: keep ref esplicito → manual flag → mapping per tipo → default.
+    # Cascata del fix MM_D-ND/dipartimento.py commit 632ce79 (05/05 mattina).
+    _TYPE_TO_REF: dict[str, str] = {
+        "scoperta":       "A1,A2",
+        "metodo":         "A4,F4",
+        "vincolo":        "A2,A14",
+        "prodotto":       "A5,A8",
+        "baseline":       "A4,F4",
+        "ipotesi":        "A1,A4",
+        "contraddizione": "A2,A4,C2",
+        "boundary":       "A6,A7",
+        "meta":           "A4,A12,C2",
+        "regola":         "A4,A8,A14",
+    }
+    _REF_MANUAL = "operator"
+    _REF_DEFAULT = "A2,A4"
+    _normalized_count = 0
+    for t in tensioni:
+        if not isinstance(t, dict):
+            continue
+        if t.get("condensato_ref"):
+            continue
+        if t.get("manuale"):
+            t["condensato_ref"] = _REF_MANUAL
+        else:
+            tipo = (t.get("tipo") or "").lower()
+            t["condensato_ref"] = _TYPE_TO_REF.get(tipo, _REF_DEFAULT)
+        _normalized_count += 1
+    if _normalized_count:
+        logger.info(
+            "seed_integrator: condensato_ref normalizzato su %d tensione/i",
+            _normalized_count,
+        )
+
     tensioni.sort(
         key=lambda t: t.get("intensità", t.get("intensita", 0)) or 0,
         reverse=True,
