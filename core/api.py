@@ -886,6 +886,8 @@ _N_I18N: dict[str, dict[str, str]] = {
         "narr_tech_report_link": "report tecnico originale",
         "narr_tech_report_post": " con dati, falsifier flags e bicono resta consultabile.",
         "narr_default_title_fmt": "Cycle {cycle_ts} · {domain}",
+        "narr_evidence_note_finance": "Stato corrente: questa è una narrativa storica del cycle. Il dominio finance resta in collaudo; nessun risultato è promosso come segnale di mercato finché non supera i gate su dati reali con controlli robusti.",
+        "narr_evidence_note_bio-rhythms": "Stato corrente: questa è una narrativa storica del cycle. Il dominio bio-rhythms resta in collaudo; nessun risultato conta come evidenza biologica o clinica finché l'origine reale del dato non è verificata.",
         # Verdict labels (da _verdict_label)
         "verdict_falsificazione": "Falsificazione",
         "verdict_redesign": "Il sistema chiede di riprogettare",
@@ -964,6 +966,8 @@ _N_I18N: dict[str, dict[str, str]] = {
         "narr_tech_report_link": "original technical report",
         "narr_tech_report_post": " with data, falsifier flags and bicono remains available.",
         "narr_default_title_fmt": "Cycle {cycle_ts} · {domain}",
+        "narr_evidence_note_finance": "Current state: this is a historical cycle narrative. The finance domain remains under validation; no result is promoted as a market signal until it passes real-data gates with robust controls.",
+        "narr_evidence_note_bio-rhythms": "Current state: this is a historical cycle narrative. The bio-rhythms domain remains under validation; no result counts as biological or clinical evidence until the real origin of the data is verified.",
         # Verdict labels
         "verdict_falsificazione": "Falsified",
         "verdict_redesign": "System asks to redesign",
@@ -1236,6 +1240,17 @@ _NARRATIVE_HTML_TEMPLATE = """\
     text-transform: uppercase; letter-spacing: 0.08em;
     margin-bottom: 36px;
   }}
+  .evidence-note {{
+    border: 1px solid var(--line-strong);
+    border-left: 3px solid var(--accent);
+    border-radius: var(--radius);
+    background: rgba(13, 14, 20, 0.64);
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.55;
+    padding: 14px 16px;
+    margin: -14px 0 30px;
+  }}
   article p {{
     font-size: 17px; line-height: 1.65;
     margin-bottom: 18px; color: var(--text);
@@ -1300,6 +1315,7 @@ _NARRATIVE_HTML_TEMPLATE = """\
   <div class="eyebrow">{eyebrow}</div>
   <h1>{title}</h1>
   <div class="verdict-pill">{verdict_label}</div>
+  {evidence_note_html}
   <article>
 {body_html}
   </article>
@@ -1359,6 +1375,14 @@ def _verdict_label(aeternitas: str | None, band: str | None, traj: str | None, l
     if band == "SCARTO":
         return _t(lang, "verdict_scarto")
     return _t(lang, "verdict_default")
+
+
+def _evidence_note_html(domain: str, lang: str) -> str:
+    key = f"narr_evidence_note_{domain}"
+    pack = _N_I18N.get(lang) or _N_I18N["it"]
+    if key not in pack and key not in _N_I18N["it"]:
+        return ""
+    return f'<aside class="evidence-note">{html_escape(_t(lang, key))}</aside>'
 
 
 def _list_narrative_files(domain: str) -> list[Path]:
@@ -1742,6 +1766,7 @@ async def public_narrative_page(domain: str, cycle_ts: str, request: Request) ->
         accent=accent,
         lab=html_escape(domain),
         verdict_label=html_escape(label),
+        evidence_note_html=_evidence_note_html(domain, lang),
         body_html=body_html,
         cycle_ts=html_escape(cycle_ts),
         aeternitas=html_escape(parsed.get("aeternitas") or "—"),
