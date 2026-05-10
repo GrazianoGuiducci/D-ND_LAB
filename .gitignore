@@ -27,6 +27,7 @@ data/
 domains/*/data/
 domains/*/reports/
 domains/*/cimitero.md
+domains/_archive/**/cimitero.md
 *.log
 
 # IDE

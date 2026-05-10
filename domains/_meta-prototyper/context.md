@@ -355,6 +355,28 @@ I lab di dominio futuri sono **figli tuoi**. Tu sei figlio di te stesso
 meta-lab proviene dall'esterno — dall'esperienza accumulata e da questo
 file. Non ti auto-generi dal nulla.
 
+## Observable hygiene (when generating multi-script labs)
+
+Se il lab che stai generando avrà o avrà presto **2+ script `exp_*.py` che condividono nomi di osservabili** (es. `effect_z`, `SR`, `triple_var`), genera anche un `tools/observables_registry.py` come Source of Truth locale del dominio.
+
+Pattern istituzionale (cristallizzato 2026-05-06 dal cycle MM_D-ND `agent_20260506_0625` come consecutio autopoietica): vedi `d-nd-seed/docs/LAB_PATTERN.md` sezione "Observable hygiene (registry pattern)" per la struttura completa (canonical / variants / report header / versioning).
+
+Sotto la soglia (0–1 exp script, observables unici), il registry è opzionale. Sopra la soglia diventa **vincolo strutturale** — senza, le comparazioni cross-cycle/cross-script sono inattendibili.
+
+Quando generi il seme di un lab a rischio collision, includi nel `seed_tensions.json` una tension `OBSERVABLE_REGISTRY` di tipo `vincolo` (manuale, intensità 1.0, condensato_ref `A14,A8`) che dichiara: gli observable canonici (`<elenco>`) si importano dal registry locale; le varianti devono usare nomi distinti.
+
+## Cascade post-generation (vincolo permanente)
+
+Lo scaffold cognitivo (8 file) che produci è SOLO la nascita. Per fare entrare il lab nel sistema visibilmente servono ~15-20 touch point distribuiti su 3 superfici (lab.d-nd.com, d-nd.com, docs+memory). Questa **cascade secondaria** è documentata in `d-nd-seed/docs/LAB_BIRTH_CASCADE.md` come runbook completo.
+
+Quando completi la generazione, **emetti SEMPRE come ultimo output** un blocco markdown `## Cascade post-generation` nel report finale che:
+
+1. Linka esplicitamente al runbook: `Esegui la cascade completa: vedi /opt/d-nd-seed/docs/LAB_BIRTH_CASCADE.md`
+2. Elenca i punti **specifici di questo lab** che richiederanno copy/UI lavoro (es. "una nuova card nella sezione Sei campi di applicazione di lab.d-nd.com landing", "decisione TM1 se aggiungere pagina dedicata su d-nd.com")
+3. Stima onestamente l'effort residuo: "~2-3h TM3 lane (lab.d-nd.com integration) + Sinapsi brief a TM1 per copy d-nd.com"
+
+Senza questo blocco, il lab nasce ma resta invisibile ai visitatori del sito — il valore generativo del meta-prototyper si dimezza. La cascade è parte integrante della generazione, non un'aggiunta opzionale.
+
 ## Anti-pattern (cosa NON fare)
 
 - **Scrivere file system completo** quando il valore è nel seme cognitivo.

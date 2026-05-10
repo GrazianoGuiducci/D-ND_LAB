@@ -38,7 +38,8 @@
     "ssp_pipeline":       { "enabled": false, "params": {"comment": "meta-lab produce template, non findings scientifici — SSP non applicabile"} },
     "bias_corrector":     { "enabled": true },
     "report_falsifier":   { "enabled": true },
-    "bicono_extractor":   { "enabled": false }
+    "bicono_extractor":   { "enabled": false },
+    "narrative_writer":   { "enabled": true, "params": {"max_words": 200, "timeout_seconds": 90, "comment": "Distilla cycle output in narrativa Apple-like ~200 parole."} }
   },
   "capabilities": {
     "agent_role": "meta_seed_generator",
