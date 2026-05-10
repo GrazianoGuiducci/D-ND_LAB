@@ -23,8 +23,8 @@ If the signal survives the shuffle, the regime is not just a word: it is structu
 
 The lab does not promise price prediction. It measures **regime structure** — one level above "guessing direction". Five conditions are necessary for any promoted finding: real metric + shuffle null baseline + explicit naive baseline (VaR + vol) + D-ND delta ≥ 3σ + declared failure when the delta is absent.
 
-The first cycle runs **sandboxed without network** on synthetic data. Public APIs (yfinance, FRED, CoinGecko, World Bank) bring real data into subsequent cycles — they do not replace the null test.
+The first cycle started **sandboxed without network** on synthetic data. Public APIs (yfinance, FRED, CoinGecko, World Bank) bring real data into subsequent cycles — they do not replace the null test.
 
 ---
 
-*Status: alpha · Validated by meta-falsifier M1-M6 6/6 PASS · Ready for first real cycle.*
+*Status: alpha · domain under validation · latest realistic synthetic run returned NO_DELTA · promotion requires real-data gates with robust controls.*

@@ -23,8 +23,8 @@ Se il segnale sopravvive allo shuffle, il regime non è una parola: è struttura
 
 Il lab non promette previsioni di prezzo. Misura **struttura del regime** — un livello sopra rispetto a "indovinare la direzione". Cinque condizioni necessarie per ogni finding promosso: metrica reale + null baseline shuffle + naive baseline (VaR + vol) + delta D-ND ≥ 3σ + fallimento dichiarato quando il delta è assente.
 
-Il primo cycle gira **sandboxed senza rete** su dataset sintetico. Le API pubbliche (yfinance, FRED, CoinGecko, World Bank) portano dati reali nei cycle successivi — non sostituiscono il null test.
+Il primo cycle è partito **sandboxed senza rete** su dataset sintetico. Le API pubbliche (yfinance, FRED, CoinGecko, World Bank) portano dati reali nei cycle successivi — non sostituiscono il null test.
 
 ---
 
-*Status: alpha · Validato dal falsifier meta M1-M6 6/6 PASS · Pronto per il primo cycle reale.*
+*Status: alpha · dominio in collaudo · ultimo synthetic realistic in NO_DELTA · promozione vincolata a gate su dati reali con controlli robusti.*

@@ -124,7 +124,7 @@ def _check_tool_summary() -> dict[str, Any]:
 
     Usa mode='ideal' (engineered bull/bear con hard transition) per
     garantire DND_DELTA stabile come sanity check del pipeline.
-    Nel cycle reale, l'agent userà mode='realistic' (default CLI).
+    Nel run operativo, l'agent userà mode='realistic' (default CLI).
     """
     module = _load_exp_module()
     summary = module.run_experiment(n=512, seed=17, shuffles=64, mode="ideal")

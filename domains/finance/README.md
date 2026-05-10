@@ -103,8 +103,8 @@ promotion_proposer (proposte sistemiche).
 - [x] Template validato (M1-M6 6/6 PASS)
 - [x] Tool sintetico funzionante (verdict DND_DELTA su test sintetico)
 - [x] Assertions 5/5 PASS
-- [ ] Primo cycle reale del lab (`dnd-cycle.sh finance`)
-- [ ] Connessione yfinance live (cycle 2+)
+- [x] Primo cycle controllato del lab (`dnd-cycle.sh finance`)
+- [ ] Gate dati reali con yfinance/CoinGecko e controlli robusti
 - [ ] Verdict DND_DELTA su dati reali (FX major pair, crypto BTC, equity SPY)
 - [ ] Stage 5: kernel pacchettizzato `dnd_kernel_finance_regime_shift`
 - [ ] Pubblicazione lab.d-nd.com/dashboard/?domain=finance
