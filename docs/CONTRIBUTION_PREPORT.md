@@ -125,10 +125,18 @@ append-only `registry.jsonl`, and emits Markdown + JSON preports under:
 data/<domain>/contributions/
 ```
 
+## Dashboard UI
+
+The Lab Assistant shows an explicit `Registra proposta` action when a chat
+exchange looks like a contribution, improvement request, dataset proposal, or
+new-domain proposal. The button posts the visitor's draft and current dashboard
+context to the contribution endpoint, then reports the generated preport verdict
+inside the chat. This still does not run cycles or alter Lab state.
+
 ## Next Implementation Ring
 
-1. Connect the Lab Assistant UI to the endpoint behind an explicit visitor
-   confirmation such as "Registra come proposta".
-2. Add an operator-only review view for pending preports.
+1. Add an operator-only review view for pending preports.
+2. Add structured follow-up fields in the UI for source, hypothesis,
+   falsification test, constraints, expected value, and contact preference.
 3. Add an operator-only promotion path from accepted preports to seed tension
    or new-domain draft.

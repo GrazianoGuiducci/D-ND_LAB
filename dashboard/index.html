@@ -2276,6 +2276,20 @@
                 </template>
               </div>
             </template>
+            <!-- Public contribution registry: explicit visitor confirmation.
+                 This creates only a sanitized preport, never a seed/cycle write. -->
+            <template x-if="contributionPanelVisible(i)">
+              <div class="mt-2 flex flex-wrap items-center gap-2 text-xs">
+                <button @click="registerContribution(i)"
+                        x-show="!m.contribution_registered"
+                        :disabled="m.contribution_loading"
+                        class="px-3 py-1 rounded bg-cyan-700 hover:bg-cyan-600 disabled:opacity-50 text-white">
+                  Registra proposta
+                </button>
+                <span class="text-slate-300" x-show="!m.contribution_result">Crea una scheda pre-report per revisione operatore.</span>
+                <span class="text-emerald-300" x-show="m.contribution_result" x-text="m.contribution_result"></span>
+              </div>
+            </template>
           </div>
         </template>
         <template x-if="chatLoading">
@@ -4493,6 +4507,69 @@
       declineAction(message, idx) {
         const action = message.pending_actions[idx];
         if (action) action.declined = true;
+      },
+
+      contributionCandidateText(text) {
+        const s = (text || '').toLowerCase();
+        return [
+          'contribu', 'miglior', 'proposta', 'proporre', 'sugger',
+          'nuovo dominio', 'nuova base', 'fonte dati', 'dataset',
+          'modifica', 'feedback'
+        ].some(token => s.includes(token));
+      },
+
+      latestUserMessageBefore(index) {
+        for (let i = index - 1; i >= 0; i -= 1) {
+          if (this.chatMessages[i]?.role === 'user') return this.chatMessages[i];
+        }
+        return null;
+      },
+
+      canRegisterContribution(index) {
+        const msg = this.chatMessages[index];
+        if (!msg || msg.role !== 'assistant') return false;
+        if (msg.contribution_registered) return false;
+        const userMsg = this.latestUserMessageBefore(index);
+        if (!userMsg) return false;
+        return this.contributionCandidateText(userMsg.content)
+          || this.contributionCandidateText(msg.content);
+      },
+
+      contributionPanelVisible(index) {
+        const msg = this.chatMessages[index];
+        return !!(msg && msg.role === 'assistant'
+          && (msg.contribution_result || msg.contribution_loading || this.canRegisterContribution(index)));
+      },
+
+      async registerContribution(index) {
+        const msg = this.chatMessages[index];
+        const userMsg = this.latestUserMessageBefore(index);
+        if (!msg || !userMsg || msg.contribution_loading) return;
+        msg.contribution_loading = true;
+        try {
+          const r = await fetch(`/api/domains/${this.activeDomain}/contributions`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              message: userMsg.content,
+              context_tab: this.activeTab || null,
+              context_view: this.buildChatViewContext(),
+            }),
+          });
+          const data = await r.json().catch(() => ({}));
+          if (!r.ok) {
+            msg.contribution_result = `errore: ${data.detail || r.statusText}`;
+            return;
+          }
+          msg.contribution_registered = true;
+          const verdict = data.verdict || data.status || 'preport';
+          const question = data.next_question ? ` · ${data.next_question}` : '';
+          msg.contribution_result = `pre-report ${verdict}${question}`;
+        } catch (e) {
+          msg.contribution_result = `errore: ${e.message}`;
+        } finally {
+          msg.contribution_loading = false;
+        }
       },
 
       async sendChat() {
