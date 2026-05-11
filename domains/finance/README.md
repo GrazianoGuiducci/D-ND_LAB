@@ -30,13 +30,16 @@ Verifica che tutto giri (no network, sandboxed):
 # 1. Tool sintetico — regime bull/bear vs surrogati shuffle
 python3 domains/finance/tools/exp_regime_shift.py --json
 
-# 2. Assertions del lab — invariantsi numerici D-ND
+# 2. Report diagnostico interno — SPY shifted windows, no claim operativo
+python3 domains/finance/tools/finance_diagnostic_report.py
+
+# 3. Assertions del lab — invarianti numerici D-ND
 python3 domains/finance/assertions.py
 
-# 3. Falsifier meta — template valido?
+# 4. Falsifier meta — template valido?
 python3 domains/meta-lab/tools/lab_template_validator.py domains/finance
 
-# 4. Primo cycle (lancia agent autonomo, ~5-15 min)
+# 5. Primo cycle (lancia agent autonomo, ~5-15 min)
 bash tools/dnd-cycle.sh finance
 ```
 
@@ -52,7 +55,10 @@ domains/finance/
 ├── assertions.py               5 test eseguibili (PASS/FAIL/SKIP)
 ├── mml.json                    Metamasterlab — 16 skill su 8 layer
 └── tools/
-    └── exp_regime_shift.py     CLI sintetico, no rete
+    ├── exp_regime_shift.py     CLI sintetico/real-market
+    ├── market_data.py          acquisizione dati + cache + data card
+    └── finance_diagnostic_report.py
+                                report interno value-facing, no claim operativo
 ```
 
 ## External APIs (no-auth, opt-in)
