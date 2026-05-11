@@ -170,6 +170,7 @@
        diventa flex:1 con scroll interno proprio cosi' il content lungo
        (Info docs, gallery bicono, taxonomy graph) non sfora la viewport.
        Sidebars sx/dx scrollano indipendentemente — niente page scroll. */
+    .campo-pane > div:first-child,
     .info-pane > div:first-child,
     .bicono-pane > div:first-child,
     .tassonomia-pane > div:first-child,
@@ -987,6 +988,96 @@
       <!-- ============ CONTENT (center) — tab panes ============ -->
       <section class="lab-content">
 
+        <!-- TAB CAMPO — prima lettura multidimensionale del sistema -->
+        <div x-show="activeTab === 'campo'" x-transition.opacity.duration.150ms class="campo-pane">
+          <div class="bg-slate-900 border border-slate-800 rounded-lg p-5">
+            <div class="flex items-start justify-between gap-4 flex-wrap mb-5">
+              <div>
+                <h2 class="text-lg font-medium">Campo — risultante attuale</h2>
+                <p class="text-xs text-slate-300 mt-1 max-w-3xl">
+                  Lettura sintetica prima delle lenti: output, ricadute, falsificazioni e maturità percepibile del dominio.
+                </p>
+              </div>
+              <div class="flex items-center gap-2 text-xs">
+                <button @click="setActiveTab('grafo')" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-cyan-300">Grafo</button>
+                <button @click="setActiveTab('agente')" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-purple-300">Report</button>
+                <button @click="setActiveTab('prodotti')" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-green-300">Prodotti</button>
+              </div>
+            </div>
+
+            <div class="grid md:grid-cols-4 gap-3 mb-5">
+              <div class="bg-slate-950/50 border border-slate-800 rounded-md p-3">
+                <div class="text-[10px] uppercase tracking-wider text-slate-400">Cicli</div>
+                <div class="text-2xl font-mono text-cyan-400 mt-1" x-text="campoStats().cicli"></div>
+                <div class="text-[11px] text-slate-400 mt-1"><span x-text="freshnessStats().today"></span> oggi · <span x-text="freshnessStats().fresh"></span> freschi</div>
+              </div>
+              <div class="bg-slate-950/50 border border-slate-800 rounded-md p-3">
+                <div class="text-[10px] uppercase tracking-wider text-slate-400">Scoperte</div>
+                <div class="text-2xl font-mono text-purple-300 mt-1" x-text="campoStats().scoperte"></div>
+                <div class="text-[11px] text-slate-400 mt-1"><span x-text="campoStats().applicazioni"></span> applicazioni candidate</div>
+              </div>
+              <div class="bg-slate-950/50 border border-slate-800 rounded-md p-3">
+                <div class="text-[10px] uppercase tracking-wider text-slate-400">Prodotti</div>
+                <div class="text-2xl font-mono text-green-400 mt-1" x-text="campoStats().prodotti"></div>
+                <div class="text-[11px] text-slate-400 mt-1">post-verifica SSP</div>
+              </div>
+              <div class="bg-slate-950/50 border border-slate-800 rounded-md p-3">
+                <div class="text-[10px] uppercase tracking-wider text-slate-400">Filtro</div>
+                <div class="text-2xl font-mono text-amber-300 mt-1" x-text="cimiteroCount()"></div>
+                <div class="text-[11px] text-slate-400 mt-1">falsificati / scartati</div>
+              </div>
+            </div>
+
+            <div class="grid lg:grid-cols-[1.15fr_0.85fr] gap-4">
+              <section class="border border-slate-800 rounded-md p-4 bg-slate-950/30">
+                <div class="flex items-center justify-between gap-3 mb-3">
+                  <h3 class="text-sm font-medium text-slate-200">Lettura di campo</h3>
+                  <span class="text-[11px] font-mono text-slate-400" x-text="`${graphStats.n_nodes ?? 0} nodi · ${graphStats.n_edges ?? 0} archi`"></span>
+                </div>
+                <div class="space-y-3 text-sm text-slate-300">
+                  <p x-show="campoStats().prodotti > 0">
+                    Il dominio ha già ricadute mature: passa dalla mappa alle metriche in <button @click="setActiveTab('prodotti')" class="text-green-300 hover:text-green-200 underline underline-offset-2">Prodotti</button>.
+                  </p>
+                  <p x-show="campoStats().prodotti === 0 && campoStats().applicazioni > 0">
+                    Il dominio ha applicazioni candidate ma nessun prodotto maturo: la risultante è ancora in verifica.
+                  </p>
+                  <p x-show="campoStats().prodotti === 0 && campoStats().applicazioni === 0 && campoStats().scoperte > 0">
+                    Il dominio ha scoperte o report utili, ma non ha ancora prodotto ricadute operative.
+                  </p>
+                  <p x-show="campoStats().cicli === 0">
+                    Il dominio è seme: il grafo mostra struttura concettuale finché un cycle non produce evidenza.
+                  </p>
+                  <p>
+                    La sequenza percettiva consigliata è: <span class="text-cyan-300">Campo</span> per la risultante, <span class="text-cyan-300">Grafo</span> per le relazioni, <span class="text-purple-300">Bicono</span> per i poli, <span class="text-slate-200">Agente</span> per evidenza e falsificazione.
+                  </p>
+                </div>
+              </section>
+
+              <section class="border border-slate-800 rounded-md p-4 bg-slate-950/30">
+                <div class="flex items-center justify-between gap-3 mb-3">
+                  <h3 class="text-sm font-medium text-slate-200">Ultimi segnali</h3>
+                  <button @click="setActiveTab('agente')" class="text-xs text-purple-300 hover:text-purple-200">apri report</button>
+                </div>
+                <template x-if="reports.length === 0">
+                  <p class="text-sm text-slate-400 italic">Nessun report ancora disponibile.</p>
+                </template>
+                <div class="space-y-2">
+                  <template x-for="r in reports.slice(0, 3)" :key="r.filename">
+                    <button @click="setActiveTab('agente'); openReport(r.filename)"
+                            class="w-full text-left border border-slate-800 hover:border-purple-700 rounded-md p-3 transition">
+                      <div class="flex items-center justify-between gap-2">
+                        <span class="text-sm text-slate-200 truncate" x-text="r.title || r.filename"></span>
+                        <span class="text-[10px] text-slate-400 font-mono flex-shrink-0" x-text="new Date(r.mtime).toISOString().slice(0,10)"></span>
+                      </div>
+                      <div class="text-xs text-slate-400 mt-1 line-clamp-2" x-text="r.verdict || 'verdict non estratto'"></div>
+                    </button>
+                  </template>
+                </div>
+              </section>
+            </div>
+          </div>
+        </div>
+
         <!-- TAB GRAFO -->
         <div x-show="activeTab === 'grafo'" x-transition.opacity.duration.150ms class="grafo-pane">
           <div class="bg-slate-900 border border-slate-800 rounded-lg p-4">
@@ -1588,6 +1679,7 @@
             <div class="border-t border-slate-800 pt-4">
               <h3 class="text-sm font-medium text-purple-300 mb-2" data-i18n="dash.info.howRead">Come si legge la dashboard</h3>
               <ul class="text-sm text-slate-300 space-y-2 list-disc list-inside">
+                <li><strong>Campo</strong> — prima lettura della risultante: cicli, scoperte, applicazioni, prodotti, falsificazioni e segnali recenti.</li>
                 <li><strong data-i18n="dash.info.itemGrafo">Grafo</strong> — <span data-i18n="dash.info.body.grafo">knowledge graph del dominio. Click su un nodo apre il dettaglio a destra; tooltip al hover con azioni rapide.</span></li>
                 <li><strong data-i18n="dash.info.itemBicono">Bicono</strong> — <span data-i18n="dash.info.body.bicono">galleria delle scoperte: 4 poli (radici/singolare/invariante/campo) parsati dal report.</span></li>
                 <li><strong data-i18n="dash.info.itemAgente">Agente</strong> — <span data-i18n="dash.info.body.agente">lista cicli con verdict + flag dal counter-pole. Filter Cimitero per i report falsificati.</span></li>
@@ -1710,7 +1802,7 @@
           <!-- Empty state contestuale: dipende dal tab attivo. -->
           <template x-if="!selectedNode && !selectedScopertaSsp && !selectedProdottoSsp">
             <p class="text-slate-300 text-xs italic py-4"
-               x-text="activeTab === 'prodotti' ? t('dash.detail.click.scoperta', 'Click su una scoperta o prodotto per vedere il dettaglio qui.') : (activeTab === 'grafo' ? t('dash.detail.click.grafo', 'Click su un nodo del grafo per vedere il dettaglio qui.') : (activeTab === 'agente' ? t('dash.detail.click.agente', 'Apri un report per vedere il dettaglio del cycle qui.') : t('dash.detail.click.default', 'Seleziona un elemento per vedere il dettaglio qui.')))"></p>
+               x-text="activeTab === 'campo' ? 'La tab Campo mostra la risultante; apri una lente per il dettaglio.' : (activeTab === 'prodotti' ? t('dash.detail.click.scoperta', 'Click su una scoperta o prodotto per vedere il dettaglio qui.') : (activeTab === 'grafo' ? t('dash.detail.click.grafo', 'Click su un nodo del grafo per vedere il dettaglio qui.') : (activeTab === 'agente' ? t('dash.detail.click.agente', 'Apri un report per vedere il dettaglio del cycle qui.') : t('dash.detail.click.default', 'Seleziona un elemento per vedere il dettaglio qui.'))))"></p>
           </template>
 
           <!-- Dettaglio scoperta SSP selezionata (tab Prodotti) -->
@@ -2304,6 +2396,7 @@
   // + `label` (fallback IT se i18n non caricato). Render via t(key, fallback)
   // helper Alpine reactive su lang change.
   const TABS = [
+    { id: 'campo',    icon: '◌', labelKey: 'dash.tab.campo',    label: 'Campo' },
     { id: 'grafo',    icon: '⬢', labelKey: 'dash.tab.grafo',    label: 'Grafo' },
     { id: 'bicono',   icon: '◇', labelKey: 'dash.tab.bicono',   label: 'Bicono' },
     { id: 'agente',   icon: '⊙', labelKey: 'dash.tab.agente',   label: 'Agente' },
@@ -2349,7 +2442,7 @@
 
       // v3 — tabs + sidebars
       TABS: TABS,
-      activeTab: 'grafo',
+      activeTab: 'campo',
       sidebarLeftOpen: true,
       sidebarRightOpen: true,
       // Default ON — labels sempre visibili (operatore: "si perdono i titoli durante drag")
