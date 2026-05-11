@@ -1694,13 +1694,41 @@
           </div>
         </div>
 
-        <!-- TAB INFO/DOC — context.md del dominio + reference utili (UI fix #5).
-             Sostituisce la card intro che rubava spazio in alto. -->
+        <!-- TAB INFO/DOC — ingresso orientativo + reference utili.
+             Funziona anche come megamenu verso le risorse interne del lab. -->
         <div x-show="activeTab === 'info'" x-transition.opacity.duration.150ms class="info-pane">
           <div class="bg-slate-900 border border-slate-800 rounded-lg p-6 space-y-4">
             <div>
               <h2 class="text-lg font-medium" x-text="contextIntro.title || 'Info'"></h2>
-              <p class="text-xs text-slate-300 mt-1" data-i18n="dash.info.subtitle">Cosa fa questo lab, come leggere la dashboard, dove sono i dati. Letto dal context.md del dominio.</p>
+              <p class="text-xs text-slate-300 mt-1" data-i18n="dash.info.subtitle">Dove sei, cosa puoi leggere, come contribuire al ciclo successivo.</p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-3">
+              <button @click="setActiveTab('campo')" class="text-left bg-slate-950/50 border border-slate-800 hover:border-cyan-700 rounded-md p-3 transition">
+                <div class="text-sm font-medium text-cyan-300">Campo</div>
+                <p class="text-xs text-slate-400 mt-1">Risultante, diagnostiche e segnali recenti.</p>
+              </button>
+              <button @click="setActiveTab('grafo')" class="text-left bg-slate-950/50 border border-slate-800 hover:border-cyan-700 rounded-md p-3 transition">
+                <div class="text-sm font-medium text-cyan-300">Grafo</div>
+                <p class="text-xs text-slate-400 mt-1">Relazioni, nodi, vuoti e ponti del dominio.</p>
+              </button>
+              <button @click="setActiveTab('prodotti')" class="text-left bg-slate-950/50 border border-slate-800 hover:border-green-700 rounded-md p-3 transition">
+                <div class="text-sm font-medium text-green-300">Prodotti</div>
+                <p class="text-xs text-slate-400 mt-1">Scoperte, applicazioni candidate e verifiche.</p>
+              </button>
+              <button @click="setActiveTab('agente')" class="text-left bg-slate-950/50 border border-slate-800 hover:border-purple-700 rounded-md p-3 transition">
+                <div class="text-sm font-medium text-purple-300">Report</div>
+                <p class="text-xs text-slate-400 mt-1">Evidenza, verdict, falsifier e cimitero.</p>
+              </button>
+              <button @click="askImproveLab()" class="text-left bg-slate-950/50 border border-slate-800 hover:border-amber-700 rounded-md p-3 transition">
+                <div class="text-sm font-medium text-amber-300">Contribuisci</div>
+                <p class="text-xs text-slate-400 mt-1">Proponi dati, controlli, correzioni o un nuovo dominio.</p>
+              </button>
+              <a href="mailto:info@d-nd.com?subject=D-ND_LAB%20newsletter%20e%20report&body=Interessi%3A%0ADominio%20o%20lab%20che%20voglio%20seguire%3A%0AEmail%20per%20aggiornamenti%3A%0ANote%3A"
+                 class="text-left bg-slate-950/50 border border-slate-800 hover:border-amber-700 rounded-md p-3 transition">
+                <div class="text-sm font-medium text-amber-300">Newsletter / report</div>
+                <p class="text-xs text-slate-400 mt-1">Richiedi aggiornamenti sugli sviluppi e sui cicli del Lab.</p>
+              </a>
             </div>
 
             <template x-if="contextIntro.intro">
@@ -1710,6 +1738,7 @@
             <div class="border-t border-slate-800 pt-4">
               <h3 class="text-sm font-medium text-purple-300 mb-2" data-i18n="dash.info.howRead">Come si legge la dashboard</h3>
               <ul class="text-sm text-slate-300 space-y-2 list-disc list-inside">
+                <li><strong>Info</strong> — orientamento e megamenu: parti da qui per sapere dove sei e dove andare.</li>
                 <li><strong>Campo</strong> — prima lettura della risultante: cicli, scoperte, applicazioni, prodotti, falsificazioni e segnali recenti.</li>
                 <li><strong data-i18n="dash.info.itemGrafo">Grafo</strong> — <span data-i18n="dash.info.body.grafo">knowledge graph del dominio. Click su un nodo apre il dettaglio a destra; tooltip al hover con azioni rapide.</span></li>
                 <li><strong data-i18n="dash.info.itemBicono">Bicono</strong> — <span data-i18n="dash.info.body.bicono">galleria delle scoperte: 4 poli (radici/singolare/invariante/campo) parsati dal report.</span></li>
@@ -2244,7 +2273,7 @@
         <template x-if="chatMessages.length === 0 && !chatLoading">
           <div class="text-slate-300 text-xs text-center py-3 italic">
             Il lab ha seed, last reports e cimitero in contesto.<br>
-            Click su un nodo del grafo per domande mirate.
+            Puoi chiedere spiegazioni o proporre miglioramenti per il prossimo ciclo.
           </div>
         </template>
       </div>
@@ -2474,7 +2503,7 @@
 
       // v3 — tabs + sidebars
       TABS: TABS,
-      activeTab: 'campo',
+      activeTab: 'info',
       sidebarLeftOpen: true,
       sidebarRightOpen: true,
       // Default ON — labels sempre visibili (operatore: "si perdono i titoli durante drag")
@@ -4163,6 +4192,14 @@
       // hardcoded per i due domini esistenti; in futuro potrebbero leggere
       // da domains/<d>/quick_actions.json.
       quickActions() {
+        if (this.activeDomain === 'finance') {
+          return [
+            "Ci aiuti a migliorare questo Lab?",
+            "Quali dati o controlli servono?",
+            "Come posso ricevere il report domani?",
+            "Vorrei proporre un nuovo dominio",
+          ];
+        }
         if (this.activeDomain === 'physics') {
           return [
             "Spiega l'ultimo report",
@@ -4181,12 +4218,18 @@
         return [
           "Stato del lab",
           "Spiega l'ultimo report",
-          "Cosa serve adesso?",
+          "Ci aiuti a migliorare questo Lab?",
         ];
       },
 
       useQuickAction(prompt) {
         this.chatInput = prompt;
+        this.sendChat();
+      },
+
+      askImproveLab() {
+        this.chatOpen = true;
+        this.chatInput = "Ci aiuti a migliorare questo Lab? Ho un suggerimento o competenza da offrire.";
         this.sendChat();
       },
 

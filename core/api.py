@@ -156,7 +156,7 @@ class ChatRequest(BaseModel):
     session_id: str | None = None
     context_node: dict[str, Any] | None = None       # selected graph node, if any
     # Consapevolezza pagina (Atto UX 7) — il chat agent sa cosa l'utente sta guardando
-    context_tab: str | None = None                   # 'grafo' | 'bicono' | 'agente' | 'incrocio' | 'prodotti' | 'info'
+    context_tab: str | None = None                   # 'info' | 'campo' | 'grafo' | 'bicono' | 'agente' | 'incrocio' | 'prodotti'
     context_scoperta: dict[str, Any] | None = None   # SSP scoperta selezionata in tab Prodotti
     context_prodotto: dict[str, Any] | None = None   # SSP prodotto maturo selezionato in tab Prodotti
 
@@ -2404,12 +2404,13 @@ async def chat_endpoint(domain: str, body: ChatRequest, request: Request) -> dic
     # può suggerire CTA ('vai al tab Prodotti', 'apri questa scoperta').
     if body.context_tab:
         tab_label = {
+            "info": "Info (orientation, megamenu, contribution/contact entrypoint)",
+            "campo": "Campo (field resultant, latest diagnostics, recent signals)",
             "grafo": "Grafo (knowledge graph)",
             "bicono": "Bicono (galleria scoperte 4-poli)",
             "agente": "Agente (lista cicli + verdict + falsifier flags)",
             "incrocio": "Tassonomia (grafo aggregato + Trajectory timeline)",
             "prodotti": "Prodotti (pipeline SSP: scoperte / applicazioni / prodotti maturi)",
-            "info": "Info (context.md domain + Pipeline SSP spiegata + reference)",
         }.get(body.context_tab, body.context_tab)
         system_prompt += f"\n\n## CURRENT TAB — user is viewing: {tab_label}\n"
         system_prompt += (
@@ -2455,6 +2456,18 @@ async def chat_endpoint(domain: str, body: ChatRequest, request: Request) -> dic
         "calling them does NOT execute the action — it returns a structured "
         "proposal the user must confirm via the UI. Use them when the user "
         "explicitly asks to add a tension or run a cycle.\n"
+    )
+    system_prompt += (
+        "\n\n## CONTRIBUTION INTAKE\n"
+        "If the visitor is an expert or wants to help improve the lab, guide them "
+        "to provide: domain, proposed data/source, hypothesis or correction, "
+        "expected falsification test, constraints, and email preference for "
+        "follow-up. Tone: 'Grazie per il suggerimento; posso trasformarlo in una "
+        "proposta per il prossimo ciclo. Se vuoi, lascia un contatto e domani "
+        "possiamo avvisarti sui risultati.' Do not promise that email automation "
+        "or cycle execution already happened. Use propose_inject_tension only "
+        "when the suggestion is concrete enough to become a seed tension and the "
+        "user explicitly wants to propose it.\n"
     )
 
     user_messages = [{"role": m.role, "content": m.content} for m in body.messages]
