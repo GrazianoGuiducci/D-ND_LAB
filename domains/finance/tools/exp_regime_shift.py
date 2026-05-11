@@ -207,6 +207,10 @@ def main() -> None:
                              "Overrides --mode and --n (uses full available window).")
     parser.add_argument("--market-period", default="1y",
                         help="Period for yfinance (default 1y); ignored for coingecko")
+    parser.add_argument("--market-start",
+                        help="Explicit yfinance start date YYYY-MM-DD; requires --market-end")
+    parser.add_argument("--market-end",
+                        help="Explicit yfinance end date YYYY-MM-DD; requires --market-start")
     parser.add_argument("--market-days", type=int, default=365,
                         help="Days for coingecko (default 365); ignored for yfinance")
     args = parser.parse_args()
@@ -224,6 +228,13 @@ def main() -> None:
         kwargs: dict[str, Any] = {}
         if provider == "yfinance":
             kwargs["period"] = args.market_period
+            if args.market_start or args.market_end:
+                if not (args.market_start and args.market_end):
+                    print("--market-start and --market-end must be provided together",
+                          file=sys.stderr)
+                    sys.exit(2)
+                kwargs["start"] = args.market_start
+                kwargs["end"] = args.market_end
         else:
             kwargs["days"] = args.market_days
         d = fetch(provider, symbol, **kwargs)

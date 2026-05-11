@@ -154,7 +154,9 @@ def _data_card(provider: str, symbol: str, source_url: str, license_str: str,
 # ---------- provider: yfinance (stocks/ETF/indices) ----------
 
 def fetch_yfinance(symbol: str, period: str = "1y", interval: str = "1d",
-                   ttl_sec: int = DEFAULT_TTL_SEC) -> dict[str, Any]:
+                   ttl_sec: int = DEFAULT_TTL_SEC,
+                   start: str | None = None,
+                   end: str | None = None) -> dict[str, Any]:
     """Fetch daily OHLCV via yfinance.
 
     symbol: e.g. "SPY", "QQQ", "^GSPC", "BTC-USD".
@@ -164,7 +166,12 @@ def fetch_yfinance(symbol: str, period: str = "1y", interval: str = "1d",
     yfinance gestisce crumb cookie + scrape Yahoo internamente. Output
     pandas DataFrame; convertiamo in numpy/list per uscire.
     """
-    cache_p = _cache_path("yfinance", symbol, period, "now", interval)
+    if (start is None) ^ (end is None):
+        raise ValueError("yfinance explicit window requires both start and end")
+
+    cache_start = start or period
+    cache_end = end or "now"
+    cache_p = _cache_path("yfinance", symbol, cache_start, cache_end, interval)
     cached = _cache_load(cache_p, ttl_sec)
     if cached is not None:
         return _arrayify(cached)
@@ -173,8 +180,18 @@ def fetch_yfinance(symbol: str, period: str = "1y", interval: str = "1d",
     import yfinance as yf  # type: ignore[import-not-found]
 
     ticker = yf.Ticker(symbol)
-    df = ticker.history(period=period, interval=interval, auto_adjust=True)
+    if start and end:
+        df = ticker.history(start=start, end=end, interval=interval, auto_adjust=True)
+        source_url = (
+            f"yfinance://Ticker({symbol}).history(start={start}, "
+            f"end={end}, interval={interval})"
+        )
+    else:
+        df = ticker.history(period=period, interval=interval, auto_adjust=True)
+        source_url = f"yfinance://Ticker({symbol}).history(period={period}, interval={interval})"
     if df is None or df.empty:
+        if start and end:
+            raise RuntimeError(f"yfinance empty result for {symbol} start={start} end={end}")
         raise RuntimeError(f"yfinance empty result for {symbol} period={period}")
 
     dates = [d.strftime("%Y-%m-%d") for d in df.index.to_pydatetime()]
@@ -197,7 +214,7 @@ def fetch_yfinance(symbol: str, period: str = "1y", interval: str = "1d",
         "data_card": _data_card(
             provider="yfinance",
             symbol=symbol,
-            source_url=f"yfinance://Ticker({symbol}).history(period={period}, interval={interval})",
+            source_url=source_url,
             license_str="Yahoo Finance terms — research/personal use; verify for redistribution",
             dates=dates,
             frequency="daily" if interval == "1d" else interval,
@@ -294,7 +311,9 @@ def fetch(provider: str, symbol: str, **kwargs: Any) -> dict[str, Any]:
         period = kwargs.get("period", "1y")
         interval = kwargs.get("interval", "1d")
         ttl = int(kwargs.get("ttl_sec", DEFAULT_TTL_SEC))
-        return fetch_yfinance(symbol, period, interval, ttl)
+        start = kwargs.get("start")
+        end = kwargs.get("end")
+        return fetch_yfinance(symbol, period, interval, ttl, start=start, end=end)
     if provider == "coingecko":
         days = int(kwargs.get("days", 365))
         ttl = int(kwargs.get("ttl_sec", DEFAULT_TTL_SEC))
@@ -329,6 +348,8 @@ def main() -> int:
                     help="SPY/QQQ/^GSPC for yfinance; bitcoin/ethereum for coingecko")
     ap.add_argument("--period", default="1y",
                     help="yfinance period: 1mo/3mo/6mo/1y/2y/5y/10y/max (yfinance only)")
+    ap.add_argument("--start", help="yfinance explicit start date YYYY-MM-DD")
+    ap.add_argument("--end", help="yfinance explicit end date YYYY-MM-DD")
     ap.add_argument("--interval", default="1d",
                     help="yfinance interval: 1d/1wk/1mo/1h (yfinance only)")
     ap.add_argument("--days", type=int, default=365, help="coingecko only")
@@ -340,6 +361,9 @@ def main() -> int:
     if args.provider == "yfinance":
         kwargs["period"] = args.period
         kwargs["interval"] = args.interval
+        if args.start or args.end:
+            kwargs["start"] = args.start
+            kwargs["end"] = args.end
     else:
         kwargs["days"] = args.days
 
