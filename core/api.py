@@ -17,6 +17,7 @@ Endpoints:
   POST /api/domains/{d}/run                  # async cycle, returns cycle_id
   WS   /api/cycles/{cycle_id}/log            # live log stream
   POST /api/domains/{d}/chat                 # chat agent (single-shot or streaming)
+  POST /api/domains/{d}/contributions        # public sanitized intake + preport
   POST /api/domains/{d}/inject_tension       # gated side-effect
 
 Frontend (static HTML/JS) served from /static and /.
@@ -86,6 +87,7 @@ app = FastAPI(
 # the log file. Phase 6 v2 may move this to Redis for multi-process.
 
 _CYCLES: dict[str, dict[str, Any]] = {}
+_CONTRIBUTION_RATE: dict[str, list[float]] = {}
 
 
 def _start_cycle(domain: str, direction_override: str | None = None) -> str:
@@ -173,6 +175,20 @@ class InjectTensionRequest(BaseModel):
     nota: str = ""
 
 
+class ContributionRequest(BaseModel):
+    message: str
+    proposed_domain: str | None = None
+    public_data_source: str | None = None
+    hypothesis: str | None = None
+    falsification_test: str | None = None
+    constraints: str | None = None
+    expected_value: str | None = None
+    contact_preference: str = "none"
+    contact: str | None = None
+    context_tab: str | None = None
+    context_view: dict[str, Any] | None = None
+
+
 # ─── Auth (opt-in stub — Phase 6 v2 implements magic-link) ─────────
 
 
@@ -185,7 +201,11 @@ async def _check_auth(request: Request) -> None:
     """
     if not settings.auth_enabled:
         return
-    if settings.demo_mode and (request.method == "GET" or request.url.path.endswith("/chat")):
+    if settings.demo_mode and (
+        request.method == "GET"
+        or request.url.path.endswith("/chat")
+        or request.url.path.endswith("/contributions")
+    ):
         return  # demo: read-only access without auth, including chat
     raise HTTPException(503, "Auth enabled but not yet implemented (Phase 6 v2). "
                              "Set DASHBOARD_AUTH=disabled and bind to 127.0.0.1.")
@@ -2761,6 +2781,70 @@ async def chat_endpoint(domain: str, body: ChatRequest, request: Request) -> dic
     }
 
 
+# ─── Contribution intake (public registry + preport) ───────────────
+
+
+@app.post("/api/domains/{domain}/contributions")
+async def submit_contribution(
+    domain: str,
+    body: ContributionRequest,
+    request: Request,
+) -> dict[str, Any]:
+    """Collect a visitor improvement proposal without touching seed/cycles.
+
+    This endpoint is intentionally allowed in public demo mode, but its only
+    side effect is an append-only, sanitized registry under ignored runtime
+    data. Promotion into the Lab remains an operator action.
+    """
+    await _check_auth(request)
+    _validate_domain(domain)
+    _check_contribution_rate(request)
+
+    now = datetime.now(timezone.utc).isoformat()
+    contribution_id = f"contrib_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}"
+    record = {
+        "id": contribution_id,
+        "created_at": now,
+        "domain": domain,
+        "source_type": "visitor",
+        "message": _clean_public_text(body.message, 4000),
+        "proposed_domain": _clean_public_text(body.proposed_domain, 120),
+        "public_data_source": _clean_public_text(body.public_data_source, 600),
+        "hypothesis": _clean_public_text(body.hypothesis, 1000),
+        "falsification_test": _clean_public_text(body.falsification_test, 1000),
+        "constraints": _clean_public_text(body.constraints, 1000),
+        "expected_value": _clean_public_text(body.expected_value, 800),
+        "contact_preference": _normalize_contact_preference(body.contact_preference),
+        "contact": _clean_contact(body.contact, body.contact_preference),
+        "context_tab": _clean_public_text(body.context_tab, 60),
+        "context_view": _sanitize_context_view(body.context_view),
+        "operator_note": "",
+    }
+    preport = _score_contribution(record)
+    record.update({
+        "noise_score": preport["noise_score"],
+        "signal_score": preport["signal_score"],
+        "status": preport["status"],
+    })
+
+    _write_contribution(domain, record, preport)
+    return {
+        "ok": True,
+        "id": contribution_id,
+        "status": record["status"],
+        "verdict": preport["verdict"],
+        "signal_score": preport["signal_score"],
+        "noise_score": preport["noise_score"],
+        "missing_fields": preport["missing_fields"],
+        "next_question": preport["next_question"],
+        "operator_contact_hint": (
+            "L'operatore puo' ricevere notifiche Telegram dalla chat THIA e "
+            "intervenire quando disponibile. Non usare questo canale per segreti "
+            "o dati sensibili; non e' una presenza garantita in tempo reale."
+        ),
+    }
+
+
 # ─── Chat tools (Phase 6 v5) ───────────────────────────────────────
 
 
@@ -3132,6 +3216,269 @@ mount_static()
 def _validate_domain(domain: str) -> None:
     if domain not in cfg.list_domains():
         raise HTTPException(404, f"domain '{domain}' not found")
+
+
+def _client_key(request: Request) -> str:
+    forwarded = request.headers.get("x-forwarded-for", "")
+    if forwarded:
+        return forwarded.split(",", 1)[0].strip()[:80]
+    if request.client:
+        return request.client.host[:80]
+    return "unknown"
+
+
+def _check_contribution_rate(request: Request) -> None:
+    """Small in-process rate limit for public contribution intake."""
+    now = time.time()
+    key = _client_key(request)
+    window_seconds = 600
+    max_hits = 5
+    bucket = [ts for ts in _CONTRIBUTION_RATE.get(key, []) if now - ts < window_seconds]
+    if len(bucket) >= max_hits:
+        raise HTTPException(429, "Too many contribution attempts; retry later.")
+    bucket.append(now)
+    _CONTRIBUTION_RATE[key] = bucket
+
+
+def _clean_public_text(value: Any, limit: int) -> str:
+    if value is None:
+        return ""
+    text = str(value)
+    text = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]", " ", text)
+    text = _redact_sensitive_text(text)
+    text = re.sub(r"[ \t]+", " ", text)
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    return text.strip()[:limit]
+
+
+def _redact_sensitive_text(text: str) -> str:
+    secret_assignment = re.compile(
+        r"(?i)\b(api[_ -]?key|apikey|password|passwd|secret|token|cookie|private[_ -]?key)\b\s*[:=]\s*[^\s,;]+"
+    )
+    text = secret_assignment.sub(lambda m: f"{m.group(1)}=[REDACTED]", text)
+    text = re.sub(r"\b[A-Za-z0-9_\-]{32,}\b", "[REDACTED_TOKEN]", text)
+    return text
+
+
+def _normalize_contact_preference(value: Any) -> str:
+    allowed = {
+        "none",
+        "email_requested",
+        "newsletter_requested",
+        "telegram_operator",
+        "follow_up_requested",
+    }
+    clean = _clean_public_text(value, 80).lower()
+    return clean if clean in allowed else "none"
+
+
+def _clean_contact(value: Any, preference: Any) -> str:
+    pref = _normalize_contact_preference(preference)
+    if pref == "none":
+        return ""
+    contact = _clean_public_text(value, 240)
+    if not contact:
+        return ""
+    if pref in {"email_requested", "newsletter_requested", "follow_up_requested"}:
+        if not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", contact):
+            return ""
+    return contact
+
+
+def _sanitize_context_view(view: dict[str, Any] | None) -> dict[str, Any]:
+    if not isinstance(view, dict):
+        return {}
+    out: dict[str, Any] = {}
+    for key in ("tab", "domain", "active_heading"):
+        if key in view:
+            out[key] = _clean_public_text(view.get(key), 160)
+    for key in ("scroll_y", "viewport_w", "viewport_h"):
+        value = view.get(key)
+        if isinstance(value, (int, float)):
+            out[key] = value
+    visible = view.get("visible_sections")
+    if isinstance(visible, list):
+        out["visible_sections"] = []
+        for item in visible[:6]:
+            if not isinstance(item, dict):
+                continue
+            clean_item: dict[str, Any] = {}
+            if item.get("id"):
+                clean_item["id"] = _clean_public_text(item.get("id"), 120)
+            if item.get("label"):
+                clean_item["label"] = _clean_public_text(item.get("label"), 180)
+            if isinstance(item.get("ratio"), (int, float)):
+                clean_item["ratio"] = item.get("ratio")
+            out["visible_sections"].append(clean_item)
+    return out
+
+
+def _score_contribution(record: dict[str, Any]) -> dict[str, Any]:
+    required = [
+        "public_data_source",
+        "hypothesis",
+        "falsification_test",
+        "constraints",
+        "expected_value",
+    ]
+    present = [
+        field for field in required
+        if len(str(record.get(field) or "").strip()) >= 20
+    ]
+    missing = [field for field in required if field not in present]
+    message = str(record.get("message") or "")
+    proposed_domain = str(record.get("proposed_domain") or "")
+    if len(proposed_domain) >= 3:
+        present.append("proposed_domain")
+    else:
+        missing.append("proposed_domain")
+
+    combined = " ".join(str(record.get(k) or "") for k in [
+        "message",
+        "proposed_domain",
+        "public_data_source",
+        "hypothesis",
+        "falsification_test",
+        "constraints",
+        "expected_value",
+    ]).lower()
+    unsafe_terms = (
+        "password", "api key", "apikey", "secret", "token", "cookie",
+        "private key", "credenziale", "cartella clinica", "diagnosi medica",
+        "consiglio medico", "consiglio legale", "trading signal",
+        "segnale trading", "buy signal", "sell signal",
+    )
+    generic_terms = (
+        "migliorare tutto", "fare soldi", "profitto sicuro", "rendilo migliore",
+        "non so", "boh", "qualcosa di bello",
+    )
+    unsafe_hits = [term for term in unsafe_terms if term in combined]
+    generic_hits = [term for term in generic_terms if term in combined]
+
+    signal_score = min(1.0, len(set(present)) / 6)
+    noise_score = 0.0
+    if len(message) < 40:
+        noise_score += 0.25
+    if generic_hits:
+        noise_score += 0.25
+    if unsafe_hits:
+        noise_score += 0.65
+    if not record.get("public_data_source"):
+        noise_score += 0.15
+    noise_score = min(1.0, noise_score)
+
+    if unsafe_hits:
+        verdict = "REJECT_NOISE"
+        status = "rejected"
+        next_question = (
+            "Riformula senza segreti, dati privati o richieste medico-legali/"
+            "finanziarie operative; usa solo fonti pubbliche verificabili."
+        )
+    elif signal_score >= 0.67 and noise_score < 0.5:
+        verdict = "ACCEPT_CANDIDATE"
+        status = "preported"
+        next_question = ""
+    elif signal_score >= 0.34:
+        verdict = "NEEDS_CLARIFICATION"
+        status = "needs_clarification"
+        next_question = _next_missing_question(missing)
+    else:
+        verdict = "REJECT_NOISE" if noise_score >= 0.5 else "NEEDS_CLARIFICATION"
+        status = "rejected" if verdict == "REJECT_NOISE" else "needs_clarification"
+        next_question = _next_missing_question(missing)
+
+    return {
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "verdict": verdict,
+        "status": status,
+        "signal_score": round(signal_score, 2),
+        "noise_score": round(noise_score, 2),
+        "missing_fields": missing,
+        "unsafe_hits": unsafe_hits,
+        "generic_hits": generic_hits,
+        "next_question": next_question,
+    }
+
+
+def _next_missing_question(missing: list[str]) -> str:
+    questions = {
+        "proposed_domain": "Quale dominio preciso vuoi aprire o migliorare?",
+        "public_data_source": "Quale fonte pubblica e verificabile dovrebbe leggere il Lab?",
+        "hypothesis": "Quale ipotesi dovrebbe testare il Lab rispetto a una baseline semplice?",
+        "falsification_test": "Quale risultato dovrebbe farci dichiarare che la proposta non funziona?",
+        "constraints": "Quali vincoli legali, privacy, costo o interpretazione dobbiamo rispettare?",
+        "expected_value": "Quale valore atteso produce: ricerca, report, prodotto, supporto o nuovo dominio?",
+    }
+    for field in missing:
+        if field in questions:
+            return questions[field]
+    return "Aggiungi una fonte pubblica, una ipotesi e un criterio di falsificazione."
+
+
+def _write_contribution(domain: str, record: dict[str, Any], preport: dict[str, Any]) -> None:
+    base = paths.domain_data_dir(domain) / "contributions"
+    preports = base / "preports"
+    preports.mkdir(parents=True, exist_ok=True)
+    registry = base / "registry.jsonl"
+    with registry.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(record, ensure_ascii=False) + "\n")
+    stem = record["id"]
+    (preports / f"{stem}.json").write_text(
+        json.dumps({"record": record, "preport": preport}, indent=2, ensure_ascii=False),
+        encoding="utf-8",
+    )
+    (preports / f"{stem}.md").write_text(
+        _render_contribution_preport(record, preport),
+        encoding="utf-8",
+    )
+
+
+def _render_contribution_preport(record: dict[str, Any], preport: dict[str, Any]) -> str:
+    fields = [
+        ("Domain", record.get("domain")),
+        ("Proposed Domain", record.get("proposed_domain")),
+        ("Status", record.get("status")),
+        ("Verdict", preport.get("verdict")),
+        ("Signal Score", preport.get("signal_score")),
+        ("Noise Score", preport.get("noise_score")),
+        ("Context Tab", record.get("context_tab")),
+        ("Contact Preference", record.get("contact_preference")),
+    ]
+    lines = [
+        f"# Contribution Preport — {record.get('id')}",
+        "",
+        f"Created: {record.get('created_at')}",
+        "",
+        "## Summary",
+    ]
+    lines.extend(
+        f"- {label}: {value if value not in (None, '') else '-'}"
+        for label, value in fields
+    )
+    lines.extend([
+        "",
+        "## Proposal",
+        record.get("message") or "-",
+        "",
+        "## Normalized Fields",
+        f"- Public data source: {record.get('public_data_source') or '-'}",
+        f"- Hypothesis: {record.get('hypothesis') or '-'}",
+        f"- Falsification test: {record.get('falsification_test') or '-'}",
+        f"- Constraints: {record.get('constraints') or '-'}",
+        f"- Expected value: {record.get('expected_value') or '-'}",
+        "",
+        "## Pre-report",
+        f"- Missing fields: {', '.join(preport.get('missing_fields') or []) or '-'}",
+        f"- Unsafe hits: {', '.join(preport.get('unsafe_hits') or []) or '-'}",
+        f"- Generic hits: {', '.join(preport.get('generic_hits') or []) or '-'}",
+        f"- Next question: {preport.get('next_question') or '-'}",
+        "",
+        "## Boundary",
+        "This preport does not modify seed, run cycles, schedule email, or promote a domain.",
+        "Operator review is required before any Lab contamination.",
+        "",
+    ])
+    return "\n".join(lines)
 
 
 def _agent_report_files(reports_dir: Path) -> list[Path]:

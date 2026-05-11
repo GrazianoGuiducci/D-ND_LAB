@@ -1,6 +1,6 @@
 # Contribution Registry And Pre-report
 
-Status: design note for public Lab improvement intake
+Status: implemented first ring for public Lab improvement intake
 Date: 2026-05-11
 
 ## Purpose
@@ -67,9 +67,14 @@ If the visitor asks to contribute, explain the flow:
 ```text
 I can turn your idea into a candidate improvement spec.
 Useful specs include: domain, public source/data, hypothesis, falsification
-test, constraints, and expected value. In this public demo I do not save,
-run cycles, or send email automatically; concrete specs go to operator review.
+test, constraints, and expected value. In this public demo I do not save Lab
+changes, run cycles, or send email automatically; concrete specs go to operator
+review.
 ```
+
+The public demo can persist only a sanitized contribution/preport record under
+ignored runtime data. This is not Lab contamination yet: it does not alter seed,
+does not run a cycle, does not schedule mail, and does not promote a new domain.
 
 If the visitor does not contribute, the assistant should help them understand
 recent results and the way the Lab works:
@@ -80,10 +85,50 @@ It learns by cycles, adjusts when findings fail, and can be redirected toward
 new horizons when the operator chooses a new direction.
 ```
 
+## Fast Operator Contact
+
+THIA Assistant can notify the operator through Telegram when activity happens
+in site chat, and the operator may join the conversation with the visitor from
+the page context. This can be described as a fast human connection path, with
+two boundaries:
+
+- it is availability-based, not a guaranteed real-time support promise;
+- visitors must not send secrets, credentials, private datasets, or sensitive
+  personal material through this path.
+
+## Implemented Endpoint
+
+```text
+POST /api/domains/{domain}/contributions
+```
+
+Payload fields:
+
+- `message`
+- `proposed_domain`
+- `public_data_source`
+- `hypothesis`
+- `falsification_test`
+- `constraints`
+- `expected_value`
+- `contact_preference`: none / email_requested / newsletter_requested /
+  telegram_operator / follow_up_requested
+- `contact`
+- `context_tab`
+- `context_view`
+
+The endpoint rate-limits public submissions, redacts common secret patterns,
+sanitizes text, writes an
+append-only `registry.jsonl`, and emits Markdown + JSON preports under:
+
+```text
+data/<domain>/contributions/
+```
+
 ## Next Implementation Ring
 
-1. Add an append-only JSONL registry under ignored runtime data.
-2. Add a public read-only/sanitizing intake endpoint with rate limiting.
-3. Add a pre-report generator that writes Markdown + JSON.
-4. Add an operator-only promotion path from accepted preports to seed tension
+1. Connect the Lab Assistant UI to the endpoint behind an explicit visitor
+   confirmation such as "Registra come proposta".
+2. Add an operator-only review view for pending preports.
+3. Add an operator-only promotion path from accepted preports to seed tension
    or new-domain draft.
