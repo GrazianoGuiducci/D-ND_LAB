@@ -244,10 +244,7 @@ def _call_thia_chat_fallback(
                 "non attivo email automatiche."
             ),
             "session_id": body.session_id or f"lab_{uuid.uuid4().hex[:12]}",
-            "tool_trace": [
-                {"name": "thia_public_fallback", "args": {"status": "unavailable", "reason": reason[:180]}},
-                {"name": "local_spec_collector", "args": {"mode": "read_only_demo"}},
-            ],
+            "tool_trace": [],
             "pending_actions": [],
             "usage": {},
         }
@@ -306,7 +303,7 @@ def _call_thia_chat_fallback(
     return {
         "reply": reply,
         "session_id": payload["sessionId"],
-        "tool_trace": [{"name": "thia_public_fallback", "args": {"provider": parsed.get("provider")}}],
+        "tool_trace": [],
         "pending_actions": [],
         "usage": {},
     }
@@ -2757,7 +2754,7 @@ async def chat_endpoint(domain: str, body: ChatRequest, request: Request) -> dic
     return {
         "session_id": body.session_id or uuid.uuid4().hex[:12],
         "reply": final_text,
-        "tool_trace": tool_trace,
+        "tool_trace": [] if settings.demo_mode else tool_trace,
         "pending_actions": pending_actions,
         "usage": cumulative_usage,
         "model": config.model,
