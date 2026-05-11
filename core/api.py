@@ -10,6 +10,7 @@ Endpoints:
   GET  /api/domains/{d}/seed
   GET  /api/domains/{d}/reports
   GET  /api/domains/{d}/reports/{filename}
+  GET  /api/domains/{d}/latest_diagnostic
   GET  /api/domains/{d}/trajectory
   GET  /api/domains/{d}/cost
   GET  /api/domains/{d}/cimitero
@@ -1819,6 +1820,45 @@ async def get_lab_graph(domain: str, request: Request) -> dict[str, Any]:
     if not p.exists():
         return {"graph": {"nodes": [], "edges": []}, "stats": {}, "domain": domain}
     return _read_json_safe(p, {"graph": {"nodes": [], "edges": []}, "stats": {}, "domain": domain})
+
+
+@app.get("/api/domains/{domain}/latest_diagnostic")
+async def get_latest_diagnostic(domain: str, request: Request) -> dict[str, Any]:
+    """Latest value-facing diagnostic artifact for the domain.
+
+    Diagnostics are runtime artifacts under data/<domain>/diagnostics/. They are
+    not agent reports and should not be forced into the graph: the dashboard
+    Campo tab uses them as first-perception evidence.
+    """
+    await _check_auth(request)
+    _validate_domain(domain)
+    diagnostics_dir = paths.domain_data_dir(domain) / "diagnostics"
+    if not diagnostics_dir.exists():
+        return {"available": False, "domain": domain}
+
+    json_files = sorted(
+        diagnostics_dir.glob("*diagnostic*.json"),
+        key=lambda p: p.stat().st_mtime,
+        reverse=True,
+    )
+    if not json_files:
+        return {"available": False, "domain": domain}
+
+    fp = json_files[0]
+    payload = _read_json_safe(fp, {})
+    md_path = fp.with_suffix(".md")
+    excerpt = ""
+    if md_path.exists():
+        excerpt = md_path.read_text(errors="replace")[:4000]
+
+    return {
+        "available": True,
+        "domain": domain,
+        "filename": fp.name,
+        "mtime": datetime.fromtimestamp(fp.stat().st_mtime, tz=timezone.utc).isoformat(),
+        "payload": payload,
+        "markdown_excerpt": excerpt,
+    }
 
 
 @app.get("/api/domains/{domain}/cimitero")

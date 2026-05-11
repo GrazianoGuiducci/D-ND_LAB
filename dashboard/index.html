@@ -1075,6 +1075,37 @@
                 </div>
               </section>
             </div>
+
+            <template x-if="latestDiagnostic.available">
+              <section class="mt-4 border border-cyan-900/60 rounded-md p-4 bg-cyan-950/10">
+                <div class="flex items-start justify-between gap-3 flex-wrap mb-3">
+                  <div>
+                    <h3 class="text-sm font-medium text-cyan-200">Diagnostica ricorsiva</h3>
+                    <p class="text-xs text-slate-400 mt-1">Ultimo artifact value-facing rientrato nel Campo.</p>
+                  </div>
+                  <span class="text-[11px] font-mono text-slate-400" x-text="latestDiagnostic.filename"></span>
+                </div>
+                <div class="grid md:grid-cols-4 gap-3">
+                  <div class="bg-slate-950/50 border border-slate-800 rounded p-3">
+                    <div class="text-[10px] uppercase tracking-wider text-slate-400">Maturità</div>
+                    <div class="text-lg font-mono text-cyan-300 mt-1" x-text="latestDiagnostic.payload?.maturity?.level || 'n/a'"></div>
+                  </div>
+                  <div class="bg-slate-950/50 border border-slate-800 rounded p-3">
+                    <div class="text-[10px] uppercase tracking-wider text-slate-400">DND_DELTA</div>
+                    <div class="text-lg font-mono text-green-300 mt-1" x-text="latestDiagnostic.payload?.maturity?.dnd_delta_count ?? 0"></div>
+                  </div>
+                  <div class="bg-slate-950/50 border border-slate-800 rounded p-3">
+                    <div class="text-[10px] uppercase tracking-wider text-slate-400">NO_DELTA</div>
+                    <div class="text-lg font-mono text-amber-300 mt-1" x-text="latestDiagnostic.payload?.maturity?.no_delta_count ?? 0"></div>
+                  </div>
+                  <div class="bg-slate-950/50 border border-slate-800 rounded p-3">
+                    <div class="text-[10px] uppercase tracking-wider text-slate-400">Claim pubblico</div>
+                    <div class="text-lg font-mono mt-1" :class="latestDiagnostic.payload?.boundary?.public_claim ? 'text-rose-300' : 'text-slate-300'" x-text="latestDiagnostic.payload?.boundary?.public_claim ? 'true' : 'false'"></div>
+                  </div>
+                </div>
+                <p class="text-sm text-slate-300 mt-3" x-text="latestDiagnostic.payload?.maturity?.reason || ''"></p>
+              </section>
+            </template>
           </div>
         </div>
 
@@ -2433,6 +2464,7 @@
       // Dinamica — cycle traces (sequenza movements + duration + status)
       cycleTraces: [],         // riassunti dei trace
       activeCycleTrace: null,  // dettaglio del cycle selezionato
+      latestDiagnostic: { available: false },
 
       // Graph
       cy: null,                 // Cytoscape instance
@@ -2764,6 +2796,7 @@
           this.reloadCorrectorSummary(),                       // v4.9 — bias_corrector stats
           this.reloadSsp(),                                    // SSP scoperte/applicazioni/prodotti (filesystem)
           this.reloadCycleTraces(),                            // Dinamica — cycle_trace_*.json (timeline)
+          this.reloadLatestDiagnostic(),                       // Campo — artifact value-facing piu' recente
         ]);
         // wait next tick so the #graph-viz container is in the DOM (x-show=true)
         this.$nextTick(() => this.renderGraph());
@@ -2811,6 +2844,17 @@
           console.error('graph load failed', e);
           this.graphData = { graph: { nodes: [], edges: [] }, stats: {} };
           this.graphStats = {};
+        }
+      },
+
+      async reloadLatestDiagnostic() {
+        if (!this.activeDomain) return;
+        try {
+          const r = await fetch(`/api/domains/${this.activeDomain}/latest_diagnostic`);
+          this.latestDiagnostic = r.ok ? await r.json() : { available: false };
+        } catch (e) {
+          console.error('latest diagnostic load failed', e);
+          this.latestDiagnostic = { available: false };
         }
       },
 
