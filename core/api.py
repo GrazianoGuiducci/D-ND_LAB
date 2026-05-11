@@ -233,6 +233,12 @@ def _call_thia_chat_fallback(
                 "Se manca uno di questi punti, la proposta resta feedback debole; "
                 "se ci sono fonte, ipotesi e falsificatore, diventa candidata per "
                 "revisione operatore.\n\n"
+                "Se vuoi contribuire, parti da questi elementi e io li trasformo "
+                "in una scheda ordinata. Altrimenti posso aiutarti a leggere i "
+                "risultati recenti, capire come funziona il Lab e trovare insight "
+                "per direzionarlo o affinarlo. I Lab imparano, si aggiustano ed "
+                "evolvono per cicli; quando serve, vengono reindirizzati verso "
+                "nuovi orizzonti.\n\n"
                 "Nota operativa: in questa dashboard pubblica posso raccogliere e "
                 "ordinare la proposta, ma non salvo modifiche, non avvio cicli e "
                 "non attivo email automatiche."
@@ -2624,7 +2630,10 @@ async def chat_endpoint(domain: str, body: ChatRequest, request: Request) -> dic
             "The dashboard is in public demo mode. Chat is allowed, but all write "
             "operations are disabled. Do not call proposal tools and do not say "
             "that a seed, cycle, email automation, or persisted queue was updated. "
-            "You may summarize a candidate improvement spec for later operator review.\n"
+            "You may summarize a candidate improvement spec for later operator "
+            "review. If the visitor is not contributing, help them understand "
+            "recent results and how the Lab learns, adjusts, evolves by cycles, "
+            "and can be redirected toward new horizons when desired.\n"
         )
 
     user_messages = [{"role": m.role, "content": m.content} for m in body.messages]

@@ -642,6 +642,8 @@
     .chat-fab .fab-bubble { width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%); box-shadow: 0 8px 24px rgba(124,58,237,.45); display: flex; align-items: center; justify-content: center; cursor: pointer; border: 0; color: white; font-size: 22px; transition: transform 0.15s; }
     .chat-fab .fab-bubble:hover { transform: scale(1.05); }
     .chat-fab .fab-bubble .badge-count { position: absolute; top: -4px; right: -4px; background: #f472b6; color: #18181b; font-size: 10px; font-weight: 700; border-radius: 999px; padding: 1px 6px; }
+    .chat-closed-hint { position: fixed; right: 84px; bottom: 100px; max-width: 260px; padding: 9px 11px; border-radius: 10px; border: 1px solid rgba(167,139,250,.35); background: rgba(15,23,42,.94); color: #d8dbe7; font-size: 12px; line-height: 1.35; box-shadow: 0 12px 32px rgba(0,0,0,.35); cursor: pointer; }
+    .chat-closed-hint:hover { border-color: rgba(167,139,250,.7); color: #f1f5f9; }
     .chat-panel { position: relative; width: 100%; height: 100%; background: rgb(15 23 42); border: 1px solid rgb(51 65 85); border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,.5); display: flex; flex-direction: column; overflow: hidden; }
     .chat-panel-header { background: linear-gradient(180deg, rgba(167,139,250,.12) 0%, rgba(15,23,42,1) 100%); padding: 12px 14px; border-bottom: 1px solid rgb(30 41 59); display: flex; align-items: center; justify-content: space-between; cursor: move; user-select: none; }
     .chat-panel-header .title { font-size: 14px; font-weight: 600; color: #c4b5fd; display: flex; align-items: center; gap: 8px; }
@@ -657,6 +659,7 @@
     .quick-action-btn:hover { background: rgba(167,139,250,.22); border-color: rgba(167,139,250,.5); }
     @media (max-width: 640px) {
       .chat-fab.open { bottom: 18px !important; right: 18px !important; left: auto !important; top: auto !important; width: calc(100vw - 36px) !important; height: calc(100vh - 36px) !important; }
+      .chat-closed-hint { display: none; }
       .chat-panel-header { cursor: default; }
       .chat-resize-grip { display: none; }
     }
@@ -2204,6 +2207,7 @@
         </template>
       </span>
     </button>
+    <div x-show="!chatOpen && chatMessages.length === 0" @click="openChatPanel(); useQuickAction(closedChatHint())" class="chat-closed-hint" x-text="closedChatHint()"></div>
 
     <!-- Open state: panel -->
     <div x-show="chatOpen" class="chat-panel">
@@ -2218,7 +2222,10 @@
             </span>
           </template>
         </div>
-        <button @pointerdown.stop @click="chatOpen = false" title="Chiudi">×</button>
+        <div class="flex items-center gap-1">
+          <button @pointerdown.stop @click="resetChat()" title="Reset chat">↻</button>
+          <button @pointerdown.stop @click="chatOpen = false" title="Chiudi">×</button>
+        </div>
       </div>
 
       <!-- Quick actions — visibili solo quando la chat e' vuota -->
@@ -2238,7 +2245,7 @@
             <div :class="m.role === 'user' ? 'bg-purple-900/30 border-purple-800/60' : 'bg-slate-800/50 border-slate-700'"
                  class="border rounded-lg px-3 py-2 markdown text-sm" x-html="renderMarkdown(m.content)"></div>
             <!-- v5 — tool trace (collapsed, mostra cosa il chat agent ha letto) -->
-            <template x-if="m.tool_trace && m.tool_trace.length > 0">
+            <template x-if="m.tool_trace && m.tool_trace.length > 0 && !health.demo_mode">
               <details class="mt-1 text-[10px] text-slate-300">
                 <summary class="cursor-pointer hover:text-slate-300">🔧 <span x-text="`${m.tool_trace.length} tool call`"></span></summary>
                 <div class="mt-1 pl-3 space-y-0.5">
@@ -2279,8 +2286,7 @@
         </template>
         <template x-if="chatMessages.length === 0 && !chatLoading">
           <div class="text-slate-300 text-xs text-center py-3 italic">
-            Il lab ha seed, last reports e cimitero in contesto.<br>
-            Puoi chiedere spiegazioni o proporre miglioramenti per il prossimo ciclo.
+            <span x-text="emptyChatHint()"></span>
           </div>
         </template>
       </div>
@@ -4340,39 +4346,80 @@
         this.chatOpen = !this.chatOpen;
       },
 
-      // v3.8 — quick actions per dominio. Restituisce 3-4 prompt suggeriti
-      // adattati al tipo di lab (physics vs editorial vs altro). Per ora
-      // hardcoded per i due domini esistenti; in futuro potrebbero leggere
-      // da domains/<d>/quick_actions.json.
+      resetChat() {
+        this.chatMessages = [];
+        this.chatInput = '';
+        this.chatSessionId = null;
+        this.chatLoading = false;
+      },
+
+      // v3.8+ — quick actions contestuali: tab corrente, nodo selezionato,
+      // dominio e punto visibile orientano l'attivazione della chat.
       quickActions() {
+        const actions = [];
+        const push = (s) => { if (s && !actions.includes(s)) actions.push(s); };
+
+        if (this.activeTab === 'info') {
+          push("Dove sono e come si legge questo Lab?");
+          push("Come posso contribuire in modo utile?");
+          push("Che specifiche servono per un nuovo dominio?");
+        } else if (this.activeTab === 'campo') {
+          push("Che cosa sta mostrando il Campo adesso?");
+          push("Quale segnale recente merita attenzione?");
+          push("Cosa manca per migliorare il prossimo ciclo?");
+        } else if (this.activeTab === 'grafo') {
+          if (this.selectedNode) push("Spiega il nodo selezionato");
+          push("Quali relazioni o vuoti vedi nel grafo?");
+          push("Quale ponte dovremmo verificare?");
+        } else if (this.activeTab === 'prodotti') {
+          push("Quali prodotti sono maturi e verificati?");
+          push("Quale applicazione ha più valore?");
+          push("Cosa serve per trasformare una scoperta in prodotto?");
+        } else if (this.activeTab === 'agente') {
+          push("Spiega l'ultimo report");
+          push("Cosa è stato falsificato?");
+          push("Qual è il prossimo passo del Lab?");
+        } else if (this.activeTab === 'incrocio') {
+          push("Che tassonomia emerge qui?");
+          push("Quale traiettoria conviene seguire?");
+        } else if (this.activeTab === 'bicono') {
+          push("Spiega il bicono della scoperta");
+          push("Quale invariante passa tra i poli?");
+        }
+
         if (this.activeDomain === 'finance') {
-          return [
-            "Ci aiuti a migliorare questo Lab?",
-            "Quali dati o controlli servono?",
-            "Come posso ricevere il report domani?",
-            "Vorrei proporre un nuovo dominio",
-          ];
+          push("Quali dati o controlli servono?");
+          push("Vorrei proporre un nuovo dominio");
+          push("Come posso ricevere il report quando disponibile?");
         }
         if (this.activeDomain === 'physics') {
-          return [
-            "Spiega l'ultimo report",
-            "Cosa c'è nel cimitero?",
-            "Quale tensione è prioritaria?",
-            "Quali ponti tra teorie esistono?",
-          ];
+          push("Cosa c'è nel cimitero?");
+          push("Quale tensione è prioritaria?");
+          push("Quali ponti tra teorie esistono?");
         }
         if (this.activeDomain === 'editorial') {
-          return [
-            "Quali pezzi sono pronti?",
-            "Cosa è stato falsificato?",
-            "Quale direzione editoriale?",
-          ];
+          push("Quali pezzi sono pronti?");
+          push("Quale direzione editoriale?");
         }
-        return [
-          "Stato del lab",
-          "Spiega l'ultimo report",
-          "Ci aiuti a migliorare questo Lab?",
-        ];
+        push("Ci aiuti a migliorare questo Lab?");
+        return actions.slice(0, 4);
+      },
+
+      closedChatHint() {
+        if (this.activeTab === 'info') return "Vuoi orientarti o proporre un miglioramento?";
+        if (this.activeTab === 'campo') return "Vuoi capire il segnale che stai vedendo?";
+        if (this.activeTab === 'grafo') return this.selectedNode ? "Vuoi spiegare questo nodo?" : "Vuoi leggere relazioni e vuoti del grafo?";
+        if (this.activeTab === 'prodotti') return "Vuoi capire quali scoperte diventano prodotti?";
+        if (this.activeTab === 'agente') return "Vuoi leggere report, falsificazioni e prossimo passo?";
+        if (this.activeTab === 'incrocio') return "Vuoi seguire la traiettoria tassonomica?";
+        return "Vuoi usare l'assistente come ingresso al Lab?";
+      },
+
+      emptyChatHint() {
+        if (this.activeTab === 'info') return "Posso orientarti nel Lab o raccogliere una specifica migliorativa.";
+        if (this.activeTab === 'campo') return "Posso spiegare la risultante, i segnali recenti e cosa servirebbe al prossimo ciclo.";
+        if (this.activeTab === 'prodotti') return "Posso distinguere scoperte, applicazioni candidate e prodotti verificati.";
+        return "Il Lab ha seed, report e cimitero in contesto: chiedi cosa stai vedendo o proponi un affinamento.";
       },
 
       useQuickAction(prompt) {

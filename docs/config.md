@@ -20,9 +20,20 @@ you with interactive prompts.
 | `LLM_API_KEY` | yes | — | Your provider's API key |
 | `LLM_MODEL` | yes | — | Model id (e.g. `deepseek/deepseek-v4-pro`) |
 | `LLM_PROVIDER` | no | `openrouter` | Label only, doesn't affect the call |
+| `LLM_PROVIDER_CHAIN` | no | `codex-cli,claude-cli,openrouter` | Provider dispatcher order. Use `openrouter` for HTTP-only or local OpenAI-compatible endpoints. |
 | `LLM_MAX_TURNS` | no | `25` | Hard cap per cycle |
 | `LLM_TIMEOUT_SECONDS` | no | `1200` | Whole-loop timeout per cycle |
 | `LLM_MAX_COST_USD` | no | unset | Optional cost cap per cycle |
+
+The default chain tries local/OAuth CLI providers before HTTP fallback:
+
+```text
+codex-cli -> claude-cli -> openrouter
+```
+
+Installations may use any OpenAI-compatible endpoint, including local LLMs via
+`LLM_BASE_URL=http://localhost:11434/v1`, but movements that require tool use
+need a CLI/runtime able to read, write, and execute in the Lab sandbox.
 
 ### Lab
 
