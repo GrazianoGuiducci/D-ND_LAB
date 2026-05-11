@@ -32,6 +32,8 @@ import re
 import subprocess
 import threading
 import time
+import urllib.error
+import urllib.request
 import uuid
 from datetime import datetime, timezone
 from html import escape as html_escape
@@ -183,16 +185,125 @@ async def _check_auth(request: Request) -> None:
     """
     if not settings.auth_enabled:
         return
-    if settings.demo_mode and request.method == "GET":
-        return  # demo: read-only access without auth
+    if settings.demo_mode and (request.method == "GET" or request.url.path.endswith("/chat")):
+        return  # demo: read-only access without auth, including chat
     raise HTTPException(503, "Auth enabled but not yet implemented (Phase 6 v2). "
                              "Set DASHBOARD_AUTH=disabled and bind to 127.0.0.1.")
 
 
-def _check_demo_writes(request: Request) -> None:
+def _check_demo_writes(request: Request, *, allow_chat: bool = False) -> None:
     """In demo mode, block all write operations regardless of auth."""
+    if settings.demo_mode and allow_chat and request.url.path.endswith("/chat"):
+        return
     if settings.demo_mode and request.method != "GET":
         raise HTTPException(403, "Demo mode is read-only.")
+
+
+def _call_thia_chat_fallback(
+    *,
+    domain: str,
+    body: ChatRequest,
+    system_prompt: str,
+) -> dict[str, Any]:
+    """Read-only public THIA fallback for demo chat when no local LLM is configured."""
+    last_user = ""
+    for msg in reversed(body.messages):
+        if msg.role == "user":
+            last_user = msg.content
+            break
+    if not last_user:
+        raise HTTPException(400, "No user message provided.")
+
+    def local_spec_collector(reason: str) -> dict[str, Any]:
+        return {
+            "reply": (
+                "Posso raccogliere la proposta come specifica migliorativa "
+                "candidata per il Lab.\n\n"
+                "Per separare segnale da rumore servono questi elementi:\n\n"
+                "1. Dominio preciso: quale campo vuoi aprire o migliorare.\n"
+                "2. Fonte dati: pubblica, verificabile, con formato e periodo.\n"
+                "3. Ipotesi: cosa dovrebbe distinguere il Lab che una baseline "
+                "naive non vede.\n"
+                "4. Test di falsificazione: quando dovremmo dichiarare che non "
+                "funziona.\n"
+                "5. Vincoli: dati sensibili da non usare, limiti legali, rischio "
+                "di interpretazione, costo computazionale.\n"
+                "6. Valore atteso: ricerca, prodotto, report, supporto tecnico o "
+                "nuovo dominio installabile.\n\n"
+                "Se manca uno di questi punti, la proposta resta feedback debole; "
+                "se ci sono fonte, ipotesi e falsificatore, diventa candidata per "
+                "revisione operatore.\n\n"
+                "Nota operativa: in questa dashboard pubblica posso raccogliere e "
+                "ordinare la proposta, ma non salvo modifiche, non avvio cicli e "
+                "non attivo email automatiche."
+            ),
+            "session_id": body.session_id or f"lab_{uuid.uuid4().hex[:12]}",
+            "tool_trace": [
+                {"name": "thia_public_fallback", "args": {"status": "unavailable", "reason": reason[:180]}},
+                {"name": "local_spec_collector", "args": {"mode": "read_only_demo"}},
+            ],
+            "pending_actions": [],
+            "usage": {},
+        }
+
+    context = (
+        "You are THIA speaking through the D-ND_LAB dashboard as the Lab "
+        "Assistant. This is public demo mode: answer, orient, and collect "
+        "improvement specifications, but do not execute actions, do not claim "
+        "that a cycle was started, and do not promise automatic email delivery.\n\n"
+        + system_prompt[-1200:]
+    )
+    payload = {
+        "message": (
+            "[D-ND_LAB PUBLIC DEMO - READ ONLY]\n"
+            "Answer as THIA/Lab Assistant. You may orient the visitor and turn "
+            "their idea into an improvement specification. You must not say that "
+            "anything was saved, queued, injected, emailed, or scheduled for a "
+            "night cycle. Ask for missing evidence if the suggestion is vague.\n\n"
+            f"Visitor message: {last_user}"
+        ),
+        "history": [
+            {"role": m.role, "text": m.content}
+            for m in body.messages[-8:]
+            if m.role in {"user", "assistant"}
+        ],
+        "pageSlug": f"dashboard/{domain}",
+        "lang": "it",
+        "sessionId": body.session_id or f"lab_{uuid.uuid4().hex[:12]}",
+        "context": context,
+    }
+    data = json.dumps(payload).encode("utf-8")
+    req = urllib.request.Request(
+        "https://d-nd.com/thia-api/api/chat",
+        data=data,
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=8) as resp:
+            raw = resp.read().decode("utf-8")
+    except (TimeoutError, urllib.error.URLError) as e:
+        return local_spec_collector(str(e))
+
+    try:
+        parsed = json.loads(raw)
+    except json.JSONDecodeError as e:
+        raise HTTPException(502, "THIA fallback returned invalid JSON") from e
+
+    reply = parsed.get("reply") or parsed.get("message") or "(empty reply)"
+    reply += (
+        "\n\nNota operativa: in questa dashboard pubblica posso raccogliere e "
+        "ordinare la proposta, ma non salvo modifiche, non avvio cicli e non "
+        "attivo email automatiche. Le specifiche concrete restano candidate per "
+        "revisione operatore."
+    )
+    return {
+        "reply": reply,
+        "session_id": payload["sessionId"],
+        "tool_trace": [{"name": "thia_public_fallback", "args": {"provider": parsed.get("provider")}}],
+        "pending_actions": [],
+        "usage": {},
+    }
 
 
 # ─── Endpoints ──────────────────────────────────────────────────────
@@ -2375,7 +2486,7 @@ async def chat_endpoint(domain: str, body: ChatRequest, request: Request) -> dic
         descrive cosa farebbe, l'operatore conferma esplicitamente.
     """
     await _check_auth(request)
-    _check_demo_writes(request)
+    _check_demo_writes(request, allow_chat=True)
     _validate_domain(domain)
 
     from core import llm_adapter
@@ -2497,6 +2608,24 @@ async def chat_endpoint(domain: str, body: ChatRequest, request: Request) -> dic
         "when the suggestion is concrete enough to become a seed tension and the "
         "user explicitly wants to propose it.\n"
     )
+    system_prompt += (
+        "\n\n## IMPROVEMENT SIGNAL FILTER\n"
+        "When collecting suggestions from visitors, discriminate signal from "
+        "noise. Strong signal has: domain expertise, concrete data/source, "
+        "reproducible procedure, falsification criterion, expected value, and "
+        "constraints. Weak signal is generic enthusiasm, unsupported claims, "
+        "private/sensitive data dumps, trading/medical/legal requests, or demands "
+        "to execute actions immediately. For weak signal, ask one clarifying "
+        "question and keep it as non-operational feedback.\n"
+    )
+    if settings.demo_mode:
+        system_prompt += (
+            "\n\n## PUBLIC DEMO BOUNDARY\n"
+            "The dashboard is in public demo mode. Chat is allowed, but all write "
+            "operations are disabled. Do not call proposal tools and do not say "
+            "that a seed, cycle, email automation, or persisted queue was updated. "
+            "You may summarize a candidate improvement spec for later operator review.\n"
+        )
 
     user_messages = [{"role": m.role, "content": m.content} for m in body.messages]
 
@@ -2505,6 +2634,8 @@ async def chat_endpoint(domain: str, body: ChatRequest, request: Request) -> dic
     try:
         config.validate()
     except ValueError as e:
+        if settings.demo_mode:
+            return _call_thia_chat_fallback(domain=domain, body=body, system_prompt=system_prompt)
         raise HTTPException(503, f"LLM not configured: {e}")
 
     try:
@@ -2514,6 +2645,11 @@ async def chat_endpoint(domain: str, body: ChatRequest, request: Request) -> dic
 
     client = openai.OpenAI(base_url=config.base_url, api_key=config.api_key)
     schemas, fn_map, mutation_names = _chat_tools(domain)
+    if settings.demo_mode:
+        schemas = [
+            schema for schema in schemas
+            if schema.get("function", {}).get("name") not in mutation_names
+        ]
 
     messages = [{"role": "system", "content": system_prompt}, *user_messages]
     pending_actions: list[dict[str, Any]] = []
