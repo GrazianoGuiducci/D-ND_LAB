@@ -642,16 +642,23 @@
     .chat-fab .fab-bubble { width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%); box-shadow: 0 8px 24px rgba(124,58,237,.45); display: flex; align-items: center; justify-content: center; cursor: pointer; border: 0; color: white; font-size: 22px; transition: transform 0.15s; }
     .chat-fab .fab-bubble:hover { transform: scale(1.05); }
     .chat-fab .fab-bubble .badge-count { position: absolute; top: -4px; right: -4px; background: #f472b6; color: #18181b; font-size: 10px; font-weight: 700; border-radius: 999px; padding: 1px 6px; }
-    .chat-panel { width: 100%; height: 100%; background: rgb(15 23 42); border: 1px solid rgb(51 65 85); border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,.5); display: flex; flex-direction: column; overflow: hidden; }
-    .chat-panel-header { background: linear-gradient(180deg, rgba(167,139,250,.12) 0%, rgba(15,23,42,1) 100%); padding: 12px 14px; border-bottom: 1px solid rgb(30 41 59); display: flex; align-items: center; justify-content: space-between; }
+    .chat-panel { position: relative; width: 100%; height: 100%; background: rgb(15 23 42); border: 1px solid rgb(51 65 85); border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,.5); display: flex; flex-direction: column; overflow: hidden; }
+    .chat-panel-header { background: linear-gradient(180deg, rgba(167,139,250,.12) 0%, rgba(15,23,42,1) 100%); padding: 12px 14px; border-bottom: 1px solid rgb(30 41 59); display: flex; align-items: center; justify-content: space-between; cursor: move; user-select: none; }
     .chat-panel-header .title { font-size: 14px; font-weight: 600; color: #c4b5fd; display: flex; align-items: center; gap: 8px; }
     .chat-panel-header button { background: none; border: 0; color: rgb(148 163 184); cursor: pointer; padding: 4px 8px; border-radius: 4px; font-size: 18px; line-height: 1; }
     .chat-panel-header button:hover { background: rgb(30 41 59); color: #cbd5e1; }
+    .chat-resize-grip { position: absolute; right: 0; bottom: 0; width: 18px; height: 18px; cursor: nwse-resize; opacity: .55; }
+    .chat-resize-grip::before,
+    .chat-resize-grip::after { content: ''; position: absolute; right: 5px; bottom: 5px; width: 9px; height: 1px; background: rgba(196,181,253,.75); transform: rotate(-45deg); transform-origin: right center; }
+    .chat-resize-grip::after { right: 5px; bottom: 9px; width: 6px; }
+    .chat-resize-grip:hover { opacity: 1; }
     .quick-actions { padding: 12px; border-bottom: 1px solid rgb(30 41 59); display: flex; flex-wrap: wrap; gap: 6px; background: rgba(0,0,0,.18); }
     .quick-action-btn { font-size: 11px; padding: 6px 10px; border-radius: 999px; background: rgba(167,139,250,.12); color: #c4b5fd; border: 1px solid rgba(167,139,250,.25); cursor: pointer; transition: all 0.15s; }
     .quick-action-btn:hover { background: rgba(167,139,250,.22); border-color: rgba(167,139,250,.5); }
     @media (max-width: 640px) {
-      .chat-fab.open { width: calc(100vw - 36px); height: calc(100vh - 36px); }
+      .chat-fab.open { bottom: 18px !important; right: 18px !important; left: auto !important; top: auto !important; width: calc(100vw - 36px) !important; height: calc(100vh - 36px) !important; }
+      .chat-panel-header { cursor: default; }
+      .chat-resize-grip { display: none; }
     }
     @media (max-width: 1024px) {
       /* Quando la chat e' aperta su mobile, deve coprire i peek button (z 70) */
@@ -2186,10 +2193,10 @@
   </main>
 
   <!-- CHAT floating bottom-right (v3.8) -->
-  <div x-show="view === 'domain' && activeDomain" x-cloak class="chat-fab" :class="chatOpen && 'open'">
+  <div x-show="view === 'domain' && activeDomain" x-cloak class="chat-fab" :class="chatOpen && 'open'" :style="chatOpen ? chatWindowStyle() : null">
 
     <!-- Closed state: floating bubble -->
-    <button x-show="!chatOpen" @click="chatOpen = true" class="fab-bubble" title="Chat con il lab">
+    <button x-show="!chatOpen" @click="openChatPanel()" class="fab-bubble" title="Chat con il lab">
       <span style="position:relative">
         <span>◆</span>
         <template x-if="chatMessages.length > 0">
@@ -2200,18 +2207,18 @@
 
     <!-- Open state: panel -->
     <div x-show="chatOpen" class="chat-panel">
-      <div class="chat-panel-header">
+      <div class="chat-panel-header" @pointerdown="startChatDrag($event)">
         <div class="title">
           <span>◆</span>
           <span>Chat con il lab</span>
           <template x-if="selectedNode">
             <span class="selected-node-badge ml-2" style="font-size: 9px">
               <span x-text="`◉ ${(selectedNode.label || selectedNode.id || '').slice(0,18)}`"></span>
-              <button @click.stop="clearSelection()">×</button>
+              <button @pointerdown.stop @click.stop="clearSelection()">×</button>
             </span>
           </template>
         </div>
-        <button @click="chatOpen = false" title="Chiudi">×</button>
+        <button @pointerdown.stop @click="chatOpen = false" title="Chiudi">×</button>
       </div>
 
       <!-- Quick actions — visibili solo quando la chat e' vuota -->
@@ -2283,6 +2290,7 @@
         <input x-model="chatInput" :disabled="chatLoading" placeholder="Chiedi al lab…" class="flex-1 bg-slate-950 border border-slate-700 rounded px-3 py-2 text-xs focus:border-purple-500 outline-none">
         <button type="submit" :disabled="chatLoading || !chatInput.trim()" class="px-3 py-2 rounded bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-xs font-medium" data-i18n="dash.chat.send">Send</button>
       </form>
+      <div class="chat-resize-grip" @pointerdown.stop="startChatResize($event)" title="Ridimensiona"></div>
     </div>
   </div>
 
@@ -2575,6 +2583,9 @@
       chatInput: '',
       chatLoading: false,
       chatSessionId: null,
+      chatWindow: { left: null, top: null, width: 380, height: 580 },
+      chatDragging: null,
+      chatResizing: null,
 
       // Run modal
       showRunModal: false,
@@ -2661,19 +2672,37 @@
         document.addEventListener('pointermove', (e) => {
           this._onResizeMove(e);
           this._onAgentResizeMove(e);
+          this._onChatDragMove(e);
+          this._onChatResizeMove(e);
         });
         document.addEventListener('pointerup', () => {
           this._onResizeEnd();
           this._onAgentResizeEnd();
+          this._onChatDragEnd();
+          this._onChatResizeEnd();
         });
         document.addEventListener('pointercancel', () => {
           this._onResizeEnd();
           this._onAgentResizeEnd();
+          this._onChatDragEnd();
+          this._onChatResizeEnd();
         });
         // Restore agent list width
         try {
           const aw = parseInt(localStorage.getItem('dnd_agent_list_w') || '');
           if (aw && aw >= 200 && aw <= 520) this.agentListWidth = aw;
+        } catch (e) {}
+        try {
+          const savedChat = JSON.parse(localStorage.getItem('dnd_chat_window') || 'null');
+          if (savedChat) {
+            this.chatWindow = {
+              left: Number.isFinite(savedChat.left) ? savedChat.left : null,
+              top: Number.isFinite(savedChat.top) ? savedChat.top : null,
+              width: Math.max(320, Math.min(760, parseInt(savedChat.width || 380))),
+              height: Math.max(420, Math.min(820, parseInt(savedChat.height || 580))),
+            };
+            this._clampChatWindow();
+          }
         } catch (e) {}
       },
 
@@ -2791,6 +2820,95 @@
         document.body.classList.remove('resizing');
         document.querySelectorAll('.agente-resize.active').forEach(el => el.classList.remove('active'));
         try { localStorage.setItem('dnd_agent_list_w', String(this.agentListWidth)); } catch (e) {}
+      },
+
+      openChatPanel() {
+        this.chatOpen = true;
+        this.$nextTick(() => this._clampChatWindow());
+      },
+
+      chatWindowStyle() {
+        const isMobile = (window.innerWidth || 0) <= 640;
+        if (isMobile) return '';
+        this._ensureChatWindowPosition();
+        return `left: ${Math.round(this.chatWindow.left)}px; top: ${Math.round(this.chatWindow.top)}px; right: auto; bottom: auto; width: ${Math.round(this.chatWindow.width)}px; height: ${Math.round(this.chatWindow.height)}px;`;
+      },
+
+      _ensureChatWindowPosition() {
+        if (Number.isFinite(this.chatWindow.left) && Number.isFinite(this.chatWindow.top)) return;
+        const pad = 18;
+        this.chatWindow.left = Math.max(pad, (window.innerWidth || 1024) - this.chatWindow.width - pad);
+        this.chatWindow.top = Math.max(pad, (window.innerHeight || 768) - this.chatWindow.height - pad);
+      },
+
+      _clampChatWindow() {
+        const isMobile = (window.innerWidth || 0) <= 640;
+        if (isMobile) return;
+        const pad = 12;
+        const vw = window.innerWidth || 1024;
+        const vh = window.innerHeight || 768;
+        this.chatWindow.width = Math.max(320, Math.min(this.chatWindow.width || 380, Math.max(320, vw - pad * 2)));
+        this.chatWindow.height = Math.max(420, Math.min(this.chatWindow.height || 580, Math.max(420, vh - pad * 2)));
+        this._ensureChatWindowPosition();
+        this.chatWindow.left = Math.max(pad, Math.min(this.chatWindow.left, vw - this.chatWindow.width - pad));
+        this.chatWindow.top = Math.max(pad, Math.min(this.chatWindow.top, vh - this.chatWindow.height - pad));
+      },
+
+      _persistChatWindow() {
+        try { localStorage.setItem('dnd_chat_window', JSON.stringify(this.chatWindow)); } catch (e) {}
+      },
+
+      startChatDrag(ev) {
+        if ((window.innerWidth || 0) <= 640) return;
+        if (ev.target.closest('button, input, textarea, a')) return;
+        ev.preventDefault();
+        this._ensureChatWindowPosition();
+        try { ev.currentTarget.setPointerCapture?.(ev.pointerId); } catch (e) {}
+        this.chatDragging = {
+          startX: ev.clientX,
+          startY: ev.clientY,
+          startLeft: this.chatWindow.left,
+          startTop: this.chatWindow.top,
+        };
+      },
+
+      _onChatDragMove(ev) {
+        if (!this.chatDragging) return;
+        this.chatWindow.left = this.chatDragging.startLeft + (ev.clientX - this.chatDragging.startX);
+        this.chatWindow.top = this.chatDragging.startTop + (ev.clientY - this.chatDragging.startY);
+        this._clampChatWindow();
+      },
+
+      _onChatDragEnd() {
+        if (!this.chatDragging) return;
+        this.chatDragging = null;
+        this._persistChatWindow();
+      },
+
+      startChatResize(ev) {
+        if ((window.innerWidth || 0) <= 640) return;
+        ev.preventDefault();
+        this._ensureChatWindowPosition();
+        try { ev.currentTarget.setPointerCapture?.(ev.pointerId); } catch (e) {}
+        this.chatResizing = {
+          startX: ev.clientX,
+          startY: ev.clientY,
+          startW: this.chatWindow.width,
+          startH: this.chatWindow.height,
+        };
+      },
+
+      _onChatResizeMove(ev) {
+        if (!this.chatResizing) return;
+        this.chatWindow.width = this.chatResizing.startW + (ev.clientX - this.chatResizing.startX);
+        this.chatWindow.height = this.chatResizing.startH + (ev.clientY - this.chatResizing.startY);
+        this._clampChatWindow();
+      },
+
+      _onChatResizeEnd() {
+        if (!this.chatResizing) return;
+        this.chatResizing = null;
+        this._persistChatWindow();
       },
 
       // v3.10 — mobile drawer handlers
