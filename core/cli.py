@@ -14,6 +14,9 @@ from __future__ import annotations
 import json
 import logging
 import sys
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any
 
 import click
 
@@ -262,6 +265,155 @@ def status(domain: str, n: int) -> None:
         ts = d.get("ts", "?")[:19]
         dec = d.get("decision", "?")
         click.echo(f"  {ts}  {dec}")
+
+
+@main.group()
+def contributions() -> None:
+    """Review visitor contribution preports locally.
+
+    This is intentionally CLI-only while dashboard auth is not implemented:
+    public demo can collect sanitized preports, but review/promotion stays on
+    the operator machine.
+    """
+
+
+@contributions.command(name="list")
+@click.option("--domain", required=True, help="Domain name.")
+@click.option("--status", "status_filter", default=None,
+              help="Filter by effective status/verdict, e.g. preported, rejected, ACCEPT_CANDIDATE.")
+@click.option("--limit", default=20, show_default=True, help="Max rows to show.")
+def contributions_list(domain: str, status_filter: str | None, limit: int) -> None:
+    """List recent contribution preports."""
+    _validate_cli_domain(domain)
+    rows = _load_contribution_rows(domain)
+    if status_filter:
+        needle = status_filter.lower()
+        rows = [
+            r for r in rows
+            if needle in str(r.get("effective_status", "")).lower()
+            or needle in str(r.get("verdict", "")).lower()
+        ]
+    rows = rows[:limit]
+    if not rows:
+        click.echo("No contribution preports found.")
+        return
+    click.echo(f"Contribution preports: domain={domain} rows={len(rows)}")
+    for r in rows:
+        click.echo(
+            f"{r['created_at'][:19]}  {r['id']:<32} "
+            f"{r['effective_status']:<20} {r['verdict']:<20} "
+            f"S={r['signal_score']} N={r['noise_score']}  "
+            f"{r['summary']}"
+        )
+
+
+@contributions.command(name="show")
+@click.option("--domain", required=True, help="Domain name.")
+@click.argument("contribution_id")
+def contributions_show(domain: str, contribution_id: str) -> None:
+    """Print one contribution preport Markdown."""
+    _validate_cli_domain(domain)
+    md_path = _contributions_dir(domain) / "preports" / f"{contribution_id}.md"
+    if not md_path.exists():
+        raise click.ClickException(f"preport not found: {contribution_id}")
+    click.echo(md_path.read_text(encoding="utf-8", errors="replace"))
+    events = _load_review_events(domain).get(contribution_id, [])
+    if events:
+        click.echo("\n## Review Events")
+        for event in events:
+            click.echo(
+                f"- {event.get('created_at', '?')}: {event.get('decision', '?')}"
+                f" — {event.get('note', '')}"
+            )
+
+
+@contributions.command(name="mark")
+@click.option("--domain", required=True, help="Domain name.")
+@click.option("--decision", required=True,
+              type=click.Choice(["accepted", "rejected", "needs_clarification", "archived"]),
+              help="Operator review decision.")
+@click.option("--note", default="", help="Short operator note.")
+@click.argument("contribution_id")
+def contributions_mark(domain: str, decision: str, note: str, contribution_id: str) -> None:
+    """Append an operator review event for a contribution."""
+    _validate_cli_domain(domain)
+    json_path = _contributions_dir(domain) / "preports" / f"{contribution_id}.json"
+    if not json_path.exists():
+        raise click.ClickException(f"preport not found: {contribution_id}")
+    event = {
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "id": contribution_id,
+        "decision": decision,
+        "note": note.strip(),
+    }
+    events_path = _contributions_dir(domain) / "review_events.jsonl"
+    events_path.parent.mkdir(parents=True, exist_ok=True)
+    with events_path.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(event, ensure_ascii=False) + "\n")
+    click.echo(f"review event appended: {contribution_id} -> {decision}")
+
+
+def _validate_cli_domain(domain: str) -> None:
+    try:
+        cfg.load_domain_config(domain)
+    except cfg.ConfigError as e:
+        raise click.ClickException(f"Config error: {e}") from e
+
+
+def _contributions_dir(domain: str) -> Path:
+    from core import paths
+    return paths.domain_data_dir(domain) / "contributions"
+
+
+def _load_contribution_rows(domain: str) -> list[dict[str, Any]]:
+    base = _contributions_dir(domain)
+    preports = base / "preports"
+    if not preports.exists():
+        return []
+    review_events = _load_review_events(domain)
+    rows: list[dict[str, Any]] = []
+    for fp in sorted(preports.glob("*.json"), key=lambda p: p.stat().st_mtime, reverse=True):
+        try:
+            data = json.loads(fp.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            continue
+        record = data.get("record") or {}
+        preport = data.get("preport") or {}
+        contribution_id = record.get("id") or fp.stem
+        events = review_events.get(contribution_id, [])
+        effective_status = (
+            events[-1].get("decision")
+            if events else record.get("status") or preport.get("status") or "unknown"
+        )
+        message = str(record.get("message") or "").replace("\n", " ")
+        rows.append({
+            "id": contribution_id,
+            "created_at": record.get("created_at") or preport.get("created_at") or "?",
+            "effective_status": effective_status,
+            "verdict": preport.get("verdict") or "?",
+            "signal_score": preport.get("signal_score") if preport.get("signal_score") is not None else "-",
+            "noise_score": preport.get("noise_score") if preport.get("noise_score") is not None else "-",
+            "summary": message[:90],
+        })
+    return rows
+
+
+def _load_review_events(domain: str) -> dict[str, list[dict[str, Any]]]:
+    events_path = _contributions_dir(domain) / "review_events.jsonl"
+    out: dict[str, list[dict[str, Any]]] = {}
+    if not events_path.exists():
+        return out
+    for line in events_path.read_text(encoding="utf-8", errors="replace").splitlines():
+        if not line.strip():
+            continue
+        try:
+            event = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        contribution_id = event.get("id")
+        if contribution_id:
+            out.setdefault(contribution_id, []).append(event)
+    return out
 
 
 if __name__ == "__main__":

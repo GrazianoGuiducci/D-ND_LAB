@@ -135,8 +135,34 @@ inside the chat. This still does not run cycles or alter Lab state.
 
 ## Next Implementation Ring
 
-1. Add an operator-only review view for pending preports.
-2. Add structured follow-up fields in the UI for source, hypothesis,
+1. Add structured follow-up fields in the UI for source, hypothesis,
    falsification test, constraints, expected value, and contact preference.
-3. Add an operator-only promotion path from accepted preports to seed tension
+2. Add an operator-only promotion path from accepted preports to seed tension
    or new-domain draft.
+
+## Local Operator Review
+
+Review is CLI-only until dashboard authentication is real. Do not expose review
+or promotion endpoints on the public demo.
+
+```bash
+dndlab contributions list --domain finance
+dndlab contributions show --domain finance contrib_YYYYMMDD_HHMMSS_xxxxxxxx
+dndlab contributions mark --domain finance --decision accepted contrib_YYYYMMDD_HHMMSS_xxxxxxxx
+```
+
+Decisions are append-only events in:
+
+```text
+data/<domain>/contributions/review_events.jsonl
+```
+
+Supported decisions:
+
+- `accepted`
+- `rejected`
+- `needs_clarification`
+- `archived`
+
+The CLI does not promote accepted items into seed, does not create domains, and
+does not run cycles. It only records operator review state.
