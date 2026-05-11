@@ -4173,6 +4173,41 @@
         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
       },
 
+      buildChatViewContext() {
+        const viewportH = window.innerHeight || document.documentElement.clientHeight || 0;
+        const viewportW = window.innerWidth || document.documentElement.clientWidth || 0;
+        const scrollY = window.scrollY || document.documentElement.scrollTop || 0;
+        const candidates = Array.from(document.querySelectorAll('h1, h2, h3, [data-view-section], .info-pane, .agente-col'));
+        const visible = [];
+
+        for (const el of candidates) {
+          if (!el || el.closest('.chat-fab')) continue;
+          const rect = el.getBoundingClientRect();
+          if (!rect || rect.height <= 0 || rect.width <= 0) continue;
+          const visibleTop = Math.max(rect.top, 0);
+          const visibleBottom = Math.min(rect.bottom, viewportH);
+          const visibleHeight = Math.max(0, visibleBottom - visibleTop);
+          if (visibleHeight <= 0) continue;
+          const text = (el.getAttribute('data-view-section') || el.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 160);
+          if (!text) continue;
+          visible.push({
+            id: el.id || null,
+            label: text,
+            ratio: Math.round((visibleHeight / Math.min(rect.height, viewportH || rect.height)) * 100) / 100,
+          });
+        }
+
+        return {
+          domain: this.activeDomain || null,
+          tab: this.activeTab || null,
+          scroll_y: Math.round(scrollY),
+          viewport_w: Math.round(viewportW),
+          viewport_h: Math.round(viewportH),
+          active_heading: visible[0]?.label || null,
+          visible_sections: visible.slice(0, 8),
+        };
+      },
+
       escapeHtml(s) {
         return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
       },
@@ -4313,6 +4348,7 @@
               session_id: this.chatSessionId,
               context_node: this.selectedNode || null,
               context_tab: this.activeTab || null,
+              context_view: this.buildChatViewContext(),
               context_scoperta: this.selectedScopertaSsp || null,
               context_prodotto: this.selectedProdottoSsp || null,
             }),

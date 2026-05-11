@@ -157,6 +157,7 @@ class ChatRequest(BaseModel):
     context_node: dict[str, Any] | None = None       # selected graph node, if any
     # Consapevolezza pagina (Atto UX 7) — il chat agent sa cosa l'utente sta guardando
     context_tab: str | None = None                   # 'info' | 'campo' | 'grafo' | 'bicono' | 'agente' | 'incrocio' | 'prodotti'
+    context_view: dict[str, Any] | None = None       # viewport/scroll/visible sections for local grounding
     context_scoperta: dict[str, Any] | None = None   # SSP scoperta selezionata in tab Prodotti
     context_prodotto: dict[str, Any] | None = None   # SSP prodotto maturo selezionato in tab Prodotti
 
@@ -2417,6 +2418,33 @@ async def chat_endpoint(domain: str, body: ChatRequest, request: Request) -> dic
             "When relevant, suggest concrete CTAs like 'Apri tab Info → Pipeline SSP per "
             "il dettaglio', 'Vai su tab Prodotti per vedere i prodotti maturi', "
             "'Cerca nella Sidebar Dettaglio (destra)'. Be a guide, not just a Q&A.\n"
+        )
+
+    if body.context_view:
+        view = body.context_view
+        visible = view.get("visible_sections") or []
+        if not isinstance(visible, list):
+            visible = []
+        visible_lines = []
+        for item in visible[:6]:
+            if not isinstance(item, dict):
+                continue
+            label = str(item.get("label") or item.get("id") or "?")[:160]
+            ratio = item.get("ratio")
+            ratio_txt = f" ({ratio:.2f})" if isinstance(ratio, (int, float)) else ""
+            visible_lines.append(f"- {label}{ratio_txt}")
+        system_prompt += "\n\n## CURRENT VIEWPORT — local dashboard grounding\n"
+        system_prompt += f"- domain: {str(view.get('domain', domain))[:80]}\n"
+        system_prompt += f"- tab: {str(view.get('tab', body.context_tab or '?'))[:80]}\n"
+        system_prompt += f"- scroll_y: {view.get('scroll_y', '?')}\n"
+        system_prompt += f"- viewport: {view.get('viewport_w', '?')}x{view.get('viewport_h', '?')}\n"
+        if view.get("active_heading"):
+            system_prompt += f"- active_heading: {str(view.get('active_heading'))[:180]}\n"
+        if visible_lines:
+            system_prompt += "- visible_sections:\n" + "\n".join(visible_lines) + "\n"
+        system_prompt += (
+            "Use this only as grounding for what the user is likely seeing now. "
+            "Do not infer hidden state from scroll alone; ask or use read tools when evidence matters.\n"
         )
 
     if body.context_scoperta:
