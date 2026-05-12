@@ -2585,9 +2585,36 @@ async def chat_endpoint(domain: str, body: ChatRequest, request: Request) -> dic
             system_prompt += f"- active_heading: {str(view.get('active_heading'))[:180]}\n"
         if visible_lines:
             system_prompt += "- visible_sections:\n" + "\n".join(visible_lines) + "\n"
+        focus_marker = view.get("focus_marker") if isinstance(view.get("focus_marker"), dict) else None
+        visible_markers = view.get("visible_markers") if isinstance(view.get("visible_markers"), list) else []
+        if focus_marker:
+            system_prompt += "\n## CURRENT PERCEPTUAL MARKER — section the user is likely seeing\n"
+            system_prompt += f"- page: {str(focus_marker.get('page', 'lab-dashboard'))[:80]}\n"
+            system_prompt += f"- focus: {str(focus_marker.get('focus', '?'))[:220]}\n"
+            if focus_marker.get("section_label"):
+                system_prompt += f"- section_label: {str(focus_marker.get('section_label'))[:220]}\n"
+            refs = focus_marker.get("data_refs") or []
+            if isinstance(refs, list) and refs:
+                system_prompt += "- data_refs: " + ", ".join(str(x)[:80] for x in refs[:8]) + "\n"
+            if focus_marker.get("assistant_instruction"):
+                system_prompt += f"- instruction: {str(focus_marker.get('assistant_instruction'))[:500]}\n"
+            if focus_marker.get("suggested_cta"):
+                system_prompt += f"- suggested_cta: {str(focus_marker.get('suggested_cta'))[:300]}\n"
+        compact_markers = []
+        for marker in visible_markers[:4]:
+            if not isinstance(marker, dict):
+                continue
+            focus = str(marker.get("focus") or "")[:120]
+            label = str(marker.get("section_label") or marker.get("section_id") or "")[:120]
+            if focus or label:
+                compact_markers.append(f"- {label or '?'} -> {focus or '?'}")
+        if compact_markers:
+            system_prompt += "- visible_marker_stack:\n" + "\n".join(compact_markers) + "\n"
         system_prompt += (
             "Use this only as grounding for what the user is likely seeing now. "
-            "Do not infer hidden state from scroll alone; ask or use read tools when evidence matters.\n"
+            "Do not treat it as raw text segmentation: it is a perceptual marker "
+            "for the active section. Do not infer hidden state from scroll alone; "
+            "ask or use read tools when evidence matters.\n"
         )
 
     if body.context_scoperta:
@@ -3450,6 +3477,27 @@ def _sanitize_context_view(view: dict[str, Any] | None) -> dict[str, Any]:
             if isinstance(item.get("ratio"), (int, float)):
                 clean_item["ratio"] = item.get("ratio")
             out["visible_sections"].append(clean_item)
+    focus_marker = view.get("focus_marker")
+    if isinstance(focus_marker, dict):
+        out["focus_marker"] = _sanitize_view_marker(focus_marker)
+    markers = view.get("visible_markers")
+    if isinstance(markers, list):
+        out["visible_markers"] = [
+            _sanitize_view_marker(item)
+            for item in markers[:6]
+            if isinstance(item, dict)
+        ]
+    return out
+
+
+def _sanitize_view_marker(marker: dict[str, Any]) -> dict[str, Any]:
+    out: dict[str, Any] = {}
+    for key in ("page", "domain", "tab", "section_id", "section_label", "focus", "assistant_instruction", "suggested_cta"):
+        if key in marker:
+            out[key] = _clean_public_text(marker.get(key), 500)
+    refs = marker.get("data_refs")
+    if isinstance(refs, list):
+        out["data_refs"] = [_clean_public_text(item, 120) for item in refs[:8]]
     return out
 
 

@@ -4334,6 +4334,8 @@
             ratio: Math.round((visibleHeight / Math.min(rect.height, viewportH || rect.height)) * 100) / 100,
           });
         }
+        const visibleSections = visible.slice(0, 8);
+        const visibleMarkers = visibleSections.map((section) => this.sectionPerceptionMarker(section));
 
         return {
           domain: this.activeDomain || null,
@@ -4341,9 +4343,99 @@
           scroll_y: Math.round(scrollY),
           viewport_w: Math.round(viewportW),
           viewport_h: Math.round(viewportH),
-          active_heading: visible[0]?.label || null,
-          visible_sections: visible.slice(0, 8),
+          active_heading: visibleSections[0]?.label || null,
+          visible_sections: visibleSections,
+          focus_marker: visibleMarkers[0] || this.sectionPerceptionMarker(null),
+          visible_markers: visibleMarkers,
         };
+      },
+
+      sectionPerceptionMarker(section) {
+        const tab = this.activeTab || 'info';
+        const label = (section?.label || '').toLowerCase();
+        const marker = {
+          page: 'lab-dashboard',
+          domain: this.activeDomain || null,
+          tab,
+          section_id: section?.id || null,
+          section_label: section?.label || null,
+          focus: 'orientamento nel Lab',
+          data_refs: ['domain', 'tab', 'viewport'],
+          assistant_instruction: 'Orientare prima, poi rispondere. Se manca evidenza, usare strumenti di lettura o chiedere un dettaglio.',
+          suggested_cta: 'Chiedere cosa l’utente vuole capire o migliorare in questo punto.',
+        };
+        const set = (focus, dataRefs, instruction, cta) => {
+          marker.focus = focus;
+          marker.data_refs = dataRefs;
+          marker.assistant_instruction = instruction;
+          marker.suggested_cta = cta;
+        };
+
+        if (tab === 'info') {
+          set(
+            'orientamento e megamenu del Lab',
+            ['domain_about', 'pipeline_ssp', 'cycle_trace', 'contribution_preport'],
+            'Spiegare dove si trova l’utente, quali tab aprire e come contribuire senza attivare side effect.',
+            'Guidare verso tab pertinente o raccolta specifica migliorativa.'
+          );
+        } else if (tab === 'campo') {
+          set(
+            'risultante pubblica e stato corrente del campo',
+            ['seed', 'latest_diagnostic', 'lab_graph', 'freshness'],
+            'Leggere il segnale attuale, distinguere dati osservati da inferenze e proporre controlli per il ciclo successivo.',
+            'Chiedere quale segnale, vuoto o controllo l’utente vuole approfondire.'
+          );
+        } else if (tab === 'grafo') {
+          set(
+            'relazioni, vuoti e ponti nel grafo di conoscenza',
+            ['selected_node', 'lab_graph', 'reports', 'seed_tensions'],
+            'Partire dal nodo o dalla zona visibile; se serve evidenza, leggere report o tensione prima di spiegare.',
+            this.selectedNode ? 'Spiegare il nodo selezionato.' : 'Invitare a selezionare un nodo o un ponte.'
+          );
+        } else if (tab === 'bicono') {
+          set(
+            'lettura a quattro poli della scoperta',
+            ['biconi', 'reports', 'invariants'],
+            'Tradurre i poli in una relazione comprensibile e chiarire quale invariante regge.',
+            'Aprire la scoperta o chiedere quale polo confrontare.'
+          );
+        } else if (tab === 'agente') {
+          set(
+            'cicli, report, verdict e falsificazioni',
+            ['latest_reports', 'falsifier', 'cimitero', 'trajectory'],
+            'Non riassumere a memoria: per report, flag o tensioni specifiche usare gli strumenti di lettura.',
+            'Chiedere quale report, flag o prossimo passo va letto.'
+          );
+        } else if (tab === 'incrocio') {
+          set(
+            'tassonomia, traiettoria e connessioni aggregate',
+            ['taxonomy', 'trajectory', 'cycle_trace'],
+            'Mostrare la direzione che emerge e distinguere traiettoria confermata da ipotesi aperta.',
+            'Suggerire una traiettoria da verificare o una categoria da isolare.'
+          );
+        } else if (tab === 'prodotti') {
+          set(
+            'pipeline SSP: scoperte, applicazioni candidate, prodotti',
+            ['scoperte', 'soluzioni', 'prodotti', 'verification'],
+            'Distinguere sempre scoperta, soluzione candidata e prodotto verificato. Non promettere maturità se la verifica manca.',
+            'Aprire il dettaglio della scoperta/prodotto o registrare una specifica migliorativa.'
+          );
+        }
+
+        if (label.includes('cimitero')) {
+          marker.focus = 'claim falsificati e memoria degli errori';
+          marker.assistant_instruction = 'Usare il cimitero per spiegare cosa è caduto e perché non va reinserito senza nuova evidenza.';
+          marker.data_refs = ['cimitero', 'falsifier', 'reports'];
+        } else if (label.includes('pipeline') || label.includes('prodott')) {
+          marker.focus = 'stato pipeline e maturità operativa';
+          marker.assistant_instruction = 'Separare status, gate, verifica e prossima azione; evitare linguaggio da prodotto maturo se non verificato.';
+          marker.data_refs = ['ssp_state', 'scoperte', 'soluzioni', 'prodotti'];
+        } else if (label.includes('contrib') || label.includes('specific')) {
+          marker.focus = 'raccolta proposta migliorativa';
+          marker.assistant_instruction = 'Raccogliere dominio, fonte pubblica, ipotesi, test di falsificazione, vincoli e valore atteso; niente segreti.';
+          marker.data_refs = ['contribution_preport', 'operator_review'];
+        }
+        return marker;
       },
 
       escapeHtml(s) {
@@ -4372,6 +4464,8 @@
       quickActions() {
         const actions = [];
         const push = (s) => { if (s && !actions.includes(s)) actions.push(s); };
+        const marker = this.currentPerceptionMarker();
+        for (const action of this.markerStarterActions(marker)) push(action);
 
         if (this.activeTab === 'info') {
           push("Dove sono e come si legge questo Lab?");
@@ -4419,7 +4513,46 @@
         return actions.slice(0, 4);
       },
 
+      currentPerceptionMarker() {
+        try {
+          return this.buildChatViewContext().focus_marker || this.sectionPerceptionMarker(null);
+        } catch (e) {
+          return this.sectionPerceptionMarker(null);
+        }
+      },
+
+      markerStarterActions(marker) {
+        const focus = `${marker?.focus || ''} ${marker?.section_label || ''}`.toLowerCase();
+        const refs = Array.isArray(marker?.data_refs) ? marker.data_refs.join(' ').toLowerCase() : '';
+        const actions = [];
+        if (focus.includes('raccolta proposta') || refs.includes('contribution')) {
+          actions.push("Voglio proporre una modifica utile");
+          actions.push("Quali specifiche servono per separare segnale e rumore?");
+        } else if (focus.includes('pipeline') || refs.includes('prodotti') || refs.includes('ssp')) {
+          actions.push("Spiegami cosa è maturo e cosa no");
+          actions.push("Cosa serve per far avanzare questa scoperta?");
+        } else if (focus.includes('cimitero') || refs.includes('falsifier')) {
+          actions.push("Cosa è caduto e perché?");
+          actions.push("Quale errore non va reinserito nel ciclo?");
+        } else if (focus.includes('grafo') || refs.includes('selected_node')) {
+          actions.push(this.selectedNode ? "Spiega il nodo che sto guardando" : "Quale relazione conviene leggere?");
+          actions.push("Quale vuoto o ponte merita verifica?");
+        } else if (focus.includes('campo') || refs.includes('latest_diagnostic')) {
+          actions.push("Che segnale sto vedendo adesso?");
+          actions.push("Quale controllo serve al prossimo ciclo?");
+        }
+        return actions;
+      },
+
       closedChatHint() {
+        const marker = this.currentPerceptionMarker();
+        if (marker?.focus) {
+          if (`${marker.focus}`.toLowerCase().includes('raccolta proposta')) return "Hai una proposta? Posso trasformarla in specifica.";
+          if (`${marker.focus}`.toLowerCase().includes('pipeline')) return "Vuoi capire cosa può diventare prodotto?";
+          if (`${marker.focus}`.toLowerCase().includes('cimitero')) return "Vuoi capire cosa è stato falsificato?";
+          if (`${marker.focus}`.toLowerCase().includes('grafo')) return this.selectedNode ? "Vuoi spiegare questo nodo?" : "Vuoi leggere relazioni e vuoti?";
+          if (`${marker.focus}`.toLowerCase().includes('campo')) return "Vuoi capire il segnale che stai vedendo?";
+        }
         if (this.activeTab === 'info') return "Vuoi orientarti o proporre un miglioramento?";
         if (this.activeTab === 'campo') return "Vuoi capire il segnale che stai vedendo?";
         if (this.activeTab === 'grafo') return this.selectedNode ? "Vuoi spiegare questo nodo?" : "Vuoi leggere relazioni e vuoti del grafo?";
@@ -4430,6 +4563,15 @@
       },
 
       emptyChatHint() {
+        const marker = this.currentPerceptionMarker();
+        if (marker?.focus) {
+          const focus = `${marker.focus}`.toLowerCase();
+          if (focus.includes('raccolta proposta')) return "Posso raccogliere la proposta come pre-report: dominio, fonte, ipotesi, falsificazione, vincoli e valore atteso.";
+          if (focus.includes('pipeline')) return "Posso distinguere cosa è scoperta, cosa è candidata e cosa è davvero verificata.";
+          if (focus.includes('cimitero')) return "Posso spiegare cosa è caduto, quale prova lo ha fatto cadere e cosa servirebbe per riaprirlo.";
+          if (focus.includes('grafo')) return "Posso leggere nodi, ponti e vuoti partendo da ciò che stai guardando.";
+          if (focus.includes('campo')) return "Posso leggere il segnale attuale e indicare quali controlli servono al prossimo ciclo.";
+        }
         if (this.activeTab === 'info') return "Posso orientarti nel Lab o raccogliere una specifica migliorativa.";
         if (this.activeTab === 'campo') return "Posso spiegare la risultante, i segnali recenti e cosa servirebbe al prossimo ciclo.";
         if (this.activeTab === 'prodotti') return "Posso distinguere scoperte, applicazioni candidate e prodotti verificati.";
