@@ -4373,6 +4373,18 @@
           items.push(item);
         };
         push({ type: 'assistant_panel', id: 'lab-dashboard-assistant', open: !!this.chatOpen });
+        if (this.activeTab === 'agente') {
+          push({
+            type: 'active_report_viewer',
+            tab: 'agente',
+            report_filename: this.activeReportFilename || null,
+            report_title: this.activeReport?.title || null,
+            report_filter: this.reportsFilter || null,
+            has_report_open: !!this.activeReport,
+            falsifier_coherent: this.activeReport?.falsifier_coherent ?? null,
+            n_flags: this.activeReport?.n_flags ?? null,
+          });
+        }
         if (this.selectedNode) {
           push({
             type: 'selected_graph_node',
@@ -4397,6 +4409,26 @@
           });
         }
         return items.slice(0, 8);
+      },
+
+      isPageAwarenessQuestion(text) {
+        const s = (text || '').toLowerCase();
+        return [
+          'cosa vedo',
+          'cosa sto vedendo',
+          'cosa abbiamo aperto',
+          'cosa e aperto',
+          'cosa è aperto',
+          'che pagina',
+          'quale pagina',
+          'quale tab',
+          'tab aperta',
+          'tab attiva',
+          'what am i seeing',
+          'what is open',
+          'which tab',
+          'current page',
+        ].some(token => s.includes(token));
       },
 
       rememberAssistantSurface(context) {
@@ -4812,7 +4844,10 @@
               session_id: this.chatSessionId,
               context_node: this.selectedNode || null,
               context_tab: this.activeTab || null,
-              context_view: this.buildChatViewContext(),
+              context_view: {
+                ...this.buildChatViewContext(),
+                user_intent: this.isPageAwarenessQuestion(userMsg.content) ? 'page_awareness' : null,
+              },
               context_scoperta: this.selectedScopertaSsp || null,
               context_prodotto: this.selectedProdottoSsp || null,
             }),

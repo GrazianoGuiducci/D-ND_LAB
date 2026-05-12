@@ -235,6 +235,72 @@ def _call_thia_chat_fallback(
     if not last_user:
         raise HTTPException(400, "No user message provided.")
 
+    def page_awareness_reply() -> dict[str, Any] | None:
+        view = body.context_view if isinstance(body.context_view, dict) else {}
+        if view.get("user_intent") != "page_awareness":
+            return None
+
+        tab = view.get("tab") or view.get("active_tab") or body.context_tab or "?"
+        domain_name = view.get("domain") or view.get("active_domain") or domain
+        visible = view.get("visible_sections") if isinstance(view.get("visible_sections"), list) else []
+        visible_labels: list[str] = []
+        for item in visible[:5]:
+            if isinstance(item, dict):
+                label = item.get("label") or item.get("id")
+            else:
+                label = item
+            if label:
+                visible_labels.append(str(label)[:160])
+
+        focus_marker = view.get("focus_marker") if isinstance(view.get("focus_marker"), dict) else {}
+        focus = (
+            focus_marker.get("focus")
+            or focus_marker.get("section_label")
+            or view.get("active_heading")
+        )
+
+        open_elements = view.get("open_elements") if isinstance(view.get("open_elements"), list) else []
+        report_bits: list[str] = []
+        selected_bits: list[str] = []
+        for item in open_elements[:8]:
+            if not isinstance(item, dict):
+                continue
+            if item.get("type") == "active_report_viewer":
+                if item.get("report_title"):
+                    report_bits.append(f"report: {item.get('report_title')}")
+                elif item.get("report_filename"):
+                    report_bits.append(f"report: {item.get('report_filename')}")
+                if item.get("falsifier_coherent") is not None:
+                    report_bits.append(f"falsifier_coherent={item.get('falsifier_coherent')}")
+                if item.get("n_flags") is not None:
+                    report_bits.append(f"flag={item.get('n_flags')}")
+            elif item.get("type") and item.get("type") != "assistant_panel":
+                label = item.get("label") or item.get("title") or item.get("id") or item.get("type")
+                selected_bits.append(f"{item.get('type')}: {label}")
+
+        lines = [
+            f"Hai aperto la dashboard del Lab per il dominio `{domain_name}`.",
+            f"La tab attiva è `{tab}`.",
+        ]
+        if focus:
+            lines.append(f"Il focus percettivo corrente è: {str(focus)[:220]}.")
+        if report_bits:
+            lines.append("Elemento aperto/selezionato: " + "; ".join(report_bits[:4]) + ".")
+        if selected_bits:
+            lines.append("Altri elementi attivi: " + "; ".join(selected_bits[:4]) + ".")
+        if visible_labels:
+            lines.append("Nel viewport risultano visibili: " + "; ".join(visible_labels[:5]) + ".")
+        lines.append(
+            "Questa è una risposta di orientamento sulla superficie aperta, non una raccolta proposta."
+        )
+        return {
+            "reply": "\n\n".join(lines),
+            "session_id": body.session_id or f"lab_{uuid.uuid4().hex[:12]}",
+            "tool_trace": [],
+            "pending_actions": [],
+            "usage": {},
+        }
+
     def local_spec_collector(reason: str) -> dict[str, Any]:
         return {
             "reply": (
@@ -270,6 +336,14 @@ def _call_thia_chat_fallback(
             "usage": {},
         }
 
+    awareness = page_awareness_reply()
+    if awareness:
+        return awareness
+
+    is_page_awareness = (
+        isinstance(body.context_view, dict)
+        and body.context_view.get("user_intent") == "page_awareness"
+    )
     context = (
         "You are THIA speaking through the D-ND_LAB dashboard as the Lab "
         "Assistant. This is public demo mode: answer, orient, and collect "
@@ -280,7 +354,9 @@ def _call_thia_chat_fallback(
     payload = {
         "message": (
             "[D-ND_LAB PUBLIC DEMO - READ ONLY]\n"
-            "Answer as THIA/Lab Assistant. You may orient the visitor and turn "
+            "Answer as THIA/Lab Assistant. If the visitor asks what is open or "
+            "visible, answer from the runtime context and do not treat it as an "
+            "improvement proposal. Otherwise you may orient the visitor and turn "
             "their idea into an improvement specification. You must not say that "
             "anything was saved, queued, injected, emailed, or scheduled for a "
             "night cycle. Ask for missing evidence if the suggestion is vague.\n\n"
@@ -315,12 +391,13 @@ def _call_thia_chat_fallback(
         raise HTTPException(502, "THIA fallback returned invalid JSON") from e
 
     reply = parsed.get("reply") or parsed.get("message") or "(empty reply)"
-    reply += (
-        "\n\nNota operativa: in questa dashboard pubblica posso raccogliere e "
-        "ordinare la proposta, ma non salvo modifiche, non avvio cicli e non "
-        "attivo email automatiche. Le specifiche concrete restano candidate per "
-        "revisione operatore."
-    )
+    if not is_page_awareness:
+        reply += (
+            "\n\nNota operativa: in questa dashboard pubblica posso raccogliere e "
+            "ordinare la proposta, ma non salvo modifiche, non avvio cicli e non "
+            "attivo email automatiche. Le specifiche concrete restano candidate per "
+            "revisione operatore."
+        )
     return {
         "reply": reply,
         "session_id": payload["sessionId"],
@@ -2581,6 +2658,15 @@ async def chat_endpoint(domain: str, body: ChatRequest, request: Request) -> dic
         system_prompt += f"- tab: {str(view.get('tab', body.context_tab or '?'))[:80]}\n"
         system_prompt += f"- scroll_y: {view.get('scroll_y', '?')}\n"
         system_prompt += f"- viewport: {view.get('viewport_w', '?')}x{view.get('viewport_h', '?')}\n"
+        if view.get("user_intent") == "page_awareness":
+            system_prompt += (
+                "- user_intent: page_awareness\n"
+                "The user is asking what is open/visible in the UI. Answer from "
+                "CURRENT TAB, CURRENT VIEWPORT, OPEN / SELECTED UI ELEMENTS and "
+                "CURRENT PERCEPTUAL MARKER. Do not treat this as a contribution "
+                "proposal. Do not say you cannot see the page: the dashboard sent "
+                "the runtime context below.\n"
+            )
         if view.get("active_heading"):
             system_prompt += f"- active_heading: {str(view.get('active_heading'))[:180]}\n"
         if visible_lines:
@@ -2610,7 +2696,23 @@ async def chat_endpoint(domain: str, body: ChatRequest, request: Request) -> dic
                 if not isinstance(item, dict):
                     continue
                 bits = []
-                for key in ("type", "id", "label", "title", "node_type", "status", "ssp_state", "open"):
+                for key in (
+                    "type",
+                    "id",
+                    "label",
+                    "title",
+                    "node_type",
+                    "status",
+                    "ssp_state",
+                    "open",
+                    "tab",
+                    "report_filename",
+                    "report_title",
+                    "report_filter",
+                    "has_report_open",
+                    "falsifier_coherent",
+                    "n_flags",
+                ):
                     if key in item and item.get(key) is not None:
                         bits.append(f"{key}={str(item.get(key))[:120]}")
                 if bits:
@@ -3504,6 +3606,8 @@ def _sanitize_context_view(view: dict[str, Any] | None) -> dict[str, Any]:
     for key in ("tab", "domain", "active_heading"):
         if key in view:
             out[key] = _clean_public_text(view.get(key), 160)
+    if view.get("user_intent") == "page_awareness":
+        out["user_intent"] = "page_awareness"
     for key in ("scroll_y", "viewport_w", "viewport_h"):
         value = view.get(key)
         if isinstance(value, (int, float)):
@@ -3553,11 +3657,28 @@ def _sanitize_context_view(view: dict[str, Any] | None) -> dict[str, Any]:
             if not isinstance(item, dict):
                 continue
             clean_item: dict[str, Any] = {}
-            for key in ("type", "id", "label", "title", "node_type", "status", "ssp_state"):
+            for key in (
+                "type",
+                "id",
+                "label",
+                "title",
+                "node_type",
+                "status",
+                "ssp_state",
+                "tab",
+                "report_filename",
+                "report_title",
+                "report_filter",
+            ):
                 if key in item:
                     clean_item[key] = _clean_public_text(item.get(key), 180)
             if isinstance(item.get("open"), bool):
                 clean_item["open"] = item.get("open")
+            for key in ("has_report_open", "falsifier_coherent"):
+                if isinstance(item.get(key), bool):
+                    clean_item[key] = item.get(key)
+            if isinstance(item.get("n_flags"), (int, float)):
+                clean_item["n_flags"] = item.get("n_flags")
             if clean_item:
                 out["open_elements"].append(clean_item)
     surface_history = view.get("surface_history")
