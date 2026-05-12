@@ -235,9 +235,49 @@ def _call_thia_chat_fallback(
     if not last_user:
         raise HTTPException(400, "No user message provided.")
 
+    def is_page_awareness_text(text: str) -> bool:
+        s = (text or "").lower()
+        return any(token in s for token in (
+            "cosa vedo",
+            "cosa sto vedendo",
+            "cosa abbiamo aperto",
+            "cosa e aperto",
+            "cosa è aperto",
+            "che contenuto ho aperto",
+            "contenuto ho aperto",
+            "contenuto aperto",
+            "pagina nel dettaglio",
+            "nel dettaglio",
+            "che pagina",
+            "quale pagina",
+            "quale tab",
+            "tab aperta",
+            "tab attiva",
+            "what am i seeing",
+            "what is open",
+            "which tab",
+            "current page",
+        ))
+
+    def is_contribution_intent(text: str) -> bool:
+        s = (text or "").lower()
+        return any(token in s for token in (
+            "contribu",
+            "miglior",
+            "proposta",
+            "proporre",
+            "sugger",
+            "nuovo dominio",
+            "nuova base",
+            "fonte dati",
+            "dataset",
+            "modifica",
+            "feedback",
+        ))
+
     def page_awareness_reply() -> dict[str, Any] | None:
         view = body.context_view if isinstance(body.context_view, dict) else {}
-        if view.get("user_intent") != "page_awareness":
+        if view.get("user_intent") != "page_awareness" and not is_page_awareness_text(last_user):
             return None
 
         tab = view.get("tab") or view.get("active_tab") or body.context_tab or "?"
@@ -380,10 +420,23 @@ def _call_thia_chat_fallback(
         method="POST",
     )
     try:
-        with urllib.request.urlopen(req, timeout=8) as resp:
+        with urllib.request.urlopen(req, timeout=25) as resp:
             raw = resp.read().decode("utf-8")
     except (TimeoutError, urllib.error.URLError) as e:
-        return local_spec_collector(str(e))
+        if is_contribution_intent(last_user):
+            return local_spec_collector(str(e))
+        return {
+            "reply": (
+                "In questo momento il modello remoto del Lab non ha risposto in "
+                "tempo. Posso comunque orientarti dalla superficie aperta se mi "
+                "chiedi cosa vedi, oppure riprovare tra poco per una lettura piu' "
+                "analitica del report."
+            ),
+            "session_id": body.session_id or f"lab_{uuid.uuid4().hex[:12]}",
+            "tool_trace": [],
+            "pending_actions": [],
+            "usage": {},
+        }
 
     try:
         parsed = json.loads(raw)
