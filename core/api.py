@@ -26,6 +26,7 @@ Frontend (static HTML/JS) served from /static and /.
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import json
 import logging
 import os
@@ -2420,6 +2421,14 @@ async def get_prodotto_detail(domain: str, product_id: str, request: Request) ->
     }
 
 
+@app.get("/api/domains/{domain}/assistant_context")
+async def assistant_context_endpoint(domain: str, request: Request) -> dict[str, Any]:
+    """Read-only visibility into what the Lab Assistant reloads at runtime."""
+    await _check_auth(request)
+    _validate_domain(domain)
+    return _build_assistant_runtime_context(domain, include_overlay_text=False)
+
+
 @app.post("/api/domains/{domain}/run")
 async def run_cycle_endpoint(domain: str, body: RunRequest, request: Request) -> dict[str, str]:
     await _check_auth(request)
@@ -3137,7 +3146,138 @@ def _build_chat_system_prompt(domain: str) -> str:
     parts.append("Pipeline auto: cycle → on_crystallize → eligibility_gate → "
                  "(if mature) application_designer → (if eligible) stage4_poc_runner → verification.json reale.")
 
+    runtime_context = _build_assistant_runtime_context(domain, include_overlay_text=True)
+    parts.append("")
+    parts.append("## ASSISTANT RUNTIME CONTEXT — auto-updated")
+    parts.append(
+        "This block is rebuilt on every chat request from the Lab filesystem. "
+        "It is context, not authority: it does not permit seed edits, cycle runs, "
+        "email/newsletter activation, domain promotion, or other side effects."
+    )
+    parts.append(f"- built_at: {runtime_context['built_at']}")
+    parts.append(f"- source_fingerprint: {runtime_context['source_fingerprint']}")
+    parts.append(f"- latest_reports_seen: {len(runtime_context['latest_reports'])}")
+    parts.append(f"- scoperte/soluzioni/prodotti: {n_scoperte}/{n_soluzioni}/{n_prodotti_pass + n_prodotti_fail}")
+    overlays = runtime_context.get("runtime_overlays", [])
+    if overlays:
+        parts.append("- runtime overlays:")
+        for overlay in overlays:
+            parts.append(
+                f"  - {overlay['scope']}: updated_at={overlay.get('updated_at') or '-'} "
+                f"sha={overlay.get('sha256_12') or '-'}"
+            )
+            text = overlay.get("text") or ""
+            if text:
+                parts.append(text[:2500])
+    else:
+        parts.append("- runtime overlays: none")
+
     return "\n".join(parts)
+
+
+def _build_assistant_runtime_context(domain: str, *, include_overlay_text: bool) -> dict[str, Any]:
+    """Return a compact, runtime-reloaded context map for the Lab Assistant.
+
+    Non-structural assistant updates can be placed in ignored runtime files:
+    data/assistant_runtime.md for all domains or data/<domain>/assistant_runtime.md
+    for a single domain. These overlays are advisory context only.
+    """
+    domain_dir = paths.domain_data_dir(domain)
+    reports_dir = paths.reports_dir(domain)
+    latest_reports: list[dict[str, Any]] = []
+    if reports_dir.exists():
+        for report in sorted(_agent_report_files(reports_dir), key=lambda p: p.stat().st_mtime, reverse=True)[:5]:
+            latest_reports.append(_runtime_file_meta(report, base=domain_dir))
+
+    scoperte_dir = domain_dir / "scoperte"
+    soluzioni_dir = domain_dir / "soluzioni"
+    prodotti_dir = domain_dir / "prodotti"
+    overlays = [
+        _runtime_overlay_meta(paths._data_dir() / "assistant_runtime.md", scope="global", include_text=include_overlay_text),
+        _runtime_overlay_meta(domain_dir / "assistant_runtime.md", scope=domain, include_text=include_overlay_text),
+    ]
+    overlays = [o for o in overlays if o]
+    sources = {
+        "domain_model": _runtime_file_meta(paths.domain_context_path(domain), base=paths._repo_root()),
+        "seed": _runtime_file_meta(paths.seed_path(domain), base=domain_dir),
+        "cimitero": _runtime_file_meta(paths.cimitero_path(domain), base=domain_dir),
+        "reports_dir": _runtime_dir_meta(reports_dir),
+        "scoperte_dir": _runtime_dir_meta(scoperte_dir),
+        "soluzioni_dir": _runtime_dir_meta(soluzioni_dir),
+        "prodotti_dir": _runtime_dir_meta(prodotti_dir),
+        "runtime_overlays": [
+            {k: v for k, v in overlay.items() if k != "text"}
+            for overlay in overlays
+        ],
+    }
+    fingerprint_payload = json.dumps(sources, sort_keys=True, ensure_ascii=False)
+    return {
+        "schema_version": "assistant-runtime-context/v1",
+        "domain": domain,
+        "built_at": datetime.now(timezone.utc).isoformat(),
+        "source_fingerprint": hashlib.sha256(fingerprint_payload.encode("utf-8")).hexdigest()[:16],
+        "update_policy": {
+            "reload": "every chat request",
+            "non_structural_overlays": [
+                "data/assistant_runtime.md",
+                "data/<domain>/assistant_runtime.md",
+            ],
+            "boundary": "read-only context; no seed/cycle/email/domain-promotion side effects",
+        },
+        "sources": sources,
+        "latest_reports": latest_reports,
+        "runtime_overlays": overlays,
+    }
+
+
+def _runtime_file_meta(p: Path, *, base: Path | None = None) -> dict[str, Any]:
+    if not p.exists() or not p.is_file():
+        return {"present": False}
+    stat = p.stat()
+    try:
+        rel = str(p.relative_to(base)) if base else p.name
+    except ValueError:
+        rel = p.name
+    return {
+        "present": True,
+        "name": rel,
+        "updated_at": datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc).isoformat(),
+        "size_bytes": stat.st_size,
+        "sha256_12": _sha256_12(p),
+    }
+
+
+def _runtime_dir_meta(p: Path) -> dict[str, Any]:
+    if not p.exists() or not p.is_dir():
+        return {"present": False, "count": 0}
+    entries = [x for x in p.iterdir() if not x.name.startswith(".")]
+    latest = max((x.stat().st_mtime for x in entries), default=None)
+    return {
+        "present": True,
+        "count": len(entries),
+        "latest_updated_at": (
+            datetime.fromtimestamp(latest, tz=timezone.utc).isoformat()
+            if latest else None
+        ),
+    }
+
+
+def _runtime_overlay_meta(p: Path, *, scope: str, include_text: bool) -> dict[str, Any] | None:
+    if not p.exists() or not p.is_file():
+        return None
+    meta = _runtime_file_meta(p, base=paths._data_dir())
+    meta["scope"] = scope
+    if include_text:
+        meta["text"] = _clean_public_text(p.read_text(encoding="utf-8", errors="replace"), 3000)
+    return meta
+
+
+def _sha256_12(p: Path) -> str:
+    h = hashlib.sha256()
+    with p.open("rb") as f:
+        for chunk in iter(lambda: f.read(65536), b""):
+            h.update(chunk)
+    return h.hexdigest()[:12]
 
 
 # ─── Inject tension (gated side-effect) ─────────────────────────────
