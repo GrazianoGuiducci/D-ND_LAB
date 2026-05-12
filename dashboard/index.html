@@ -2196,7 +2196,7 @@
   </main>
 
   <!-- CHAT floating bottom-right (v3.8) -->
-  <div x-show="view === 'domain' && activeDomain" x-cloak class="chat-fab" :class="chatOpen && 'open'" :style="chatOpen ? chatWindowStyle() : null">
+  <div x-show="localAssistantEnabled() && view === 'domain' && activeDomain" x-cloak class="chat-fab" :class="chatOpen && 'open'" :style="chatOpen ? chatWindowStyle() : null">
 
     <!-- Closed state: floating bubble -->
     <button x-show="!chatOpen" @click="openChatPanel()" class="fab-bubble" title="Chat con il lab">
@@ -4355,15 +4355,27 @@
       },
 
       buildAssistantTopology() {
+        const unifiedThia = !this.localAssistantEnabled();
         return {
-          active_assistant: 'lab-dashboard-assistant',
+          active_assistant: unifiedThia ? 'THIA/DOMUS unified lab assistant' : 'lab-dashboard-assistant',
           surface: 'lab-dashboard',
           local_scope: 'dominio, dashboard tecnica, ciclo, report, cimitero, SSP, proposte migliorative',
-          coexisting_assistant: 'THIA/DOMUS widget',
-          coexisting_scope: 'orientamento pubblico sul sottodominio, pagine narrative, funnel, collegamento al sistema generale',
-          routing_rule: 'Usa il Lab Assistant per leggere dati e stati della dashboard; usa THIA/DOMUS per orientamento generale o navigazione tra pagine. Non duplicare ownership.',
+          coexisting_assistant: unifiedThia ? 'none on public dashboard' : 'THIA/DOMUS widget',
+          coexisting_scope: unifiedThia ? 'THIA owns public orientation, dashboard awareness, contribution funnel and contact routing' : 'orientamento pubblico sul sottodominio, pagine narrative, funnel, collegamento al sistema generale',
+          routing_rule: unifiedThia ? 'Use THIA as the single visible public assistant; local Lab Assistant remains installable/standalone only.' : 'Usa il Lab Assistant per leggere dati e stati della dashboard; usa THIA/DOMUS per orientamento generale o navigazione tra pagine. Non duplicare ownership.',
           public_demo_rule: 'In demo pubblica raccogli e ordina proposte, ma non salvare modifiche strutturali, non avviare cicli e non attivare email automatiche senza operatore.',
         };
+      },
+
+      localAssistantEnabled() {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('assistant') === 'local') return true;
+        if (params.get('assistant') === 'off') return false;
+        try {
+          if (localStorage.getItem('dnd_lab_local_assistant') === '1') return true;
+          if (localStorage.getItem('dnd_lab_local_assistant') === '0') return false;
+        } catch {}
+        return !document.querySelector('script[src*="domus-widget"]');
       },
 
       buildOpenElementsContext() {
