@@ -2585,12 +2585,57 @@ async def chat_endpoint(domain: str, body: ChatRequest, request: Request) -> dic
             system_prompt += f"- active_heading: {str(view.get('active_heading'))[:180]}\n"
         if visible_lines:
             system_prompt += "- visible_sections:\n" + "\n".join(visible_lines) + "\n"
+        topology = view.get("assistant_topology") if isinstance(view.get("assistant_topology"), dict) else None
+        if topology:
+            system_prompt += "\n## ASSISTANT TOPOLOGY — double assistant surface\n"
+            for key in (
+                "active_assistant",
+                "surface",
+                "local_scope",
+                "coexisting_assistant",
+                "coexisting_scope",
+                "routing_rule",
+                "public_demo_rule",
+            ):
+                if topology.get(key):
+                    system_prompt += f"- {key}: {str(topology.get(key))[:500]}\n"
+            system_prompt += (
+                "Respect this topology: in the dashboard you are the Lab Assistant. "
+                "Use THIA/DOMUS as the broader site/system orientation surface, not as a duplicate owner of dashboard operations.\n"
+            )
+        open_elements = view.get("open_elements") if isinstance(view.get("open_elements"), list) else []
+        if open_elements:
+            system_prompt += "\n## OPEN / SELECTED UI ELEMENTS\n"
+            for item in open_elements[:6]:
+                if not isinstance(item, dict):
+                    continue
+                bits = []
+                for key in ("type", "id", "label", "title", "node_type", "status", "ssp_state", "open"):
+                    if key in item and item.get(key) is not None:
+                        bits.append(f"{key}={str(item.get(key))[:120]}")
+                if bits:
+                    system_prompt += "- " + "; ".join(bits) + "\n"
+        surface_history = view.get("surface_history") if isinstance(view.get("surface_history"), list) else []
+        if surface_history:
+            system_prompt += "\n## SESSION SURFACE HISTORY — what the user has likely seen in this session\n"
+            for item in surface_history[-6:]:
+                if not isinstance(item, dict):
+                    continue
+                tab = str(item.get("tab") or "?")[:80]
+                focus = str(item.get("focus") or item.get("section") or "?")[:180]
+                selected = item.get("selected_node") or item.get("selected_ssp")
+                suffix = f" (selected: {str(selected)[:80]})" if selected else ""
+                system_prompt += f"- {tab}: {focus}{suffix}\n"
         focus_marker = view.get("focus_marker") if isinstance(view.get("focus_marker"), dict) else None
         visible_markers = view.get("visible_markers") if isinstance(view.get("visible_markers"), list) else []
         if focus_marker:
             system_prompt += "\n## CURRENT PERCEPTUAL MARKER — section the user is likely seeing\n"
             system_prompt += f"- page: {str(focus_marker.get('page', 'lab-dashboard'))[:80]}\n"
             system_prompt += f"- focus: {str(focus_marker.get('focus', '?'))[:220]}\n"
+            if focus_marker.get("assistant_scope"):
+                system_prompt += f"- assistant_scope: {str(focus_marker.get('assistant_scope'))[:180]}\n"
+            if focus_marker.get("coassistant_note"):
+                system_prompt += f"- coassistant_note: {str(focus_marker.get('coassistant_note'))[:400]}\n"
             if focus_marker.get("section_label"):
                 system_prompt += f"- section_label: {str(focus_marker.get('section_label'))[:220]}\n"
             refs = focus_marker.get("data_refs") or []
@@ -3487,12 +3532,63 @@ def _sanitize_context_view(view: dict[str, Any] | None) -> dict[str, Any]:
             for item in markers[:6]
             if isinstance(item, dict)
         ]
+    topology = view.get("assistant_topology")
+    if isinstance(topology, dict):
+        out["assistant_topology"] = {}
+        for key in (
+            "active_assistant",
+            "surface",
+            "local_scope",
+            "coexisting_assistant",
+            "coexisting_scope",
+            "routing_rule",
+            "public_demo_rule",
+        ):
+            if key in topology:
+                out["assistant_topology"][key] = _clean_public_text(topology.get(key), 500)
+    open_elements = view.get("open_elements")
+    if isinstance(open_elements, list):
+        out["open_elements"] = []
+        for item in open_elements[:8]:
+            if not isinstance(item, dict):
+                continue
+            clean_item: dict[str, Any] = {}
+            for key in ("type", "id", "label", "title", "node_type", "status", "ssp_state"):
+                if key in item:
+                    clean_item[key] = _clean_public_text(item.get(key), 180)
+            if isinstance(item.get("open"), bool):
+                clean_item["open"] = item.get("open")
+            if clean_item:
+                out["open_elements"].append(clean_item)
+    surface_history = view.get("surface_history")
+    if isinstance(surface_history, list):
+        out["surface_history"] = []
+        for item in surface_history[-10:]:
+            if not isinstance(item, dict):
+                continue
+            clean_item = {}
+            for key in ("ts", "domain", "tab", "focus", "section", "selected_node", "selected_ssp"):
+                if key in item:
+                    clean_item[key] = _clean_public_text(item.get(key), 220)
+            if clean_item:
+                out["surface_history"].append(clean_item)
     return out
 
 
 def _sanitize_view_marker(marker: dict[str, Any]) -> dict[str, Any]:
     out: dict[str, Any] = {}
-    for key in ("page", "domain", "tab", "section_id", "section_label", "focus", "assistant_instruction", "suggested_cta"):
+    for key in (
+        "page",
+        "domain",
+        "tab",
+        "section_id",
+        "section_label",
+        "focus",
+        "assistant_scope",
+        "coassistant_note",
+        "assistant_instruction",
+        "suggested_cta",
+    ):
         if key in marker:
             out[key] = _clean_public_text(marker.get(key), 500)
     refs = marker.get("data_refs")

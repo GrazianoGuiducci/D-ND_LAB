@@ -4337,7 +4337,7 @@
         const visibleSections = visible.slice(0, 8);
         const visibleMarkers = visibleSections.map((section) => this.sectionPerceptionMarker(section));
 
-        return {
+        const context = {
           domain: this.activeDomain || null,
           tab: this.activeTab || null,
           scroll_y: Math.round(scrollY),
@@ -4347,7 +4347,85 @@
           visible_sections: visibleSections,
           focus_marker: visibleMarkers[0] || this.sectionPerceptionMarker(null),
           visible_markers: visibleMarkers,
+          open_elements: this.buildOpenElementsContext(),
+          assistant_topology: this.buildAssistantTopology(),
         };
+        context.surface_history = this.rememberAssistantSurface(context);
+        return context;
+      },
+
+      buildAssistantTopology() {
+        return {
+          active_assistant: 'lab-dashboard-assistant',
+          surface: 'lab-dashboard',
+          local_scope: 'dominio, dashboard tecnica, ciclo, report, cimitero, SSP, proposte migliorative',
+          coexisting_assistant: 'THIA/DOMUS widget',
+          coexisting_scope: 'orientamento pubblico sul sottodominio, pagine narrative, funnel, collegamento al sistema generale',
+          routing_rule: 'Usa il Lab Assistant per leggere dati e stati della dashboard; usa THIA/DOMUS per orientamento generale o navigazione tra pagine. Non duplicare ownership.',
+          public_demo_rule: 'In demo pubblica raccogli e ordina proposte, ma non salvare modifiche strutturali, non avviare cicli e non attivare email automatiche senza operatore.',
+        };
+      },
+
+      buildOpenElementsContext() {
+        const items = [];
+        const push = (item) => {
+          if (!item || !item.type) return;
+          items.push(item);
+        };
+        push({ type: 'assistant_panel', id: 'lab-dashboard-assistant', open: !!this.chatOpen });
+        if (this.selectedNode) {
+          push({
+            type: 'selected_graph_node',
+            id: this.selectedNode.id || null,
+            label: this.selectedNode.label || this.selectedNode.title || null,
+            node_type: this.selectedNode.type || null,
+          });
+        }
+        if (this.selectedScopertaSsp) {
+          push({
+            type: 'selected_ssp_discovery',
+            title: this.selectedScopertaSsp.title_proposal || this.selectedScopertaSsp.dir || null,
+            status: this.selectedScopertaSsp.status || null,
+            ssp_state: this.selectedScopertaSsp.ssp_state || null,
+          });
+        }
+        if (this.selectedProdottoSsp) {
+          push({
+            type: 'selected_ssp_product',
+            title: this.selectedProdottoSsp.title || this.selectedProdottoSsp.name || null,
+            status: this.selectedProdottoSsp.status || null,
+          });
+        }
+        return items.slice(0, 8);
+      },
+
+      rememberAssistantSurface(context) {
+        const key = 'dnd_lab_surface_history_v1';
+        const current = {
+          ts: new Date().toISOString(),
+          domain: context.domain || null,
+          tab: context.tab || null,
+          focus: context.focus_marker?.focus || null,
+          section: context.active_heading || context.focus_marker?.section_label || null,
+          selected_node: this.selectedNode?.id || null,
+          selected_ssp: this.selectedScopertaSsp?.dir || this.selectedProdottoSsp?.id || null,
+        };
+        try {
+          const prev = JSON.parse(sessionStorage.getItem(key) || '[]');
+          const history = Array.isArray(prev) ? prev : [];
+          const last = history[history.length - 1] || {};
+          const same = last.domain === current.domain
+            && last.tab === current.tab
+            && last.focus === current.focus
+            && last.section === current.section
+            && last.selected_node === current.selected_node
+            && last.selected_ssp === current.selected_ssp;
+          const next = same ? history : history.concat([current]).slice(-10);
+          sessionStorage.setItem(key, JSON.stringify(next));
+          return next;
+        } catch (e) {
+          return [current];
+        }
       },
 
       sectionPerceptionMarker(section) {
@@ -4361,6 +4439,8 @@
           section_label: section?.label || null,
           focus: 'orientamento nel Lab',
           data_refs: ['domain', 'tab', 'viewport'],
+          assistant_scope: 'lab-dashboard-assistant',
+          coassistant_note: 'THIA/DOMUS può orientare nel sottodominio; questo assistente possiede dati dashboard, ciclo, report, SSP e raccolta specifiche migliorative.',
           assistant_instruction: 'Orientare prima, poi rispondere. Se manca evidenza, usare strumenti di lettura o chiedere un dettaglio.',
           suggested_cta: 'Chiedere cosa l’utente vuole capire o migliorare in questo punto.',
         };
