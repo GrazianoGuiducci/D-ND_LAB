@@ -190,6 +190,19 @@ class ContributionRequest(BaseModel):
     context_view: dict[str, Any] | None = None
 
 
+class LeadRequest(BaseModel):
+    kind: str = "general"  # newsletter / contact / support / collaboration / custom_domain / general
+    message: str
+    email: str | None = None
+    name: str | None = None
+    domain: str | None = None
+    interests: list[str] | None = None
+    frequency: str | None = None
+    consent: bool = False
+    context_page: str | None = None
+    context_view: dict[str, Any] | None = None
+
+
 # ─── Auth (opt-in stub — Phase 6 v2 implements magic-link) ─────────
 
 
@@ -206,6 +219,7 @@ async def _check_auth(request: Request) -> None:
         request.method == "GET"
         or request.url.path.endswith("/chat")
         or request.url.path.endswith("/contributions")
+        or request.url.path.endswith("/leads")
     ):
         return  # demo: read-only access without auth, including chat
     raise HTTPException(503, "Auth enabled but not yet implemented (Phase 6 v2). "
@@ -3097,6 +3111,85 @@ async def submit_contribution(
     }
 
 
+@app.post("/api/leads")
+async def submit_lead(
+    body: LeadRequest,
+    request: Request,
+) -> dict[str, Any]:
+    """Collect newsletter/contact/support interest without sending email.
+
+    This is intentionally separate from contribution preports: a lead is a
+    contact/follow-up preference, not scientific input to the Lab cycle.
+    """
+    await _check_auth(request)
+    _check_public_intake_rate(request)
+
+    kind_allowed = {
+        "newsletter",
+        "contact",
+        "support",
+        "collaboration",
+        "custom_domain",
+        "general",
+    }
+    kind = _clean_public_text(body.kind, 80).lower() or "general"
+    if kind not in kind_allowed:
+        kind = "general"
+
+    email_clean = _clean_contact(body.email, "newsletter_requested" if body.email else "none")
+    needs_email = kind in {"newsletter", "contact", "support", "collaboration", "custom_domain"}
+    if needs_email and not email_clean:
+        return {
+            "ok": False,
+            "status": "needs_email",
+            "message": "Per questo percorso serve una email valida o un contatto esplicito.",
+        }
+    if kind == "newsletter" and not body.consent:
+        return {
+            "ok": False,
+            "status": "needs_consent",
+            "message": "Per newsletter/report serve consenso esplicito agli aggiornamenti email.",
+        }
+
+    lead_id = f"lead_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}"
+    interests = [
+        _clean_public_text(item, 120)
+        for item in (body.interests or [])[:12]
+        if _clean_public_text(item, 120)
+    ]
+    record = {
+        "id": lead_id,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "kind": kind,
+        "source_type": "thia_public_funnel",
+        "status": "captured",
+        "message": _clean_public_text(body.message, 4000),
+        "email": email_clean,
+        "name": _clean_public_text(body.name, 160),
+        "domain": _clean_public_text(body.domain, 120),
+        "interests": interests,
+        "frequency": _clean_public_text(body.frequency, 80),
+        "consent": bool(body.consent),
+        "context_page": _clean_public_text(body.context_page, 240),
+        "context_view": _sanitize_context_view(body.context_view),
+        "boundary": (
+            "Lead captured only. No newsletter subscription, automatic email, "
+            "cycle run, seed write, or domain promotion has been executed."
+        ),
+    }
+    _write_lead(record)
+    return {
+        "ok": True,
+        "id": lead_id,
+        "status": "captured",
+        "kind": kind,
+        "message": (
+            "Interesse registrato per revisione. L'iscrizione automatica o il "
+            "contatto operativo richiedono ancora conferma/gestione operatore."
+        ),
+    }
+
+
 # ─── Chat tools (Phase 6 v5) ───────────────────────────────────────
 
 
@@ -3610,8 +3703,8 @@ def _client_key(request: Request) -> str:
     return "unknown"
 
 
-def _check_contribution_rate(request: Request) -> None:
-    """Small in-process rate limit for public contribution intake."""
+def _check_public_intake_rate(request: Request) -> None:
+    """Small in-process rate limit for public contribution/lead intake."""
     now = time.time()
     key = _client_key(request)
     window_seconds = 600
@@ -3621,6 +3714,10 @@ def _check_contribution_rate(request: Request) -> None:
         raise HTTPException(429, "Too many contribution attempts; retry later.")
     bucket.append(now)
     _CONTRIBUTION_RATE[key] = bucket
+
+
+def _check_contribution_rate(request: Request) -> None:
+    _check_public_intake_rate(request)
 
 
 def _clean_public_text(value: Any, limit: int) -> str:
@@ -3905,6 +4002,47 @@ def _write_contribution(domain: str, record: dict[str, Any], preport: dict[str, 
         _render_contribution_preport(record, preport),
         encoding="utf-8",
     )
+
+
+def _write_lead(record: dict[str, Any]) -> None:
+    base = paths._repo_root() / "data" / "leads"
+    base.mkdir(parents=True, exist_ok=True)
+    registry = base / "registry.jsonl"
+    with registry.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(record, ensure_ascii=False) + "\n")
+    by_kind = base / record["kind"]
+    by_kind.mkdir(parents=True, exist_ok=True)
+    (by_kind / f"{record['id']}.json").write_text(
+        json.dumps(record, indent=2, ensure_ascii=False),
+        encoding="utf-8",
+    )
+    (by_kind / f"{record['id']}.md").write_text(
+        _render_lead(record),
+        encoding="utf-8",
+    )
+
+
+def _render_lead(record: dict[str, Any]) -> str:
+    return "\n".join([
+        f"# Lead — {record.get('id')}",
+        "",
+        f"Created: {record.get('created_at')}",
+        f"Kind: {record.get('kind')}",
+        f"Status: {record.get('status')}",
+        f"Domain: {record.get('domain') or '-'}",
+        f"Email: {record.get('email') or '-'}",
+        f"Name: {record.get('name') or '-'}",
+        f"Frequency: {record.get('frequency') or '-'}",
+        f"Consent: {record.get('consent')}",
+        f"Interests: {', '.join(record.get('interests') or []) or '-'}",
+        "",
+        "## Message",
+        record.get("message") or "-",
+        "",
+        "## Boundary",
+        record.get("boundary") or "-",
+        "",
+    ])
 
 
 def _render_contribution_preport(record: dict[str, Any], preport: dict[str, Any]) -> str:

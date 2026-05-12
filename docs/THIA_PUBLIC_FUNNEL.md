@@ -104,12 +104,13 @@ Gia' presente:
 
 - pre-report contributi sanitizzato in runtime data;
 - filtro server-side signal/noise;
+- endpoint lead/newsletter/contact/support separato da contribution pre-report;
+- CTA THIA che possono registrare contributi o lead dal widget pubblico;
 - dashboard state e marker percettivi;
 - THIA/DOMUS unico assistente pubblico sul sottodominio Lab.
 
 Da implementare:
 
-- endpoint lead/newsletter separato da contribution pre-report;
 - provider email + double opt-in;
 - pannello review lead/contributi;
 - job digest automatico da report/cycle trace;
