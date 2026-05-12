@@ -4765,6 +4765,7 @@
 
       contributionCandidateText(text) {
         const s = (text || '').toLowerCase();
+        if (this.isPageAwarenessQuestion(s)) return false;
         return [
           'contribu', 'miglior', 'proposta', 'proporre', 'sugger',
           'nuovo dominio', 'nuova base', 'fonte dati', 'dataset',
@@ -4785,8 +4786,7 @@
         if (msg.contribution_registered) return false;
         const userMsg = this.latestUserMessageBefore(index);
         if (!userMsg) return false;
-        return this.contributionCandidateText(userMsg.content)
-          || this.contributionCandidateText(msg.content);
+        return this.contributionCandidateText(userMsg.content);
       },
 
       contributionPanelVisible(index) {
@@ -4818,7 +4818,12 @@
           msg.contribution_registered = true;
           const verdict = data.verdict || data.status || 'preport';
           const question = data.next_question ? ` · ${data.next_question}` : '';
-          msg.contribution_result = `pre-report ${verdict}${question}`;
+          if (data.status === 'rejected') {
+            msg.contribution_registered = false;
+            msg.contribution_result = `non registrata: ${verdict}${question}`;
+          } else {
+            msg.contribution_result = `pre-report ${verdict}${question}`;
+          }
         } catch (e) {
           msg.contribution_result = `errore: ${e.message}`;
         } finally {

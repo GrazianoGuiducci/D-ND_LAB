@@ -3010,6 +3010,22 @@ async def submit_contribution(
         "status": preport["status"],
     })
 
+    if preport["status"] == "rejected":
+        return {
+            "ok": False,
+            "id": None,
+            "status": "rejected",
+            "verdict": preport["verdict"],
+            "signal_score": preport["signal_score"],
+            "noise_score": preport["noise_score"],
+            "missing_fields": preport["missing_fields"],
+            "next_question": preport["next_question"],
+            "operator_contact_hint": (
+                "Contributo non registrato: il segnale e' insufficiente, "
+                "pericoloso o contiene materiale non ammesso."
+            ),
+        }
+
     _write_contribution(domain, record, preport)
     return {
         "ok": True,
