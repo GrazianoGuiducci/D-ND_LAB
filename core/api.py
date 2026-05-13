@@ -18,6 +18,7 @@ Endpoints:
   WS   /api/cycles/{cycle_id}/log            # live log stream
   POST /api/domains/{d}/chat                 # chat agent (single-shot or streaming)
   POST /api/domains/{d}/contributions        # public sanitized intake + preport
+  GET  /api/intake_review                    # redacted operator intake overview
   POST /api/domains/{d}/inject_tension       # gated side-effect
 
 Frontend (static HTML/JS) served from /static and /.
@@ -485,6 +486,37 @@ async def health() -> dict[str, Any]:
         "auth_enabled": settings.auth_enabled,
         "demo_mode": settings.demo_mode,
         "data_dir": str(paths._data_dir()),
+    }
+
+
+@app.get("/api/intake_review")
+async def intake_review(request: Request, domain: str = "finance", limit: int = 80) -> dict[str, Any]:
+    """Redacted intake overview for operator review surfaces.
+
+    This endpoint intentionally does not expose raw contacts. The public demo
+    can show what is accumulating without leaking emails or promoting anything
+    into seed/cycles.
+    """
+    await _check_auth(request)
+    _validate_domain(domain)
+    max_items = max(1, min(int(limit or 80), 200))
+    contributions = _read_contribution_review(domain, max_items)
+    leads = _read_lead_review(max_items)
+    return {
+        "domain": domain,
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "counts": {
+            "contributions": len(contributions),
+            "leads": len(leads),
+            "needs_clarification": sum(1 for c in contributions if c.get("status") == "needs_clarification"),
+            "candidates": sum(1 for c in contributions if c.get("status") in {"candidate", "preported"}),
+        },
+        "contributions": contributions,
+        "leads": leads,
+        "boundary": (
+            "Review only. Raw contacts are redacted. No seed write, cycle run, "
+            "newsletter subscription, or domain promotion is executed here."
+        ),
     }
 
 
@@ -3052,18 +3084,19 @@ async def submit_contribution(
 
     now = datetime.now(timezone.utc).isoformat()
     contribution_id = f"contrib_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}"
+    extracted = _extract_contribution_fields(body.message)
     record = {
         "id": contribution_id,
         "created_at": now,
         "domain": domain,
         "source_type": "visitor",
         "message": _clean_public_text(body.message, 4000),
-        "proposed_domain": _clean_public_text(body.proposed_domain, 120),
-        "public_data_source": _clean_public_text(body.public_data_source, 600),
-        "hypothesis": _clean_public_text(body.hypothesis, 1000),
-        "falsification_test": _clean_public_text(body.falsification_test, 1000),
-        "constraints": _clean_public_text(body.constraints, 1000),
-        "expected_value": _clean_public_text(body.expected_value, 800),
+        "proposed_domain": _clean_public_text(body.proposed_domain or extracted.get("proposed_domain"), 120),
+        "public_data_source": _clean_public_text(body.public_data_source or extracted.get("public_data_source"), 600),
+        "hypothesis": _clean_public_text(body.hypothesis or extracted.get("hypothesis"), 1000),
+        "falsification_test": _clean_public_text(body.falsification_test or extracted.get("falsification_test"), 1000),
+        "constraints": _clean_public_text(body.constraints or extracted.get("constraints"), 1000),
+        "expected_value": _clean_public_text(body.expected_value or extracted.get("expected_value"), 800),
         "contact_preference": _normalize_contact_preference(body.contact_preference),
         "contact": _clean_contact(body.contact, body.contact_preference),
         "context_tab": _clean_public_text(body.context_tab, 60),
@@ -3655,6 +3688,78 @@ async def inject_tension(domain: str, body: InjectTensionRequest, request: Reque
     return {"ok": True, "tension": new, "n_tensions": len(tensions)}
 
 
+# ─── Intake review page (hidden/operator draft) ─────────────────────
+
+
+@app.get("/intake-review", response_class=HTMLResponse)
+async def intake_review_page() -> HTMLResponse:
+    return HTMLResponse("""<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>D-ND_LAB — Intake Reports</title>
+  <style>
+    :root{color-scheme:dark;--bg:#06080d;--panel:#111827;--line:#334155;--ink:#f8fafc;--muted:#cbd5e1;--cyan:#00e5ff;--green:#22ff88;--amber:#ffd84d;--red:#ff4d8d;--violet:#b589ff}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,Segoe UI,sans-serif}
+    header{position:sticky;top:0;z-index:2;background:#0b0f18;border-bottom:1px solid var(--line);padding:18px 22px;display:flex;gap:16px;align-items:center;justify-content:space-between}
+    h1{font-size:22px;margin:0;color:var(--cyan)}.sub{color:var(--muted);font-size:13px}.wrap{max-width:1280px;margin:0 auto;padding:22px}
+    .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:18px}.metric{border:1px solid var(--line);background:var(--panel);padding:14px;border-radius:8px}.metric b{display:block;font-size:26px;color:var(--green)}
+    .cols{display:grid;grid-template-columns:1.15fr .85fr;gap:18px}.section{border:1px solid var(--line);background:#0f172a;border-radius:8px;overflow:hidden}.section h2{margin:0;padding:14px 16px;border-bottom:1px solid var(--line);font-size:15px;color:var(--violet);letter-spacing:.04em;text-transform:uppercase}
+    .item{padding:14px 16px;border-bottom:1px solid rgba(148,163,184,.25)}.item:last-child{border-bottom:0}.top{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-bottom:8px}.id{font-family:ui-monospace,monospace;color:var(--cyan);font-size:12px}.date{font-size:12px;color:var(--muted)}
+    .badge{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:2px 8px;font-size:11px;color:var(--ink);background:#172033}.candidate,.preported{border-color:var(--green);color:var(--green)}.needs_clarification{border-color:var(--amber);color:var(--amber)}.rejected{border-color:var(--red);color:var(--red)}
+    dl{display:grid;grid-template-columns:150px 1fr;gap:5px 10px;margin:8px 0 0}dt{color:var(--muted);font-size:12px}dd{margin:0;color:var(--ink);word-break:break-word}.msg{margin-top:10px;color:#e2e8f0;background:#151c2b;border:1px solid rgba(148,163,184,.25);padding:10px;border-radius:6px}
+    button,select{background:#111827;color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:9px 11px}button{cursor:pointer}button:hover{border-color:var(--cyan);color:var(--cyan)}.note{margin:14px 0;color:var(--muted);font-size:13px}.empty{padding:18px;color:var(--muted)}
+    @media(max-width:900px){.cols,.grid{grid-template-columns:1fr}header{align-items:flex-start;flex-direction:column}}
+  </style>
+</head>
+<body>
+  <header>
+    <div><h1>D-ND_LAB Intake Reports</h1><div class="sub">Pre-report, lead e contributi: raccolta redatta, nessuna contaminazione automatica.</div></div>
+    <div><select id="domain"><option value="finance">finance</option></select> <button id="refresh">Aggiorna</button></div>
+  </header>
+  <main class="wrap">
+    <div class="note" id="boundary">Caricamento…</div>
+    <div class="grid" id="metrics"></div>
+    <div class="cols">
+      <section class="section"><h2>Contribution Intake Reports</h2><div id="contributions"></div></section>
+      <section class="section"><h2>Lead / Contatti redatti</h2><div id="leads"></div></section>
+    </div>
+  </main>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    function metric(label, value){ return `<div class="metric"><span>${esc(label)}</span><b>${esc(value)}</b></div>`; }
+    function row(k,v){ return v ? `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>` : ''; }
+    function contribution(c){
+      const cls = esc(c.status || 'unknown');
+      return `<article class="item"><div class="top"><span class="id">${esc(c.id)}</span><span class="badge ${cls}">${cls}</span></div>
+        <div class="date">${esc(c.created_at)} · signal ${esc(c.signal_score)} · noise ${esc(c.noise_score)}</div>
+        <dl>${row('Dominio', c.proposed_domain || c.domain)}${row('Fonte', c.public_data_source)}${row('Ipotesi', c.hypothesis)}${row('Falsificatore', c.falsification_test)}${row('Vincoli', c.constraints)}${row('Valore atteso', c.expected_value)}${row('Contatto', c.contact_redacted)}${row('Tab', c.context_tab)}</dl>
+        <div class="msg">${esc(c.message_excerpt || '-')}</div></article>`;
+    }
+    function lead(l){
+      return `<article class="item"><div class="top"><span class="id">${esc(l.id)}</span><span class="badge">${esc(l.kind || 'lead')}</span></div>
+        <div class="date">${esc(l.created_at)} · ${l.consent ? 'consenso email' : 'nessun consenso email'}</div>
+        <dl>${row('Dominio', l.domain)}${row('Email', l.email_redacted)}${row('Nome', l.name_redacted)}${row('Interessi', (l.interests || []).join(', '))}${row('Pagina', l.context_page)}</dl>
+        <div class="msg">${esc(l.message_excerpt || '-')}</div></article>`;
+    }
+    async function load(){
+      const d = $('domain').value || 'finance';
+      const res = await fetch(`/api/intake_review?domain=${encodeURIComponent(d)}&limit=120`);
+      const data = await res.json();
+      $('boundary').textContent = data.boundary || '';
+      $('metrics').innerHTML = metric('Contributi', data.counts?.contributions || 0) + metric('Lead', data.counts?.leads || 0) + metric('Da chiarire', data.counts?.needs_clarification || 0) + metric('Candidati', data.counts?.candidates || 0);
+      $('contributions').innerHTML = (data.contributions || []).map(contribution).join('') || '<div class="empty">Nessun contribution intake report.</div>';
+      $('leads').innerHTML = (data.leads || []).map(lead).join('') || '<div class="empty">Nessun lead registrato.</div>';
+    }
+    $('refresh').addEventListener('click', load); load().catch(e => { $('boundary').textContent = 'Errore: ' + e.message; });
+  </script>
+</body>
+</html>""")
+
+
 # ─── Static frontend ────────────────────────────────────────────────
 
 
@@ -3971,6 +4076,31 @@ def _score_contribution(record: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _extract_contribution_fields(message: str) -> dict[str, str]:
+    fields: dict[str, str] = {}
+    aliases = {
+        "proposed_domain": ("dominio", "domain", "campo", "lab"),
+        "public_data_source": ("fonte pubblica verificabile", "fonte", "source", "dataset", "dati"),
+        "hypothesis": ("ipotesi", "hypothesis"),
+        "falsification_test": ("falsificatore", "falsificazione", "test di falsificazione", "falsifier"),
+        "constraints": ("vincoli", "constraints", "limiti"),
+        "expected_value": ("valore atteso", "valore", "expected value"),
+    }
+    for raw_line in str(message or "").splitlines():
+        if ":" not in raw_line:
+            continue
+        key_raw, value = raw_line.split(":", 1)
+        key = key_raw.strip().lower()
+        val = value.strip()
+        if len(val) < 3:
+            continue
+        for field, names in aliases.items():
+            if any(name in key for name in names):
+                fields[field] = val
+                break
+    return fields
+
+
 def _next_missing_question(missing: list[str]) -> str:
     questions = {
         "proposed_domain": "Quale dominio preciso vuoi aprire o migliorare?",
@@ -4020,6 +4150,90 @@ def _write_lead(record: dict[str, Any]) -> None:
         _render_lead(record),
         encoding="utf-8",
     )
+
+
+def _read_jsonl(path: Path, limit: int) -> list[dict[str, Any]]:
+    if not path.exists():
+        return []
+    rows: list[dict[str, Any]] = []
+    try:
+        for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
+            if not line.strip():
+                continue
+            try:
+                item = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if isinstance(item, dict):
+                rows.append(item)
+    except OSError:
+        return []
+    return rows[-limit:][::-1]
+
+
+def _redact_contact(value: Any) -> str:
+    text = str(value or "").strip()
+    if not text:
+        return ""
+    if "@" in text:
+        name, _, domain = text.partition("@")
+        if not name or not domain:
+            return "[redacted]"
+        return f"{name[:1]}***@{domain[:1]}***"
+    return "[redacted]"
+
+
+def _review_excerpt(value: Any, max_len: int = 420) -> str:
+    text = re.sub(r"\s+", " ", str(value or "")).strip()
+    if len(text) <= max_len:
+        return text
+    return text[:max_len - 1].rstrip() + "…"
+
+
+def _read_contribution_review(domain: str, limit: int) -> list[dict[str, Any]]:
+    registry = paths.domain_data_dir(domain) / "contributions" / "registry.jsonl"
+    out = []
+    for item in _read_jsonl(registry, limit):
+        out.append({
+            "id": item.get("id"),
+            "created_at": item.get("created_at"),
+            "domain": item.get("domain"),
+            "proposed_domain": item.get("proposed_domain"),
+            "status": item.get("status"),
+            "signal_score": item.get("signal_score"),
+            "noise_score": item.get("noise_score"),
+            "context_tab": item.get("context_tab"),
+            "contact_preference": item.get("contact_preference"),
+            "contact_redacted": _redact_contact(item.get("contact")),
+            "message_excerpt": _review_excerpt(item.get("message")),
+            "public_data_source": _review_excerpt(item.get("public_data_source"), 220),
+            "hypothesis": _review_excerpt(item.get("hypothesis"), 260),
+            "falsification_test": _review_excerpt(item.get("falsification_test"), 260),
+            "constraints": _review_excerpt(item.get("constraints"), 220),
+            "expected_value": _review_excerpt(item.get("expected_value"), 220),
+        })
+    return out
+
+
+def _read_lead_review(limit: int) -> list[dict[str, Any]]:
+    registry = paths._repo_root() / "data" / "leads" / "registry.jsonl"
+    out = []
+    for item in _read_jsonl(registry, limit):
+        out.append({
+            "id": item.get("id"),
+            "created_at": item.get("created_at"),
+            "kind": item.get("kind"),
+            "status": item.get("status"),
+            "domain": item.get("domain"),
+            "email_redacted": _redact_contact(item.get("email")),
+            "name_redacted": _redact_contact(item.get("name")) if item.get("name") else "",
+            "frequency": item.get("frequency"),
+            "consent": bool(item.get("consent")),
+            "interests": (item.get("interests") or [])[:8],
+            "message_excerpt": _review_excerpt(item.get("message")),
+            "context_page": _review_excerpt(item.get("context_page"), 180),
+        })
+    return out
 
 
 def _render_lead(record: dict[str, Any]) -> str:

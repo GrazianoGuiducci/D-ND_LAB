@@ -2283,8 +2283,8 @@
                 <button @click="registerContribution(i)"
                         x-show="!m.contribution_registered"
                         :disabled="m.contribution_loading"
-                        class="px-3 py-1 rounded bg-cyan-700 hover:bg-cyan-600 disabled:opacity-50 text-white">
-                  Registra proposta
+                        class="px-3 py-1 rounded bg-cyan-700 hover:bg-cyan-600 disabled:opacity-50 text-white"
+                        x-text="canRegisterContribution(i) ? 'Registra proposta' : 'Prepara scheda'">
                 </button>
                 <span class="text-slate-300" x-show="!m.contribution_result">Crea una scheda pre-report per revisione operatore.</span>
                 <span class="text-emerald-300" x-show="m.contribution_result" x-text="m.contribution_result"></span>
@@ -2307,7 +2307,7 @@
 
       <!-- Input -->
       <form @submit.prevent="sendChat()" class="border-t border-slate-700 p-2 flex gap-2 bg-slate-950/40">
-        <input x-model="chatInput" :disabled="chatLoading" placeholder="Chiedi al lab…" class="flex-1 bg-slate-950 border border-slate-700 rounded px-3 py-2 text-xs focus:border-purple-500 outline-none">
+        <textarea x-model="chatInput" :disabled="chatLoading" rows="2" placeholder="Chiedi al lab…" class="flex-1 bg-slate-950 border border-slate-700 rounded px-3 py-2 text-xs focus:border-purple-500 outline-none resize-none"></textarea>
         <button type="submit" :disabled="chatLoading || !chatInput.trim()" class="px-3 py-2 rounded bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-xs font-medium" data-i18n="dash.chat.send">Send</button>
       </form>
       <div class="chat-resize-grip" @pointerdown.stop="startChatResize($event)" title="Ridimensiona"></div>
@@ -4790,6 +4790,41 @@
         ].some(token => s.includes(token));
       },
 
+      contributionHasStructuredSignal(text) {
+        const raw = text || '';
+        const filledFields = raw.split(/\n+/).reduce((n, line) => {
+          const parts = line.split(':');
+          if (parts.length < 2) return n;
+          const key = parts[0].toLowerCase();
+          const value = parts.slice(1).join(':').trim();
+          const relevant = ['dominio', 'domain', 'fonte', 'source', 'ipotesi', 'hypothesis', 'falsific', 'vincol', 'constraint', 'valore', 'contatto'].some(t => key.includes(t));
+          return n + (relevant && value.length >= 8 ? 1 : 0);
+        }, 0);
+        if (filledFields >= 3) return true;
+        const s = raw.toLowerCase();
+        const checks = [
+          ['dominio', 'domain', 'campo'],
+          ['fonte', 'source', 'dataset', 'dati', 'paper', 'url', 'http'],
+          ['ipotesi', 'hypothesis', 'distingu', 'verific'],
+          ['falsific', 'sment', 'fallisce', 'test'],
+          ['vincol', 'constraint', 'privacy', 'costo', 'legale'],
+          ['valore', 'utile', 'report', 'supporto', 'prodotto'],
+        ];
+        return checks.reduce((n, group) => n + (group.some(t => s.includes(t)) ? 1 : 0), 0) >= 3;
+      },
+
+      contributionDraftTemplate() {
+        return [
+          'Dominio:',
+          'Fonte pubblica verificabile:',
+          'Ipotesi:',
+          'Falsificatore:',
+          'Vincoli:',
+          'Valore atteso:',
+          'Contatto, se vuoi follow-up:',
+        ].join('\n');
+      },
+
       latestUserMessageBefore(index) {
         for (let i = index - 1; i >= 0; i -= 1) {
           if (this.chatMessages[i]?.role === 'user') return this.chatMessages[i];
@@ -4803,19 +4838,29 @@
         if (msg.contribution_registered) return false;
         const userMsg = this.latestUserMessageBefore(index);
         if (!userMsg) return false;
-        return this.contributionCandidateText(userMsg.content);
+        return this.contributionCandidateText(userMsg.content) && this.contributionHasStructuredSignal(userMsg.content);
       },
 
       contributionPanelVisible(index) {
         const msg = this.chatMessages[index];
+        const userMsg = this.latestUserMessageBefore(index);
         return !!(msg && msg.role === 'assistant'
-          && (msg.contribution_result || msg.contribution_loading || this.canRegisterContribution(index)));
+          && (msg.contribution_result || msg.contribution_loading || (userMsg && this.contributionCandidateText(userMsg.content))));
       },
 
       async registerContribution(index) {
         const msg = this.chatMessages[index];
         const userMsg = this.latestUserMessageBefore(index);
         if (!msg || !userMsg || msg.contribution_loading) return;
+        if (!this.contributionHasStructuredSignal(userMsg.content)) {
+          this.chatInput = this.contributionDraftTemplate();
+          msg.contribution_result = 'Scheda preparata nell’input. Compilala con elementi verificabili, poi inviala al Lab.';
+          this.$nextTick(() => {
+            const input = document.querySelector('textarea[x-model="chatInput"]');
+            if (input) input.focus();
+          });
+          return;
+        }
         msg.contribution_loading = true;
         try {
           const r = await fetch(`/api/domains/${this.activeDomain}/contributions`, {

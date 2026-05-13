@@ -55,7 +55,7 @@ condensato del Lab.
 Pipeline:
 
 1. `intake` — chat THIA raccoglie e chiarisce;
-2. `pre-report` — scheda candidata append-only, sanitizzata;
+2. `pre-report` / `intake report` — scheda candidata append-only, sanitizzata;
 3. `review` — operatore o ciclo di revisione decide se promuovere;
 4. `candidate-branch` — eventuale ramo separato di esplorazione;
 5. `cycle-input` — solo dopo review diventa seme/tensione/dominio;
@@ -106,12 +106,13 @@ Gia' presente:
 - filtro server-side signal/noise;
 - endpoint lead/newsletter/contact/support separato da contribution pre-report;
 - CTA THIA che possono registrare contributi o lead dal widget pubblico;
+- pagina nascosta di review redatta (`/dashboard/intake-review`) per leggere
+  intake report e lead senza esporre contatti completi;
 - dashboard state e marker percettivi;
 - THIA/DOMUS unico assistente pubblico sul sottodominio Lab.
 
 Da implementare:
 
 - provider email + double opt-in;
-- pannello review lead/contributi;
 - job digest automatico da report/cycle trace;
 - promozione controllata da pre-report a branch/dominio.
