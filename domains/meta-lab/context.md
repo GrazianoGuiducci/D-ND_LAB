@@ -108,7 +108,8 @@ sono formalmente validi.
 
 Input al tuo cycle: una **richiesta dominio** in forma libera (operatore o
 utente API). Esempio: "voglio un lab su finance, focus su regime shift
-nei mercati FX". Più opzionalmente un corpus (URL, file, dataset).
+nei mercati FX". Piu' opzionalmente un corpus (URL, file, dataset) e un
+preset di famiglia da `docs/templates/domain_presets/`.
 
 Output del cycle: un **seme cognitivo strutturato** + **MML del lab figlio**
 + verifica falsifier. Importante: il MML nasce CON il lab dalla genesi —
@@ -133,6 +134,11 @@ Il lab figlio acquisisce anche:
    Non inventare tensioni; estraile dal materiale. Se il dominio non
    produce tensioni dipolari (det~0 ovunque dopo shuffle), il dominio
    non ha leverage e il falsifier deve dire NO.
+
+   Se e' stato fornito un preset, usalo solo come acceleratore: leggi
+   `docs/DOMAIN_PRESETS.md`, importa osservabili/baseline/falsifier utili e
+   scarta cio' che non appartiene all'intento reale. Un preset copiato senza
+   adattamento e' contaminazione, non transduzione.
 
 3. **Proiezione assiomi** — quale degli A1-A16 si applica naturalmente
    al dominio? Le tensioni iniziali devono referenziare almeno un
@@ -177,6 +183,11 @@ Il lab figlio acquisisce anche:
    template comune a tre colonne e dichiara quali moduli lo popolano.
    Leggi `docs/UI_COGNITIVE_PROCESS.md` e usa
    `docs/templates/ui_contract.v1.json`.
+
+   Se il dominio deriva da un preset, puoi partire dai suoi
+   `starter_ui_modules`, ma devi produrre comunque un `ui_contract.json`
+   specifico del dominio. Il contratto finale deve parlare il linguaggio del
+   dominio, non quello del preset.
 
    Il contratto deve dichiarare:
    - `intent_movement`: quale movimento la UI deve rendere visibile;

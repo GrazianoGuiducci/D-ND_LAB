@@ -102,6 +102,8 @@ The transduction rules used to preserve the Lab movement across domains live in
 [docs/DOMAIN_TRANSCENDENCE_AWARENESS.md](docs/DOMAIN_TRANSCENDENCE_AWARENESS.md).
 The UI generation process for domain-native dashboards lives in
 [docs/UI_COGNITIVE_PROCESS.md](docs/UI_COGNITIVE_PROCESS.md).
+Optional domain presets that accelerate new Lab installation live in
+[docs/DOMAIN_PRESETS.md](docs/DOMAIN_PRESETS.md).
 
 Admin-triggered cycle runs from the main-site THIA Assistant are supported via
 a server-to-server bridge; see

@@ -101,6 +101,11 @@ Minimum fields:
 
 Template: `docs/templates/ui_contract.v1.json`.
 
+If a domain family has a preset in `docs/templates/domain_presets/`, the
+meta-lab may use it as an accelerator for module selection and boundaries. The
+preset does not replace this UI contract: it must be adapted to the concrete
+domain request and then emitted as `domains/<domain>/ui_contract.json`.
+
 ## Placement Rules
 
 ### Left Column

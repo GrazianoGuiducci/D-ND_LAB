@@ -48,6 +48,11 @@ dndlab plan-domain
 Il comando raccoglie slug, titolo, tipo dominio e movimento/intento. Non genera
 ancora un Lab: crea input per meta-lab/template generator e validator.
 
+Se esiste un preset compatibile in `docs/templates/domain_presets/`, il
+meta-lab puo' usarlo come acceleratore. Il preset non e' autorita': serve a
+precompilare osservabili, baseline/null, falsifier, moduli UI e confini admin
+da adattare all'intento reale.
+
 Il passaggio successivo alla richiesta e' la transduzione: il meta-lab deve
 produrre `domains/<slug>/transduction.md` e
 `domains/<slug>/ui_contract.json` insieme a `context.md`, `seed.json`,
@@ -62,6 +67,8 @@ Le sezioni sono ordinate per dipendenza causale.
 - **Nome breve** (slug, used in path/URL): `physics`, `finance`,
   `editorial`, ...
 - **Titolo full**: "Lab fisica D-ND", "Lab finanza dipolare", ...
+- **Preset opzionale**: id preset (`finance_regime.v1`, `bio_signal.v1`,
+  ecc.) o `none` se il dominio richiede estrazione senza acceleratore.
 - **Lingua principale**: it / en / multi
 - **Scope di una riga**: cosa indaga questo lab?
 - **Owner / responsabile**: email/nome operatore

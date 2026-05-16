@@ -1,0 +1,109 @@
+{
+  "schema": "domain_preset.v1",
+  "preset_id": "bio_signal.v1",
+  "domain_family": "bio_signal",
+  "use_when": [
+    "The Lab must detect regimes or anomalies in biosignals while separating physiology from artifact.",
+    "The value is a monitored hypothesis or triage constraint, not diagnosis."
+  ],
+  "do_not_use_when": [
+    "The request asks for medical diagnosis, treatment advice or emergency decisions.",
+    "Subject consent, provenance or signal quality cannot be established."
+  ],
+  "starter_observables": [
+    {
+      "name": "heart_rate_variability",
+      "role": "Autonomic regime and rhythm variability.",
+      "risk": "Sensitive to sampling, device and preprocessing."
+    },
+    {
+      "name": "signal_quality_index",
+      "role": "Separates data state from physiology claim.",
+      "risk": "Quality proxy can hide systematic device bias."
+    },
+    {
+      "name": "circadian_phase",
+      "role": "Time-context for normal/abnormal rhythm boundaries.",
+      "risk": "Can be inferred poorly without sleep or context data."
+    },
+    {
+      "name": "artifact_rate",
+      "role": "Movement, missing data and sensor noise.",
+      "risk": "High artifact can resemble event clusters."
+    }
+  ],
+  "starter_baselines": [
+    {
+      "name": "subject_baseline",
+      "role": "Attacks population-level overgeneralization."
+    },
+    {
+      "name": "time_shuffle",
+      "role": "Attacks temporal pattern claims."
+    },
+    {
+      "name": "device_artifact_null",
+      "role": "Attacks sensor-driven anomalies."
+    }
+  ],
+  "starter_falsifiers": [
+    {
+      "lens": "artifact_confound",
+      "blocks": "Calling sensor noise a biological event."
+    },
+    {
+      "lens": "population_transfer",
+      "blocks": "Projecting one subject or cohort onto another."
+    },
+    {
+      "lens": "clinical_overclaim",
+      "blocks": "Turning a monitoring signal into diagnosis."
+    }
+  ],
+  "starter_ui_modules": {
+    "common": [
+      "SeedStatus",
+      "ActiveTensions",
+      "RuntimeDynamics",
+      "FalsifierPanel",
+      "Cemetery",
+      "THIAContextAssistant"
+    ],
+    "domain_native": [
+      "SignalQuality",
+      "ArtifactFilter",
+      "SubjectState",
+      "ClinicalBoundary"
+    ]
+  },
+  "admin_boundaries": [
+    {
+      "action": "run_cycle",
+      "allowed": true,
+      "boundary": "Run on de-identified, consented or synthetic/open data."
+    },
+    {
+      "action": "clinical_recommendation",
+      "allowed": false,
+      "boundary": "The Lab may surface constraints, not medical advice."
+    }
+  ],
+  "forbidden_labels": [
+    "diagnosis",
+    "treatment",
+    "safe",
+    "emergency",
+    "medical advice"
+  ],
+  "e2e_checks": [
+    {
+      "check": "cycle_to_signal_quality",
+      "expectation": "A completed cycle shows signal quality before any biological interpretation."
+    }
+  ],
+  "adaptation_questions": [
+    "What data provenance and consent boundary applies?",
+    "What is the subject-level baseline?",
+    "Which artifact null must fail before interpretation?"
+  ]
+}

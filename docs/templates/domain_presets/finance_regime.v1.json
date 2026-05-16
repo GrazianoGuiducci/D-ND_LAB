@@ -1,0 +1,127 @@
+{
+  "schema": "domain_preset.v1",
+  "preset_id": "finance_regime.v1",
+  "domain_family": "finance",
+  "use_when": [
+    "The Lab must detect regime changes, risk shifts or hypothesis failure in market-like time series.",
+    "The value is deciding what is not admissible under current evidence, not issuing trading signals."
+  ],
+  "do_not_use_when": [
+    "The request asks for buy/sell calls, guaranteed profit, portfolio advice or regulated financial recommendations.",
+    "The available data cannot be versioned, audited or compared against a naive baseline."
+  ],
+  "starter_observables": [
+    {
+      "name": "log_return",
+      "role": "Local price movement after scale normalization.",
+      "risk": "Can turn noise into a story when window choice is post-hoc."
+    },
+    {
+      "name": "realized_volatility",
+      "role": "Local instability and regime persistence.",
+      "risk": "Volatility increase is not direction or edge."
+    },
+    {
+      "name": "drawdown",
+      "role": "Stress path and loss clustering.",
+      "risk": "Can overfit crisis windows."
+    },
+    {
+      "name": "liquidity_or_spread_proxy",
+      "role": "Execution friction and data quality warning.",
+      "risk": "Often missing or synthetic in public data."
+    }
+  ],
+  "starter_baselines": [
+    {
+      "name": "random_walk",
+      "role": "Attacks naive predictability."
+    },
+    {
+      "name": "shuffled_returns",
+      "role": "Attacks claims that do not depend on temporal order."
+    },
+    {
+      "name": "block_bootstrap",
+      "role": "Attacks results caused only by local autocorrelation."
+    },
+    {
+      "name": "transaction_cost_baseline",
+      "role": "Attacks signals that disappear under friction."
+    }
+  ],
+  "starter_falsifiers": [
+    {
+      "lens": "lookahead_bias",
+      "blocks": "Using future information in feature or window selection."
+    },
+    {
+      "lens": "data_snooping",
+      "blocks": "Choosing metrics after seeing the result."
+    },
+    {
+      "lens": "survivorship_bias",
+      "blocks": "Testing only assets that survived."
+    },
+    {
+      "lens": "overfit_window",
+      "blocks": "Mistaking a selected window for a stable regime."
+    }
+  ],
+  "starter_ui_modules": {
+    "common": [
+      "SeedStatus",
+      "ActiveTensions",
+      "RuntimeDynamics",
+      "FalsifierPanel",
+      "Cemetery",
+      "THIAContextAssistant"
+    ],
+    "domain_native": [
+      "RegimeMap",
+      "BaselineComparison",
+      "DataCard",
+      "DecisionBounds"
+    ]
+  },
+  "admin_boundaries": [
+    {
+      "action": "run_cycle",
+      "allowed": true,
+      "boundary": "Run from current seed and dataset contract."
+    },
+    {
+      "action": "inspect_runtime",
+      "allowed": true,
+      "boundary": "Expose data card, baselines and falsifier flags."
+    },
+    {
+      "action": "publish_signal",
+      "allowed": false,
+      "boundary": "This preset does not produce trading signals."
+    }
+  ],
+  "forbidden_labels": [
+    "buy",
+    "sell",
+    "forecast",
+    "profit",
+    "alpha signal",
+    "trading signal"
+  ],
+  "e2e_checks": [
+    {
+      "check": "cycle_to_regime_map",
+      "expectation": "A completed cycle updates regime state and baseline comparison."
+    },
+    {
+      "check": "decision_bounds_visible",
+      "expectation": "The UI states what is not admissible before any product language."
+    }
+  ],
+  "adaptation_questions": [
+    "Which asset universe and time granularity are in scope?",
+    "Which data source is auditable enough for the first cycle?",
+    "Which decision should the Lab constrain rather than predict?"
+  ]
+}

@@ -1,0 +1,112 @@
+{
+  "schema": "domain_preset.v1",
+  "preset_id": "physics_bridge.v1",
+  "domain_family": "physics",
+  "use_when": [
+    "The Lab must test whether a bridge between formal models survives observable contracts.",
+    "The value is separating physical invariants from finite-size or representation artifacts."
+  ],
+  "do_not_use_when": [
+    "The request only asks for narrative analogy between theories.",
+    "No measurable observable, null model or reproducible sweep can be declared."
+  ],
+  "starter_observables": [
+    {
+      "name": "spectral_gap",
+      "role": "Local spacing or transition evidence.",
+      "risk": "Can be dominated by unfolding or scale choice."
+    },
+    {
+      "name": "participation_entropy",
+      "role": "Localization or delocalization proxy.",
+      "risk": "Finite-size regimes can masquerade as asymptotic physics."
+    },
+    {
+      "name": "bridge_frequency",
+      "role": "How often a candidate bridge appears across sweeps.",
+      "risk": "Graph-only frequency is not physical evidence."
+    },
+    {
+      "name": "classical_intermediate",
+      "role": "Checks whether a quantum/formal bridge crosses a classical control.",
+      "risk": "Can be an artifact of projection."
+    }
+  ],
+  "starter_baselines": [
+    {
+      "name": "poisson_null",
+      "role": "Attacks random uncorrelated level claims."
+    },
+    {
+      "name": "wigner_dyson_null",
+      "role": "Attacks chaos-like claims."
+    },
+    {
+      "name": "label_shuffle",
+      "role": "Attacks semantic labels detached from structure."
+    },
+    {
+      "name": "finite_size_sweep",
+      "role": "Attacks scale-specific bridges."
+    }
+  ],
+  "starter_falsifiers": [
+    {
+      "lens": "finite_size_artifact",
+      "blocks": "Promoting a boundary that moves with size."
+    },
+    {
+      "lens": "unfolding_dependency",
+      "blocks": "Calling a result invariant when it depends on the measuring ruler."
+    },
+    {
+      "lens": "graph_only_bridge",
+      "blocks": "Treating graph topology as physical proof."
+    }
+  ],
+  "starter_ui_modules": {
+    "common": [
+      "SeedStatus",
+      "ActiveTensions",
+      "RuntimeDynamics",
+      "NullBaselinePanel",
+      "FalsifierPanel",
+      "THIAContextAssistant"
+    ],
+    "domain_native": [
+      "TheoryCrossing",
+      "BridgeAudit",
+      "ZeroPoints",
+      "ObservableContract"
+    ]
+  },
+  "admin_boundaries": [
+    {
+      "action": "run_cycle",
+      "allowed": true,
+      "boundary": "Run current sweep contract without forcing the next theory target."
+    },
+    {
+      "action": "promote_bridge",
+      "allowed": false,
+      "boundary": "Promotion requires observable contract and independent sweep survival."
+    }
+  ],
+  "forbidden_labels": [
+    "proof",
+    "final theory",
+    "confirmed physics",
+    "universal law"
+  ],
+  "e2e_checks": [
+    {
+      "check": "cycle_to_bridge_audit",
+      "expectation": "A completed cycle updates bridge candidates with null and finite-size status."
+    }
+  ],
+  "adaptation_questions": [
+    "Which physical system supplies the observable contract?",
+    "Which representation changes must the result survive?",
+    "Which nulls attack the candidate bridge first?"
+  ]
+}

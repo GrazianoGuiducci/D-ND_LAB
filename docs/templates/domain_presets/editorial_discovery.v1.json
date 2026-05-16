@@ -1,0 +1,108 @@
+{
+  "schema": "domain_preset.v1",
+  "preset_id": "editorial_discovery.v1",
+  "domain_family": "editorial",
+  "use_when": [
+    "The Lab must mine archives, notes or drafts for publishable insight.",
+    "The value is separating new resultant value from source echo."
+  ],
+  "do_not_use_when": [
+    "The request is only content generation without source-grounded discovery.",
+    "Copyright, authorship or publication boundaries are unclear."
+  ],
+  "starter_observables": [
+    {
+      "name": "source_cluster",
+      "role": "Related notes, claims or fragments.",
+      "risk": "Cluster similarity can be mistaken for novelty."
+    },
+    {
+      "name": "novelty_density",
+      "role": "Ratio of new synthesis to source echo.",
+      "risk": "Can reward eccentric wording over value."
+    },
+    {
+      "name": "audience_fit",
+      "role": "Whether the insight can land for a target reader.",
+      "risk": "Can flatten difficult ideas prematurely."
+    },
+    {
+      "name": "citation_gap",
+      "role": "Missing evidence or attribution.",
+      "risk": "Can become busywork if not tied to claim risk."
+    }
+  ],
+  "starter_baselines": [
+    {
+      "name": "source_echo_baseline",
+      "role": "Attacks recycled phrasing or received insight."
+    },
+    {
+      "name": "generic_summary",
+      "role": "Attacks summaries that add no resultant value."
+    },
+    {
+      "name": "audience_mismatch",
+      "role": "Attacks publishability without reader contract."
+    }
+  ],
+  "starter_falsifiers": [
+    {
+      "lens": "source_echo",
+      "blocks": "Calling recombination discovery."
+    },
+    {
+      "lens": "unsupported_claim",
+      "blocks": "Publishing a claim without evidence chain."
+    },
+    {
+      "lens": "voice_drift",
+      "blocks": "Losing authorial or project identity."
+    }
+  ],
+  "starter_ui_modules": {
+    "common": [
+      "SeedStatus",
+      "ActiveTensions",
+      "AgentReports",
+      "RuntimeDynamics",
+      "FalsifierPanel",
+      "THIAContextAssistant"
+    ],
+    "domain_native": [
+      "SourceEchoMap",
+      "PublishabilityGate",
+      "NoveltyDensity",
+      "AudienceFit"
+    ]
+  },
+  "admin_boundaries": [
+    {
+      "action": "run_cycle",
+      "allowed": true,
+      "boundary": "Run against selected archive/source scope."
+    },
+    {
+      "action": "publish",
+      "allowed": false,
+      "boundary": "Publication requires human editorial approval and rights review."
+    }
+  ],
+  "forbidden_labels": [
+    "ready to publish",
+    "original",
+    "owned",
+    "citation complete"
+  ],
+  "e2e_checks": [
+    {
+      "check": "cycle_to_publishability_gate",
+      "expectation": "A completed cycle shows source echo, novelty and missing evidence before draft promotion."
+    }
+  ],
+  "adaptation_questions": [
+    "Which archive or source set is in scope?",
+    "What counts as new value for this audience?",
+    "Which publication boundary must block promotion?"
+  ]
+}

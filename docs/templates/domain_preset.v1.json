@@ -1,0 +1,59 @@
+{
+  "schema": "domain_preset.v1",
+  "preset_id": "<family_name>.v1",
+  "domain_family": "<broad-domain-family>",
+  "use_when": [
+    "Describe when this preset accelerates a new Lab."
+  ],
+  "do_not_use_when": [
+    "Describe situations where this preset would contaminate the request."
+  ],
+  "starter_observables": [
+    {
+      "name": "<observable>",
+      "role": "What this observable can reveal.",
+      "risk": "How it can mislead the Lab."
+    }
+  ],
+  "starter_baselines": [
+    {
+      "name": "<baseline-or-null>",
+      "role": "What claim it attacks."
+    }
+  ],
+  "starter_falsifiers": [
+    {
+      "lens": "<falsifier-lens>",
+      "blocks": "What false inference this blocks."
+    }
+  ],
+  "starter_ui_modules": {
+    "common": [
+      "SeedStatus",
+      "ActiveTensions",
+      "RuntimeDynamics"
+    ],
+    "domain_native": [
+      "<DomainModule>"
+    ]
+  },
+  "admin_boundaries": [
+    {
+      "action": "run_cycle",
+      "allowed": true,
+      "boundary": "Run from current seed; no direction override without review."
+    }
+  ],
+  "forbidden_labels": [
+    "Labels or actions that would overstate early-cycle evidence."
+  ],
+  "e2e_checks": [
+    {
+      "check": "cycle_to_ui",
+      "expectation": "A completed cycle updates left, center and right dashboard surfaces."
+    }
+  ],
+  "adaptation_questions": [
+    "What must the meta-lab answer before producing the final Lab?"
+  ]
+}

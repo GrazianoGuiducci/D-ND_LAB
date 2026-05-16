@@ -234,6 +234,11 @@ domains/<slug>/ui_contract.json
 Il processo canonico e' in `docs/UI_COGNITIVE_PROCESS.md`; il template
 riusabile e' `docs/templates/ui_contract.v1.json`.
 
+Per installazioni piu' veloci il meta-lab puo' partire da preset opzionali in
+`docs/templates/domain_presets/`, descritti in `docs/DOMAIN_PRESETS.md`. Il
+preset accelera la scelta di osservabili, null, falsifier e moduli UI, ma non
+sostituisce la transduzione: deve essere adattato al dominio e poi validato.
+
 Ogni UI di Lab dovrebbe mostrare almeno:
 
 - ipotesi o tensione attiva;

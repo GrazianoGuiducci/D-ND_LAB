@@ -129,6 +129,11 @@ moduli domain-native, osservabili, baseline/null, azioni admin e label
 vietate. Questo evita due regressioni: UI rigida uguale per tutti i domini e
 UI custom che perde il movimento del Lab.
 
+I preset in `docs/templates/domain_presets/` accelerano questo passaggio per
+famiglie note di domini. Sono input opzionali, non template finali: il meta-lab
+deve adattarli all'intento e il validator deve comunque leggere gli artefatti
+generati.
+
 ### 2.1 KTHIA
 Kernel attivo del sistema THIA. Contiene identità (chi è THIA), nucleo
 assiomatico (modello D-ND), MMSp sorgente, KSAR, skill kernel, memorie

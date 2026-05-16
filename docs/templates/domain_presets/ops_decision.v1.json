@@ -1,0 +1,108 @@
+{
+  "schema": "domain_preset.v1",
+  "preset_id": "ops_decision.v1",
+  "domain_family": "operations_decision",
+  "use_when": [
+    "The Lab must support complex decisions by falsifying options and exposing constraints.",
+    "The value is reducing bad action space under uncertainty."
+  ],
+  "do_not_use_when": [
+    "The decision has no observable feedback loop.",
+    "Stakeholders, constraints or failure costs cannot be made explicit."
+  ],
+  "starter_observables": [
+    {
+      "name": "decision_option",
+      "role": "Candidate action under evaluation.",
+      "risk": "Options can encode stakeholder bias."
+    },
+    {
+      "name": "constraint_violation",
+      "role": "Boundary a decision must not cross.",
+      "risk": "Unweighted constraints can hide fatal blockers."
+    },
+    {
+      "name": "feedback_latency",
+      "role": "Delay before outcome can be observed.",
+      "risk": "Slow feedback can make early success illusory."
+    },
+    {
+      "name": "failure_cost",
+      "role": "Asymmetric downside and irreversibility.",
+      "risk": "Hard to compare across stakeholders."
+    }
+  ],
+  "starter_baselines": [
+    {
+      "name": "status_quo",
+      "role": "Attacks change-for-change claims."
+    },
+    {
+      "name": "random_policy",
+      "role": "Attacks arbitrary prioritization."
+    },
+    {
+      "name": "single_metric_optimizer",
+      "role": "Attacks overfit to one KPI."
+    }
+  ],
+  "starter_falsifiers": [
+    {
+      "lens": "stakeholder_blindness",
+      "blocks": "Optimizing for one actor while externalizing cost."
+    },
+    {
+      "lens": "irreversibility",
+      "blocks": "Treating non-reversible actions as experiments."
+    },
+    {
+      "lens": "proxy_metric",
+      "blocks": "Mistaking a KPI improvement for system improvement."
+    }
+  ],
+  "starter_ui_modules": {
+    "common": [
+      "SeedStatus",
+      "ActiveTensions",
+      "CycleTimeline",
+      "RuntimeDynamics",
+      "FalsifierPanel",
+      "THIAContextAssistant"
+    ],
+    "domain_native": [
+      "DecisionTree",
+      "FailureModes",
+      "ActionConstraints",
+      "EscalationMap"
+    ]
+  },
+  "admin_boundaries": [
+    {
+      "action": "run_cycle",
+      "allowed": true,
+      "boundary": "Run current decision frame against constraints and baselines."
+    },
+    {
+      "action": "approve_action",
+      "allowed": false,
+      "boundary": "The Lab can constrain or recommend review, not approve execution."
+    }
+  ],
+  "forbidden_labels": [
+    "approved",
+    "guaranteed",
+    "optimal",
+    "no risk"
+  ],
+  "e2e_checks": [
+    {
+      "check": "cycle_to_action_constraints",
+      "expectation": "A completed cycle updates forbidden actions and unresolved decision tensions."
+    }
+  ],
+  "adaptation_questions": [
+    "What action space is actually controllable?",
+    "Which failure is unacceptable even if metrics improve?",
+    "What feedback can verify or falsify the decision?"
+  ]
+}
