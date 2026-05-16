@@ -1,6 +1,6 @@
 """lab_template_validator.py — CLI front-end del falsifier meta-lab.
 
-Applica le 5 meta-lenti M1-M5 (definite in domains/meta-lab/assertions.py)
+Applica le meta-lenti M1-M7 (definite in domains/meta-lab/assertions.py)
 a un template di lab dato come path. Invocabile da:
 - pipeline lab_agent.sh (validation post-generazione)
 - operatore in CLI (verifica manuale di un template prima dell'install)
@@ -9,6 +9,7 @@ a un template di lab dato come path. Invocabile da:
 Uso:
     python lab_template_validator.py <template_dir>
     python lab_template_validator.py --self-test   # gira su domains/physics/
+    python lab_template_validator.py --strict-m7 <template_dir>
 
 Exit code: 0 se nessun M_x è FAIL, 1 altrimenti.
 Output: JSON con verdict + dettaglio ogni lente.
@@ -32,6 +33,8 @@ def main():
     ap.add_argument("template_dir", nargs="?", help="path al template da validare")
     ap.add_argument("--self-test", action="store_true",
                     help="gira il falsifier meta su domains/physics/ come ground truth")
+    ap.add_argument("--strict-m7", action="store_true",
+                    help="rende M7 bloccante anche per template legacy senza transduction.md")
     ap.add_argument("--json", action="store_true", help="output JSON pulito (no testo umano)")
     args = ap.parse_args()
 
@@ -52,6 +55,8 @@ def main():
 
     # Inietta path nel modulo assertions del meta-lab
     os.environ["META_LAB_TEMPLATE_PATH"] = str(target)
+    if args.strict_m7:
+        os.environ["META_LAB_STRICT_M7"] = "1"
     sys.path.insert(0, str(_meta_lab_dir()))
     import assertions  # type: ignore
 

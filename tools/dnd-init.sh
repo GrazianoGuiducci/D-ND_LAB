@@ -2,7 +2,7 @@
 # dnd-init.sh — Entry point CLI per generare un nuovo lab via meta-lab.
 #
 # Pattern: dialogo progressivo → seed.json con direttiva → meta-lab cycle
-# (genera template + MML del lab figlio) → M1-M6 validator → opzionalmente
+# (genera template + MML del lab figlio) → M1-M7 validator → opzionalmente
 # primo cycle del lab generato.
 #
 # Pattern speculare a tools/dnd-cycle.sh ma per fase di **genesi** del
@@ -106,12 +106,12 @@ cat > "$DATA_DIR/seed.json" <<EOF
   },
   "timestamp": "${NOW_TS}",
   "piano": 1,
-  "direzione": "Genera filesystem tree completo del lab '${SLUG}' (config.json + context.md + about.md IT+EN + seed_tensions.json + tension_to_category.json + assertions.py + tools/ + mml.json conforme a mml.schema.json). Direttiva operatore: ${DIRECTIVE}. Verifica falsifier meta M1-M6 prima di dichiarare TEMPLATE_VALID. Se il dominio è data-centric, includi external_apis no-auth nel MML (pattern hermes — vedi context.md sezione dedicata). Runtime preferito: ${RUNTIME}.",
+  "direzione": "Genera filesystem tree completo del lab '${SLUG}' (config.json + context.md + about.md IT+EN + seed_tensions.json + tension_to_category.json + assertions.py + tools/ + mml.json conforme a mml.schema.json + transduction.md). Direttiva operatore: ${DIRECTIVE}. Verifica falsifier meta M1-M7 prima di dichiarare TEMPLATE_VALID. Se il dominio è data-centric, includi external_apis no-auth nel MML (pattern hermes — vedi context.md sezione dedicata). Runtime preferito: ${RUNTIME}.",
   "tensioni": [
     {
       "tipo": "task",
       "id": "GENERATE_LAB_${SLUG^^}",
-      "claim": "Generare template completo del lab '${SLUG}' con MML coerente. Output: domains/${SLUG}/ con tutti i file canonici. Falsifier M1-M6 deve dare TEMPLATE_VALID.",
+      "claim": "Generare template completo del lab '${SLUG}' con MML coerente e nota di transduzione. Output: domains/${SLUG}/ con tutti i file canonici. Falsifier M1-M7 deve dare TEMPLATE_VALID.",
       "intensita": 1.0,
       "porta": "operator_request",
       "condensato_ref": "A2,A8,A14"
@@ -149,11 +149,11 @@ if [ ! -d "domains/$SLUG" ]; then
     exit 1
 fi
 
-# 3. Validate M1-M6
+# 3. Validate M1-M7
 if [ "$DO_VALIDATE" = true ]; then
     echo ""
-    echo "=== M1-M6 falsifier on generated template ==="
-    python3 domains/meta-lab/tools/lab_template_validator.py "domains/$SLUG" || {
+    echo "=== M1-M7 falsifier on generated template ==="
+    python3 domains/meta-lab/tools/lab_template_validator.py --strict-m7 "domains/$SLUG" || {
         echo "WARN: validator non-zero exit. Template generated ma non TEMPLATE_VALID." >&2
         echo "Inspect manuale: domains/${SLUG}/" >&2
     }
@@ -172,4 +172,4 @@ echo "Lab '${SLUG}' generated in domains/${SLUG}/"
 echo "Next steps:"
 echo "  - Inspect: python3 -m core.cli inspect --domain ${SLUG}"
 echo "  - First cycle: bash tools/dnd-cycle.sh ${SLUG}"
-echo "  - Validator: python3 domains/meta-lab/tools/lab_template_validator.py domains/${SLUG}"
+echo "  - Validator: python3 domains/meta-lab/tools/lab_template_validator.py --strict-m7 domains/${SLUG}"

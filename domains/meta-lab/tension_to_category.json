@@ -24,9 +24,9 @@
     },
     "meta_falsifier": {
       "label": "Meta falsifier",
-      "description": "Tensioni sulle meta-lenti M1-M5 — il counter-pole asimmetrico applicato al template invece che al finding.",
+      "description": "Tensioni sulle meta-lenti M1-M7 — il counter-pole asimmetrico applicato al template invece che al finding.",
       "color": "#fbbf24",
-      "tensioni_ids": ["META_FALSIFIER_5_LENSES"]
+      "tensioni_ids": ["META_FALSIFIER_7_LENSES"]
     }
   }
 }

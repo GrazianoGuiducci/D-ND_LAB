@@ -18,13 +18,15 @@ system completo, e il primo cycle del lab nuovo segue.
 
 Il meta-lab applica al template generato lo stesso filtro che i lab di
 dominio applicano ai propri findings: un counter-pole asimmetrico con
-cinque lenti. M1 verifica che le tensioni proposte abbiano dipoli
+sette lenti. M1 verifica che le tensioni proposte abbiano dipoli
 aritmetici (det≠0, non descrizione). M2 che le asserzioni siano davvero
 eseguibili (PASS/FAIL/SKIP, non print). M3 che i tools iniziali girino
 out-of-box. M4 che esista un naive baseline contro cui misurare il modus.
 M5 che il primo cycle possa produrre informazione nuova, non solo restate.
+M6 che il MML sia coerente con seed e tools. M7 che la transduzione di
+dominio sia dichiarata senza copiare contenuto dal lab sorgente.
 
-Se uno qualsiasi dei cinque non passa, il template non viene installato:
+Se uno qualsiasi dei sette non passa, il template non viene installato:
 il meta-lab dichiara il dominio "non di leva" e il rifiuto entra nel
 cimitero del meta-lab come cristallizzazione utile, non come fallimento.
 È A2 — il confine necessario.

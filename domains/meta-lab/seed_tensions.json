@@ -12,7 +12,7 @@
       "intensita": 0.95,
       "porta": "sessione_interattiva",
       "condensato_ref": "A2,A10,F2,F5",
-      "vincolo": "VERIFY_BEFORE_SCAFFOLDING: il falsifier meta deve dichiarare M1-M5 PASS prima che il template venga installato. Domini che falliscono entrano nel cimitero come cristallizzazione, non come fallimento."
+      "vincolo": "VERIFY_BEFORE_SCAFFOLDING: il falsifier meta deve dichiarare M1-M7 PASS prima che il template venga installato. Domini che falliscono entrano nel cimitero come cristallizzazione, non come fallimento."
     },
     {
       "tipo": "scoperta",
@@ -33,8 +33,8 @@
     },
     {
       "tipo": "scoperta_relazionale",
-      "id": "META_FALSIFIER_5_LENSES",
-      "claim": "Le 5 meta-lenti del falsifier meta-lab (M1 dipoli aritmetici, M2 assertions eseguibili, M3 tools out-of-box, M4 naive baseline, M5 auto-incremento informativo) sono asimmetriche rispetto alle 5 lenti standard del falsifier classico (L1-L5). Le lenti classiche falsificano findings scientifici; le meta-lenti falsificano la struttura che li produce. Un template che passa M1-M5 può ancora produrre cycle che falliscono L1-L5, ma un template che fallisce M1-M5 non potrà mai produrre cycle che passano L1-L5.",
+      "id": "META_FALSIFIER_7_LENSES",
+      "claim": "Le meta-lenti del falsifier meta-lab (M1 dipoli aritmetici, M2 assertions eseguibili, M3 tools out-of-box, M4 naive baseline, M5 auto-incremento informativo, M6 coerenza MML, M7 integrità di transduzione) sono asimmetriche rispetto alle 5 lenti standard del falsifier classico (L1-L5). Le lenti classiche falsificano findings scientifici; le meta-lenti falsificano la struttura che li produce. Un template che passa M1-M7 può ancora produrre cycle che falliscono L1-L5, ma un template che fallisce M1-M7 non potrà produrre cycle affidabili che passano L1-L5.",
       "intensita": 0.85,
       "porta": "sessione_interattiva",
       "condensato_ref": "A2,A4,A8"

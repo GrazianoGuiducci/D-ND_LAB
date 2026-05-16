@@ -92,7 +92,7 @@ for tf in trace_files:
     except Exception:
         pass
 
-# Validator M1-M6 status (read most recent if cached, else run)
+# Validator M1-M7 status (read most recent if cached, else run)
 validator_status = "not_run"
 try:
     import subprocess
@@ -136,7 +136,7 @@ result = {
     "current_piano": seed.get("piano"),
     "current_direzione": (seed.get("direzione") or "")[:200],
     "cycles_recent": cycles,
-    "validator_m6": validator_status,
+    "validator_m7": validator_status,
 }
 
 # Skills summary by layer
@@ -205,6 +205,6 @@ else:
     else:
         print("_(no cycles run yet)_")
     print()
-    print(f"## Validator M1-M6")
-    print(f"  {result['validator_m6']}")
+    print(f"## Validator M1-M7")
+    print(f"  {result['validator_m7']}")
 EOF

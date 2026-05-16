@@ -54,12 +54,12 @@
       "about_it": "about.md visitor-facing IT",
       "about_en": "about.en.md visitor-facing EN",
       "assertions": "assertions.py with verifica_asserzioni()",
-      "validation_report": "M1-M5 falsifier meta verdict"
+      "validation_report": "M1-M7 falsifier meta verdict"
     }
   },
   "_notes": {
     "level": "meta — operates on system structure, not on a domain material",
     "first_test": "regenerate physics from internal corpus and validate diff vs original",
-    "falsifier": "M1-M5 (vedi context.md). Domains failing 1+ go to cimitero come not-of-leverage."
+    "falsifier": "M1-M7 (vedi context.md). Domains failing 1+ go to cimitero come not-of-leverage."
   }
 }

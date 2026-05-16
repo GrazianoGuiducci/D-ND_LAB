@@ -1,4 +1,4 @@
-"""assertions.py — Meta-lab falsifier (M1-M5).
+"""assertions.py — Meta-lab falsifier (M1-M7).
 
 Il falsifier meta-lab non valuta findings scientifici. Valuta TEMPLATE
 di lab generati. Ogni assertion controlla una condizione strutturale:
@@ -52,8 +52,8 @@ def _lookup_template_under_test() -> Path | None:
         if p.exists():
             return p
     # Fallback: physics come ground truth — il meta-lab si auto-testa
-    # provando a falsificare physics esistente. Se M1-M5 dicono PASS su
-    # physics, le lenti sono calibrate correttamente.
+    # provando a falsificare physics esistente. Se M1-M7 non producono
+    # FAIL su physics, le lenti sono calibrate correttamente.
     physics = _domains_root() / "physics"
     if physics.exists():
         return physics
@@ -365,6 +365,72 @@ def _check_m6_mml_coherence(template_dir: Path) -> dict[str, Any]:
             "detail": "; ".join(issues), "metric": 0}
 
 
+# ─── M7: Integrita' di transduzione ──────────────────────────────
+
+def _check_m7_transduction_integrity(template_dir: Path) -> dict[str, Any]:
+    """Verifica che un template post-M7 dichiari come attraversa il cambio
+    dominio. I domini storici pre-M7 restano SKIP per non rompere install e
+    self-test; i nuovi template possono forzare il gate con
+    META_LAB_STRICT_M7=1.
+    """
+    transduction_file = template_dir / "transduction.md"
+    strict = os.environ.get("META_LAB_STRICT_M7", "").lower() in {"1", "true", "yes"}
+
+    if not transduction_file.exists():
+        legacy_names = {"physics", "editorial", "meta-lab", "finance", "bio-rhythms", "ops-decisions"}
+        if template_dir.name in legacy_names and not strict:
+            return {
+                "id": "M7",
+                "status": "SKIP",
+                "detail": "transduction.md mancante su dominio legacy/pre-M7",
+                "metric": 0,
+            }
+        return {
+            "id": "M7",
+            "status": "FAIL",
+            "detail": "transduction.md mancante: il template non dichiara il cambio dominio",
+            "metric": 0,
+        }
+
+    text = transduction_file.read_text(errors="replace").lower()
+    required_signals = {
+        "invariants": ["invariant", "invariante", "movimento", "movement", "contratto"],
+        "excluded_source": ["esclus", "non copi", "source", "sorgente", "contenuto"],
+        "observables": ["osservabil", "observable", "domain-native", "native"],
+        "null_baseline": ["null", "baseline", "shuffle", "control", "controllo"],
+        "adaptive_rules": ["regol", "adaptive", "adattiv", "retire", "ritir"],
+        "ui_contract": ["ui", "interface", "surface", "vista"],
+        "e2e": ["e2e", "end-to-end", "install", "reinstall", "runtime"],
+    }
+    hits = {
+        key: any(signal in text for signal in signals)
+        for key, signals in required_signals.items()
+    }
+    n_hits = sum(1 for ok in hits.values() if ok)
+    missing = [key for key, ok in hits.items() if not ok]
+
+    if n_hits >= 6:
+        return {
+            "id": "M7",
+            "status": "PASS",
+            "detail": f"transduction.md copre {n_hits}/{len(required_signals)} segnali",
+            "metric": n_hits,
+        }
+    if n_hits >= 4 and not strict:
+        return {
+            "id": "M7",
+            "status": "SKIP",
+            "detail": f"transduction.md parziale {n_hits}/{len(required_signals)}; mancanti: {missing}",
+            "metric": n_hits,
+        }
+    return {
+        "id": "M7",
+        "status": "FAIL",
+        "detail": f"transduction.md insufficiente {n_hits}/{len(required_signals)}; mancanti: {missing}",
+        "metric": n_hits,
+    }
+
+
 # ─── Verifica top-level (interfaccia standard) ───────────────────
 
 def verifica_asserzioni() -> list[dict[str, Any]]:
@@ -384,6 +450,7 @@ def verifica_asserzioni() -> list[dict[str, Any]]:
         _check_m4_naive_baseline(template_dir),
         _check_m5_auto_increment(template_dir),
         _check_m6_mml_coherence(template_dir),
+        _check_m7_transduction_integrity(template_dir),
     ]
 
 

@@ -18,14 +18,16 @@ file system, and the new lab's first cycle follows.
 
 The meta-lab applies to the generated template the same filter that
 domain labs apply to their own findings: an asymmetric counter-pole
-with five lenses. M1 verifies that proposed tensions have arithmetic
+with seven lenses. M1 verifies that proposed tensions have arithmetic
 dipoles (det≠0, not description). M2 that assertions are truly
 executable (PASS/FAIL/SKIP, not print). M3 that initial tools run
 out-of-box. M4 that a naive baseline exists against which to measure
 the modus. M5 that the first cycle can produce new information, not
-just restate.
+just restate. M6 that the MML is coherent with seed and tools. M7 that
+domain transduction is declared without copying content from the source
+lab.
 
-If any of the five fails, the template is not installed: the meta-lab
+If any of the seven fails, the template is not installed: the meta-lab
 declares the domain "not of leverage" and the refusal enters the
 meta-lab cimitero as useful crystallization, not failure. This is A2
 — the necessary boundary.
