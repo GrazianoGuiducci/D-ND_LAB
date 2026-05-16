@@ -1,0 +1,88 @@
+{
+  "schema": "ui_contract.v1",
+  "domain": "<domain-slug>",
+  "intent_movement": "Describe the movement the UI must make visible, not the result it should sell.",
+  "frame": {
+    "left": [
+      {
+        "module": "SeedStatus",
+        "purpose": "Show current plane, direction, freshness and accepted surface."
+      },
+      {
+        "module": "ActiveTensions",
+        "purpose": "Show current tensions, intensities, filters and alerts."
+      }
+    ],
+    "center": [
+      {
+        "module": "<PrimaryDomainView>",
+        "purpose": "Show the domain's primary movement."
+      }
+    ],
+    "right": [
+      {
+        "module": "RuntimeDynamics",
+        "purpose": "Explain how the current state was reached."
+      },
+      {
+        "module": "THIAContextAssistant",
+        "purpose": "Answer from selected domain state and runtime context."
+      }
+    ]
+  },
+  "common_modules": [
+    {
+      "module": "SeedStatus",
+      "required": true,
+      "data_sources": ["data/<domain>/lab_data.json"],
+      "reason": "Every Lab needs current field awareness."
+    },
+    {
+      "module": "FalsifierPanel",
+      "required": true,
+      "data_sources": ["data/<domain>/falsifier/"],
+      "reason": "Every Lab must show what does not hold."
+    },
+    {
+      "module": "RuntimeDynamics",
+      "required": true,
+      "data_sources": ["data/<domain>/cycle_trace_*.json", "data/<domain>/cycle_logs/"],
+      "reason": "The operator must see how the cycle moved, not just what it produced."
+    }
+  ],
+  "domain_modules": [
+    {
+      "module": "<DomainNativeModule>",
+      "placement": "center",
+      "observables": ["<observable-1>", "<observable-2>"],
+      "baseline_or_null": ["<baseline-or-null>"],
+      "shows": "What this module makes visible.",
+      "blocks": "What contamination or false inference this module prevents."
+    }
+  ],
+  "admin_actions": [
+    {
+      "action": "run_cycle",
+      "allowed": true,
+      "boundary": "Run from current seed/context. Do not override direction unless explicitly reviewed."
+    },
+    {
+      "action": "inject_tension",
+      "allowed": false,
+      "boundary": "Requires reviewed source, hypothesis, falsifier and domain contract."
+    }
+  ],
+  "forbidden_labels": [
+    "Replace with labels that would contaminate this domain before review."
+  ],
+  "e2e": [
+    {
+      "check": "cycle_to_ui",
+      "expectation": "A completed cycle updates data consumed by at least one left, one center and one right module."
+    },
+    {
+      "check": "runtime_awareness_visible",
+      "expectation": "The UI can show tools called, skipped steps, suspensions and accepted surface."
+    }
+  ]
+}

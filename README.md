@@ -100,6 +100,8 @@ runtime data. It does not force-generate a Lab: the request must pass through
 the meta-lab/template validator before becoming a new installable domain.
 The transduction rules used to preserve the Lab movement across domains live in
 [docs/DOMAIN_TRANSCENDENCE_AWARENESS.md](docs/DOMAIN_TRANSCENDENCE_AWARENESS.md).
+The UI generation process for domain-native dashboards lives in
+[docs/UI_COGNITIVE_PROCESS.md](docs/UI_COGNITIVE_PROCESS.md).
 
 Admin-triggered cycle runs from the main-site THIA Assistant are supported via
 a server-to-server bridge; see

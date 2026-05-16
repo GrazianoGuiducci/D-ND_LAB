@@ -217,6 +217,23 @@ fallback sintetico o open.
 
 La UI deve cambiare col dominio. Non basta esporre report.
 
+Il frame comune resta il template a tre colonne:
+
+```text
+sinistra -> campo, stato, contatori, tensioni, filtri, alert
+centro   -> vista primaria del movimento del dominio
+destra   -> dettaglio, runtime, spiegazione, THIA/context assistant
+```
+
+Ogni dominio deve dichiarare come riempie questo frame in:
+
+```text
+domains/<slug>/ui_contract.json
+```
+
+Il processo canonico e' in `docs/UI_COGNITIVE_PROCESS.md`; il template
+riusabile e' `docs/templates/ui_contract.v1.json`.
+
 Ogni UI di Lab dovrebbe mostrare almeno:
 
 - ipotesi o tensione attiva;
@@ -282,7 +299,7 @@ La nota deve dichiarare:
 - quali osservabili domain-native sostituiscono il materiale sorgente;
 - quali null/baseline proteggono il dominio;
 - quali regole adattive sono state introdotte e quando vanno ritirate;
-- quale UI contract serve al dominio;
+- quale UI contract serve al dominio e dove vive `ui_contract.json`;
 - quali test E2E dimostrano che il Lab gira senza osservatore.
 
 Questa nota e' parte del seme del Lab figlio. Se manca, il nuovo Lab e'

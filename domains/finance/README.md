@@ -55,6 +55,7 @@ domains/finance/
 ├── assertions.py               5 test eseguibili (PASS/FAIL/SKIP)
 ├── mml.json                    Metamasterlab — 16 skill su 8 layer
 ├── transduction.md             M7 — passaggio Lab sorgente -> finance
+├── ui_contract.json            M7 — dashboard cognitiva domain-native
 └── tools/
     ├── exp_regime_shift.py     CLI sintetico/real-market
     ├── market_data.py          acquisizione dati + cache + data card

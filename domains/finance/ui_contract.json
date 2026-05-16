@@ -1,0 +1,157 @@
+{
+  "schema": "ui_contract.v1",
+  "domain": "finance",
+  "intent_movement": "Rendere visibile quando un'ipotesi operativa smette di reggere rispetto a baseline/null, prima che diventi decisione di esposizione.",
+  "frame": {
+    "left": [
+      {
+        "module": "SeedStatus",
+        "purpose": "Mostra piano, direzione, freshness e superficie accettata del Finance Lab."
+      },
+      {
+        "module": "ActiveTensions",
+        "purpose": "Mostra tensioni attive, intensita, counter-pole e bias corrector."
+      },
+      {
+        "module": "Cemetery",
+        "purpose": "Mantiene visibili assunzioni e segnali falsificati."
+      }
+    ],
+    "center": [
+      {
+        "module": "RegimeMap",
+        "purpose": "Mostra regime sospetto, finestre testate e stato DND_DELTA/NO_DELTA/SOSPENSIONE."
+      },
+      {
+        "module": "BaselineComparison",
+        "purpose": "Confronta evidenza ordered-vs-shuffle, random walk e baseline naive."
+      }
+    ],
+    "right": [
+      {
+        "module": "DataCard",
+        "purpose": "Mostra provider, source_url, retrieval_ts, era_hint, n_obs e confini dati."
+      },
+      {
+        "module": "DecisionBounds",
+        "purpose": "Dichiara cosa non e' ammissibile con l'evidenza corrente."
+      },
+      {
+        "module": "RuntimeDynamics",
+        "purpose": "Spiega strumenti invocati, finestre scartate, sospensioni e superficie accettata."
+      },
+      {
+        "module": "THIAContextAssistant",
+        "purpose": "Risponde dal contesto finance selezionato, non da copy generica del sito."
+      }
+    ]
+  },
+  "common_modules": [
+    {
+      "module": "SeedStatus",
+      "required": true,
+      "data_sources": ["data/finance/lab_data.json"],
+      "reason": "Il Lab deve sempre sapere dove si trova prima di interpretare un report."
+    },
+    {
+      "module": "FalsifierPanel",
+      "required": true,
+      "data_sources": ["data/finance/falsifier/"],
+      "reason": "Finance e' ad alto rischio di sovrainterpretazione: i veto devono restare visibili."
+    },
+    {
+      "module": "RuntimeDynamics",
+      "required": true,
+      "data_sources": ["data/finance/cycle_trace_*.json", "data/finance/cycle_logs/"],
+      "reason": "Il valore sta anche nel come il ciclo e' arrivato a SOSPENSIONE/REDESIGN/PROCEED."
+    },
+    {
+      "module": "AgentReports",
+      "required": true,
+      "data_sources": ["data/finance/reports/"],
+      "reason": "I report restano ispezionabili, ma non sono autorita senza baseline e falsifier."
+    }
+  ],
+  "domain_modules": [
+    {
+      "module": "RegimeMap",
+      "placement": "center",
+      "observables": ["log_return", "realized_volatility", "drawdown", "regime_persistence"],
+      "baseline_or_null": ["shuffled_returns", "block_bootstrap", "random_walk"],
+      "shows": "Se il regime sospetto sopravvive a ordine temporale e controlli locali.",
+      "blocks": "Trasformare una variazione di volatilita in predizione di mercato."
+    },
+    {
+      "module": "BaselineComparison",
+      "placement": "center",
+      "observables": ["effect_z", "ordered_vs_shuffle", "naive_var", "walk_forward_split"],
+      "baseline_or_null": ["random_walk", "shuffled_returns", "transaction_cost_baseline"],
+      "shows": "Quanto il risultato resta oltre baseline povera e null coerenti.",
+      "blocks": "Data snooping e metriche scelte dopo aver visto il risultato."
+    },
+    {
+      "module": "DataCard",
+      "placement": "right",
+      "observables": ["provider", "source_url", "retrieval_ts", "era_hint", "n_obs"],
+      "baseline_or_null": ["versioned_dataset_or_synthetic_fallback"],
+      "shows": "Provenienza e auditabilita dei dati.",
+      "blocks": "Claim su dati non tracciati o endpoint drift."
+    },
+    {
+      "module": "DecisionBounds",
+      "placement": "right",
+      "observables": ["verdict", "falsifier_flags", "replication_count", "cost_slippage"],
+      "baseline_or_null": ["double_replication", "slippage_baseline"],
+      "shows": "Cosa non e' ammesso fare con l'evidenza corrente.",
+      "blocks": "Label buy/sell/forecast/profit/alpha prima di prodotto maturo e revisione."
+    }
+  ],
+  "admin_actions": [
+    {
+      "action": "run_cycle",
+      "allowed": true,
+      "boundary": "Avvia un ciclo dal seed finance corrente. Niente direction_override salvo revisione esplicita."
+    },
+    {
+      "action": "inspect_runtime",
+      "allowed": true,
+      "boundary": "Mostra trace/log/report senza promuovere il risultato."
+    },
+    {
+      "action": "inject_tension",
+      "allowed": false,
+      "boundary": "Richiede source verificabile, hypothesis, falsification_test, baseline/null e review."
+    },
+    {
+      "action": "publish_signal",
+      "allowed": false,
+      "boundary": "Finance Lab non produce segnali operativi di trading."
+    }
+  ],
+  "forbidden_labels": [
+    "buy",
+    "sell",
+    "forecast",
+    "profit",
+    "alpha signal",
+    "trading signal"
+  ],
+  "e2e": [
+    {
+      "check": "cycle_to_ui",
+      "expectation": "Un ciclo finance completato aggiorna lab_data, report, falsifier, cycle_trace e almeno una narrativa visibile."
+    },
+    {
+      "check": "baseline_visible",
+      "expectation": "La vista center mostra sempre il confronto con baseline/null prima del verdetto."
+    },
+    {
+      "check": "decision_bounds_visible",
+      "expectation": "La vista right mostra cosa non e' ammissibile, specialmente in SOSPENSIONE."
+    },
+    {
+      "check": "admin_run_bridge",
+      "expectation": "THIA admin puo avviare run_cycle senza esporre il token Lab nel browser."
+    }
+  ]
+}

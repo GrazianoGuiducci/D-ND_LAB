@@ -109,6 +109,26 @@ materiale, osservabili, strumenti, UI lens e contaminazioni specifiche.
 Questa consapevolezza diventa criterio di validita' del template generato:
 il lab figlio deve produrre anche `domains/<slug>/transduction.md`.
 
+### 2.0.1 UI Cognitive Process
+
+Prima di costruire una UI di dominio, il meta-lab deve applicare
+`docs/UI_COGNITIVE_PROCESS.md`.
+
+La dashboard non e' un insieme di tab da duplicare. E' un template cognitivo
+a tre colonne:
+
+```text
+sinistra -> campo/stato/tensioni/alert
+centro   -> vista primaria del movimento
+destra   -> dettaglio/runtime/THIA assistant
+```
+
+Ogni lab figlio deve produrre `domains/<slug>/ui_contract.json`, usando
+`docs/templates/ui_contract.v1.json`. Il contratto dichiara moduli comuni,
+moduli domain-native, osservabili, baseline/null, azioni admin e label
+vietate. Questo evita due regressioni: UI rigida uguale per tutti i domini e
+UI custom che perde il movimento del Lab.
+
 ### 2.1 KTHIA
 Kernel attivo del sistema THIA. Contiene identità (chi è THIA), nucleo
 assiomatico (modello D-ND), MMSp sorgente, KSAR, skill kernel, memorie

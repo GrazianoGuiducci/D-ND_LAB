@@ -148,6 +148,18 @@ Il Finance Lab deve bloccare:
 
 La UI finance deve mostrare il movimento, non vendere il risultato.
 
+Contratto eseguibile:
+
+```text
+domains/finance/ui_contract.json
+```
+
+Il Finance Lab usa il template comune a tre colonne:
+
+- sinistra: stato del campo, tensioni, cimitero, counter-pole;
+- centro: regime map + baseline comparison;
+- destra: data-card, decision bounds, runtime dynamics, THIA assistant.
+
 Superfici minime:
 
 - ipotesi attiva;

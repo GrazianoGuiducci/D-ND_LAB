@@ -374,6 +374,7 @@ def _check_m7_transduction_integrity(template_dir: Path) -> dict[str, Any]:
     META_LAB_STRICT_M7=1.
     """
     transduction_file = template_dir / "transduction.md"
+    ui_contract_file = template_dir / "ui_contract.json"
     strict = os.environ.get("META_LAB_STRICT_M7", "").lower() in {"1", "true", "yes"}
 
     if not transduction_file.exists():
@@ -393,13 +394,25 @@ def _check_m7_transduction_integrity(template_dir: Path) -> dict[str, Any]:
         }
 
     text = transduction_file.read_text(errors="replace").lower()
+    ui_contract_status = "missing"
+    if ui_contract_file.exists():
+        try:
+            ui_contract = json.loads(ui_contract_file.read_text(errors="replace"))
+            schema = str(ui_contract.get("schema", ""))
+            frame = ui_contract.get("frame") if isinstance(ui_contract.get("frame"), dict) else {}
+            if schema == "ui_contract.v1" and all(k in frame for k in ("left", "center", "right")):
+                ui_contract_status = "valid"
+            else:
+                ui_contract_status = "invalid"
+        except Exception:
+            ui_contract_status = "invalid"
     required_signals = {
         "invariants": ["invariant", "invariante", "movimento", "movement", "contratto"],
         "excluded_source": ["esclus", "non copi", "source", "sorgente", "contenuto"],
         "observables": ["osservabil", "observable", "domain-native", "native"],
         "null_baseline": ["null", "baseline", "shuffle", "control", "controllo"],
         "adaptive_rules": ["regol", "adaptive", "adattiv", "retire", "ritir"],
-        "ui_contract": ["ui", "interface", "surface", "vista"],
+        "ui_contract": ["ui", "interface", "surface", "vista", "ui_contract"],
         "e2e": ["e2e", "end-to-end", "install", "reinstall", "runtime"],
     }
     hits = {
@@ -409,24 +422,29 @@ def _check_m7_transduction_integrity(template_dir: Path) -> dict[str, Any]:
     n_hits = sum(1 for ok in hits.values() if ok)
     missing = [key for key, ok in hits.items() if not ok]
 
-    if n_hits >= 6:
+    if ui_contract_status == "valid":
+        n_hits += 1
+    elif strict:
+        missing.append("ui_contract_file")
+
+    if n_hits >= 7:
         return {
             "id": "M7",
             "status": "PASS",
-            "detail": f"transduction.md copre {n_hits}/{len(required_signals)} segnali",
+            "detail": f"transduction.md + ui_contract coprono {n_hits}/{len(required_signals) + 1} segnali",
             "metric": n_hits,
         }
-    if n_hits >= 4 and not strict:
+    if n_hits >= 5 and not strict:
         return {
             "id": "M7",
             "status": "SKIP",
-            "detail": f"transduction.md parziale {n_hits}/{len(required_signals)}; mancanti: {missing}",
+            "detail": f"transduction/ui_contract parziale {n_hits}/{len(required_signals) + 1}; mancanti: {missing}",
             "metric": n_hits,
         }
     return {
         "id": "M7",
         "status": "FAIL",
-        "detail": f"transduction.md insufficiente {n_hits}/{len(required_signals)}; mancanti: {missing}",
+        "detail": f"transduction/ui_contract insufficiente {n_hits}/{len(required_signals) + 1}; mancanti: {missing}",
         "metric": n_hits,
     }
 

@@ -49,10 +49,11 @@ Il comando raccoglie slug, titolo, tipo dominio e movimento/intento. Non genera
 ancora un Lab: crea input per meta-lab/template generator e validator.
 
 Il passaggio successivo alla richiesta e' la transduzione: il meta-lab deve
-produrre `domains/<slug>/transduction.md` insieme a `context.md`,
-`seed.json`, `assertions.py`, tools iniziali e `mml.json`. Questa nota
-dichiara osservabili domain-native, null/baseline, regole adattive,
-contaminazioni specifiche, UI contract e test E2E attesi.
+produrre `domains/<slug>/transduction.md` e
+`domains/<slug>/ui_contract.json` insieme a `context.md`, `seed.json`,
+`assertions.py`, tools iniziali e `mml.json`. Questi artefatti dichiarano
+osservabili domain-native, null/baseline, regole adattive, contaminazioni
+specifiche, contratto UI e test E2E attesi.
 
 Le sezioni sono ordinate per dipendenza causale.
 
@@ -167,6 +168,8 @@ Da config:
 - `domains/<slug>/seed_tensions.json` — tensioni iniziali
 - `domains/<slug>/transduction.md` — come il contratto del movimento
   e' stato tradotto nel dominio senza copiare contenuto sorgente improprio
+- `domains/<slug>/ui_contract.json` — come il template dashboard a tre
+  colonne viene popolato con moduli comuni e domain-native
 - `domains/<slug>/tension_to_category.json` — mapping (può iniziare vuoto)
 - `domains/<slug>/cimitero.md` — opzionale, importato se forniti claim
 

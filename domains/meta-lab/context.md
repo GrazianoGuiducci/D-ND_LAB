@@ -115,9 +115,13 @@ Output del cycle: un **seme cognitivo strutturato** + **MML del lab figlio**
 non è retrofit. Il prossimo lab acquisisce mml.json contestualmente al
 seed.json + context.md + about.md + assertions.py.
 
-Il lab figlio acquisisce anche `transduction.md`: una nota breve ma
-obbligatoria che spiega come il movimento D-ND e' stato tradotto nel
-dominio senza trasferire contenuto improprio dal lab sorgente.
+Il lab figlio acquisisce anche:
+
+- `transduction.md`: nota breve ma obbligatoria che spiega come il
+  movimento D-ND e' stato tradotto nel dominio senza trasferire contenuto
+  improprio dal lab sorgente;
+- `ui_contract.json`: contratto macchina per popolare il template dashboard
+  a tre colonne con moduli comuni e domain-native.
 
 1. **Lettura del corpus / contesto runtime** — leggi le memorie operatore
    in `/root/.claude/projects/-opt/memory/`, le cristallizzazioni del
@@ -168,11 +172,36 @@ dominio senza trasferire contenuto improprio dal lab sorgente.
    onesta: cosa fa il lab, perché esiste, come si usa. NON è il prompt
    agente. È testo per chi visita la dashboard.
 
-7. **Generazione assertions.py** — funzione `verifica_asserzioni()` che
+7. **Generazione ui_contract.json** — processo cognitivo per costruire la
+   UI del lab figlio. Non creare tab a mano per ogni dominio: usa il
+   template comune a tre colonne e dichiara quali moduli lo popolano.
+   Leggi `docs/UI_COGNITIVE_PROCESS.md` e usa
+   `docs/templates/ui_contract.v1.json`.
+
+   Il contratto deve dichiarare:
+   - `intent_movement`: quale movimento la UI deve rendere visibile;
+   - `frame.left`: campo, stato, tensioni, filtri, alert;
+   - `frame.center`: vista primaria del movimento domain-native;
+   - `frame.right`: dettaglio, runtime, THIA/context assistant;
+   - `common_modules`: moduli comuni usati;
+   - `domain_modules`: moduli specifici con osservabili e baseline/null;
+   - `admin_actions`: azioni consentite e confini;
+   - `forbidden_labels`: parole/azioni che contaminano il dominio;
+   - `e2e`: prove che cycle data raggiunge almeno sinistra, centro e destra.
+
+   Esempi domain-native:
+   - finance: RegimeMap, BaselineComparison, DataCard, DecisionBounds;
+   - physics: TheoryCrossing, BridgeAudit, ZeroPoints, ObservableContract;
+   - bio-rhythms: SignalQuality, ArtifactFilter, SubjectState,
+     ClinicalBoundary;
+   - ops-decisions: DecisionTree, FailureModes, ActionConstraints,
+     EscalationMap.
+
+8. **Generazione assertions.py** — funzione `verifica_asserzioni()` che
    ritorna `[{"id": "...", "status": "PASS"|"FAIL"|"SKIP", ...}, ...]`.
    Almeno 5 asserzioni del dominio che testano invarianti del modello.
 
-8. **Generazione mml.json (Metamasterlab del lab figlio)** —
+9. **Generazione mml.json (Metamasterlab del lab figlio)** —
    passaggio NUOVO. Il MML è il primo atto di autocoscienza del lab
    nascente. Conformi a `mml.schema.json` del repo. Devi produrre:
    - `lab` (slug del nuovo dominio)

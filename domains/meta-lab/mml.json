@@ -6,7 +6,7 @@
   "identity": {
     "type": "function",
     "level": "meta",
-    "responsibility": "Lab di funzione che produce semi cognitivi (seed.json + context.md + about.md + assertions.py + mml.json + transduction.md) per nuovi lab D-ND. Applica il modus al lab stesso (A8 ricorsiva) e gestisce il falsifier meta (M1-M7) sui template generati."
+    "responsibility": "Lab di funzione che produce semi cognitivi (seed.json + context.md + about.md + assertions.py + mml.json + transduction.md + ui_contract.json) per nuovi lab D-ND. Applica il modus al lab stesso (A8 ricorsiva) e gestisce il falsifier meta (M1-M7) sui template generati."
   },
 
   "kernel_refs": {
@@ -138,7 +138,7 @@
   "external_apis": [],
 
   "modus_invocation": {
-    "cycle_pattern": "corpus_read → domain_analysis → tension_extraction → axiom_projection → seed_generation → context_md_synthesis → about_md_synthesis_bilingual → assertions_py_synthesis → mml_json_synthesis → transduction_md_synthesis → falsifier_meta(M1-M7) → verdict",
+    "cycle_pattern": "corpus_read → domain_analysis → tension_extraction → axiom_projection → seed_generation → context_md_synthesis → about_md_synthesis_bilingual → assertions_py_synthesis → mml_json_synthesis → transduction_md_synthesis → ui_contract_synthesis → falsifier_meta(M1-M7) → verdict",
     "skill_invocation_strategy": "lazy",
     "fallback_provider_chain": ["codex-cli", "claude-cli", "openrouter"],
     "preferred_runtime": "any"
@@ -149,7 +149,7 @@
     "cycles_completed": 0,
     "last_finding": null,
     "last_cycle_ts": null,
-    "domain_specific_notes": "Meta-lab Phase 1+1.5 in fase di scaffolding. Primo cycle vivo non ancora lanciato. Falsifier aggiornato a M1-M7; M7 richiede transduction.md sui nuovi template e resta legacy-safe sui domini pre-M7."
+    "domain_specific_notes": "Meta-lab Phase 1+1.5 in fase di scaffolding. Primo cycle vivo non ancora lanciato. Falsifier aggiornato a M1-M7; M7 richiede transduction.md + ui_contract.json sui nuovi template e resta legacy-safe sui domini pre-M7."
   },
 
   "_generated_by": "manual",
