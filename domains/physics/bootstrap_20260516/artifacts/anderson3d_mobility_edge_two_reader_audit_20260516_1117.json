@@ -1,0 +1,926 @@
+{
+  "by_size": [
+    {
+      "L": 5,
+      "reader_runs": [
+        {
+          "L": 5,
+          "k": 2,
+          "seed": 202605151947,
+          "third_included_candidates": [
+            "Anderson3D_W_8.00",
+            "Anderson3D_W_12.00",
+            "Anderson3D_W_16.00",
+            "Anderson3D_W_20.00"
+          ]
+        },
+        {
+          "L": 5,
+          "k": 3,
+          "seed": 202605151947,
+          "third_included_candidates": [
+            "Anderson3D_W_8.00",
+            "Anderson3D_W_12.00",
+            "Anderson3D_W_16.00",
+            "Anderson3D_W_17.00",
+            "Anderson3D_W_20.00"
+          ]
+        },
+        {
+          "L": 5,
+          "k": 4,
+          "seed": 202605151947,
+          "third_included_candidates": [
+            "Anderson3D_W_8.00",
+            "Anderson3D_W_12.00",
+            "Anderson3D_W_14.00",
+            "Anderson3D_W_16.00",
+            "Anderson3D_W_16.50",
+            "Anderson3D_W_17.00",
+            "Anderson3D_W_20.00"
+          ]
+        },
+        {
+          "L": 5,
+          "k": 2,
+          "seed": 202605151948,
+          "third_included_candidates": [
+            "Anderson3D_W_8.00",
+            "Anderson3D_W_12.00",
+            "Anderson3D_W_14.00",
+            "Anderson3D_W_17.00",
+            "Anderson3D_W_20.00"
+          ]
+        },
+        {
+          "L": 5,
+          "k": 3,
+          "seed": 202605151948,
+          "third_included_candidates": [
+            "Anderson3D_W_8.00",
+            "Anderson3D_W_12.00",
+            "Anderson3D_W_14.00",
+            "Anderson3D_W_16.00",
+            "Anderson3D_W_16.50",
+            "Anderson3D_W_17.00",
+            "Anderson3D_W_20.00"
+          ]
+        },
+        {
+          "L": 5,
+          "k": 4,
+          "seed": 202605151948,
+          "third_included_candidates": [
+            "Anderson3D_W_8.00",
+            "Anderson3D_W_12.00",
+            "Anderson3D_W_14.00",
+            "Anderson3D_W_16.00",
+            "Anderson3D_W_16.50",
+            "Anderson3D_W_17.00",
+            "Anderson3D_W_20.00"
+          ]
+        }
+      ],
+      "rows": [
+        {
+          "classical_audit_state": "classical_intermediate",
+          "composite_state": "unstable_non_bridge+classical_intermediate",
+          "disorder_W": 2.0,
+          "domain_window": "Anderson3D_W_2.00",
+          "graph_bridge_frequency": 0.0,
+          "mean_centroid_margin": 0.297681,
+          "mean_cross_neighbor_fraction": 0.138889,
+          "median_adjacent_r": 0.506802,
+          "median_brody_q": 0.046666,
+          "median_mean_ipr": 0.02414468,
+          "median_participation_entropy": 0.84648,
+          "median_wigner_poisson_like_weight": 0.023334,
+          "source_domain_type": "metallic_wigner_pole",
+          "stability_state": "unstable_non_bridge"
+        },
+        {
+          "classical_audit_state": "classical_wigner_endpoint",
+          "composite_state": "unstable_non_bridge+classical_wigner_endpoint",
+          "disorder_W": 4.0,
+          "domain_window": "Anderson3D_W_4.00",
+          "graph_bridge_frequency": 0.0,
+          "mean_centroid_margin": 0.244641,
+          "mean_cross_neighbor_fraction": 0.0,
+          "median_adjacent_r": 0.52228,
+          "median_brody_q": 0.856667,
+          "median_mean_ipr": 0.024777561,
+          "median_participation_entropy": 0.843742,
+          "median_wigner_poisson_like_weight": 0.446666,
+          "source_domain_type": "metallic_wigner_pole",
+          "stability_state": "unstable_non_bridge"
+        },
+        {
+          "classical_audit_state": "classical_wigner_endpoint",
+          "composite_state": "stable_graph_bridge+classical_wigner_endpoint",
+          "disorder_W": 8.0,
+          "domain_window": "Anderson3D_W_8.00",
+          "graph_bridge_frequency": 1.0,
+          "mean_centroid_margin": 0.180006,
+          "mean_cross_neighbor_fraction": 0.361111,
+          "median_adjacent_r": 0.523691,
+          "median_brody_q": 0.973334,
+          "median_mean_ipr": 0.034117456,
+          "median_participation_entropy": 0.804344,
+          "median_wigner_poisson_like_weight": 0.51,
+          "source_domain_type": "mobility_candidate",
+          "stability_state": "stable_graph_bridge"
+        },
+        {
+          "classical_audit_state": "classical_wigner_endpoint",
+          "composite_state": "stable_graph_bridge+classical_wigner_endpoint",
+          "disorder_W": 12.0,
+          "domain_window": "Anderson3D_W_12.00",
+          "graph_bridge_frequency": 1.0,
+          "mean_centroid_margin": 0.210173,
+          "mean_cross_neighbor_fraction": 0.269444,
+          "median_adjacent_r": 0.54932,
+          "median_brody_q": 0.93,
+          "median_mean_ipr": 0.064332072,
+          "median_participation_entropy": 0.717011,
+          "median_wigner_poisson_like_weight": 0.456666,
+          "source_domain_type": "mobility_candidate",
+          "stability_state": "stable_graph_bridge"
+        },
+        {
+          "classical_audit_state": "classical_wigner_endpoint",
+          "composite_state": "parameter_sensitive_bridge+classical_wigner_endpoint",
+          "disorder_W": 14.0,
+          "domain_window": "Anderson3D_W_14.00",
+          "graph_bridge_frequency": 0.666667,
+          "mean_centroid_margin": 0.15565,
+          "mean_cross_neighbor_fraction": 0.204365,
+          "median_adjacent_r": 0.514204,
+          "median_brody_q": 0.773333,
+          "median_mean_ipr": 0.078838263,
+          "median_participation_entropy": 0.682833,
+          "median_wigner_poisson_like_weight": 0.45,
+          "source_domain_type": "mobility_candidate",
+          "stability_state": "parameter_sensitive_bridge"
+        },
+        {
+          "classical_audit_state": "classical_intermediate",
+          "composite_state": "stable_graph_bridge+classical_intermediate",
+          "disorder_W": 16.0,
+          "domain_window": "Anderson3D_W_16.00",
+          "graph_bridge_frequency": 0.833333,
+          "mean_centroid_margin": 0.075257,
+          "mean_cross_neighbor_fraction": 0.433333,
+          "median_adjacent_r": 0.502545,
+          "median_brody_q": 0.573333,
+          "median_mean_ipr": 0.108015905,
+          "median_participation_entropy": 0.630707,
+          "median_wigner_poisson_like_weight": 0.37,
+          "source_domain_type": "mobility_candidate",
+          "stability_state": "stable_graph_bridge"
+        },
+        {
+          "classical_audit_state": "classical_wigner_endpoint",
+          "composite_state": "parameter_sensitive_bridge+classical_wigner_endpoint",
+          "disorder_W": 16.5,
+          "domain_window": "Anderson3D_W_16.50",
+          "graph_bridge_frequency": 0.5,
+          "mean_centroid_margin": 0.130296,
+          "mean_cross_neighbor_fraction": 0.146428,
+          "median_adjacent_r": 0.52013,
+          "median_brody_q": 0.683334,
+          "median_mean_ipr": 0.112556893,
+          "median_participation_entropy": 0.622176,
+          "median_wigner_poisson_like_weight": 0.453334,
+          "source_domain_type": "mobility_candidate",
+          "stability_state": "parameter_sensitive_bridge"
+        },
+        {
+          "classical_audit_state": "classical_wigner_endpoint",
+          "composite_state": "stable_graph_bridge+classical_wigner_endpoint",
+          "disorder_W": 17.0,
+          "domain_window": "Anderson3D_W_17.00",
+          "graph_bridge_frequency": 0.833333,
+          "mean_centroid_margin": 0.15265,
+          "mean_cross_neighbor_fraction": 0.229167,
+          "median_adjacent_r": 0.532094,
+          "median_brody_q": 0.706666,
+          "median_mean_ipr": 0.114314002,
+          "median_participation_entropy": 0.617626,
+          "median_wigner_poisson_like_weight": 0.416667,
+          "source_domain_type": "mobility_candidate",
+          "stability_state": "stable_graph_bridge"
+        },
+        {
+          "classical_audit_state": "classical_intermediate",
+          "composite_state": "stable_graph_bridge+classical_intermediate",
+          "disorder_W": 20.0,
+          "domain_window": "Anderson3D_W_20.00",
+          "graph_bridge_frequency": 1.0,
+          "mean_centroid_margin": 0.152714,
+          "mean_cross_neighbor_fraction": 0.616667,
+          "median_adjacent_r": 0.494405,
+          "median_brody_q": 0.536667,
+          "median_mean_ipr": 0.16840199,
+          "median_participation_entropy": 0.542021,
+          "median_wigner_poisson_like_weight": 0.336666,
+          "source_domain_type": "mobility_candidate",
+          "stability_state": "stable_graph_bridge"
+        },
+        {
+          "classical_audit_state": "classical_intermediate",
+          "composite_state": "unstable_non_bridge+classical_intermediate",
+          "disorder_W": 24.0,
+          "domain_window": "Anderson3D_W_24.00",
+          "graph_bridge_frequency": 0.0,
+          "mean_centroid_margin": 0.626332,
+          "mean_cross_neighbor_fraction": 0.108333,
+          "median_adjacent_r": 0.468283,
+          "median_brody_q": 0.393334,
+          "median_mean_ipr": 0.248491593,
+          "median_participation_entropy": 0.449763,
+          "median_wigner_poisson_like_weight": 0.27,
+          "source_domain_type": "localized_poisson_pole",
+          "stability_state": "unstable_non_bridge"
+        },
+        {
+          "classical_audit_state": "classical_intermediate",
+          "composite_state": "unstable_non_bridge+classical_intermediate",
+          "disorder_W": 32.0,
+          "domain_window": "Anderson3D_W_32.00",
+          "graph_bridge_frequency": 0.0,
+          "mean_centroid_margin": 0.694212,
+          "mean_cross_neighbor_fraction": 0.0,
+          "median_adjacent_r": 0.456631,
+          "median_brody_q": 0.26,
+          "median_mean_ipr": 0.366514427,
+          "median_participation_entropy": 0.346455,
+          "median_wigner_poisson_like_weight": 0.2,
+          "source_domain_type": "localized_poisson_pole",
+          "stability_state": "unstable_non_bridge"
+        }
+      ],
+      "sites": 125,
+      "summary": {
+        "classic_only_residue": 3,
+        "classic_only_rows": [
+          "Anderson3D_W_2.00",
+          "Anderson3D_W_24.00",
+          "Anderson3D_W_32.00"
+        ],
+        "composite_counts": {
+          "parameter_sensitive_bridge+classical_wigner_endpoint": 2,
+          "stable_graph_bridge+classical_intermediate": 2,
+          "stable_graph_bridge+classical_wigner_endpoint": 3,
+          "unstable_non_bridge+classical_intermediate": 3,
+          "unstable_non_bridge+classical_wigner_endpoint": 1
+        },
+        "graph_only_residue": 3,
+        "graph_only_rows": [
+          "Anderson3D_W_8.00",
+          "Anderson3D_W_12.00",
+          "Anderson3D_W_17.00"
+        ],
+        "two_reader_boundary_confirmed": 2,
+        "two_reader_rows": [
+          "Anderson3D_W_16.00",
+          "Anderson3D_W_20.00"
+        ]
+      },
+      "total_graph_reader_runs": 6
+    },
+    {
+      "L": 6,
+      "reader_runs": [
+        {
+          "L": 6,
+          "k": 2,
+          "seed": 202605151947,
+          "third_included_candidates": [
+            "Anderson3D_W_8.00",
+            "Anderson3D_W_14.00",
+            "Anderson3D_W_16.00",
+            "Anderson3D_W_16.50",
+            "Anderson3D_W_20.00"
+          ]
+        },
+        {
+          "L": 6,
+          "k": 3,
+          "seed": 202605151947,
+          "third_included_candidates": [
+            "Anderson3D_W_8.00",
+            "Anderson3D_W_12.00",
+            "Anderson3D_W_14.00",
+            "Anderson3D_W_16.00",
+            "Anderson3D_W_16.50",
+            "Anderson3D_W_17.00",
+            "Anderson3D_W_20.00"
+          ]
+        },
+        {
+          "L": 6,
+          "k": 4,
+          "seed": 202605151947,
+          "third_included_candidates": [
+            "Anderson3D_W_8.00",
+            "Anderson3D_W_12.00",
+            "Anderson3D_W_14.00",
+            "Anderson3D_W_16.00",
+            "Anderson3D_W_16.50",
+            "Anderson3D_W_17.00",
+            "Anderson3D_W_20.00"
+          ]
+        },
+        {
+          "L": 6,
+          "k": 2,
+          "seed": 202605151948,
+          "third_included_candidates": [
+            "Anderson3D_W_8.00",
+            "Anderson3D_W_12.00",
+            "Anderson3D_W_16.50",
+            "Anderson3D_W_17.00",
+            "Anderson3D_W_20.00"
+          ]
+        },
+        {
+          "L": 6,
+          "k": 3,
+          "seed": 202605151948,
+          "third_included_candidates": [
+            "Anderson3D_W_8.00",
+            "Anderson3D_W_12.00",
+            "Anderson3D_W_14.00",
+            "Anderson3D_W_16.50",
+            "Anderson3D_W_17.00",
+            "Anderson3D_W_20.00"
+          ]
+        },
+        {
+          "L": 6,
+          "k": 4,
+          "seed": 202605151948,
+          "third_included_candidates": [
+            "Anderson3D_W_8.00",
+            "Anderson3D_W_12.00",
+            "Anderson3D_W_14.00",
+            "Anderson3D_W_16.00",
+            "Anderson3D_W_16.50",
+            "Anderson3D_W_17.00",
+            "Anderson3D_W_20.00"
+          ]
+        }
+      ],
+      "rows": [
+        {
+          "classical_audit_state": "classical_intermediate",
+          "composite_state": "unstable_non_bridge+classical_intermediate",
+          "disorder_W": 2.0,
+          "domain_window": "Anderson3D_W_2.00",
+          "graph_bridge_frequency": 0.0,
+          "mean_centroid_margin": 0.271987,
+          "mean_cross_neighbor_fraction": 0.041667,
+          "median_adjacent_r": 0.512182,
+          "median_brody_q": 0.03,
+          "median_mean_ipr": 0.0171107,
+          "median_participation_entropy": 0.841038,
+          "median_wigner_poisson_like_weight": 0.006666,
+          "source_domain_type": "metallic_wigner_pole",
+          "stability_state": "unstable_non_bridge"
+        },
+        {
+          "classical_audit_state": "classical_wigner_endpoint",
+          "composite_state": "unstable_non_bridge+classical_wigner_endpoint",
+          "disorder_W": 4.0,
+          "domain_window": "Anderson3D_W_4.00",
+          "graph_bridge_frequency": 0.0,
+          "mean_centroid_margin": 0.22506,
+          "mean_cross_neighbor_fraction": 0.0,
+          "median_adjacent_r": 0.539201,
+          "median_brody_q": 0.933333,
+          "median_mean_ipr": 0.01490231,
+          "median_participation_entropy": 0.856727,
+          "median_wigner_poisson_like_weight": 0.483333,
+          "source_domain_type": "metallic_wigner_pole",
+          "stability_state": "unstable_non_bridge"
+        },
+        {
+          "classical_audit_state": "classical_wigner_endpoint",
+          "composite_state": "stable_graph_bridge+classical_wigner_endpoint",
+          "disorder_W": 8.0,
+          "domain_window": "Anderson3D_W_8.00",
+          "graph_bridge_frequency": 1.0,
+          "mean_centroid_margin": 0.185828,
+          "mean_cross_neighbor_fraction": 0.361111,
+          "median_adjacent_r": 0.523082,
+          "median_brody_q": 0.89,
+          "median_mean_ipr": 0.022388606,
+          "median_participation_entropy": 0.811286,
+          "median_wigner_poisson_like_weight": 0.503333,
+          "source_domain_type": "mobility_candidate",
+          "stability_state": "stable_graph_bridge"
+        },
+        {
+          "classical_audit_state": "classical_wigner_endpoint",
+          "composite_state": "stable_graph_bridge+classical_wigner_endpoint",
+          "disorder_W": 12.0,
+          "domain_window": "Anderson3D_W_12.00",
+          "graph_bridge_frequency": 0.833333,
+          "mean_centroid_margin": 0.195571,
+          "mean_cross_neighbor_fraction": 0.218254,
+          "median_adjacent_r": 0.524819,
+          "median_brody_q": 0.803333,
+          "median_mean_ipr": 0.042938726,
+          "median_participation_entropy": 0.731668,
+          "median_wigner_poisson_like_weight": 0.48,
+          "source_domain_type": "mobility_candidate",
+          "stability_state": "stable_graph_bridge"
+        },
+        {
+          "classical_audit_state": "classical_wigner_endpoint",
+          "composite_state": "stable_graph_bridge+classical_wigner_endpoint",
+          "disorder_W": 14.0,
+          "domain_window": "Anderson3D_W_14.00",
+          "graph_bridge_frequency": 0.833333,
+          "mean_centroid_margin": 0.200335,
+          "mean_cross_neighbor_fraction": 0.166667,
+          "median_adjacent_r": 0.530184,
+          "median_brody_q": 0.856666,
+          "median_mean_ipr": 0.054930057,
+          "median_participation_entropy": 0.696679,
+          "median_wigner_poisson_like_weight": 0.486667,
+          "source_domain_type": "mobility_candidate",
+          "stability_state": "stable_graph_bridge"
+        },
+        {
+          "classical_audit_state": "classical_intermediate",
+          "composite_state": "parameter_sensitive_bridge+classical_intermediate",
+          "disorder_W": 16.0,
+          "domain_window": "Anderson3D_W_16.00",
+          "graph_bridge_frequency": 0.666667,
+          "mean_centroid_margin": 0.151661,
+          "mean_cross_neighbor_fraction": 0.207341,
+          "median_adjacent_r": 0.514892,
+          "median_brody_q": 0.64,
+          "median_mean_ipr": 0.083227022,
+          "median_participation_entropy": 0.633095,
+          "median_wigner_poisson_like_weight": 0.403334,
+          "source_domain_type": "mobility_candidate",
+          "stability_state": "parameter_sensitive_bridge"
+        },
+        {
+          "classical_audit_state": "classical_intermediate",
+          "composite_state": "stable_graph_bridge+classical_intermediate",
+          "disorder_W": 16.5,
+          "domain_window": "Anderson3D_W_16.50",
+          "graph_bridge_frequency": 1.0,
+          "mean_centroid_margin": 0.106469,
+          "mean_cross_neighbor_fraction": 0.353373,
+          "median_adjacent_r": 0.504157,
+          "median_brody_q": 0.57,
+          "median_mean_ipr": 0.093426667,
+          "median_participation_entropy": 0.617906,
+          "median_wigner_poisson_like_weight": 0.386667,
+          "source_domain_type": "mobility_candidate",
+          "stability_state": "stable_graph_bridge"
+        },
+        {
+          "classical_audit_state": "classical_wigner_endpoint",
+          "composite_state": "stable_graph_bridge+classical_wigner_endpoint",
+          "disorder_W": 17.0,
+          "domain_window": "Anderson3D_W_17.00",
+          "graph_bridge_frequency": 0.833333,
+          "mean_centroid_margin": 0.161113,
+          "mean_cross_neighbor_fraction": 0.285714,
+          "median_adjacent_r": 0.520325,
+          "median_brody_q": 0.653334,
+          "median_mean_ipr": 0.095030103,
+          "median_participation_entropy": 0.612064,
+          "median_wigner_poisson_like_weight": 0.433333,
+          "source_domain_type": "mobility_candidate",
+          "stability_state": "stable_graph_bridge"
+        },
+        {
+          "classical_audit_state": "classical_intermediate",
+          "composite_state": "stable_graph_bridge+classical_intermediate",
+          "disorder_W": 20.0,
+          "domain_window": "Anderson3D_W_20.00",
+          "graph_bridge_frequency": 1.0,
+          "mean_centroid_margin": 0.156693,
+          "mean_cross_neighbor_fraction": 0.494444,
+          "median_adjacent_r": 0.491363,
+          "median_brody_q": 0.493333,
+          "median_mean_ipr": 0.16136749,
+          "median_participation_entropy": 0.517139,
+          "median_wigner_poisson_like_weight": 0.333334,
+          "source_domain_type": "mobility_candidate",
+          "stability_state": "stable_graph_bridge"
+        },
+        {
+          "classical_audit_state": "classical_intermediate",
+          "composite_state": "unstable_non_bridge+classical_intermediate",
+          "disorder_W": 24.0,
+          "domain_window": "Anderson3D_W_24.00",
+          "graph_bridge_frequency": 0.0,
+          "mean_centroid_margin": 0.556988,
+          "mean_cross_neighbor_fraction": 0.033333,
+          "median_adjacent_r": 0.473644,
+          "median_brody_q": 0.4,
+          "median_mean_ipr": 0.209994686,
+          "median_participation_entropy": 0.456295,
+          "median_wigner_poisson_like_weight": 0.27,
+          "source_domain_type": "localized_poisson_pole",
+          "stability_state": "unstable_non_bridge"
+        },
+        {
+          "classical_audit_state": "classical_intermediate",
+          "composite_state": "unstable_non_bridge+classical_intermediate",
+          "disorder_W": 32.0,
+          "domain_window": "Anderson3D_W_32.00",
+          "graph_bridge_frequency": 0.0,
+          "mean_centroid_margin": 0.656648,
+          "mean_cross_neighbor_fraction": 0.0,
+          "median_adjacent_r": 0.441237,
+          "median_brody_q": 0.256667,
+          "median_mean_ipr": 0.355443071,
+          "median_participation_entropy": 0.324745,
+          "median_wigner_poisson_like_weight": 0.206667,
+          "source_domain_type": "localized_poisson_pole",
+          "stability_state": "unstable_non_bridge"
+        }
+      ],
+      "sites": 216,
+      "summary": {
+        "classic_only_residue": 4,
+        "classic_only_rows": [
+          "Anderson3D_W_2.00",
+          "Anderson3D_W_16.00",
+          "Anderson3D_W_24.00",
+          "Anderson3D_W_32.00"
+        ],
+        "composite_counts": {
+          "parameter_sensitive_bridge+classical_intermediate": 1,
+          "stable_graph_bridge+classical_intermediate": 2,
+          "stable_graph_bridge+classical_wigner_endpoint": 4,
+          "unstable_non_bridge+classical_intermediate": 3,
+          "unstable_non_bridge+classical_wigner_endpoint": 1
+        },
+        "graph_only_residue": 4,
+        "graph_only_rows": [
+          "Anderson3D_W_8.00",
+          "Anderson3D_W_12.00",
+          "Anderson3D_W_14.00",
+          "Anderson3D_W_17.00"
+        ],
+        "two_reader_boundary_confirmed": 2,
+        "two_reader_rows": [
+          "Anderson3D_W_16.50",
+          "Anderson3D_W_20.00"
+        ]
+      },
+      "total_graph_reader_runs": 6
+    }
+  ],
+  "cross_size_rows": [
+    {
+      "classical_states_seen": [
+        "classical_intermediate"
+      ],
+      "disorder_W": 2.0,
+      "domain_window": "Anderson3D_W_2.00",
+      "max_graph_bridge_frequency": 0.0,
+      "median_adjacent_r_by_size": [
+        0.506802,
+        0.512182
+      ],
+      "min_graph_bridge_frequency": 0.0,
+      "size_states": {
+        "5": "unstable_non_bridge+classical_intermediate",
+        "6": "unstable_non_bridge+classical_intermediate"
+      },
+      "stability_states_seen": [
+        "unstable_non_bridge"
+      ],
+      "two_reader_all_sizes": false,
+      "two_reader_intermittent": false
+    },
+    {
+      "classical_states_seen": [
+        "classical_wigner_endpoint"
+      ],
+      "disorder_W": 4.0,
+      "domain_window": "Anderson3D_W_4.00",
+      "max_graph_bridge_frequency": 0.0,
+      "median_adjacent_r_by_size": [
+        0.52228,
+        0.539201
+      ],
+      "min_graph_bridge_frequency": 0.0,
+      "size_states": {
+        "5": "unstable_non_bridge+classical_wigner_endpoint",
+        "6": "unstable_non_bridge+classical_wigner_endpoint"
+      },
+      "stability_states_seen": [
+        "unstable_non_bridge"
+      ],
+      "two_reader_all_sizes": false,
+      "two_reader_intermittent": false
+    },
+    {
+      "classical_states_seen": [
+        "classical_wigner_endpoint"
+      ],
+      "disorder_W": 8.0,
+      "domain_window": "Anderson3D_W_8.00",
+      "max_graph_bridge_frequency": 1.0,
+      "median_adjacent_r_by_size": [
+        0.523691,
+        0.523082
+      ],
+      "min_graph_bridge_frequency": 1.0,
+      "size_states": {
+        "5": "stable_graph_bridge+classical_wigner_endpoint",
+        "6": "stable_graph_bridge+classical_wigner_endpoint"
+      },
+      "stability_states_seen": [
+        "stable_graph_bridge"
+      ],
+      "two_reader_all_sizes": false,
+      "two_reader_intermittent": false
+    },
+    {
+      "classical_states_seen": [
+        "classical_wigner_endpoint"
+      ],
+      "disorder_W": 12.0,
+      "domain_window": "Anderson3D_W_12.00",
+      "max_graph_bridge_frequency": 1.0,
+      "median_adjacent_r_by_size": [
+        0.54932,
+        0.524819
+      ],
+      "min_graph_bridge_frequency": 0.833333,
+      "size_states": {
+        "5": "stable_graph_bridge+classical_wigner_endpoint",
+        "6": "stable_graph_bridge+classical_wigner_endpoint"
+      },
+      "stability_states_seen": [
+        "stable_graph_bridge"
+      ],
+      "two_reader_all_sizes": false,
+      "two_reader_intermittent": false
+    },
+    {
+      "classical_states_seen": [
+        "classical_wigner_endpoint"
+      ],
+      "disorder_W": 14.0,
+      "domain_window": "Anderson3D_W_14.00",
+      "max_graph_bridge_frequency": 0.833333,
+      "median_adjacent_r_by_size": [
+        0.514204,
+        0.530184
+      ],
+      "min_graph_bridge_frequency": 0.666667,
+      "size_states": {
+        "5": "parameter_sensitive_bridge+classical_wigner_endpoint",
+        "6": "stable_graph_bridge+classical_wigner_endpoint"
+      },
+      "stability_states_seen": [
+        "parameter_sensitive_bridge",
+        "stable_graph_bridge"
+      ],
+      "two_reader_all_sizes": false,
+      "two_reader_intermittent": false
+    },
+    {
+      "classical_states_seen": [
+        "classical_intermediate"
+      ],
+      "disorder_W": 16.0,
+      "domain_window": "Anderson3D_W_16.00",
+      "max_graph_bridge_frequency": 0.833333,
+      "median_adjacent_r_by_size": [
+        0.502545,
+        0.514892
+      ],
+      "min_graph_bridge_frequency": 0.666667,
+      "size_states": {
+        "5": "stable_graph_bridge+classical_intermediate",
+        "6": "parameter_sensitive_bridge+classical_intermediate"
+      },
+      "stability_states_seen": [
+        "parameter_sensitive_bridge",
+        "stable_graph_bridge"
+      ],
+      "two_reader_all_sizes": false,
+      "two_reader_intermittent": true
+    },
+    {
+      "classical_states_seen": [
+        "classical_intermediate",
+        "classical_wigner_endpoint"
+      ],
+      "disorder_W": 16.5,
+      "domain_window": "Anderson3D_W_16.50",
+      "max_graph_bridge_frequency": 1.0,
+      "median_adjacent_r_by_size": [
+        0.52013,
+        0.504157
+      ],
+      "min_graph_bridge_frequency": 0.5,
+      "size_states": {
+        "5": "parameter_sensitive_bridge+classical_wigner_endpoint",
+        "6": "stable_graph_bridge+classical_intermediate"
+      },
+      "stability_states_seen": [
+        "parameter_sensitive_bridge",
+        "stable_graph_bridge"
+      ],
+      "two_reader_all_sizes": false,
+      "two_reader_intermittent": true
+    },
+    {
+      "classical_states_seen": [
+        "classical_wigner_endpoint"
+      ],
+      "disorder_W": 17.0,
+      "domain_window": "Anderson3D_W_17.00",
+      "max_graph_bridge_frequency": 0.833333,
+      "median_adjacent_r_by_size": [
+        0.532094,
+        0.520325
+      ],
+      "min_graph_bridge_frequency": 0.833333,
+      "size_states": {
+        "5": "stable_graph_bridge+classical_wigner_endpoint",
+        "6": "stable_graph_bridge+classical_wigner_endpoint"
+      },
+      "stability_states_seen": [
+        "stable_graph_bridge"
+      ],
+      "two_reader_all_sizes": false,
+      "two_reader_intermittent": false
+    },
+    {
+      "classical_states_seen": [
+        "classical_intermediate"
+      ],
+      "disorder_W": 20.0,
+      "domain_window": "Anderson3D_W_20.00",
+      "max_graph_bridge_frequency": 1.0,
+      "median_adjacent_r_by_size": [
+        0.494405,
+        0.491363
+      ],
+      "min_graph_bridge_frequency": 1.0,
+      "size_states": {
+        "5": "stable_graph_bridge+classical_intermediate",
+        "6": "stable_graph_bridge+classical_intermediate"
+      },
+      "stability_states_seen": [
+        "stable_graph_bridge"
+      ],
+      "two_reader_all_sizes": true,
+      "two_reader_intermittent": false
+    },
+    {
+      "classical_states_seen": [
+        "classical_intermediate"
+      ],
+      "disorder_W": 24.0,
+      "domain_window": "Anderson3D_W_24.00",
+      "max_graph_bridge_frequency": 0.0,
+      "median_adjacent_r_by_size": [
+        0.468283,
+        0.473644
+      ],
+      "min_graph_bridge_frequency": 0.0,
+      "size_states": {
+        "5": "unstable_non_bridge+classical_intermediate",
+        "6": "unstable_non_bridge+classical_intermediate"
+      },
+      "stability_states_seen": [
+        "unstable_non_bridge"
+      ],
+      "two_reader_all_sizes": false,
+      "two_reader_intermittent": false
+    },
+    {
+      "classical_states_seen": [
+        "classical_intermediate"
+      ],
+      "disorder_W": 32.0,
+      "domain_window": "Anderson3D_W_32.00",
+      "max_graph_bridge_frequency": 0.0,
+      "median_adjacent_r_by_size": [
+        0.456631,
+        0.441237
+      ],
+      "min_graph_bridge_frequency": 0.0,
+      "size_states": {
+        "5": "unstable_non_bridge+classical_intermediate",
+        "6": "unstable_non_bridge+classical_intermediate"
+      },
+      "stability_states_seen": [
+        "unstable_non_bridge"
+      ],
+      "two_reader_all_sizes": false,
+      "two_reader_intermittent": false
+    }
+  ],
+  "experiment": "anderson3d_mobility_edge_two_reader_audit",
+  "observable_contract": {
+    "claim": "the BOUNDARY two-reader gate transfers beyond RP only if the same Anderson disorder row is stable_graph_bridge+classical_intermediate across tested sizes",
+    "denominator": "same disorder grid across all tested sizes",
+    "generator": "H=sum_i eps_i |i><i| + nearest-neighbor hopping on L^3, eps_i uniform[-W/2,W/2]",
+    "non_possible": "cross-domain transfer if no W row is stable_graph_bridge+classical_intermediate at every tested size",
+    "not_tested": "thermodynamic mobility-edge exponent, alternative boundary conditions, sparse large-L scaling, experimental spectra",
+    "observable": "two_reader_all_sizes from graph_bridge_frequency joined with adjacent ratio, Brody q, Wigner/Poisson mixture weight, IPR and participation entropy",
+    "operator": "3D Anderson tight-binding Hamiltonian with periodic boundaries, disorder sweep, seed and kNN perturbation"
+  },
+  "observables_registry": "1.0.0-2026-05-06",
+  "observables_used": [
+    "SR",
+    "SR2",
+    "L1",
+    "L2",
+    "triple_var",
+    "SR_local_rigidity",
+    "brody_q",
+    "wigner_poisson_like_weight",
+    "mean_ipr",
+    "participation_entropy",
+    "graph_bridge_frequency",
+    "size_stability",
+    "centroid_margin",
+    "cross_neighbor_fraction",
+    "classical_audit_state"
+  ],
+  "parameters": {
+    "central_fraction": 0.45,
+    "disorders": [
+      2.0,
+      4.0,
+      8.0,
+      12.0,
+      14.0,
+      16.0,
+      16.5,
+      17.0,
+      20.0,
+      24.0,
+      32.0
+    ],
+    "graph_margin_max": 0.45,
+    "grid_size": 151,
+    "k_values": [
+      2,
+      3,
+      4
+    ],
+    "localized_pole_min": 24.0,
+    "metallic_pole_max": 4.0,
+    "reps": 8,
+    "scramble_seed": 202605161117,
+    "scramble_trials": 128,
+    "seeds": [
+      202605151947,
+      202605151948
+    ],
+    "sites": [
+      125,
+      216
+    ],
+    "sizes": [
+      5,
+      6
+    ]
+  },
+  "question": "Does the two-reader BOUNDARY gate transfer from Rosenzweig-Porter to a 3D Anderson mobility-edge flow?",
+  "summary": {
+    "disorder_rows": 11,
+    "feature_scramble_null": {
+      "add_one_p": 0.875968992,
+      "k_ge_observed": 112,
+      "max_null": 4,
+      "observed": 1,
+      "raw_p": 0.875,
+      "trials": 128
+    },
+    "graph_only_residue_by_size": {
+      "5": 3,
+      "6": 4
+    },
+    "sizes_analyzed": 2,
+    "two_reader_all_size_rows": [
+      "Anderson3D_W_20.00"
+    ],
+    "two_reader_all_sizes": 1,
+    "two_reader_intermittent": 2,
+    "two_reader_intermittent_rows": [
+      "Anderson3D_W_16.00",
+      "Anderson3D_W_16.50"
+    ]
+  }
+}

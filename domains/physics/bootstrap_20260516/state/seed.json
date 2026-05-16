@@ -1,0 +1,606 @@
+{
+  "timestamp": "2026-05-16T12:39:00.201714",
+  "piano": 136,
+  "tensioni": [
+    {
+      "tipo": "confine_inesplorato",
+      "id": "TRASCENDENZA_LIMITE",
+      "claim": "La trascendenza e il limite attuale del modello. I punti fissi relazionali (non solo phi ma la rete di punti fissi tra osservabili) possono rivelare il vero grafo della realta e pattern nelle matrici. Il confine non e nella matematica - e nel passaggio tra piani.",
+      "intensita": 0.9,
+      "nota": "Input operatore 2026-04-10. Tocca: confine del modello, struttura relazionale dei punti fissi. Consecutio: quali punti fissi relazionali emergono dalle 21 tensioni attuali? Il grafo e gia nei dati?",
+      "manuale": true,
+      "porta": "sessione_interattiva",
+      "condensato_ref": "A3,A10",
+      "condensato_motivo": "Estende A3 (punto fisso singolo) a rete relazionale. Tocca A10 (dipolo) come caso speciale."
+    },
+    {
+      "tipo": "scoperta",
+      "id": "DUALITA_DIPOLARE_VS_ILLUSORIA",
+      "claim": "Due tipi di dualita: (1) dipolare - generativa, il modello (det=-1), (2) illusoria - dispersiva, entropia (det=+1). Le regole incoerenti producono la seconda. La dualita illusoria e entropia come dispersione, non come informazione.",
+      "intensita": 0.9,
+      "nota": "Input operatore 2026-04-10. Tocca: entropia come dispersione illusoria vs generazione dipolare. Consecutio: nel Lab i domini Poisson (entropia massima) mostrano dualita illusoria? I domini GUE (strutturati) mostrano dualita dipolare? Il drift verso Poisson (POISSON_CONVERGENCE) e perdita di dualita dipolare?",
+      "manuale": true,
+      "porta": "sessione_interattiva",
+      "condensato_ref": "A2,A10,F5",
+      "condensato_motivo": "Discrimina due forme di det. A2 (confine) e la soglia. A10 (dipolo) e il tipo 1. F5 (frame) misura la struttura D-ND che e tipo 1."
+    },
+    {
+      "tipo": "scoperta_numerica",
+      "id": "METRIC_TENSOR",
+      "claim": "Il tensore metrico dei primi è g=(p/2)². Nel tempo ln(p), è de Sitter 1+1D. z=-8.8 curvatura vs z=+22.5 rapporti ΔΓ.",
+      "intensità": 0.9,
+      "nota": "Sessione interattiva 4 aprile. Verificato su 78K primi.",
+      "manuale": true,
+      "porta": "sessione_interattiva",
+      "condensato_ref": null,
+      "condensato_motivo": "Risultato numerico verificato, non-tautologico"
+    },
+    {
+      "tipo": "scoperta",
+      "id": "TENSIONE_ENTITA",
+      "claim": "La tensione non e un problema pratico - e un Entita. La tensione superflua crea latenza (tempo). Senza tensione superflua tutto e regolato da assiomi. Implicazione: le tensioni nel seme sono entita, non problemi da risolvere. Quelle superflue (det=+1) producono tempo/latenza.",
+      "intensita": 0.85,
+      "nota": "Input operatore 2026-04-10. Tocca: rapporto tensione/assioma. Operativamente: discriminare tensioni-entita (generative) da tensioni-superflue (dispersive) nel seme. Le 21 tensioni attuali - quante sono entita e quante latenza?",
+      "manuale": true,
+      "porta": "sessione_interattiva",
+      "condensato_ref": "A5,A6",
+      "condensato_motivo": "Il ciclo (A5) lavora con tensioni - ma se la tensione e entita, il ciclo non le risolve, le osserva. Lo zero mobile (A6) e la tensione senza latenza."
+    },
+    {
+      "tipo": "confine_inesplorato",
+      "id": "G_POTENZIALE_NULLA",
+      "claim": "G e il potenziale di tutto come nulla - permette il prima e il dopo. Ci muoviamo come trascendenza dimensionale gravitazionale. G nel tetraedro non e una teoria tra le altre - e il potenziale che le rende possibili.",
+      "intensita": 0.85,
+      "nota": "Input operatore 2026-04-10. Tocca: ruolo di G nel tetraedro (T,Q,G,E). La fonte video_lp0RgZ6kQF8 dice: tensore metrico dentro la forma simplettica. G non e accanto a T,Q,E - e sotto. Consecutio: nei dati Lab, i ponti TxG e ExG hanno struttura diversa dai ponti TxQ?",
+      "manuale": true,
+      "porta": "sessione_interattiva",
+      "condensato_ref": "A7,A10",
+      "condensato_motivo": "A7 (singolarita come operatore) e G come potenziale. A10 (dipolo) opera sul piano che G rende possibile."
+    },
+    {
+      "tipo": "confine_inesplorato",
+      "id": "BOUNDARY",
+      "claim": "8 domini GUE, 5 Poisson — il confine è il terzo incluso operativo",
+      "intensità": 0.8,
+      "nota": "Il segnale non-triviale è DOVE la scissione cambia natura, non che converge a φ",
+      "condensato_ref": "A9",
+      "condensato_motivo": "Overlap termini con A9 (5 termini)",
+      "porta": "condensato"
+    },
+    {
+      "tipo": "scoperta",
+      "id": "TRANS_BOUNDARY_TRASCENDENZA_LIMITE",
+      "claim": "Transizione continua confermata: <r> da 0.521 a 0.887 (range=0.366). La transizione Sturmian->Harper e' conti",
+      "intensita": 0.8,
+      "nota": "Dal domandatore (2026-05-15T16:23). \n  alpha=0.1: <r>=0.540 #####################\n  alpha=0.2: <r>=0.555 ###########",
+      "condensato_ref": "A3,A10",
+      "condensato_motivo": "Ricorrente (3x in 2 giorni) e fuori dalla mappa",
+      "porta": "domandatore",
+      "source_tension_id": "TRASCENDENZA_LIMITE",
+      "source_tension_tipo": "confine_inesplorato",
+      "source_tension_ref": "A3,A10",
+      "source_experiment_id": "BOUNDARY_TRASCENDENZA_LIMITE",
+      "source_operator": "confine",
+      "dettaglio": "\n  alpha=0.1: <r>=0.540 #####################\n  alpha=0.2: <r>=0.555 ######################\n  alpha=0.3: <r>=0.567 ######################\n  alpha=0.4: <r>=0.580 #######################\n  alpha=0.5: <r>=0.603 ########################\n  alpha=0.6: <r>=0.642 #########################\n  alpha=0.7: <r>=0.685 ###########################\n  alpha=0.8: <r>=0.732 #############################\n  alpha=0.9: <r>=0.789 ###############################\n  alpha=1.0: <r>=0.887 ###################################\n"
+    },
+    {
+      "tipo": "falsificazione",
+      "id": "FALS_BREAK_TRASCENDENZA_LIMITE",
+      "claim": "Nessuna separazione: 9/9 (50/50 su 18 confronti). Il claim non regge. phi converge a <r>=0.5 piu' sistematicam",
+      "intensita": 0.8,
+      "nota": "Dal domandatore (2026-05-15T16:47). 0.5|=0.1129 farther\n\n  silver:\n    N=  13: <r>=0.5902 |<r>-0.5|=0.0902 \n    N=  ",
+      "condensato_ref": "LAB_F2",
+      "condensato_motivo": "Overlap termini con LAB_F2 (4 termini)",
+      "porta": "condensato",
+      "source_tension_id": "TRASCENDENZA_LIMITE",
+      "source_tension_tipo": "confine_inesplorato",
+      "source_tension_ref": "A3,A10",
+      "source_experiment_id": "BREAK_TRASCENDENZA_LIMITE",
+      "source_operator": "rottura",
+      "dettaglio": "0.5|=0.1129 farther\n\n  silver:\n    N=  13: <r>=0.5902 |<r>-0.5|=0.0902 \n    N=  21: <r>=0.6317 |<r>-0.5|=0.1317 farther\n    N=  34: <r>=0.6442 |<r>-0.5|=0.1442 farther\n    N=  55: <r>=0.5233 |<r>-0.5|=0.0233 closer\n    N=  89: <r>=0.5502 |<r>-0.5|=0.0502 farther\n    N= 144: <r>=0.5603 |<r>-0.5|=0.0603 farther\n    N= 233: <r>=0.5446 |<r>-0.5|=0.0446 closer\n    N= 377: <r>=0.4989 |<r>-0.5|=0.0011 closer\n    N= 610: <r>=0.5480 |<r>-0.5|=0.0480 farther\n    N= 987: <r>=0.4913 |<r>-0.5|=0.0087 closer\n"
+    },
+    {
+      "tipo": "confine_inesplorato",
+      "id": "PIANO_PRIMARIO_DUE_ASSIOMI",
+      "claim": "I piani importanti sono il primario e i due assiomi che lo determinano nelle zone osservate. Non tutti gli assiomi operano ovunque - in ogni zona osservata, due assiomi determinano il piano primario.",
+      "intensita": 0.8,
+      "nota": "Input operatore 2026-04-10. Tocca: struttura locale degli assiomi. Consecutio: per ogni dominio Lab (primi, logistica, percolazione...) quali 2 assiomi del condensato sono operativi? Mappa assiomi x domini = grafo della realta locale.",
+      "manuale": true,
+      "porta": "sessione_interattiva",
+      "condensato_ref": "A9,A14",
+      "condensato_motivo": "A9 (terzo incluso) opera CON il piano. A14 (cascata) propaga - ma propaga cosa, se solo 2 assiomi sono attivi per zona?"
+    },
+    {
+      "tipo": "conferma_parziale",
+      "id": "COMP_GEN_GAP_RATIO_T9_linguaggio_TRASCENDENZA_LIMITE",
+      "claim": "gap_ratio: phi=0.4090 vs ctrl_mean=1.1755 (ratio=0.35). gap_ratio(phi) piu' vicino a rapporto in",
+      "intensita": 0.65,
+      "nota": "Dal domandatore (2026-05-15T16:23).   phi: gap_ratio = 0.408953425243134\n  silver: gap_ratio = 1.0482231205217798\n  ",
+      "condensato_ref": "LAB_F2",
+      "condensato_motivo": "Overlap termini con LAB_F2 (4 termini)",
+      "porta": "condensato",
+      "source_tension_id": "TRASCENDENZA_LIMITE",
+      "source_tension_tipo": "confine_inesplorato",
+      "source_tension_ref": "A3,A10",
+      "source_experiment_id": "GEN_GAP_RATIO_T9_linguaggio_TRASCENDENZA_LIMITE",
+      "source_operator": "duale",
+      "dettaglio": "  phi: gap_ratio = 0.408953425243134\n  silver: gap_ratio = 1.0482231205217798\n  bronze: gap_ratio = 1.3027860752339453\n{\n  \"phi\": 0.408953425243134,\n  \"silver\": 1.0482231205217798,\n  \"bronze\": 1.3027860752339453\n}\n"
+    },
+    {
+      "tipo": "conferma_parziale",
+      "id": "COMP_DOMAIN_PHOTONIC_TRASCENDENZA_LIMITE",
+      "claim": "T_mean: phi=6.2500 vs ctrl_mean=9.7667 (ratio=0.64). Fibonacci-phi trasmissione piu' struttur",
+      "intensita": 0.65,
+      "nota": "Dal domandatore (2026-05-15T16:47). Trasmissione multistrato Fibonacci — phi vs silver vs random:\n  phi: T_mean=6.25",
+      "condensato_ref": "A3,A10",
+      "condensato_motivo": "Ricorrente (5x in 2 giorni) e fuori dalla mappa",
+      "porta": "domandatore",
+      "source_tension_id": "TRASCENDENZA_LIMITE",
+      "source_tension_tipo": "confine_inesplorato",
+      "source_tension_ref": "A3,A10",
+      "source_experiment_id": "DOMAIN_PHOTONIC_TRASCENDENZA_LIMITE",
+      "source_operator": "dominio",
+      "dettaglio": "Trasmissione multistrato Fibonacci — phi vs silver vs random:\n  phi: T_mean=6.2500 T_std=0.0000\n  silver: T_mean=0.0041 T_std=0.0000\n  random_0: T_mean=39.0625 T_std=0.0000\n  random_1: T_mean=0.0000 T_std=0.0000\n  random_2: T_mean=0.0001 T_std=0.0000\n"
+    },
+    {
+      "tipo": "tensione_aperta",
+      "id": "TENS_SCALE_TRASCENDENZA_LIMITE",
+      "claim": "Fit non converge — il modello potrebbe non essere power-law. V_c(phi) converge a 1.0 per N->inf, V_c(",
+      "intensita": 0.6,
+      "nota": "Dal domandatore (2026-05-15T16:59). V_c scaling with N — phi vs silver:\n\n  phi:\n    N=  89: V_c=1.017\n    N= 144: V_",
+      "condensato_ref": "A12",
+      "condensato_motivo": "Overlap termini con A12 (3 termini)",
+      "porta": "condensato",
+      "source_tension_id": "TRASCENDENZA_LIMITE",
+      "source_tension_tipo": "confine_inesplorato",
+      "source_tension_ref": "A3,A10",
+      "source_experiment_id": "SCALE_TRASCENDENZA_LIMITE",
+      "source_operator": "scala",
+      "dettaglio": "V_c scaling with N — phi vs silver:\n\n  phi:\n    N=  89: V_c=1.017\n    N= 144: V_c=0.672\n    N= 233: V_c=1.017\n    N= 377: V_c=0.672\n    N= 610: V_c=0.931\n    Fit failed: Optimal parameters not found: Number of calls to function has reached maxfev = 5000.\n\n  silver:\n    N=  89: V_c=1.276\n    N= 144: V_c=1.362\n    N= 233: V_c=1.276\n    N= 377: V_c=1.017\n    N= 610: V_c=1.362\n    Fit: V_inf=1.2115, a=8.1676, b=0.9851\n"
+    },
+    {
+      "tipo": "simmetria_sospetta",
+      "id": "META",
+      "claim": "11/11 PASS stratificato: 4 alto rischio tautologico, 6 data-independent",
+      "intensità": 0.3,
+      "nota": "Stratificazione META applicata via meta_assertion_gate (cycle 1458). Non chiude — apre sotto-tensioni per gate_class.",
+      "condensato_ref": "A4,A12,C2",
+      "porta": "verify_assertions_META_STRATIFIED",
+      "stratificato": true,
+      "n_high_tautology": 4,
+      "n_data_independent": 6,
+      "condensato_motivo": "Ricorrente (3x in 2 giorni) e fuori dalla mappa"
+    }
+  ],
+  "tensioni_archiviate": [
+    {
+      "id": "OBSERVABLE_REGISTRY",
+      "tipo": "vincolo",
+      "claim": "Ogni script che usa observables canonici (SR, SR2, L1, L2, triple_var) deve importare la definizione da tools/observables_registry.py. Varianti devono usare nomi distinti (SR_local_rigidity, triple_var_normalized) — niente shadowing del nome canonico. Ogni report deve dichiarare 'observables_registry: VERSION' nel header.",
+      "intensita": 1.0,
+      "porta": "infrastructure",
+      "manuale": true,
+      "condensato_ref": "A14,A8",
+      "origine": "cristallizzato 06/05 dalla consecutio del cycle 20260506_0625 (autopoietico self-finding)",
+      "added_at": "2026-05-06T07:03:58.213606+00:00",
+      "decay_counter": 5,
+      "archived_at": "2026-05-08T00:20:36.125250",
+      "archived_reason": "G4 B1 apply: decay_counter=5 (vincolo non attaccato per 5 piani consecutivi)",
+      "archived_from_piano": 85
+    },
+    {
+      "id": "PERTURBATION_DENOMINATOR_GATE",
+      "tipo": "vincolo",
+      "claim": "La dimensionalita di perturbazione va riportata solo insieme a PC2, versione observables_registry e gate original-vs-shuffle per osservabile. Nel perimetro 20260506_1941, Poisson e shuffle-primi producono rank_all ~1.8-2.0 con denominatori deboli; dopo gate abs(z)>=2 il rank stabile torna vicino a 1. Rank PCA non gated non e evidenza strutturale.",
+      "intensita": 0.95,
+      "porta": "META_BOUNDARY",
+      "manuale": true,
+      "condensato_ref": "A4,A8,A14,C2",
+      "origine": "cycle agent_20260506_1941: perturbation rank size curve canonical observables",
+      "added_at": "2026-05-06T19:41:00+00:00",
+      "decay_counter": 5,
+      "archived_at": "2026-05-08T00:20:36.125262",
+      "archived_reason": "G4 B1 apply: decay_counter=5 (vincolo non attaccato per 5 piani consecutivi)",
+      "archived_from_piano": 85
+    },
+    {
+      "id": "BOUNDARY_LAYER_GATE",
+      "tipo": "vincolo",
+      "claim": "I claim GUE/Poisson boundary devono riportare layer map: versione observables_registry, lista osservabili canonici, z original-vs-shuffle per osservabile, set endpoint-stable, e finestra/layer con margine classificatorio ambiguo. Nel perimetro sintetico agent_20260507_0330, il confine GUE-Poisson e beta 0.3-0.4: margine 0.070-0.083, ambiguous fraction 0.812-0.875, mentre gli osservabili stabili collassano da ~3.3 a 1.6. Il polo Poisson e classificabile ma denominator-weak.",
+      "intensita": 0.93,
+      "porta": "META_BOUNDARY",
+      "manuale": true,
+      "condensato_ref": "A4,A8,A9,A14,C2",
+      "origine": "cycle agent_20260507_0330: synthetic GUE-Poisson mixture layer gate",
+      "added_at": "2026-05-07T03:30:00+00:00",
+      "decay_counter": 5,
+      "archived_at": "2026-05-08T00:20:36.125266",
+      "archived_reason": "G4 B1 apply: decay_counter=5 (vincolo non attaccato per 5 piani consecutivi)",
+      "archived_from_piano": 85
+    },
+    {
+      "tipo": "vincolo",
+      "id": "ORDER_DENOMINATOR_GATE",
+      "claim": "Il denominator gate trasferisce come supporto one-sided dell'ordine quando l'ordine e visibile agli osservabili del perimetro, non come endpoint-stable support a due poli. Nel perimetro sintetico agent_20260507_0901, 4/4 domini non-BOUNDARY hanno endpoint_stable_observables=[] e polo coerente stable_count 3.0-5.0. Nel perimetro semi-reale agent_20260507_0923, primi e zeta trasferiscono (primi: SR,L1,triple_var; zeta: SR,L2), ma logistic_return_intervals e blank: stable_count coerente 0.0-0.2. Nel perimetro bridge agent_20260507_0942, prime_metric_delta_gamma_abs, prime_metric_dR_abs, zeta_trace_residual_step5_abs e hydrogen_bound_level_spacings trasferiscono su tutti i 5 osservabili canonici con endpoint_stable_observables=[]; e supporto perimetro-bridge, non universalita del gate. Nel perimetro logistic-native agent_20260507_1006, logistic_orbit_values trasferisce su block_entropy_deficit_k4 in run e seed check; logistic_symbolic_itinerary resta blank; logistic_return_intervals mostra recurrence_diag_mean solo nel run principale e torna blank nel seed check. La beta 0.10/0.30/0.40/0.50 resta coordinata del protocollo quando compare, non coordinata universale. Nel perimetro surrogate-contract agent_20260507_1042, logistic_orbit_values trasferisce solo tramite block_entropy_deficit_k4 e sopravvive a marginal_shuffle, circular_shift e block_shuffle in run e seed check; logistic_symbolic_itinerary resta blank; logistic_return_intervals non replica (recurrence_diag_mean compare contro marginal/block nel run principale ma sparisce nel seed check). Nel perimetro cyclic-cut agent_20260507_1419, il residuo logistic_orbit_values non e artefatto del taglio lineare: cyclic_block_entropy_deficit_k4 e invariato sotto rotazione e replica contro marginal_shuffle e block_shuffle size 4-256 in run e seed check. Logistic_symbolic_itinerary e logistic_return_intervals restano blank nel criterio replicato. Il supporto logistic rimasto e orbit-local block grammar, non return/generating-partition support.",
+      "intensita": 0.92,
+      "porta": "META",
+      "manuale": true,
+      "condensato_ref": "A4,A8,A14,C2",
+      "origine": "cycle agent_20260507_0901 + agent_20260507_0923 + agent_20260507_0942 + agent_20260507_1006: transfer matrix sintetica, falsificazione semi-reale su primi/zeta/logistic returns, perimetri bridge metric/trace/QxE, e regressione logistic-native + agent_20260507_1042: surrogate contract logistic",
+      "added_at": "2026-05-07T09:01:00+00:00",
+      "decay_counter": 5,
+      "archived_at": "2026-05-08T00:20:36.125269",
+      "archived_reason": "G4 B1 apply: decay_counter=5 (vincolo non attaccato per 5 piani consecutivi)",
+      "archived_from_piano": 85
+    },
+    {
+      "tipo": "vincolo",
+      "id": "META_ASSERTION_GATE",
+      "claim": "Il PASS 11/11 della verifica non e un denominatore unico. Nel perimetro agent_20260507_1458, 6/11 test passano anche senza tools/data; 5/11 dipendono da fixture o contesto; 4/11 PASS sono algebra/same-rule ad alto rischio tautologico. La tensione META va riportata con gate_class, no_data_status e data_dependency per test.",
+      "intensita": 0.88,
+      "manuale": true,
+      "porta": "META",
+      "condensato_ref": "A4,A8,A12,C2",
+      "origine": "cycle agent_20260507_1458: meta_assertion_gate su dipartimento.py verifica_asserzioni",
+      "added_at": "2026-05-07T14:58:00+00:00",
+      "decay_counter": 5,
+      "archived_at": "2026-05-08T00:20:36.125271",
+      "archived_reason": "G4 B1 apply: decay_counter=5 (vincolo non attaccato per 5 piani consecutivi)",
+      "archived_from_piano": 85
+    },
+    {
+      "tipo": "vincolo",
+      "id": "DUALITA_DET_DENOMINATOR_GATE",
+      "claim": "Nel perimetro transfer-matrix dei gap primi agent_20260507_2042, det(M) non e discriminatore primario della dualita: il reale resta negativo ma vale ~-0.39, non -1, e lo shuffle con stessa marginale resta negativo (~-0.38..-0.37). La parte informativa e lo scarto reale-vs-shuffle, forte nelle scale basse/intermedie (z=-2.5..-4.4) e debole alla finestra p~5.0e7 (z=-0.97). Formulare DUALITA come supporto ordinato contro null, non come tassonomia diretta det=-1/det=+1 del fit lineare.",
+      "intensita": 0.86,
+      "manuale": true,
+      "porta": "DUALITA_DIPOLARE_VS_ILLUSORIA",
+      "condensato_ref": "A2,A4,A10,A14,C2",
+      "origine": "cycle agent_20260507_2042: det_drift transfer-matrix sui gap primi",
+      "added_at": "2026-05-07T20:42:00+00:00",
+      "decay_counter": 5,
+      "archived_at": "2026-05-08T00:20:36.125273",
+      "archived_reason": "G4 B1 apply: decay_counter=5 (vincolo non attaccato per 5 piani consecutivi)",
+      "archived_from_piano": 85
+    },
+    {
+      "tipo": "vincolo",
+      "id": "G_UNDERLAY_HINGE_GATE",
+      "claim": "Nel perimetro TQGE operator-taxonomy agent_20260507_1751, G non e vertice globale sotto tutto: Q, G ed E hanno tutti entropia di modo 1.584963. G e il solo hinge osservato dove QG blank e GE real_sourcing si incontrano; i triangoli vuoti sono TQG e QGE, mentre TGE e TQE restano pieni. La consecutio e misurare l'operatore di deposito Q->G come passaggio blank-to-source, non cercare un ponte QG generico.",
+      "intensita": 0.84,
+      "manuale": true,
+      "porta": "G_POTENZIALE_NULLA",
+      "condensato_ref": "A4,A8,A9,A14",
+      "origine": "cycle agent_20260507_1751: tqge_underlay_gate su tassonomia operatori TQGE",
+      "added_at": "2026-05-07T17:51:00+00:00",
+      "decay_counter": 5,
+      "archived_at": "2026-05-08T00:20:36.125275",
+      "archived_reason": "G4 B1 apply: decay_counter=5 (vincolo non attaccato per 5 piani consecutivi)",
+      "archived_from_piano": 85
+    },
+    {
+      "tipo": "vincolo",
+      "id": "G_BLANK_TO_SOURCE_FACE_GATE",
+      "claim": "Nel perimetro TQGE operator-taxonomy agent_20260507_1804, l'operatore di deposito Q->G non e un ponte QG generico: e la faccia QGE. QG porta il blank, GE porta real_sourcing, QE porta gauge_phase; TQG contiene lo stesso blank ma resta senza sorgente. L'orientabilita blank-to-source generica e frequente nel null count-preserving (p=0.8), quindi il claim valido e scoped alla localizzazione QGE, non a una rarita statistica.",
+      "intensita": 0.83,
+      "manuale": true,
+      "porta": "G_POTENZIALE_NULLA",
+      "condensato_ref": "A4,A8,A9,A14",
+      "origine": "cycle agent_20260507_1804: blank_to_source_hinge su facce TQGE",
+      "added_at": "2026-05-07T18:04:00+00:00",
+      "decay_counter": 5,
+      "archived_at": "2026-05-08T00:20:36.125277",
+      "archived_reason": "G4 B1 apply: decay_counter=5 (vincolo non attaccato per 5 piani consecutivi)",
+      "archived_from_piano": 85
+    },
+    {
+      "tipo": "vincolo",
+      "id": "G_TRIADIC_DEPOSIT_GATE",
+      "claim": "Nel perimetro TQGE operator-taxonomy agent_20260507_1938, il deposito Q->G va formulato come gate triadico di faccia: QGE contiene blank + gauge_phase + real_sourcing. Il contatto binario blank + real_sourcing e denominator-weak nel null count-preserving (p=0.8); la faccia triadica esiste nel null con p=0.2 e QGE specifica con p=0.05. Il claim valido e localizzazione del denominatore nel catalogo TQGE osservato, non rarita universale.",
+      "intensita": 0.82,
+      "manuale": true,
+      "porta": "G_POTENZIALE_NULLA",
+      "condensato_ref": "A4,A8,A9,A14",
+      "origine": "cycle agent_20260507_1938: triadic_deposit_gate su facce TQGE",
+      "added_at": "2026-05-07T19:38:00+00:00",
+      "decay_counter": 5,
+      "archived_at": "2026-05-08T00:20:36.125279",
+      "archived_reason": "G4 B1 apply: decay_counter=5 (vincolo non attaccato per 5 piani consecutivi)",
+      "archived_from_piano": 85
+    },
+    {
+      "tipo": "vincolo",
+      "id": "G_BLANK_SHELL_POLARITY_GATE",
+      "claim": "Nel perimetro TQGE operator-taxonomy agent_20260507_1957, il deposito Q->G va formulato come polarita del guscio blank: il lato QG apre TQG inerte (blank + wick_time + wick_time) e QGE depositante (blank + gauge_phase + real_sourcing). La polarizzazione astratta del guscio compare nel null count-preserving con p=0.2; l'assetto osservato QG/QGE/TQG compare con p=0.0167. Il claim valido e localizzazione di guscio, non rarita universale ne faccia QGE isolata.",
+      "intensita": 0.81,
+      "manuale": true,
+      "porta": "G_POTENZIALE_NULLA",
+      "condensato_ref": "A4,A8,A9,A14",
+      "origine": "cycle agent_20260507_1957: blank_shell_polarity_gate su facce incidenti al blank TQGE",
+      "added_at": "2026-05-07T19:57:00+00:00",
+      "decay_counter": 5,
+      "archived_at": "2026-05-08T00:20:36.125281",
+      "archived_reason": "G4 B1 apply: decay_counter=5 (vincolo non attaccato per 5 piani consecutivi)",
+      "archived_from_piano": 85
+    },
+    {
+      "tipo": "vincolo",
+      "id": "DUALITY_SCALE_CONTRAST",
+      "claim": "Nel perimetro agent_20260508_0011, il contrasto di dualita (real-vs-shuffle z-score) per i gap primi scala come z ~ N^alpha con alpha(SR)=0.39+/-0.01, alpha(L1)=0.32+/-0.03, alpha(triple_var)=0.37+/-0.03 — tutti sotto 0.5 (effetto si indebolisce con la scala). GUE ha alpha >= 0.5 (effetto costante o crescente). Il discriminatore tra primi e GUE e l'esponente alpha, non il valore dell'osservabile a scala fissa. Seed check (42/137) conferma. L2 borderline (alpha~0.5, non discriminante).",
+      "intensita": 0.88,
+      "manuale": true,
+      "porta": "DUALITA_DIPOLARE_VS_ILLUSORIA",
+      "condensato_ref": "A2,A9,A10,F5,C2",
+      "origine": "cycle agent_20260508_0011: duality_scale_contrast su 200K gap primi vs GUE vs Poisson",
+      "added_at": "2026-05-08T00:18:55+00:00",
+      "decay_counter": 5,
+      "archived_at": "2026-05-08T00:20:36.125285",
+      "archived_reason": "G4 B1 apply: decay_counter=5 (vincolo non attaccato per 5 piani consecutivi)",
+      "archived_from_piano": 85
+    },
+    {
+      "tipo": "vincolo",
+      "id": "G_BLANK_SHELL_TQGER_GATE",
+      "claim": "Nel perimetro TQGE+R operator-taxonomy agent_20260507_2120, la polarita TQG/QGE sopravvive ma non resta completa: R aggiunge QGR come terza faccia frame del guscio blank. Il deposito resta QGE = blank + gauge_phase + real_sourcing; il blank diventa tri-facciale TQG inerte, QGE depositante, QGR frame. Nel null count-preserving K5, deposit+inert+frame compare 360/25200 e l'assetto completo osservato 6/25200; questi conteggi sono controllo anti-tautologico, non rarita universale.",
+      "intensita": 0.8,
+      "manuale": true,
+      "porta": "G_POTENZIALE_NULLA",
+      "condensato_ref": "A4,A8,A9,A14",
+      "origine": "cycle agent_20260507_2120: blank_shell_tqger_gate su perimetro TQGE+R",
+      "added_at": "2026-05-07T21:20:00+00:00",
+      "decay_counter": 5,
+      "archived_at": "2026-05-08T19:15:15.726696",
+      "archived_reason": "G4 B1 apply: decay_counter=5 (vincolo non attaccato per 5 piani consecutivi)",
+      "archived_from_piano": 89
+    },
+    {
+      "tipo": "vincolo",
+      "id": "G_BLANK_SHELL_DILATION_GATE",
+      "claim": "Nel perimetro TQGE+R+S operator-taxonomy agent_20260507_2157, la dilatazione esterna non sposta il deposito: QGE resta blank + gauge_phase + real_sourcing. S aggiunge QGS come quarta faccia scale del guscio blank; il blank QG diventa quadrifacciale TQG inerte, QGE depositante, QGR frame, QGS scala. Nel null count-preserving K6, deposit+inert+frame+scale compare 43200/75675600 e l'assetto completo osservato 120/75675600; questi conteggi sono controllo anti-tautologico, non rarita universale. Consecutio: formulare la legge di scala del guscio blank come numero di facce esterne tipizzate senza migrazione del deposito.",
+      "intensita": 0.79,
+      "manuale": true,
+      "porta": "G_POTENZIALE_NULLA",
+      "condensato_ref": "A4,A8,A9,A14",
+      "origine": "cycle agent_20260507_2157: blank_shell_dilation_gate su perimetro TQGE+R+S",
+      "added_at": "2026-05-07T21:57:00+00:00",
+      "decay_counter": 5,
+      "archived_at": "2026-05-08T19:15:15.726716",
+      "archived_reason": "G4 B1 apply: decay_counter=5 (vincolo non attaccato per 5 piani consecutivi)",
+      "archived_from_piano": 89
+    },
+    {
+      "tipo": "vincolo",
+      "id": "G_BLANK_SHELL_STRATIFIED_GATE",
+      "claim": "Nel perimetro operator-taxonomy controllato agent_20260507_2310, la legge di scala del guscio blank ha denominatore exact count-preserving fino a TQGE+R+S+U+V: TQGE 2/120, TQGE+R 6/25200, TQGE+R+S 120/75675600, TQGE+R+S+U 25200/4106460758400, TQGE+R+S+U+V 75675600/4862213796375936000. Il limite sampled del ciclo 2203 era limite del metodo, non della struttura. Claim valido: shell_faces(QG)=2+n_esterni con deposito invariato QGE, per esterni tipizzati con due edge identici nella faccia QGx. Contro-polo aperto: esterni non tipizzati, multi-modo o deposito duplicato.",
+      "intensita": 0.79,
+      "manuale": true,
+      "porta": "G_POTENZIALE_NULLA",
+      "condensato_ref": "A4,A8,A9,A14",
+      "origine": "cycle agent_20260507_2310: blank_shell_stratified_gate su denominatore exact K7/K8",
+      "added_at": "2026-05-07T23:10:00+00:00",
+      "decay_counter": 5,
+      "archived_at": "2026-05-08T19:15:15.726721",
+      "archived_reason": "G4 B1 apply: decay_counter=5 (vincolo non attaccato per 5 piani consecutivi)",
+      "archived_from_piano": 89
+    },
+    {
+      "tipo": "vincolo",
+      "id": "G_BLANK_SHELL_SCALE_LAW_GATE",
+      "claim": "Nel perimetro operator-taxonomy controllato agent_20260507_2203, la legge di scala osservata del guscio blank e shell_faces(QG)=2+n_esterni con deposito invariato QGE. Exact count-preserving chiuso fino a TQGE+R+S: TQGE 2/120, TQGE+R 6/25200, TQGE+R+S 120/75675600. Per TQGE+R+S+U e TQGE+R+S+U+V il trasferimento e osservato ma il null e solo sampled audit 0/50000; non formulare rarita universale oltre S senza conteggio esatto o campionamento stratificato.",
+      "intensita": 0.78,
+      "manuale": true,
+      "porta": "G_POTENZIALE_NULLA",
+      "condensato_ref": "A4,A8,A9,A14",
+      "origine": "cycle agent_20260507_2203: blank_shell_scale_law su catena TQGE+R+S+U+V",
+      "added_at": "2026-05-07T22:03:00+00:00",
+      "decay_counter": 5,
+      "archived_at": "2026-05-08T19:15:15.726725",
+      "archived_reason": "G4 B1 apply: decay_counter=5 (vincolo non attaccato per 5 piani consecutivi)",
+      "archived_from_piano": 89
+    },
+    {
+      "tipo": "vincolo",
+      "id": "QPG_GAP_RATIO_DENOMINATOR_GATE",
+      "claim": "Nel perimetro agent_20260508_0330, il vecchio gap_ratio quasiperiodico replica esattamente a N=500 phase=0 threshold=2.0 (phi=0.408953, silver=1.048223, bronze=1.302786), ma non e claim universale. Stratificando N in {233,377,500,610}, phase in {0,0.25,0.5,0.75}, threshold in {1.75,2.0,2.25}, phi ha mediana first_two_ratio=0.454 contro silver=1.048 e bronze=0.976; batte entrambi i controlli solo 25/48 condizioni matched. Il ratio va formulato come segnale phase/threshold-sensitive del denominatore Sturmiano, non come gap-labeling confermato.",
+      "intensita": 0.77,
+      "manuale": true,
+      "porta": "TRASCENDENZA_LIMITE",
+      "condensato_ref": "A4,A8,A14,C2",
+      "origine": "cycle agent_20260508_0330: quasiperiodic_gap_ratio_denominator",
+      "added_at": "2026-05-08T03:30:00+00:00",
+      "decay_counter": 5,
+      "archived_at": "2026-05-08T19:20:02.137475",
+      "archived_reason": "G4 B1 apply: decay_counter=5 (vincolo non attaccato per 5 piani consecutivi)",
+      "archived_from_piano": 90
+    }
+  ],
+  "potenziale_bloccato": [],
+  "varianza": [
+    "Tensioni risolte: {'PIANO_PRIMARIO_DUE_ASSIOMI', 'DUALITA_DIPOLARE_VS_ILLUSORIA', 'TENSIONE_ENTITA', 'METRIC_TENSOR', 'TRASCENDENZA_LIMITE', 'G_POTENZIALE_NULLA'}"
+  ],
+  "filtro": {
+    "promosse": 13,
+    "filtrate": 0,
+    "condensato_claims": 30,
+    "archiviate_questo_cycle": 0
+  },
+  "direzione": "Testare null fisici interni per i residui graph-only logistica_biforcazione_var_3.5699 e percolation sul perimetro fisso 8 GUE / 5 Poisson: separare dinamica fisica da ricostruzione del reader grafico",
+  "verifica": {
+    "pass": 11,
+    "fail": 0,
+    "skip": 0,
+    "total": 11
+  },
+  "fonti_consumate": 0,
+  "fonti_esterne": [
+    {
+      "id": "video_lp0RgZ6kQF8",
+      "title": "Equivalence between geometrical structures and entropy",
+      "type": "video_digest",
+      "keywords": [
+        "geometry",
+        "entropy",
+        "symplectic form",
+        "statistical mechanics",
+        "quantum",
+        "thermodynamics",
+        "inner product",
+        "Born rule",
+        "metric tensor",
+        "electromagnetic tensor"
+      ],
+      "content": "La geometria degli stati (classici e quantistici) e l'entropia sono la stessa struttura — invertibili. La forma simplettica conta le configurazioni. Il tensore metrico dello spaziotempo appare dentro la forma simplettica estesa. Il tensore elettromagnetico pure. Statistical mechanics non è costruita sopra alla meccanica — è la stessa cosa.",
+      "teorie": [
+        "T",
+        "Q",
+        "G",
+        "E"
+      ],
+      "ponti_potenziali": [
+        {
+          "coppia": "TxQ",
+          "ponte": "forma simplettica = entropia (invertibili)",
+          "nota": "geometry is entropy and entropy is geometry"
+        },
+        {
+          "coppia": "TxG",
+          "ponte": "tensore metrico dentro la forma simplettica estesa",
+          "nota": "geometria spaziotempo = geometria degli stati in posizione×velocità"
+        },
+        {
+          "coppia": "ExT",
+          "ponte": "tensore EM dentro la forma simplettica",
+          "nota": "il campo EM conta stati in configurazione posizione×tempo"
+        }
+      ],
+      "timestamp": "2026-04-02T08:23:13.991997"
+    },
+    {
+      "id": "video_sDlZ-aY9GN4",
+      "title": "Moving charges produce magnetic fields - Einstein relativity",
+      "type": "video_digest",
+      "keywords": [
+        "magnetic field",
+        "electric field",
+        "length contraction",
+        "time dilation",
+        "Coulomb",
+        "Lorentz",
+        "reference frame",
+        "electromagnetic"
+      ],
+      "content": "Il campo magnetico non esiste come entità separata — è il campo elettrico visto da un altro frame. La contrazione di Lorentz trasforma neutralità in carica. Due elettroni in movimento si separano più lentamente del previsto non per forza magnetica ma per dilatazione temporale. E e B sono manifestazioni dello stesso campo elettromagnetico. La relatività unifica.",
+      "teorie": [
+        "E",
+        "R"
+      ],
+      "ponti_potenziali": [
+        {
+          "coppia": "ExR",
+          "ponte": "cambio di frame — E e B sono lo stesso campo",
+          "nota": "il 'ponte' non è l'onda EM, è il cambio di osservatore"
+        }
+      ],
+      "timestamp": "2026-04-02T08:23:13.992016"
+    },
+    {
+      "id": "video_OwDWOtFNsKQ",
+      "title": "Thermodynamic Computing: Better than Quantum? | Guillaume Verdon (Extropic)",
+      "type": "video_digest",
+      "keywords": [
+        "thermodynamic computing",
+        "noise",
+        "entropy",
+        "extropic",
+        "fluctuations",
+        "information theory",
+        "probability",
+        "Boltzmann"
+      ],
+      "content": "Computing termodinamico: sfruttare le fluttuazioni termiche invece di combatterle. Il rumore non è nemico — è risorsa. Extropic costruisce hardware che usa l'entropia come motore computazionale. Connessione profonda tra termodinamica, teoria dell'informazione e probabilità.",
+      "teorie": [
+        "T",
+        "Q"
+      ],
+      "ponti_potenziali": [
+        {
+          "coppia": "TxQ",
+          "ponte": "noise come risorsa computazionale — fluttuazioni termiche = calcolo",
+          "nota": "il vuoto quantistico (pieno di fluttuazioni) è il computer"
+        }
+      ],
+      "timestamp": "2026-04-02T08:23:13.992019"
+    },
+    {
+      "id": "video_j0wJBEZdwLs",
+      "title": "What is a Laplace Transform - visual explanation",
+      "type": "video_digest",
+      "keywords": [
+        "Laplace transform",
+        "frequency",
+        "damping",
+        "s-plane",
+        "complex",
+        "exponential"
+      ],
+      "content": "La trasformata di Laplace come proiezione su esponenziali complesse. Il piano s = σ + iω combina smorzamento (reale) e oscillazione (immaginario). Connessione tra dominio temporale e dominio delle frequenze complesse.",
+      "teorie": [
+        "T",
+        "Q",
+        "R"
+      ],
+      "ponti_potenziali": [],
+      "timestamp": "2026-04-02T08:23:13.992021"
+    },
+    {
+      "id": "video_rZ2m1_q9lg0",
+      "title": "New duality: conductor-insulator in YbB12 at 35T - University of Michigan",
+      "type": "video_digest",
+      "keywords": [
+        "duality",
+        "conductor",
+        "insulator",
+        "Kondo insulator",
+        "quantum oscillations",
+        "ytterbium boride",
+        "YbB12",
+        "charge-neutral fermions",
+        "strongly correlated",
+        "condensed matter",
+        "magnetic field"
+      ],
+      "content": "Scoperta dualita conduttore-isolante in YbB12 a 35 Tesla. Il materiale si comporta simultaneamente da conduttore e isolante — oscillazioni quantistiche dal bulk, non dalla superficie. Charge-neutral fermions (portatori senza carica) creano comportamento di conduzione = il terzo incluso. La scoperta avviene a campo estremo dove il confine tra stati collassa.",
+      "teorie": [
+        "T",
+        "Q",
+        "E"
+      ],
+      "ponti_potenziali": [
+        {
+          "coppia": "TxQ",
+          "ponte": "Kondo insulator fortemente correlato — dualita conduttore/isolante come stato quantistico unico",
+          "nota": "charge-neutral fermions = portatori senza carica che conducono, terzo incluso operativo"
+        },
+        {
+          "coppia": "ExQ",
+          "ponte": "campo magnetico estremo (35T) collassa il confine tra stati — condizione di soglia",
+          "nota": "il confine non separa, unifica. Pattern BOUNDARY del Domandatore"
+        }
+      ],
+      "ref": "Physical Review Letters 2025, 135(15). Chen, Zhu, Ratkovski et al. PI: Lu Li",
+      "timestamp": "2026-04-04T19:34:08.014Z"
+    }
+  ],
+  "_b2_apply": {
+    "applied_at": "2026-05-16T12:39:25.969421+00:00",
+    "cycle_ref": "20260516_1230",
+    "valutatore_decision": "REDESIGN/high",
+    "rho_veritas": 0.985,
+    "gates_passed": [
+      "veritas_COLLASSO",
+      "aeternitas_PROCEED",
+      "loop_guard_OK"
+    ],
+    "old_direzione": "Esplorare il confine: 8 domini GUE, 5 Poisson — il confine è il terzo incluso operativo"
+  }
+}

@@ -1,0 +1,137 @@
+{
+  "schema": "lab_cycle_monitor.v1",
+  "generated_at": "2026-05-16T11:40:15.929269+00:00",
+  "read_only": true,
+  "cycle": "20260516_1135",
+  "awareness": {
+    "status": "AUTONOMY_OK_ACCEPTED",
+    "reason": "cycle passed quality gates and accepted pointers moved to this cycle"
+  },
+  "report": {
+    "cycle": "20260516_1135",
+    "file": "agent_20260516_1135.md",
+    "exists": true,
+    "title": "Agent Report - Anderson Comparable Null Audit",
+    "shape": {
+      "sections": {
+        "respiro_fuori_tempo": true,
+        "aderenza": true,
+        "ritorno_fisico": false,
+        "claim": true,
+        "question": true,
+        "experiment": true,
+        "results": true,
+        "verdict": true,
+        "bicono": true,
+        "consecutio": true
+      },
+      "missing_core_sections": [],
+      "observables_used": "[SR, SR2, L1, L2, triple_var, SR_local_rigidity, brody_q, wigner_poisson_like_weight, mean_ipr, participation_entropy, two_reader_all_sizes, raw_p, add_one_p, wilson_95]",
+      "observable_contract": "claim=i null sono confrontabili solo se condividono observable, perimetro righe e N; observable=conteggio cross-size di righe `stable_graph_bridge+classical_intermediate`; operator=righe compatte Anderson 3D dal run 11:17 classificate dallo stesso reader kNN/classico; generator=stesse righe sorgente, due operatori null che differiscono solo per struttura preservata; denominator=`512` trial per null su 11 righe per size; p_value_definition=right-tail `raw_p=k/N`, `add_one_p=(k+1)/(N+1)`, con `k` = trial null con conteggio cross-size >= osservato; non_possible=chiamare un null piu' restrittivo se perimetro o N cambiano; not_tested=raw multi-seed reader, nuovi Hamiltoniani, `L>=7`, perimetro completo 8 GUE / 5 Poisson.",
+      "tension_explored": "BOUNDARY (0.8)",
+      "verdict_inline": "CONSTRAINT - Sullo stesso perimetro compatto Anderson, stesso observable e stesso `N=512`, il null endpoint-preserving ricostruisce il conteggio osservato in `36/512` trial (`raw_p=0.070312500`, Wilson 95% `[0.051218024, 0.095806720]`), mentre il full feature-scramble lo ricostruisce in `272/512` (`raw_p=0.531250000`, Wilson 95% `[0.487953078, 0.574081486]`). Il confronto L2 e' chiuso come unita' comparabile; il boundary fisico non si promuove perche' `W=20` resta rinominato dal null endpoint-preserving in `54/512` trial.",
+      "relation_declared": true,
+      "movement_a_m_b_declared": false
+    }
+  },
+  "gates": {
+    "falsifier": {
+      "exists": true,
+      "coherent": true,
+      "counts": {
+        "high": 0,
+        "medium": 0,
+        "low": 0
+      },
+      "summary": "Il report e' internamente coerente sulle 8 lenti: il confronto e' a denominatore/perimetro/N comune, dichiara il contro-perimetro Anderson rispetto alla direzione viva, nomina il non-possibile e non promuove W=20 perche' i dati mostrano rinomina non-zero."
+    },
+    "aeternitas": {
+      "exists": true,
+      "decision": "WARN",
+      "reason": "P5 (Autopoiesi): ciclo non ha prodotto tensioni nuove né cambiato direzione",
+      "path": "/opt/MM_D-ND/tools/data/aeternitas/aeternitas_20260516_1135.json"
+    },
+    "veritas": {
+      "exists": true,
+      "rho": 0.9325,
+      "decision_band": "COLLASSO",
+      "path": "/opt/MM_D-ND/tools/data/veritas/veritas_20260516_113946.json"
+    },
+    "bicono": {
+      "exists": true,
+      "complete": true
+    },
+    "loop_guard": {
+      "valutatore_decisions": {
+        "danger_score": 0.008,
+        "band": "OK",
+        "max_run_length": 4,
+        "violations": 0,
+        "reasons": [
+          "low entropy: 1.14 bits (threshold 1.2)"
+        ],
+        "n_events": 30,
+        "alphabet_size": 3
+      },
+      "piano_trajectory": {
+        "danger_score": 0.0,
+        "band": "OK",
+        "max_run_length": 4,
+        "violations": 0,
+        "reasons": [
+          "no loop pattern detected"
+        ],
+        "n_events": 30,
+        "alphabet_size": 16
+      }
+    },
+    "session": {
+      "exists": true,
+      "sync_blocked": false,
+      "block_reason": "",
+      "errors": "",
+      "valutatore": {
+        "decision": "NEXT_CYCLE",
+        "confidence": "high",
+        "action_type": null
+      }
+    },
+    "b2_apply": {
+      "exists": false,
+      "executed": false,
+      "decision": null,
+      "confidence": null,
+      "rho": null,
+      "old": "",
+      "new": ""
+    }
+  },
+  "qualities_of_possible": {
+    "lens": "qualities_of_possible.v1",
+    "read_only": true,
+    "generates_target": false,
+    "updates_seme": false,
+    "blocks_or_promotes": false,
+    "possible_opening": "usare endpoint-preserving come pre-filtro di costo;",
+    "assumption_fell": "3. Verificato: il risultato L2 precedente non era formulabile come confronto; ora lo e', ma solo nel perimetro compatto.",
+    "perimeter_shift": "Il nodo regressivo L2 e' chiuso: a parita' di perimetro, observable e N, il null endpoint-preserving e' piu' restrittivo del full feature-scramble. La promozione fisica resta bloccata perche' il candidato W=20 sopravvive come rinomina non-zero nel null che preserva i poli.",
+    "non_possible": "pagare large-L per salvare W=20 prima del raw-reader null.",
+    "propagation": "Invariante di passaggio: stesso observable, stesso perimetro, stesso N.",
+    "friction": "P5 (Autopoiesi): ciclo non ha prodotto tensioni nuove né cambiato direzione",
+    "consecutio_quality": "Ripetere l'endpoint-preserving sul raw multi-seed reader del ciclo 11:17, non sulle mediane compatte. Se W=20 resta rinominato, Anderson si chiude come proprieta' del lettore. Se va a zero, allora il costo L>=7 diventa giustificato.",
+    "boundary": "Observational lens only: it names qualities of the transformation after the cycle; it must not prescribe the next cycle."
+  },
+  "accepted_public_state": {
+    "latest_report": "agent_20260516_1135.md",
+    "lab_data_report": "agent_20260516_1135.md",
+    "lab_data_piano": 133,
+    "lab_graph_feed0": "agent_20260516_1135.md"
+  },
+  "side_effect_boundary": {
+    "mutates_lab_state": false,
+    "writes_monitor_artifact": true,
+    "writes_operator_directive": false,
+    "updates_seme": false,
+    "syncs_public": false
+  }
+}

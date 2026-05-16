@@ -1,0 +1,20 @@
+{
+  "radici": "riga cross-size osservata; ricostruzione da null.",
+  "singolare": "disorder row prima della doppia lettura classico/grafo.",
+  "invariante": "row alignment e p-value dichiarato (`raw_p`, `add_one_p`) restano il filtro.",
+  "campo": {
+    "raw": "possibile = usare Anderson come stress test cross-dominio del gate; non-possibile = promuovere il boundary senza battere il null.",
+    "possibile": "",
+    "non_possibile": ""
+  },
+  "fields_present": [
+    "radici",
+    "singolare",
+    "invariante",
+    "campo"
+  ],
+  "complete": true,
+  "_extracted_at": "2026-05-16T11:23:43.888598+00:00",
+  "_source_report": "agent_20260516_1117.md",
+  "_cycle_ts": "20260516_1117"
+}

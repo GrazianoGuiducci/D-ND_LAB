@@ -1,0 +1,137 @@
+{
+  "schema": "lab_cycle_monitor.v1",
+  "generated_at": "2026-05-16T11:24:01.313261+00:00",
+  "read_only": true,
+  "cycle": "20260516_1117",
+  "awareness": {
+    "status": "AUTONOMY_OK_ACCEPTED",
+    "reason": "cycle passed quality gates and accepted pointers moved to this cycle"
+  },
+  "report": {
+    "cycle": "20260516_1117",
+    "file": "agent_20260516_1117.md",
+    "exists": true,
+    "title": "Agent Report - Anderson 3D Two-Reader Boundary Null",
+    "shape": {
+      "sections": {
+        "respiro_fuori_tempo": true,
+        "aderenza": true,
+        "ritorno_fisico": true,
+        "claim": true,
+        "question": true,
+        "experiment": true,
+        "results": true,
+        "verdict": true,
+        "bicono": true,
+        "consecutio": true
+      },
+      "missing_core_sections": [],
+      "observables_used": "[SR, SR2, L1, L2, triple_var, SR_local_rigidity, brody_q, wigner_poisson_like_weight, mean_ipr, participation_entropy, graph_bridge_frequency, size_stability, centroid_margin, cross_neighbor_fraction, classical_audit_state, raw_p, add_one_p]",
+      "observable_contract": "claim=il gate BOUNDARY a due lettori trasferisce oltre RP solo se la stessa riga Anderson e' `stable_graph_bridge+classical_intermediate` su tutte le size e batte il feature-scramble null; observable=`two_reader_all_sizes` unito a `graph_bridge_frequency`, adjacent ratio, Brody q, mixture Wigner/Poisson, IPR, entropy; operator=Hamiltoniana Anderson 3D con disorder sweep, seed perturbation e kNN reader; generator=`H=sum_i eps_i |i><i| + hopping nearest-neighbor` su reticolo periodico `L^3`, `eps_i uniform[-W/2,W/2]`; denominator=11 disorder rows x 2 size x 2 seed x 3 k-reader, null 128 feature-scramble trial; non_possible=promozione fisica se il null ricostruisce almeno il conteggio osservato; not_tested=limite termodinamico, mobility-edge exponent, boundary conditions alternative, sparse large-L, spettri sperimentali.",
+      "tension_explored": "BOUNDARY (0.8)",
+      "verdict_inline": "CONSTRAINT - Anderson 3D produce una riga cross-size a due lettori (`W=20.00`), ma il feature-scramble null ricostruisce almeno lo stesso conteggio in `112/128` trial (`raw_p=0.875000000`, `add_one_p=0.875968992`). Il boundary trasferisce come candidato operativo sul dominio, non come terzo incluso fisico promosso.",
+      "relation_declared": true,
+      "movement_a_m_b_declared": true
+    }
+  },
+  "gates": {
+    "falsifier": {
+      "exists": true,
+      "coherent": true,
+      "counts": {
+        "high": 0,
+        "medium": 0,
+        "low": 0
+      },
+      "summary": "Il report e' internamente coerente rispetto ai dati visibili: le lenti L1-L8 non mostrano contraddizioni strutturali, hard constraint falsi, patch silenziose o drift primario dalla direzione viva."
+    },
+    "aeternitas": {
+      "exists": true,
+      "decision": "WARN",
+      "reason": "P5 (Autopoiesi): ciclo non ha prodotto tensioni nuove né cambiato direzione",
+      "path": "/opt/MM_D-ND/tools/data/aeternitas/aeternitas_20260516_1117.json"
+    },
+    "veritas": {
+      "exists": true,
+      "rho": 0.9325,
+      "decision_band": "COLLASSO",
+      "path": "/opt/MM_D-ND/tools/data/veritas/veritas_20260516_112343.json"
+    },
+    "bicono": {
+      "exists": true,
+      "complete": true
+    },
+    "loop_guard": {
+      "valutatore_decisions": {
+        "danger_score": 0.005,
+        "band": "OK",
+        "max_run_length": 4,
+        "violations": 0,
+        "reasons": [
+          "low entropy: 1.16 bits (threshold 1.2)"
+        ],
+        "n_events": 30,
+        "alphabet_size": 3
+      },
+      "piano_trajectory": {
+        "danger_score": 0.113,
+        "band": "OK",
+        "max_run_length": 5,
+        "violations": 0,
+        "reasons": [
+          "max self-run = 5 (threshold 4)"
+        ],
+        "n_events": 30,
+        "alphabet_size": 14
+      }
+    },
+    "session": {
+      "exists": true,
+      "sync_blocked": false,
+      "block_reason": "",
+      "errors": "",
+      "valutatore": {
+        "decision": "NEXT_CYCLE",
+        "confidence": "medium",
+        "action_type": null
+      }
+    },
+    "b2_apply": {
+      "exists": false,
+      "executed": false,
+      "decision": null,
+      "confidence": null,
+      "rho": null,
+      "old": "",
+      "new": ""
+    }
+  },
+  "qualities_of_possible": {
+    "lens": "qualities_of_possible.v1",
+    "read_only": true,
+    "generates_target": false,
+    "updates_seme": false,
+    "blocks_or_promotes": false,
+    "possible_opening": "usare Anderson come stress test cross-dominio del gate;",
+    "assumption_fell": "",
+    "perimeter_shift": "",
+    "non_possible": "promuovere il boundary senza battere il null.",
+    "propagation": "Invariante di passaggio: row alignment e p-value dichiarato (raw_p, add_one_p) restano il filtro.",
+    "friction": "P5 (Autopoiesi): ciclo non ha prodotto tensioni nuove né cambiato direzione",
+    "consecutio_quality": "il candidato W=20 a un audit piu' duro: L>=7 con sparse eigensolver oppure null endpoint-preserving che mantiene i poli metallic/localized e rompe solo l'accoppiamento delle righe candidate. Se anche li' il null ricostruisce, il boundary resta proprieta' del lettore.",
+    "boundary": "Observational lens only: it names qualities of the transformation after the cycle; it must not prescribe the next cycle."
+  },
+  "accepted_public_state": {
+    "latest_report": "agent_20260516_1117.md",
+    "lab_data_report": "agent_20260516_1117.md",
+    "lab_data_piano": 132,
+    "lab_graph_feed0": "agent_20260516_1117.md"
+  },
+  "side_effect_boundary": {
+    "mutates_lab_state": false,
+    "writes_monitor_artifact": true,
+    "writes_operator_directive": false,
+    "updates_seme": false,
+    "syncs_public": false
+  }
+}

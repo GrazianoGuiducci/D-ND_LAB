@@ -1,0 +1,20 @@
+{
+  "radici": "bridge osservato pieno / ricostruzione piena sotto null.",
+  "singolare": "riga `numeri_primi:cycle_3` prima della label e prima del nome fisico.",
+  "invariante": "stesso denominatore 13 righe, stesso reader 27 letture, stesso target.",
+  "campo": {
+    "raw": "possibile = usare il target come candidato da stressare; non-possibile = promuoverlo come ritorno fisico dal solo graph-reader.",
+    "possibile": "",
+    "non_possibile": ""
+  },
+  "fields_present": [
+    "radici",
+    "singolare",
+    "invariante",
+    "campo"
+  ],
+  "complete": true,
+  "_extracted_at": "2026-05-16T12:04:57.058689+00:00",
+  "_source_report": "agent_20260516_1148.md",
+  "_cycle_ts": "20260516_1148"
+}

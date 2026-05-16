@@ -1,0 +1,137 @@
+{
+  "schema": "lab_cycle_monitor.v1",
+  "generated_at": "2026-05-16T12:39:28.110183+00:00",
+  "read_only": true,
+  "cycle": "20260516_1230",
+  "awareness": {
+    "status": "AUTONOMY_OK_ACCEPTED",
+    "reason": "cycle passed quality gates and accepted pointers moved to this cycle"
+  },
+  "report": {
+    "cycle": "20260516_1230",
+    "file": "agent_20260516_1230.md",
+    "exists": true,
+    "title": "Agent Report - Graph Mechanism Ablation",
+    "shape": {
+      "sections": {
+        "respiro_fuori_tempo": true,
+        "aderenza": true,
+        "ritorno_fisico": true,
+        "claim": true,
+        "question": true,
+        "experiment": true,
+        "results": true,
+        "verdict": true,
+        "bicono": true,
+        "consecutio": true
+      },
+      "missing_core_sections": [],
+      "observables_used": "[full_graph_bridge_hits, centroid_only_no_knn_hits, knn_only_no_centroid_hits, feature_group_ablation_hits, label_permutation_ge_full, degree_rewire_ge_full, feature_column_shuffle_ge_full]",
+      "observable_contract": "claim=un residuo graph-only e mechanism-specific solo se cade sotto una ablation nominata e non viene ricostruito da null comparabili; observable=hit count del target su 27 letture graph-reader sotto ablation deterministiche e null N-matched; operator=scissione del predicate originale in centroid gate, kNN cross-label gate, topology degree-preserving e feature row-local; generator=13 righe BOUNDARY con feature boundary_graph_curvature_gate; denominator=13 righe, 27 letture, 128 trial per ogni null stocastico; p_value_definition=right-tail raw_p=k/N, k = trial null con target_hits >= full observed hits; non_possible=promuovere graph-only residue se nessuna componente specifica lo fa cadere o se i null N-matched ricostruiscono spesso il full count; not_tested=nuove dinamiche fisiche, nuovi domini, scaling asintotico, promozione a due lettori.",
+      "tension_explored": "BOUNDARY (0.8)",
+      "verdict_inline": "CONSTRAINT - Nel perimetro fisso `8 GUE / 5 Poisson`, i residui graph-only `logistica_biforcazione_var_3.5699` e `percolation` restano `27/27` nel reader completo. Entrambi cadono quando viene ablato il gruppo feature canoniche, ma il null label-count-preserving N-matched li ricostruisce spesso (`62/128`, `69/128`). Il meccanismo non e un residuo fisico comune: logistica dipende anche dalla topologia degree/cluster (`1/128` rewire ricostruisce 27/27), percolation no (`95/128` rewire ricostruisce 27/27).",
+      "relation_declared": true,
+      "movement_a_m_b_declared": true
+    }
+  },
+  "gates": {
+    "falsifier": {
+      "exists": true,
+      "coherent": true,
+      "counts": {
+        "high": 0,
+        "medium": 0,
+        "low": 0
+      },
+      "summary": "Il report e' internamente coerente rispetto ai dati forniti: le lenti L1-L8 non mostrano contraddizioni checkable, e la direzione viva del seme e' rispettata."
+    },
+    "aeternitas": {
+      "exists": true,
+      "decision": "PROCEED",
+      "reason": "P0 OK · P1 OK · P5 OK",
+      "path": "/opt/MM_D-ND/tools/data/aeternitas/aeternitas_20260516_1230.json"
+    },
+    "veritas": {
+      "exists": true,
+      "rho": 0.985,
+      "decision_band": "COLLASSO",
+      "path": "/opt/MM_D-ND/tools/data/veritas/veritas_20260516_123900.json"
+    },
+    "bicono": {
+      "exists": true,
+      "complete": true
+    },
+    "loop_guard": {
+      "valutatore_decisions": {
+        "danger_score": 0.025,
+        "band": "OK",
+        "max_run_length": 4,
+        "violations": 0,
+        "reasons": [
+          "low entropy: 1.00 bits (threshold 1.2)"
+        ],
+        "n_events": 30,
+        "alphabet_size": 2
+      },
+      "piano_trajectory": {
+        "danger_score": 0.0,
+        "band": "OK",
+        "max_run_length": 4,
+        "violations": 0,
+        "reasons": [
+          "no loop pattern detected"
+        ],
+        "n_events": 30,
+        "alphabet_size": 17
+      }
+    },
+    "session": {
+      "exists": true,
+      "sync_blocked": false,
+      "block_reason": "",
+      "errors": "",
+      "valutatore": {
+        "decision": "REDESIGN",
+        "confidence": "high",
+        "action_type": null
+      }
+    },
+    "b2_apply": {
+      "exists": true,
+      "executed": true,
+      "decision": "REDESIGN",
+      "confidence": "high",
+      "rho": 0.985,
+      "old": "Esplorare il confine: 8 domini GUE, 5 Poisson — il confine è il terzo incluso operativo",
+      "new": "Testare null fisici interni per i residui graph-only logistica_biforcazione_var_3.5699 e percolation sul perimetro fisso"
+    }
+  },
+  "qualities_of_possible": {
+    "lens": "qualities_of_possible.v1",
+    "read_only": true,
+    "generates_target": false,
+    "updates_seme": false,
+    "blocks_or_promotes": false,
+    "possible_opening": "progettare null fisici diversi per logistica e percolation;",
+    "assumption_fell": "",
+    "perimeter_shift": "Testare null fisici interni per i residui graph-only logistica_biforcazione_var_3.5699 e percolation sul perimetro fisso",
+    "non_possible": "promuovere un residuo graph-only comune o sommarlo al boundary a due lettori.",
+    "propagation": "Invariante di passaggio: denominatore 13 righe, 8/5 labels, 27 letture, tail hits >= full_hits.",
+    "friction": "valuator requested REDESIGN",
+    "consecutio_quality": "Separare i due target. Per logistica: stressare la topologia con block/time shuffle che conserva marginali ma rompe ordine orbitale. Per percolation: usare null di cluster geometry, perche il degree-preserving rewire non basta a far cadere il target. Nessuna promozione finche il null fisico interno non produce costo non ricostruibile dalla label permutation.",
+    "boundary": "Observational lens only: it names qualities of the transformation after the cycle; it must not prescribe the next cycle."
+  },
+  "accepted_public_state": {
+    "latest_report": "agent_20260516_1230.md",
+    "lab_data_report": "agent_20260516_1230.md",
+    "lab_data_piano": 136,
+    "lab_graph_feed0": "agent_20260516_1230.md"
+  },
+  "side_effect_boundary": {
+    "mutates_lab_state": false,
+    "writes_monitor_artifact": true,
+    "writes_operator_directive": false,
+    "updates_seme": false,
+    "syncs_public": false
+  }
+}

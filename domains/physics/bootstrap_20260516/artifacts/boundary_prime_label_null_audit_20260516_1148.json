@@ -1,0 +1,218 @@
+{
+  "experiment": "boundary_prime_label_null_audit",
+  "null": {
+    "add_one_p": 0.495126706,
+    "any_row_eq_27": 508,
+    "examples": [
+      {
+        "stable_27_rows": [
+          "brownian_motion:cycle_12",
+          "coupled_oscillators:cycle_10",
+          "ising_2d:cycle_1",
+          "logistica_biforcazione:cycle_5"
+        ],
+        "target_hits": 0,
+        "target_label": "GUE",
+        "trial": 0
+      },
+      {
+        "stable_27_rows": [
+          "brownian_motion:cycle_12",
+          "logistica_biforcazione_var_3.5699:cycle_13",
+          "numeri_primi:cycle_3",
+          "pendolo_doppio:cycle_2",
+          "percolation:cycle_9",
+          "random_matrix:cycle_7",
+          "reaction_diffusion:cycle_11",
+          "zeta_zeros:cycle_4"
+        ],
+        "target_hits": 27,
+        "target_label": "Poisson",
+        "trial": 1
+      },
+      {
+        "stable_27_rows": [
+          "cellular_automata:cycle_8",
+          "coupled_oscillators:cycle_10",
+          "logistica_biforcazione:cycle_5",
+          "logistica_biforcazione_var_3.5699:cycle_13",
+          "numeri_primi:cycle_3",
+          "percolation:cycle_9",
+          "string_vibration:cycle_6",
+          "zeta_zeros:cycle_4"
+        ],
+        "target_hits": 27,
+        "target_label": "GUE",
+        "trial": 2
+      },
+      {
+        "stable_27_rows": [
+          "logistica_biforcazione_var_3.5699:cycle_13",
+          "numeri_primi:cycle_3",
+          "pendolo_doppio:cycle_2",
+          "random_matrix:cycle_7",
+          "reaction_diffusion:cycle_11",
+          "zeta_zeros:cycle_4"
+        ],
+        "target_hits": 27,
+        "target_label": "GUE",
+        "trial": 3
+      },
+      {
+        "stable_27_rows": [
+          "brownian_motion:cycle_12",
+          "coupled_oscillators:cycle_10",
+          "logistica_biforcazione:cycle_5",
+          "logistica_biforcazione_var_3.5699:cycle_13",
+          "string_vibration:cycle_6"
+        ],
+        "target_hits": 21,
+        "target_label": "Poisson",
+        "trial": 4
+      },
+      {
+        "stable_27_rows": [
+          "brownian_motion:cycle_12",
+          "cellular_automata:cycle_8",
+          "coupled_oscillators:cycle_10",
+          "ising_2d:cycle_1",
+          "logistica_biforcazione:cycle_5",
+          "numeri_primi:cycle_3",
+          "pendolo_doppio:cycle_2",
+          "random_matrix:cycle_7",
+          "string_vibration:cycle_6",
+          "zeta_zeros:cycle_4"
+        ],
+        "target_hits": 27,
+        "target_label": "GUE",
+        "trial": 5
+      },
+      {
+        "stable_27_rows": [
+          "brownian_motion:cycle_12",
+          "logistica_biforcazione:cycle_5",
+          "numeri_primi:cycle_3",
+          "percolation:cycle_9",
+          "reaction_diffusion:cycle_11"
+        ],
+        "target_hits": 27,
+        "target_label": "GUE",
+        "trial": 6
+      },
+      {
+        "stable_27_rows": [
+          "coupled_oscillators:cycle_10",
+          "logistica_biforcazione:cycle_5",
+          "pendolo_doppio:cycle_2"
+        ],
+        "target_hits": 9,
+        "target_label": "GUE",
+        "trial": 7
+      }
+    ],
+    "raw_p": 0.494140625,
+    "target_eq_27": 253,
+    "target_eq_27_with_target_label": {
+      "GUE": 141,
+      "Poisson": 112
+    },
+    "target_ge_observed": 253,
+    "target_hits_distribution": {
+      "0": 36,
+      "1": 4,
+      "10": 1,
+      "12": 16,
+      "15": 5,
+      "18": 38,
+      "19": 5,
+      "20": 1,
+      "21": 35,
+      "24": 24,
+      "27": 253,
+      "3": 9,
+      "5": 1,
+      "6": 9,
+      "7": 1,
+      "8": 2,
+      "9": 72
+    },
+    "target_label_distribution": {
+      "GUE": 307,
+      "Poisson": 205
+    },
+    "wilson_95": [
+      0.45103927,
+      0.53732925
+    ]
+  },
+  "observable_contract": {
+    "claim": "the named prime bridge is physical only if its 27/27 graph-reader status is not commonly reconstructed when only the 8/5 labels are permuted",
+    "denominator": "13 rows, 27 graph-reader reads, 512 null label permutations",
+    "generator": "fixed row-local feature vectors from boundary_graph_curvature_gate; only source_domain_type changes under null",
+    "non_possible": "calling numeri_primi:cycle_3 a physical return if target 27/27 is reconstructed frequently by label permutations",
+    "not_tested": "new spectra, new physical Hamiltonian, analytic source-label validity, asymptotic scaling",
+    "observable": "target row bridge hit count across the same 27 graph-reader perturbations",
+    "operator": "label-count-preserving permutation null over the 13 row-aligned BOUNDARY labels",
+    "p_value_definition": "right-tail raw_p=k/N and add_one_p=(k+1)/(N+1), k = null trials with target_hits >= observed target_hits"
+  },
+  "observables_registry": "1.0.0-2026-05-06 via boundary_graph_curvature_gate; classical audit joined for target only",
+  "observables_used": [
+    "target_graph_bridge_hits",
+    "target_graph_bridge_frequency",
+    "label_count_preserving_null_hits",
+    "any_row_stable_27_under_null",
+    "classical_audit_state",
+    "brody_q",
+    "berry_robnick_like_gue_weight"
+  ],
+  "observed": {
+    "stable_27_rows": [
+      "logistica_biforcazione_var_3.5699:cycle_13",
+      "numeri_primi:cycle_3",
+      "percolation:cycle_9"
+    ],
+    "target": "numeri_primi:cycle_3",
+    "target_classical_audit": {
+      "audit_state": "classic_and_graph_bridge",
+      "berry_robnick_like_gue_weight": 0.275,
+      "brody_nll": 1826.209184,
+      "brody_q": 0.465,
+      "centroid_margin": 0.222754,
+      "cross_neighbor_fraction": 0.25,
+      "domain": "numeri_primi",
+      "domain_window": "numeri_primi:cycle_3",
+      "graph_state": "third_included_candidate",
+      "mixture_ks": 0.148459,
+      "n_spacings": 2048,
+      "source_domain_type": "GUE"
+    },
+    "target_frequency": 1.0,
+    "target_hits": 27,
+    "target_source_label": "GUE"
+  },
+  "params": {
+    "classical_audit": "tools/data/boundary_classical_crossover_audit_20260515_1904.json",
+    "k_values": [
+      2,
+      3,
+      4
+    ],
+    "min_gaps": 64,
+    "n_gaps_values": [
+      512,
+      1024,
+      2048
+    ],
+    "n_shuffle": 32,
+    "null_seed": 20260516,
+    "null_trials": 512,
+    "scope": "tools/data/boundary_denominator_prescan_full_20260509_1500.json",
+    "seeds": [
+      20260515,
+      20260516,
+      20260517
+    ],
+    "target": "numeri_primi:cycle_3"
+  },
+  "question": "Does the prime two-reader bridge survive a label-count-preserving null on the same 13-row BOUNDARY reader?"
+}

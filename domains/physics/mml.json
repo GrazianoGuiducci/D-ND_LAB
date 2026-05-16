@@ -1,0 +1,135 @@
+{
+  "$schema": "../../mml.schema.json",
+  "lab": "physics",
+  "version": "0.1.0-alpha",
+
+  "identity": {
+    "type": "domain",
+    "level": "ground",
+    "responsibility": "Lab di dominio per matematica/fisica D-ND. Studia primi, zeta, GUE, sistemi dinamici, isomorfie strutturali tra teorie. Output: findings dipolari (det≠0 vs det~0), classificazione MOLLA/ZERO, kernel computazionali pacchettizzabili."
+  },
+
+  "kernel_refs": {
+    "mmsp_entities": [
+      "MMS_Master",
+      "Aethelred_v3.1",
+      "ALAN",
+      "OCC_v1.0"
+    ],
+    "kernel_files": [
+      "kernel/reference/Kernel_Semantico_Autopoietico_Reiterativo_KSAR.md",
+      "kernel/reference/MMSP1/D-ND_PrimaryRules.md",
+      "kernel/reference/MMSP1/00_Assioma_di_Invarianza_Ontologica.md"
+    ],
+    "condensato_axioms_used": ["A1", "A2", "A3", "A4", "A5", "A9", "A10", "A11", "A14", "F1", "F2", "F3", "F5"]
+  },
+
+  "skills_attive": [
+    {
+      "name": "consapevolezza-condensato",
+      "source": ".claude/skills/consapevolezza-condensato.md",
+      "trigger": "on cycle init",
+      "rationale": "Il lab proietta 16 assiomi + 6 fatti + 3 claim su domini matematici. Skill core per riconoscere quale assioma/fatto si applica al passo corrente.",
+      "category": "identity"
+    },
+    {
+      "name": "cascata",
+      "source": ".claude/skills/cascata.md",
+      "trigger": "after every significant finding",
+      "rationale": "Ogni finding del lab fisico propaga: report → applications/scoperte → finding_promoter → kernel d-nd-seed. La cascata deve essere tracciata, non implicita.",
+      "category": "orchestration"
+    },
+    {
+      "name": "cec",
+      "source": ".claude/skills/cec.md",
+      "trigger": "before declaring claim",
+      "rationale": "Crivello operativo: il claim è dipolare (det≠0) o descrittivo? CEC filtra prima della dichiarazione, evita coincidenze numeriche presentate come scoperte (C2).",
+      "category": "logic"
+    },
+    {
+      "name": "autologica-operativa",
+      "source": ".claude/skills/autologica-operativa.md",
+      "trigger": "on every analysis step",
+      "rationale": "Modus fondante D-ND. f(f(x)) sui domini matematici: la qualità della domanda determina la qualità dell'inversione (A4).",
+      "category": "cognitive"
+    },
+    {
+      "name": "eval",
+      "source": ".claude/skills/eval.md",
+      "trigger": "after assertions run",
+      "rationale": "Le assertions del lab (verify_assertions movement) devono produrre PASS/FAIL/SKIP reali. Eval verifica che i test non si fidino alla cieca.",
+      "category": "maintenance"
+    },
+    {
+      "name": "autoresearch",
+      "source": ".claude/skills/autoresearch.md",
+      "trigger": "during exploration phase",
+      "rationale": "Lab fisico esplora domini matematici con null baseline (surrogati uniformi/esponenziali). Autoresearch è il pattern operativo standard.",
+      "category": "constructive"
+    },
+    {
+      "name": "assertion-verifier",
+      "source": ".claude/skills/assertion-verifier.md",
+      "trigger": "before promote_to_publish",
+      "rationale": "Stage 1.5 finding eligibility gate richiede assertions verificate. Skill che valida che i claim del report siano testabili.",
+      "category": "logic"
+    },
+    {
+      "name": "capture-insight",
+      "source": ".claude/skills/capture-insight.md",
+      "trigger": "during corpus exploration",
+      "rationale": "Il lab legge journal di autoricerca + cycle history. Capture-insight cristallizza pattern emergenti durante l'esplorazione, non dopo.",
+      "category": "cognitive"
+    },
+    {
+      "name": "paper-deployer",
+      "source": ".claude/skills/paper-deployer.md",
+      "trigger": "on application_eligible finding",
+      "rationale": "Quando un finding passa l'eligibility gate ed è da promuovere a sito, paper-deployer cura il packaging coerente (lab-note, finding_index, manifest).",
+      "category": "output"
+    },
+    {
+      "name": "guru",
+      "source": "kernel/reference/skills/agent_skills_guru.md",
+      "trigger": "on context loading",
+      "rationale": "Il lab fisico è la sorgente storica del modello D-ND. Guru applica conoscenza contestuale dell'operatore alle scelte di esperimento.",
+      "category": "identity"
+    },
+    {
+      "name": "observer",
+      "source": "kernel/reference/skills/agent_skills_observer.md",
+      "trigger": "before classification",
+      "rationale": "A4 modus: osservare il deposito numerico (campo vivo, journal) prima di classificare MOLLA vs ZERO. Observer garantisce l'osservazione strutturata.",
+      "category": "cognitive"
+    },
+    {
+      "name": "forgia",
+      "source": "kernel/reference/skills/agent_skills_forgia.md",
+      "trigger": "on kernel crystallization",
+      "rationale": "Quando un finding diventa kernel pacchettizzabile (Stage 5), forgia lo cristallizza in formato d-nd-seed (kernel_*.md + worked example + axiom_refs).",
+      "category": "constructive"
+    }
+  ],
+
+  "tools_custom": [],
+
+  "external_apis": [],
+
+  "modus_invocation": {
+    "cycle_pattern": "autopsy → build_field → agent → bias_corrector → report_falsifier → bicono_extractor → validate_seed → verify_assertions → build_lab_data → refiner → seed_integrator → trajectory_evaluator → ssp_pipeline → notify",
+    "skill_invocation_strategy": "lazy",
+    "fallback_provider_chain": ["codex-cli", "claude-cli", "openrouter"],
+    "preferred_runtime": "any"
+  },
+
+  "conoscenza_lab": {
+    "tensioni_attive_count": 8,
+    "cycles_completed": "many (lab originario, cron 03:30 attivo dal 2026-04)",
+    "last_finding": "Markov Layers Pass First Recovery Gate (cycle 20260504_1219, application_eligible: 1)",
+    "last_cycle_ts": "20260504_1219",
+    "domain_specific_notes": "Lab originario D-ND. Sandbox D-ND_LAB qui + production MM_D-ND su d-nd.com (cron 03:30). Findings promossi al d-nd-seed come kernel pacchettizzabili (es. dnd_kernel_z_12_813_lordine_sequenziale v0.1.0). MML retrofit 2026-05-04 sera (Phase 2.A.7 propagation), template pre-meta-lab — generato manualmente."
+  },
+
+  "_generated_by": "manual (retrofit Phase 2.A.7 propagation 2026-05-04)",
+  "_generated_at": "2026-05-04T19:00:00Z"
+}

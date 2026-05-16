@@ -1,0 +1,20 @@
+{
+  "radici": "residuo graph-only osservato / residuo ricostruito dal null.",
+  "singolare": "la riga del dominio prima della label sorgente e prima del nome fisico.",
+  "invariante": "stesso denominatore 13 righe, stesso reader 27 letture, stesso conteggio 8/5.",
+  "campo": {
+    "raw": "possibile = usare i due target come stress test per null fisici interni; non-possibile = sommare graph-only residue al boundary o proporre ritorno fisico dal solo grafo.",
+    "possibile": "",
+    "non_possibile": ""
+  },
+  "fields_present": [
+    "radici",
+    "singolare",
+    "invariante",
+    "campo"
+  ],
+  "complete": true,
+  "_extracted_at": "2026-05-16T12:20:02.327509+00:00",
+  "_source_report": "agent_20260516_1206.md",
+  "_cycle_ts": "20260516_1206"
+}

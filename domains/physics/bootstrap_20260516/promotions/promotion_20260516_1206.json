@@ -1,0 +1,33 @@
+{
+  "ts": "2026-05-16T12:20:02.404868+00:00",
+  "cycle_ref": "20260516_1206",
+  "lab": "MM_D-ND_physics",
+  "eligibility": {
+    "falsifier_coherent": true,
+    "n_high_flags": 0,
+    "aeternitas_decision": "PROCEED",
+    "n_pass": 11,
+    "n_fail": 0,
+    "report_size": 10674,
+    "all_passed": true
+  },
+  "proposals": [
+    {
+      "type": "regola_operativa",
+      "title": "CONSTRAINT.",
+      "summary": "CONSTRAINT.\n\nIl gate label-count-preserving chiude la promozione dei residui graph-only. `logistica_biforcazione_var_3.5699` e `percolation` restano righe operative del grafo, ma non diventano ritorno fisico ne boundary a due lettori. Il prossimo passo regressivo e un null row-local specifico per dinamica: rompere ordine logistico/percolativo mantenendo feature marginali, poi chiedere se il bridge cade.",
+      "rationale": "Verdict section contains rule-language keywords",
+      "source_section": "verdict",
+      "destination_hint": "memory/feedback_<slug>_20260516_1206.md",
+      "confidence": "medium"
+    }
+  ],
+  "operator_action_required": "Review proposals. Per ognuna decide: approve (apply via appropriate atto Approve), defer (lascia in questo file), reject (annota _rejected:true). Il lab NON applica automaticamente.",
+  "_apply_methods_hint": {
+    "regola_operativa": "Crea memoria operatore feedback_<slug>.md + index in MEMORY.md",
+    "skill": "Crea .claude/skills/<slug>.md con eval section",
+    "hook": "Aggiungi entry a settings.json hooks",
+    "voce_kernel": "Aggiungi sezione a /opt/THIA/docs/core/COWORK_KERNEL.md",
+    "voce_libro": "Aggiungi sezione a /opt/MM_D-ND/D-ND_BOOK.md sezione III/IV/..."
+  }
+}

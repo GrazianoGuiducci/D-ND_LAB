@@ -1,0 +1,12 @@
+{
+  "timestamp": "2026-05-16T11:35:04.569415",
+  "teorie": 6,
+  "depositi": 24,
+  "domande": 10,
+  "vuoti": 1,
+  "consecutio": 60,
+  "consecutio_verso_vuoto": 6,
+  "tensioni_processate": 3,
+  "ponti_evoluti": 9,
+  "ponti_esterni": 12
+}

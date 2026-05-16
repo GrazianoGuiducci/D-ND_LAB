@@ -1,0 +1,24 @@
+{
+  "valutatore_decisions": {
+    "danger_score": 0.025,
+    "band": "OK",
+    "max_run_length": 4,
+    "violations": 0,
+    "reasons": [
+      "low entropy: 1.00 bits (threshold 1.2)"
+    ],
+    "n_events": 30,
+    "alphabet_size": 2
+  },
+  "piano_trajectory": {
+    "danger_score": 0.0,
+    "band": "OK",
+    "max_run_length": 4,
+    "violations": 0,
+    "reasons": [
+      "no loop pattern detected"
+    ],
+    "n_events": 30,
+    "alphabet_size": 16
+  }
+}

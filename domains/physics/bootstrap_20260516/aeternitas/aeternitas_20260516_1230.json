@@ -1,0 +1,30 @@
+{
+  "decision": "PROCEED",
+  "checks": {
+    "P0": {
+      "name": "Lignaggio",
+      "passed": true,
+      "violations": []
+    },
+    "P1": {
+      "name": "Integrità",
+      "passed": true,
+      "violations": []
+    },
+    "P5": {
+      "name": "Autopoiesi",
+      "passed": true,
+      "violations": [],
+      "new_tension_ids": [],
+      "direzione_changed": true
+    }
+  },
+  "reason": "P0 OK · P1 OK · P5 OK",
+  "ts": "2026-05-16T12:39:00.512719+00:00",
+  "cycle_ref": "20260516_1230",
+  "run_ts": "20260516_123900",
+  "_old_seed_source": {
+    "path": "/opt/MM_D-ND/tools/data/seme_backup_pre_run.json",
+    "kind": "backup"
+  }
+}

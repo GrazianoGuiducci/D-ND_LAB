@@ -1,0 +1,315 @@
+{
+  "experiment": "boundary_residue_label_count_null_audit",
+  "null": {
+    "any_graph_only_eq_27": 417,
+    "any_graph_only_eq_27_frequency": 0.814453125,
+    "examples": [
+      {
+        "stable_graph_only_rows": [
+          "logistica_biforcazione_var_3.5699:cycle_13",
+          "percolation:cycle_9",
+          "reaction_diffusion:cycle_11"
+        ],
+        "stable_target_rows": [
+          "logistica_biforcazione_var_3.5699:cycle_13",
+          "percolation:cycle_9"
+        ],
+        "target_labels": {
+          "logistica_biforcazione_var_3.5699:cycle_13": "GUE",
+          "percolation:cycle_9": "Poisson"
+        },
+        "trial": 1
+      },
+      {
+        "stable_graph_only_rows": [
+          "logistica_biforcazione_var_3.5699:cycle_13",
+          "percolation:cycle_9"
+        ],
+        "stable_target_rows": [
+          "logistica_biforcazione_var_3.5699:cycle_13",
+          "percolation:cycle_9"
+        ],
+        "target_labels": {
+          "logistica_biforcazione_var_3.5699:cycle_13": "GUE",
+          "percolation:cycle_9": "Poisson"
+        },
+        "trial": 2
+      },
+      {
+        "stable_graph_only_rows": [
+          "logistica_biforcazione_var_3.5699:cycle_13"
+        ],
+        "stable_target_rows": [
+          "logistica_biforcazione_var_3.5699:cycle_13"
+        ],
+        "target_labels": {
+          "logistica_biforcazione_var_3.5699:cycle_13": "GUE",
+          "percolation:cycle_9": "Poisson"
+        },
+        "trial": 3
+      },
+      {
+        "stable_graph_only_rows": [
+          "logistica_biforcazione_var_3.5699:cycle_13",
+          "percolation:cycle_9"
+        ],
+        "stable_target_rows": [
+          "logistica_biforcazione_var_3.5699:cycle_13",
+          "percolation:cycle_9"
+        ],
+        "target_labels": {
+          "logistica_biforcazione_var_3.5699:cycle_13": "GUE",
+          "percolation:cycle_9": "Poisson"
+        },
+        "trial": 4
+      },
+      {
+        "stable_graph_only_rows": [
+          "percolation:cycle_9",
+          "reaction_diffusion:cycle_11"
+        ],
+        "stable_target_rows": [
+          "percolation:cycle_9"
+        ],
+        "target_labels": {
+          "logistica_biforcazione_var_3.5699:cycle_13": "Poisson",
+          "percolation:cycle_9": "Poisson"
+        },
+        "trial": 6
+      },
+      {
+        "stable_graph_only_rows": [
+          "logistica_biforcazione_var_3.5699:cycle_13",
+          "reaction_diffusion:cycle_11"
+        ],
+        "stable_target_rows": [
+          "logistica_biforcazione_var_3.5699:cycle_13"
+        ],
+        "target_labels": {
+          "logistica_biforcazione_var_3.5699:cycle_13": "Poisson",
+          "percolation:cycle_9": "GUE"
+        },
+        "trial": 8
+      },
+      {
+        "stable_graph_only_rows": [
+          "logistica_biforcazione_var_3.5699:cycle_13",
+          "percolation:cycle_9",
+          "reaction_diffusion:cycle_11"
+        ],
+        "stable_target_rows": [
+          "logistica_biforcazione_var_3.5699:cycle_13",
+          "percolation:cycle_9"
+        ],
+        "target_labels": {
+          "logistica_biforcazione_var_3.5699:cycle_13": "Poisson",
+          "percolation:cycle_9": "GUE"
+        },
+        "trial": 9
+      },
+      {
+        "stable_graph_only_rows": [
+          "logistica_biforcazione_var_3.5699:cycle_13"
+        ],
+        "stable_target_rows": [
+          "logistica_biforcazione_var_3.5699:cycle_13"
+        ],
+        "target_labels": {
+          "logistica_biforcazione_var_3.5699:cycle_13": "GUE",
+          "percolation:cycle_9": "Poisson"
+        },
+        "trial": 10
+      }
+    ],
+    "target_rows": [
+      {
+        "add_one_p": 0.436647173,
+        "classical_audit": {
+          "berry_robnick_like_gue_weight": 0.0,
+          "brody_q": 0.0,
+          "classical_audit_state": "graph_only_bridge",
+          "composite_state": "stable_graph_bridge+graph_only_bridge",
+          "cut_edge_frequency": 0.0,
+          "domain": "logistica_biforcazione_var_3.5699",
+          "domain_window": "logistica_biforcazione_var_3.5699:cycle_13",
+          "graph_bridge_frequency": 1.0,
+          "graph_bridge_hits": 27,
+          "mean_cross_neighbor_fraction": 0.522222,
+          "mean_margin": 0.104961,
+          "source_domain_type": "GUE",
+          "stability_state": "stable_graph_bridge"
+        },
+        "label_survival_state": "does_not_survive_label_null",
+        "null_eq_27": 223,
+        "null_eq_27_with_original_label": 107,
+        "null_eq_27_with_swapped_label": 116,
+        "null_ge_observed": 223,
+        "null_hit_distribution": {
+          "10": 4,
+          "11": 7,
+          "12": 3,
+          "13": 1,
+          "14": 10,
+          "15": 7,
+          "16": 3,
+          "17": 4,
+          "18": 13,
+          "19": 16,
+          "20": 21,
+          "21": 21,
+          "22": 12,
+          "23": 8,
+          "24": 35,
+          "25": 66,
+          "26": 51,
+          "27": 223,
+          "4": 1,
+          "5": 2,
+          "9": 4
+        },
+        "null_label_distribution": {
+          "GUE": 318,
+          "Poisson": 194
+        },
+        "observed_frequency": 1.0,
+        "observed_hits": 27,
+        "raw_p": 0.435546875,
+        "source_label": "GUE",
+        "target": "logistica_biforcazione_var_3.5699:cycle_13",
+        "wilson_95": [
+          0.393236226,
+          0.478817486
+        ]
+      },
+      {
+        "add_one_p": 0.528265107,
+        "classical_audit": {
+          "berry_robnick_like_gue_weight": 0.025,
+          "brody_q": 0.025,
+          "classical_audit_state": "graph_only_bridge",
+          "composite_state": "stable_graph_bridge+graph_only_bridge",
+          "cut_edge_frequency": 0.0,
+          "domain": "percolation",
+          "domain_window": "percolation:cycle_9",
+          "graph_bridge_frequency": 1.0,
+          "graph_bridge_hits": 27,
+          "mean_cross_neighbor_fraction": 0.886949,
+          "mean_margin": 0.133945,
+          "source_domain_type": "Poisson",
+          "stability_state": "stable_graph_bridge"
+        },
+        "label_survival_state": "does_not_survive_label_null",
+        "null_eq_27": 270,
+        "null_eq_27_with_original_label": 108,
+        "null_eq_27_with_swapped_label": 162,
+        "null_ge_observed": 270,
+        "null_hit_distribution": {
+          "0": 54,
+          "12": 9,
+          "13": 1,
+          "14": 4,
+          "15": 2,
+          "16": 2,
+          "18": 27,
+          "19": 9,
+          "2": 1,
+          "20": 4,
+          "21": 16,
+          "22": 5,
+          "24": 9,
+          "25": 42,
+          "27": 270,
+          "3": 2,
+          "4": 2,
+          "6": 10,
+          "7": 1,
+          "8": 1,
+          "9": 41
+        },
+        "null_label_distribution": {
+          "GUE": 317,
+          "Poisson": 195
+        },
+        "observed_frequency": 1.0,
+        "observed_hits": 27,
+        "raw_p": 0.52734375,
+        "source_label": "Poisson",
+        "target": "percolation:cycle_9",
+        "wilson_95": [
+          0.48405628,
+          0.570223964
+        ]
+      }
+    ]
+  },
+  "observable_contract": {
+    "claim": "graph-only residues carry source-label cost only if their 27/27 graph-reader status is rare under 8/5 label-count-preserving permutations and does not persist under swapped labels",
+    "denominator": "13 rows, 27 graph-reader reads, 512 null label permutations",
+    "generator": "fixed row-local feature vectors from boundary_graph_curvature_gate; only source_domain_type changes under null",
+    "non_possible": "calling graph-only rows Lab-specific residues if 27/27 is reconstructed frequently or under swapped source label",
+    "not_tested": "new graph construction, physical source dynamics, asymptotic scaling, two-reader promotion",
+    "observable": "target row bridge hit count across the same 27 graph-reader perturbations",
+    "operator": "label-count-preserving permutation null over the 13 row-aligned BOUNDARY labels",
+    "p_value_definition": "right-tail raw_p=k/N and add_one_p=(k+1)/(N+1), k = null trials with target_hits >= observed target_hits"
+  },
+  "observables_registry": "1.0.0-2026-05-06 via boundary_graph_curvature_gate",
+  "observables_used": [
+    "target_graph_bridge_hits",
+    "target_graph_bridge_frequency",
+    "label_count_preserving_null_hits",
+    "source_label_survival_state",
+    "any_graph_only_stable_under_null",
+    "classical_audit_state"
+  ],
+  "observed": {
+    "stable_27_rows": [
+      "logistica_biforcazione_var_3.5699:cycle_13",
+      "numeri_primi:cycle_3",
+      "percolation:cycle_9"
+    ],
+    "target_rows": [
+      {
+        "classical_audit_state": "graph_only_bridge",
+        "observed_frequency": 1.0,
+        "observed_hits": 27,
+        "source_label": "GUE",
+        "target": "logistica_biforcazione_var_3.5699:cycle_13"
+      },
+      {
+        "classical_audit_state": "graph_only_bridge",
+        "observed_frequency": 1.0,
+        "observed_hits": 27,
+        "source_label": "Poisson",
+        "target": "percolation:cycle_9"
+      }
+    ]
+  },
+  "params": {
+    "classical_audit": "tools/data/boundary_bridge_stability_audit_20260516_1140.json",
+    "k_values": [
+      2,
+      3,
+      4
+    ],
+    "min_gaps": 64,
+    "n_gaps_values": [
+      512,
+      1024,
+      2048
+    ],
+    "n_shuffle": 32,
+    "null_seed": 20260516,
+    "null_trials": 512,
+    "scope": "tools/data/boundary_denominator_prescan_full_20260509_1500.json",
+    "seeds": [
+      20260515,
+      20260516,
+      20260517
+    ],
+    "targets": [
+      "logistica_biforcazione_var_3.5699:cycle_13",
+      "percolation:cycle_9"
+    ]
+  },
+  "question": "Do graph-only residues survive a label-count-preserving null on the same 13-row BOUNDARY reader?"
+}

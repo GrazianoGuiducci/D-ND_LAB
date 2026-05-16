@@ -30,8 +30,20 @@ contenuti specifici vengono dall'intervista all'utente.
 
 ## 1. Intervista (raccolta info)
 
-L'assistente lab pone in ordine le domande. Ogni risposta finisce in
-`config.draft.json`. Le sezioni sono ordinate per dipendenza causale.
+L'assistente lab pone in ordine le domande. Ogni risposta finisce prima in una
+richiesta strutturata (`domain_request.v1`), poi in `config.draft.json` quando
+il meta-lab ha verificato che il dominio ha leva sufficiente.
+
+Nel pacchetto pubblico la fase minima e' esposta via CLI:
+
+```bash
+dndlab plan-domain
+```
+
+Il comando raccoglie slug, titolo, tipo dominio e movimento/intento. Non genera
+ancora un Lab: crea input per meta-lab/template generator e validator.
+
+Le sezioni sono ordinate per dipendenza causale.
 
 ### 1.1 Identità del lab
 

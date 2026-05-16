@@ -22,7 +22,7 @@ COPY pyproject.toml README.md LICENSE ./
 COPY core/__init__.py ./core/__init__.py
 
 # Create venv + install runtime deps (NOT physics extras — those are
-# installed by the user at first cycle if the physics domain is active)
+# installed in this image because physics is the default reinstallable demo)
 RUN uv venv /app/.venv && \
     uv pip install --python /app/.venv/bin/python --no-cache \
         "openai>=2.0" \
@@ -30,7 +30,12 @@ RUN uv venv /app/.venv && \
         "click>=8.2" \
         "jsonschema>=4.23" \
         "httpx>=0.28" \
-        "pyyaml>=6.0"
+        "pyyaml>=6.0" \
+        "numpy>=2.0" \
+        "scipy>=1.14" \
+        "sympy>=1.13" \
+        "mpmath>=1.3" \
+        "matplotlib>=3.9"
 
 # Optional: install MCP later in Phase 2.5 if the lab uses MCP tool servers
 # RUN /app/.venv/bin/pip install --no-cache-dir "mcp>=1.20"

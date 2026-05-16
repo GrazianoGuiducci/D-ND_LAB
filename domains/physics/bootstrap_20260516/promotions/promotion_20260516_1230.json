@@ -1,0 +1,33 @@
+{
+  "ts": "2026-05-16T12:39:00.646521+00:00",
+  "cycle_ref": "20260516_1230",
+  "lab": "MM_D-ND_physics",
+  "eligibility": {
+    "falsifier_coherent": true,
+    "n_high_flags": 0,
+    "aeternitas_decision": "PROCEED",
+    "n_pass": 11,
+    "n_fail": 0,
+    "report_size": 10606,
+    "all_passed": true
+  },
+  "proposals": [
+    {
+      "type": "regola_operativa",
+      "title": "CONSTRAINT.",
+      "summary": "CONSTRAINT.\n\nIl ciclo isola il meccanismo come vincolo differenziato, non come scoperta: `logistica_biforcazione_var_3.5699` dipende da feature canoniche e dalla specifica topologia kNN/degree; `percolation` dipende da feature canoniche + shuffle-z ma viene ricostruita dalla topologia degree-preserving. Il residuo graph-only comune non sopravvive: esistono due artefatti di reader con componenti diverse.",
+      "rationale": "Verdict section contains rule-language keywords",
+      "source_section": "verdict",
+      "destination_hint": "memory/feedback_<slug>_20260516_1230.md",
+      "confidence": "medium"
+    }
+  ],
+  "operator_action_required": "Review proposals. Per ognuna decide: approve (apply via appropriate atto Approve), defer (lascia in questo file), reject (annota _rejected:true). Il lab NON applica automaticamente.",
+  "_apply_methods_hint": {
+    "regola_operativa": "Crea memoria operatore feedback_<slug>.md + index in MEMORY.md",
+    "skill": "Crea .claude/skills/<slug>.md con eval section",
+    "hook": "Aggiungi entry a settings.json hooks",
+    "voce_kernel": "Aggiungi sezione a /opt/THIA/docs/core/COWORK_KERNEL.md",
+    "voce_libro": "Aggiungi sezione a /opt/MM_D-ND/D-ND_BOOK.md sezione III/IV/..."
+  }
+}

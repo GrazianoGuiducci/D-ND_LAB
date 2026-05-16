@@ -1,0 +1,20 @@
+{
+  "radici": "stabilita graph-only piena / caduta sotto componente nominata.",
+  "singolare": "il predicate del reader prima della scissione in feature, centroidi e kNN.",
+  "invariante": "denominatore 13 righe, 8/5 labels, 27 letture, tail `hits >= full_hits`.",
+  "campo": {
+    "raw": "possibile = progettare null fisici diversi per logistica e percolation; non-possibile = promuovere un residuo graph-only comune o sommarlo al boundary a due lettori.",
+    "possibile": "",
+    "non_possibile": ""
+  },
+  "fields_present": [
+    "radici",
+    "singolare",
+    "invariante",
+    "campo"
+  ],
+  "complete": true,
+  "_extracted_at": "2026-05-16T12:39:00.554220+00:00",
+  "_source_report": "agent_20260516_1230.md",
+  "_cycle_ts": "20260516_1230"
+}

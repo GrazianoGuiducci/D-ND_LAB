@@ -1,0 +1,290 @@
+{
+  "timestamp": "2026-05-16T12:39:26.125332",
+  "piano": 136,
+  "direzione": "Testare null fisici interni per i residui graph-only logistica_biforcazione_var_3.5699 e percolation sul perimetro fisso 8 GUE / 5 Poisson: separare dinamica fisica da ricostruzione del reader grafico",
+  "cicli_totali": 160,
+  "tensioni": [
+    {
+      "id": "TRASCENDENZA_LIMITE",
+      "claim": "La trascendenza e il limite attuale del modello. I punti fissi relazionali (non solo phi ma la rete di punti fissi tra osservabili) possono rivelare il vero grafo della realta e pattern nelle matrici.",
+      "potenziale": "",
+      "stato": "",
+      "porta": "sessione_interattiva"
+    },
+    {
+      "id": "DUALITA_DIPOLARE_VS_ILLUSORIA",
+      "claim": "Due tipi di dualita: (1) dipolare - generativa, il modello (det=-1), (2) illusoria - dispersiva, entropia (det=+1). Le regole incoerenti producono la seconda. La dualita illusoria e entropia come disp",
+      "potenziale": "",
+      "stato": "",
+      "porta": "sessione_interattiva"
+    },
+    {
+      "id": "METRIC_TENSOR",
+      "claim": "Il tensore metrico dei primi è g=(p/2)². Nel tempo ln(p), è de Sitter 1+1D. z=-8.8 curvatura vs z=+22.5 rapporti ΔΓ.",
+      "potenziale": "",
+      "stato": "",
+      "porta": "sessione_interattiva"
+    },
+    {
+      "id": "TENSIONE_ENTITA",
+      "claim": "La tensione non e un problema pratico - e un Entita. La tensione superflua crea latenza (tempo). Senza tensione superflua tutto e regolato da assiomi. Implicazione: le tensioni nel seme sono entita, n",
+      "potenziale": "",
+      "stato": "",
+      "porta": "sessione_interattiva"
+    },
+    {
+      "id": "G_POTENZIALE_NULLA",
+      "claim": "G e il potenziale di tutto come nulla - permette il prima e il dopo. Ci muoviamo come trascendenza dimensionale gravitazionale. G nel tetraedro non e una teoria tra le altre - e il potenziale che le r",
+      "potenziale": "",
+      "stato": "",
+      "porta": "sessione_interattiva"
+    },
+    {
+      "id": "BOUNDARY",
+      "claim": "8 domini GUE, 5 Poisson — il confine è il terzo incluso operativo",
+      "potenziale": "",
+      "stato": "",
+      "porta": "condensato"
+    },
+    {
+      "id": "TRANS_BOUNDARY_TRASCENDENZA_LIMITE",
+      "claim": "Transizione continua confermata: <r> da 0.521 a 0.887 (range=0.366). La transizione Sturmian->Harper e' conti",
+      "potenziale": "",
+      "stato": "",
+      "porta": "domandatore"
+    },
+    {
+      "id": "FALS_BREAK_TRASCENDENZA_LIMITE",
+      "claim": "Nessuna separazione: 9/9 (50/50 su 18 confronti). Il claim non regge. phi converge a <r>=0.5 piu' sistematicam",
+      "potenziale": "",
+      "stato": "",
+      "porta": "condensato"
+    },
+    {
+      "id": "PIANO_PRIMARIO_DUE_ASSIOMI",
+      "claim": "I piani importanti sono il primario e i due assiomi che lo determinano nelle zone osservate. Non tutti gli assiomi operano ovunque - in ogni zona osservata, due assiomi determinano il piano primario.",
+      "potenziale": "",
+      "stato": "",
+      "porta": "sessione_interattiva"
+    },
+    {
+      "id": "COMP_GEN_GAP_RATIO_T9_linguaggio_TRASCENDENZA_LIMITE",
+      "claim": "gap_ratio: phi=0.4090 vs ctrl_mean=1.1755 (ratio=0.35). gap_ratio(phi) piu' vicino a rapporto in",
+      "potenziale": "",
+      "stato": "",
+      "porta": "condensato"
+    },
+    {
+      "id": "COMP_DOMAIN_PHOTONIC_TRASCENDENZA_LIMITE",
+      "claim": "T_mean: phi=6.2500 vs ctrl_mean=9.7667 (ratio=0.64). Fibonacci-phi trasmissione piu' struttur",
+      "potenziale": "",
+      "stato": "",
+      "porta": "domandatore"
+    },
+    {
+      "id": "TENS_SCALE_TRASCENDENZA_LIMITE",
+      "claim": "Fit non converge — il modello potrebbe non essere power-law. V_c(phi) converge a 1.0 per N->inf, V_c(",
+      "potenziale": "",
+      "stato": "",
+      "porta": "condensato"
+    },
+    {
+      "id": "META",
+      "claim": "11/11 PASS stratificato: 4 alto rischio tautologico, 6 data-independent",
+      "potenziale": "",
+      "stato": "",
+      "porta": "verify_assertions_META_STRATIFIED"
+    }
+  ],
+  "ultimo_report": {
+    "file": "agent_20260516_1230.md",
+    "content": "# Agent Report - Graph Mechanism Ablation\n**Date**: 2026-05-16 12:30\n**Piano**: 135\n**Tension explored**: BOUNDARY (0.8)\n**verdict**: CONSTRAINT - Nel perimetro fisso `8 GUE / 5 Poisson`, i residui graph-only `logistica_biforcazione_var_3.5699` e `percolation` restano `27/27` nel reader completo. Entrambi cadono quando viene ablato il gruppo feature canoniche, ma il null label-count-preserving N-matched li ricostruisce spesso (`62/128`, `69/128`). Il meccanismo non e un residuo fisico comune: logistica dipende anche dalla topologia degree/cluster (`1/128` rewire ricostruisce 27/27), percolation no (`95/128` rewire ricostruisce 27/27).\nobservables_registry: 1.0.0-2026-05-06 via boundary_graph_curvature_gate\nobservables_used: [full_graph_bridge_hits, centroid_only_no_knn_hits, knn_only_no_centroid_hits, feature_group_ablation_hits, label_permutation_ge_full, degree_rewire_ge_full, feature_column_shuffle_ge_full]\n**observable_contract**: claim=un residuo graph-only e mechanism-specific solo se cade sotto una ablation nominata e non viene ricostruito da null comparabili; observable=hit count del target su 27 letture graph-reader sotto ablation deterministiche e null N-matched; operator=scissione del predicate originale in centroid gate, kNN cross-label gate, topology degree-preserving e feature row-local; generator=13 righe BOUNDARY con feature boundary_graph_curvature_gate; denominator=13 righe, 27 letture, 128 trial per ogni null stocastico; p_value_definition=right-tail raw_p=k/N, k = trial null con target_hits >= full observed hits; non_possible=promuovere graph-only residue se nessuna componente specifica lo fa cadere o se i null N-matched ricostruiscono spesso il full count; not_tested=nuove dinamiche fisiche, nuovi domini, scaling asintotico, promozione a due lettori.\n\n## Respiro fuori-tempo\n- **Combo**: A9 terzo incluso + A11 combo + BOUNDARY `8 GUE / 5 Poisson` + grafo conoscenza come lettore + vincolo del seme sui residui graph-only.\n- **Dipolo / punto-zero**: residuo graph-only / meccanismo del reader. Punto-zero: la riga prima che il reader la spezzi in centroidi, kNN e feature row-local.\n- **Piano superiore**: topologia del grafo e bicono-dipoli; il bordo viene letto come predicate composto, non come singolo numero.\n- **Operatori laterali scelti**: kNN boundary, degree-preserving rewiring, feature row-local ablation.\n- **Contaminazione cognitiva**: CE-none:`tools/data/agent_field_live.md` letto nel ciclo 12:30; non contiene un archivio enzimi esplicito da metabolizzare. Uso KSAR solo come metodo implicito di reiterazione del kernel 12:06 sullo stesso denominatore.\n- **Proto-ipotesi**: un residuo graph-only che non costa sotto label permutation puo ancora informare il reader solo se una componente nominata lo fa cadere; se cade in modo diverso fra target, non esiste un meccanismo grafico comune promuovibile.\n- **Proiezione**: separare il predicate `cross_neighbor_fraction > 0 and centroid_margin < 0.25` e ablarne feature/topologia sullo s"
+  },
+  "selection": {
+    "report_mode": "cycle",
+    "status": "accepted_release",
+    "cycle": "20260516_1230",
+    "blocked_cycle": ""
+  },
+  "projector": {
+    "trajectory": [
+      {
+        "id": "TRASCENDENZA_LIMITE",
+        "potentiality": "alto",
+        "connections": 9,
+        "resonance": 0,
+        "delta_v": "tangente",
+        "anti_claim": "la rete di punti fissi tra osservabili) possono rivelare il vero grafo della realta e pattern nelle "
+      },
+      {
+        "id": "TRANS_BOUNDARY_TRASCENDENZA_LIMITE",
+        "potentiality": "alto",
+        "connections": 7,
+        "resonance": 1,
+        "delta_v": "acuto",
+        "anti_claim": "The opposite: Transizione continua confermata: <r> da 0.521 a 0.887 (range=0.366). La transizione St"
+      },
+      {
+        "id": "TENS_SCALE_TRASCENDENZA_LIMITE",
+        "potentiality": "alto",
+        "connections": 7,
+        "resonance": 2,
+        "delta_v": "acuto",
+        "anti_claim": "il modello potrebbe non essere power-law. V_c(phi) converge a 1.0 per N->inf, V_c( (not: Fit non con"
+      },
+      {
+        "id": "G_POTENZIALE_NULLA",
+        "potentiality": "alto",
+        "connections": 6,
+        "resonance": 3,
+        "delta_v": "acuto",
+        "anti_claim": "G e il potenziale di tutto come nulla - permette il prima e il dopo. Ci muoviamo come trascendenza d"
+      },
+      {
+        "id": "FALS_BREAK_TRASCENDENZA_LIMITE",
+        "potentiality": "alto",
+        "connections": 6,
+        "resonance": 4,
+        "delta_v": "acuto",
+        "anti_claim": "Nessuna separazione: 9/9 (50/50 su 18 confronti). Il claim regge. phi converge a <r>=0.5 piu' sistem"
+      },
+      {
+        "id": "COMP_GEN_GAP_RATIO_T9_linguaggio_TRASCENDENZA_LIMITE",
+        "potentiality": "alto",
+        "connections": 6,
+        "resonance": 5,
+        "delta_v": "acuto",
+        "anti_claim": "ctrl_mean=1.1755 (ratio=0.35). gap_ratio(phi) piu' vicino a rapporto in (not: gap_ratio: phi=0.4090)"
+      },
+      {
+        "id": "COMP_DOMAIN_PHOTONIC_TRASCENDENZA_LIMITE",
+        "potentiality": "alto",
+        "connections": 6,
+        "resonance": 6,
+        "delta_v": "acuto",
+        "anti_claim": "ctrl_mean=9.7667 (ratio=0.64). Fibonacci-phi trasmissione piu' struttur (not: T_mean: phi=6.2500)"
+      },
+      {
+        "id": "TENSIONE_ENTITA",
+        "potentiality": "alto",
+        "connections": 3,
+        "resonance": 0,
+        "delta_v": "tangente",
+        "anti_claim": "La tensione e un problema pratico - e un Entita. La tensione superflua crea latenza (tempo). Senza t"
+      },
+      {
+        "id": "METRIC_TENSOR",
+        "potentiality": "alto",
+        "connections": 1,
+        "resonance": 1,
+        "delta_v": "acuto",
+        "anti_claim": "z=+22.5 rapporti ΔΓ (not: Il tensore metrico dei primi è g=(p/2)². Nel tempo ln(p), è )"
+      },
+      {
+        "id": "DUALITA_DIPOLARE_VS_ILLUSORIA",
+        "potentiality": "medio",
+        "connections": 3,
+        "resonance": 3,
+        "delta_v": "acuto",
+        "anti_claim": "Due tipi di dualita: (1) dipolare - generativa, il modello (det=-1), (2) illusoria - dispersiva, ent"
+      },
+      {
+        "id": "BOUNDARY",
+        "potentiality": "medio",
+        "connections": 2,
+        "resonance": 2,
+        "delta_v": "acuto",
+        "anti_claim": "il confine è il terzo incluso operativo (not: 8 domini GUE, 5 Poisson)"
+      },
+      {
+        "id": "PIANO_PRIMARIO_DUE_ASSIOMI",
+        "potentiality": "medio",
+        "connections": 2,
+        "resonance": 2,
+        "delta_v": "acuto",
+        "anti_claim": "I piani importanti sono il primario e i due assiomi che lo determinano nelle zone osservate. Non tut"
+      }
+    ],
+    "passages": [
+      {
+        "type": "convergence",
+        "step": 1,
+        "cluster": [
+          "BOUNDARY",
+          "COMP_DOMAIN_PHOTONIC_TRASCENDENZA_LIMITE",
+          "COMP_GEN_GAP_RATIO_T9_linguaggio_TRASCENDENZA_LIMITE",
+          "DUALITA_DIPOLARE_VS_ILLUSORIA",
+          "FALS_BREAK_TRASCENDENZA_LIMITE",
+          "G_POTENZIALE_NULLA",
+          "PIANO_PRIMARIO_DUE_ASSIOMI",
+          "TENS_SCALE_TRASCENDENZA_LIMITE",
+          "TRANS_BOUNDARY_TRASCENDENZA_LIMITE",
+          "TRASCENDENZA_LIMITE"
+        ],
+        "note": "10 dipoli risuonano: BOUNDARY, COMP_DOMAIN_PHOTONIC_TRASCENDENZA_LIMITE, COMP_GEN_GAP_RATIO_T9_linguaggio_TRASCENDENZA_LIMITE..."
+      },
+      {
+        "type": "convergence",
+        "step": 2,
+        "cluster": [
+          "BOUNDARY",
+          "COMP_DOMAIN_PHOTONIC_TRASCENDENZA_LIMITE",
+          "COMP_GEN_GAP_RATIO_T9_linguaggio_TRASCENDENZA_LIMITE",
+          "FALS_BREAK_TRASCENDENZA_LIMITE",
+          "G_POTENZIALE_NULLA",
+          "TENS_SCALE_TRASCENDENZA_LIMITE",
+          "TRANS_BOUNDARY_TRASCENDENZA_LIMITE",
+          "TRASCENDENZA_LIMITE"
+        ],
+        "note": "8 dipoli risuonano: BOUNDARY, COMP_DOMAIN_PHOTONIC_TRASCENDENZA_LIMITE, COMP_GEN_GAP_RATIO_T9_linguaggio_TRASCENDENZA_LIMITE..."
+      },
+      {
+        "type": "convergence",
+        "step": 3,
+        "cluster": [
+          "COMP_DOMAIN_PHOTONIC_TRASCENDENZA_LIMITE",
+          "COMP_GEN_GAP_RATIO_T9_linguaggio_TRASCENDENZA_LIMITE",
+          "DUALITA_DIPOLARE_VS_ILLUSORIA",
+          "FALS_BREAK_TRASCENDENZA_LIMITE",
+          "G_POTENZIALE_NULLA",
+          "TENS_SCALE_TRASCENDENZA_LIMITE",
+          "TRANS_BOUNDARY_TRASCENDENZA_LIMITE",
+          "TRASCENDENZA_LIMITE"
+        ],
+        "note": "8 dipoli risuonano: COMP_DOMAIN_PHOTONIC_TRASCENDENZA_LIMITE, COMP_GEN_GAP_RATIO_T9_linguaggio_TRASCENDENZA_LIMITE, DUALITA_DIPOLARE_VS_ILLUSORIA..."
+      },
+      {
+        "type": "convergence",
+        "step": 4,
+        "cluster": [
+          "COMP_DOMAIN_PHOTONIC_TRASCENDENZA_LIMITE",
+          "COMP_GEN_GAP_RATIO_T9_linguaggio_TRASCENDENZA_LIMITE",
+          "FALS_BREAK_TRASCENDENZA_LIMITE",
+          "G_POTENZIALE_NULLA",
+          "TENS_SCALE_TRASCENDENZA_LIMITE",
+          "TRANS_BOUNDARY_TRASCENDENZA_LIMITE",
+          "TRASCENDENZA_LIMITE"
+        ],
+        "note": "7 dipoli risuonano: COMP_DOMAIN_PHOTONIC_TRASCENDENZA_LIMITE, COMP_GEN_GAP_RATIO_T9_linguaggio_TRASCENDENZA_LIMITE, FALS_BREAK_TRASCENDENZA_LIMITE..."
+      },
+      {
+        "type": "convergence",
+        "step": 8,
+        "cluster": [
+          "DUALITA_DIPOLARE_VS_ILLUSORIA",
+          "METRIC_TENSOR",
+          "PIANO_PRIMARIO_DUE_ASSIOMI",
+          "TENSIONE_ENTITA"
+        ],
+        "note": "4 dipoli risuonano: DUALITA_DIPOLARE_VS_ILLUSORIA, METRIC_TENSOR, PIANO_PRIMARIO_DUE_ASSIOMI..."
+      }
+    ],
+    "field": {
+      "total_dipoles": 13,
+      "high_potential": 12,
+      "saturated": 0,
+      "piano_saturation": "0/13",
+      "assonances": 29
+    }
+  }
+}

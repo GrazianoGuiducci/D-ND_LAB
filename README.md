@@ -70,7 +70,8 @@ The installer:
 1. Verifies Docker + Docker Compose
 2. Clones to `~/.d-nd-lab`
 3. Prompts for your LLM API key + model + domain
-4. Builds the image and starts a smoke test (dry-run cycle, no API calls)
+4. Restores the physics bootstrap snapshot when `LAB_DOMAIN=physics`
+5. Builds the image and validates the selected domain config
 
 After install, run a real cycle:
 
@@ -82,8 +83,21 @@ docker compose run --rm lab     # one cycle, ~5-15 min, $0.03-$0.15 typical
 Or schedule nightly cycles:
 
 ```bash
+cd ~/.d-nd-lab
 docker compose --profile cron up -d
 ```
+
+To start from a new domain or intent instead of the shipped physics Lab, first
+capture a structured request for the meta-lab:
+
+```bash
+cd ~/.d-nd-lab
+docker compose run --rm lab plan-domain
+```
+
+This records the domain, kind and movement/intention under the `meta-lab`
+runtime data. It does not force-generate a Lab: the request must pass through
+the meta-lab/template validator before becoming a new installable domain.
 
 ## Provider-agnostic by design
 
@@ -116,14 +130,32 @@ extended, Gemini 3) is preserved across multi-turn loops automatically.
 |---|---|
 | `physics` | mathematical physics through D-ND: primes, zeta, GUE, theory crossing TQGE+R |
 | `editorial` | the operator's archive — discriminates source from echo, drafts publishable copy through the bicono filter and non-dual-copy gate |
+| `meta-lab` | the lab that designs labs: turns domain/intention requests into validated domain templates |
 
-After install, both domains are available out-of-box. Default is
+After install, these domains are available out-of-box. Default is
 `physics` — change `LAB_DOMAIN` in `.env` to switch.
 
 Each domain is a directory with `config.json`, `context.md`,
 `tension_to_category.json`, `seed_tensions.json`, `tools/`, and
 optionally `corpus/` (gitignored). See
 [docs/extending.md](docs/extending.md) for how to write your own.
+
+The physics domain includes a tracked reinstall snapshot under
+`domains/physics/bootstrap_20260516/`: five accepted cycles from the live
+research Lab, their reports, falsifiers, runtime monitors, experiment outputs
+and tools. The reusable physics experiment tools are shipped under
+`domains/physics/tools/`. Restore the snapshot locally with:
+
+```bash
+bash scripts/restore_physics_snapshot.sh
+python -m core.cli inspect --domain physics
+```
+
+Docker installs use the equivalent in-container command:
+
+```bash
+docker compose run --rm lab restore-snapshot --domain physics --snapshot 20260516
+```
 
 ## Architecture
 
@@ -138,7 +170,8 @@ D-ND_LAB/
 │   └── benchmark.py            # cost/quality matrix across N models (Phase 5+)
 ├── domains/                    # plug-in content
 │   ├── physics/
-│   └── editorial/
+│   ├── editorial/
+│   └── meta-lab/
 ├── docs/                       # GitHub Pages site
 ├── examples/                   # runnable demos
 ├── Dockerfile + docker-compose.yml + install.sh

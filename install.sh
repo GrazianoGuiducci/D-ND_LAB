@@ -105,7 +105,7 @@ else
 
     say ""
     say "${C_BOLD}Domain${C_RESET}"
-    say "${C_DIM}Available: physics, editorial${C_RESET}"
+    say "${C_DIM}Available: physics, meta-lab, editorial, finance, ops-decisions, bio-rhythms${C_RESET}"
     read -r -p "  LAB_DOMAIN [physics]: " domain
     domain="${domain:-physics}"
 
@@ -139,6 +139,12 @@ say "${C_DIM}Building image (first time may take 1-3 minutes)...${C_RESET}"
 docker compose build --pull
 ok "Image built"
 
+if [ "${domain:-physics}" = "physics" ]; then
+    say "${C_DIM}Restoring physics bootstrap snapshot into the Docker data volume...${C_RESET}"
+    docker compose run --rm lab restore-snapshot --domain physics --snapshot 20260516
+    ok "Physics snapshot restored"
+fi
+
 say "${C_DIM}Starting services...${C_RESET}"
 docker compose up -d nginx
 ok "nginx running on port ${DEFAULT_PORT}"
@@ -146,13 +152,13 @@ ok "nginx running on port ${DEFAULT_PORT}"
 # ── Step 5: smoke test ────────────────────────────────────────────
 hdr "Smoke test"
 
-# Validate config without spending API credits
-say "Running config validation (dry-run)..."
-if docker compose run --rm lab dry-run --domain "${domain:-physics}" >/tmp/dndlab-dryrun.log 2>&1; then
-    ok "Dry-run cycle completed (0 errors)"
+# Validate config without spending API credits or mutating the restored snapshot.
+say "Running config validation..."
+if docker compose run --rm lab inspect --domain "${domain:-physics}" >/tmp/dndlab-inspect.log 2>&1; then
+    ok "Domain config validated"
 else
-    warn "Dry-run had errors — see /tmp/dndlab-dryrun.log"
-    tail -20 /tmp/dndlab-dryrun.log
+    warn "Config validation had errors — see /tmp/dndlab-inspect.log"
+    tail -20 /tmp/dndlab-inspect.log
 fi
 
 # ── Done ───────────────────────────────────────────────────────────

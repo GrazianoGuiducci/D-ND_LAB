@@ -1,0 +1,249 @@
+{
+  "schema_version": "0.1",
+  "generated_at": "2026-05-16T11:24:00.990058+00:00",
+  "cycle_ref": "20260516_1117",
+  "report": {
+    "file": "agent_20260516_1117.md",
+    "title": "Agent Report - Anderson 3D Two-Reader Boundary Null",
+    "date": "2026-05-16 11:17",
+    "tension": "BOUNDARY (0.8)",
+    "verdict": "CONSTRAINT - Anderson 3D produce una riga cross-size a due lettori (`W=20.00`), ma il feature-scramble null ricostruisce almeno lo stesso conteggio in `112/128` trial (`raw_p=0.875000000`, `add_one_p=0.875968992`). Il boundary trasferisce come candidato operativo sul dominio, non come terzo incluso fisico promosso.",
+    "observable_contract": "claim=il gate BOUNDARY a due lettori trasferisce oltre RP solo se la stessa riga Anderson e' `stable_graph_bridge+classical_intermediate` su tutte le size e batte il feature-scramble null; observable=`two_reader_all_sizes` unito a `graph_bridge_frequency`, adjacent ratio, Brody q, mixture Wigner/Poisson, IPR, entropy; operator=Hamiltoniana Anderson 3D con disorder sweep, seed perturbation e kNN reader; generator=`H=sum_i eps_i |i><i| + hopping nearest-neighbor` su reticolo periodico `L^3`, `eps_i uniform[-W/2,W/2]`; denominator=11 disorder rows x 2 size x 2 seed x 3 k-reader, null 128 feature-scramble trial; non_possible=promozione fisica se il null ricostruisce almeno il conteggio osservato; not_tested=limite termodinamico, mobility-edge exponent, boundary conditions alternative, sparse large-L, spettri sperimentali.",
+    "claim_under_test": "Il boundary come terzo incluso trasferisce da RP ad Anderson 3D solo se una riga disorder resta a due lettori su tutte le size e il feature-scramble null non ricostruisce quel conteggio.",
+    "question": "Il gate a due lettori trova un confine fisico Anderson, o una combinazione di feature che il null puo' ricomporre senza struttura fisica?",
+    "consecutio": "Portare il candidato `W=20` a un audit piu' duro: `L>=7` con sparse eigensolver oppure null endpoint-preserving che mantiene i poli metallic/localized e rompe solo l'accoppiamento delle righe candidate. Se anche li' il null ricostruisce, il boundary resta proprieta' del lettore.",
+    "pair_mentions": [
+      "GxQ",
+      "QxG"
+    ]
+  },
+  "graph_focus": {
+    "report_node": "report_20260516_1117",
+    "report_theories": [
+      "Q"
+    ],
+    "report_edges": [
+      {
+        "source": "report_20260516_1117",
+        "target": "Q",
+        "tipo": "report"
+      }
+    ],
+    "void_edges": [
+      {
+        "source": "Q",
+        "target": "G",
+        "tipo": "ponte",
+        "ponte": "",
+        "ponte_en": "",
+        "domanda": "Come coesistono continuo e discreto?",
+        "domanda_en": "How do continuous and discrete coexist?",
+        "vuoto": true,
+        "completion_state": "contract_ready_not_integrated",
+        "candidate_contract_ref": "graph_completion_20260516_1111.json",
+        "shape_hypothesis": "conditional_existence_arc",
+        "edge_contract": {
+          "question": "Come coesistono continuo e discreto?",
+          "question_en": "How do continuous and discrete coexist?",
+          "shape_hypothesis": "arco di esistenza condizionata: valore e evento si separano prima del fit",
+          "dipole": "residuo sopra null; trasporto size assente.",
+          "point_zero": "riga RP prima del nome `candidate` e prima del legame con `N`.",
+          "invariant": "p-value dichiarato (`raw_p`, `add_one_p`) e denominatore source row x reader row-aligned.",
+          "possible": "possibile = audit endpoint-gated come filtro finito-size; non-possibile = promuovere RP a boundary fisico senza supporto `N>=192`.",
+          "not_possible": ""
+        },
+        "fit_ready_contract": null,
+        "validation": {
+          "bicono_complete": true,
+          "falsifier_coherent": true,
+          "veritas_rho": 0.9325,
+          "veritas_band": "COLLASSO",
+          "fit_ready_contract_present": false
+        },
+        "annotation": "Vuoto con arco candidato: mostra il come, non chiude ancora il ponte",
+        "annotation_en": "Void with candidate arc: shows the how, does not close the bridge yet"
+      }
+    ],
+    "void_questions_total": 6
+  },
+  "bicono": {
+    "radici": "riga cross-size osservata; ricostruzione da null.",
+    "singolare": "disorder row prima della doppia lettura classico/grafo.",
+    "invariante": "row alignment e p-value dichiarato (`raw_p`, `add_one_p`) restano il filtro.",
+    "campo": {
+      "raw": "possibile = usare Anderson come stress test cross-dominio del gate; non-possibile = promuovere il boundary senza battere il null.",
+      "possibile": "",
+      "non_possibile": ""
+    },
+    "fields_present": [
+      "radici",
+      "singolare",
+      "invariante",
+      "campo"
+    ],
+    "complete": true,
+    "_extracted_at": "2026-05-16T11:23:43.888598+00:00",
+    "_source_report": "agent_20260516_1117.md",
+    "_cycle_ts": "20260516_1117",
+    "_source": "tools/data/biconi/bicono_20260516_1117.json"
+  },
+  "candidates": [
+    {
+      "target_pair": "QxG",
+      "current_state": "void",
+      "completion_state": "contract_ready_not_integrated",
+      "why_this_pair": {
+        "mentioned_in_report": true,
+        "connected_in_graph": false,
+        "opened_by_consecutio": true,
+        "report_current_theories": [
+          "Q"
+        ],
+        "missing_report_edges": [
+          "G"
+        ]
+      },
+      "edge_contract": {
+        "question": "Come coesistono continuo e discreto?",
+        "question_en": "How do continuous and discrete coexist?",
+        "shape_hypothesis": "arco di esistenza condizionata: valore e evento si separano prima del fit",
+        "dipole": "riga cross-size osservata; ricostruzione da null.",
+        "point_zero": "disorder row prima della doppia lettura classico/grafo.",
+        "invariant": "row alignment e p-value dichiarato (`raw_p`, `add_one_p`) restano il filtro.",
+        "possible": "possibile = usare Anderson come stress test cross-dominio del gate; non-possibile = promuovere il boundary senza battere il null.",
+        "not_possible": ""
+      },
+      "observable_contract": "claim=il gate BOUNDARY a due lettori trasferisce oltre RP solo se la stessa riga Anderson e' `stable_graph_bridge+classical_intermediate` su tutte le size e batte il feature-scramble null; observable=`two_reader_all_sizes` unito a `graph_bridge_frequency`, adjacent ratio, Brody q, mixture Wigner/Poisson, IPR, entropy; operator=Hamiltoniana Anderson 3D con disorder sweep, seed perturbation e kNN reader; generator=`H=sum_i eps_i |i><i| + hopping nearest-neighbor` su reticolo periodico `L^3`, `eps_i uniform[-W/2,W/2]`; denominator=11 disorder rows x 2 size x 2 seed x 3 k-reader, null 128 feature-scramble trial; non_possible=promozione fisica se il null ricostruisce almeno il conteggio osservato; not_tested=limite termodinamico, mobility-edge exponent, boundary conditions alternative, sparse large-L, spettri sperimentali.",
+      "validation": {
+        "bicono_complete": true,
+        "falsifier_coherent": true,
+        "falsifier_flags": [],
+        "veritas_rho": 0.9325,
+        "veritas_band": "COLLASSO",
+        "loop_guard": {
+          "valutatore_decisions": {
+            "danger_score": 0.005,
+            "band": "OK",
+            "max_run_length": 4,
+            "violations": 0,
+            "reasons": [
+              "low entropy: 1.16 bits (threshold 1.2)"
+            ],
+            "n_events": 30,
+            "alphabet_size": 3
+          },
+          "piano_trajectory": {
+            "danger_score": 0.113,
+            "band": "OK",
+            "max_run_length": 5,
+            "violations": 0,
+            "reasons": [
+              "max self-run = 5 (threshold 4)"
+            ],
+            "n_events": 30,
+            "alphabet_size": 14
+          }
+        },
+        "fit_ready_contract_present": false
+      },
+      "evidence": {
+        "report": "agent_20260516_1117.md",
+        "bicono_source": "tools/data/biconi/bicono_20260516_1117.json",
+        "source_files": [
+          "tools/data/anderson3d_mobility_edge_two_reader_audit_20260516_1117.json",
+          "tools/data/reports/agent_20260516_1117.md",
+          "tools/dnd_scenario.py",
+          "tools/exp_anderson3d_mobility_edge_two_reader_audit.py"
+        ],
+        "fit_ready_artifacts": [],
+        "void_consecutio_questions": [
+          {
+            "da": "GxE",
+            "a": "QxG",
+            "perno": "G",
+            "domanda": "Cosa dice 'buco nero carico (Reissner-Nordstrom)' su '[VUOTO]'?",
+            "ponte_da": "buco nero carico (Reissner-Nordstrom)",
+            "ponte_a": "[VUOTO]",
+            "tocca_vuoto": true
+          },
+          {
+            "da": "GxR",
+            "a": "QxG",
+            "perno": "G",
+            "domanda": "Cosa dice 'orizzonte degli eventi' su '[VUOTO]'?",
+            "ponte_da": "orizzonte degli eventi",
+            "ponte_a": "[VUOTO]",
+            "tocca_vuoto": true
+          },
+          {
+            "da": "QxE",
+            "a": "QxG",
+            "perno": "Q",
+            "domanda": "Cosa dice 'atomo di idrogeno' su '[VUOTO]'?",
+            "ponte_da": "atomo di idrogeno",
+            "ponte_a": "[VUOTO]",
+            "tocca_vuoto": true
+          },
+          {
+            "da": "QxR",
+            "a": "QxG",
+            "perno": "Q",
+            "domanda": "Cosa dice 'equazione di Dirac' su '[VUOTO]'?",
+            "ponte_da": "equazione di Dirac",
+            "ponte_a": "[VUOTO]",
+            "tocca_vuoto": true
+          },
+          {
+            "da": "TxG",
+            "a": "QxG",
+            "perno": "G",
+            "domanda": "Cosa dice 'temperatura di Hawking' su '[VUOTO]'?",
+            "ponte_da": "temperatura di Hawking",
+            "ponte_a": "[VUOTO]",
+            "tocca_vuoto": true
+          },
+          {
+            "da": "TxQ",
+            "a": "QxG",
+            "perno": "Q",
+            "domanda": "Cosa dice 'matrice densita' su '[VUOTO]'?",
+            "ponte_da": "matrice densita",
+            "ponte_a": "[VUOTO]",
+            "tocca_vuoto": true
+          }
+        ]
+      },
+      "missing_pieces_before_live_integration": [
+        "report node is not connected to every theory in the target void pair",
+        "fit-ready table with vc_defined is missing"
+      ],
+      "next_move": "Rendi il contratto sperimentale fit-ready: soglie esplicite, stato transfer/blank/fall e contro-perimetro verificabile; poi rigenera il grafo usando questo artifact come evidenza.",
+      "proposed_graph_delta": [
+        {
+          "op": "add_report_edge",
+          "source": "report_20260516_1117",
+          "target": "G",
+          "tipo": "report_contract",
+          "reason": "latest report mentions the void pair but live graph does not connect the report to this theory"
+        },
+        {
+          "op": "annotate_void_edge",
+          "source": "Q",
+          "target": "G",
+          "fields": {
+            "completion_state": "contract_ready_not_integrated",
+            "candidate_contract_ref": "graph_completion_20260516_1117.json",
+            "shape_hypothesis": "conditional_existence_arc"
+          }
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "candidate_count": 1,
+    "ready_count": 1,
+    "has_observable_contract": true,
+    "bicono_complete": true,
+    "has_fit_ready_contract": false
+  }
+}

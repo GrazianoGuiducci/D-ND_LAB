@@ -1,0 +1,7 @@
+{
+  "report_file": "agent_20260516_1117.md",
+  "marked_at": "2026-05-16T11:22:25.268430+00:00",
+  "coherent": true,
+  "flags": [],
+  "summary": "Il report e' internamente coerente rispetto ai dati visibili: le lenti L1-L8 non mostrano contraddizioni strutturali, hard constraint falsi, patch silenziose o drift primario dalla direzione viva."
+}

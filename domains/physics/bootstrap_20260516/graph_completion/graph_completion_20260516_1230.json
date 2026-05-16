@@ -1,0 +1,302 @@
+{
+  "schema_version": "0.1",
+  "generated_at": "2026-05-16T12:39:27.763492+00:00",
+  "cycle_ref": "20260516_1230",
+  "report": {
+    "file": "agent_20260516_1230.md",
+    "title": "Agent Report - Graph Mechanism Ablation",
+    "date": "2026-05-16 12:30",
+    "tension": "BOUNDARY (0.8)",
+    "verdict": "CONSTRAINT - Nel perimetro fisso `8 GUE / 5 Poisson`, i residui graph-only `logistica_biforcazione_var_3.5699` e `percolation` restano `27/27` nel reader completo. Entrambi cadono quando viene ablato il gruppo feature canoniche, ma il null label-count-preserving N-matched li ricostruisce spesso (`62/128`, `69/128`). Il meccanismo non e un residuo fisico comune: logistica dipende anche dalla topologia degree/cluster (`1/128` rewire ricostruisce 27/27), percolation no (`95/128` rewire ricostruisce 27/27).",
+    "observable_contract": "claim=un residuo graph-only e mechanism-specific solo se cade sotto una ablation nominata e non viene ricostruito da null comparabili; observable=hit count del target su 27 letture graph-reader sotto ablation deterministiche e null N-matched; operator=scissione del predicate originale in centroid gate, kNN cross-label gate, topology degree-preserving e feature row-local; generator=13 righe BOUNDARY con feature boundary_graph_curvature_gate; denominator=13 righe, 27 letture, 128 trial per ogni null stocastico; p_value_definition=right-tail raw_p=k/N, k = trial null con target_hits >= full observed hits; non_possible=promuovere graph-only residue se nessuna componente specifica lo fa cadere o se i null N-matched ricostruiscono spesso il full count; not_tested=nuove dinamiche fisiche, nuovi domini, scaling asintotico, promozione a due lettori.",
+    "claim_under_test": "Nel perimetro `8 GUE / 5 Poisson`, un residuo graph-only diventa informazione sul meccanismo del reader solo se il full `27/27` cade sotto una componente specifica e non viene ricostruito frequentemente dai null N-matched.",
+    "question": "Il graph-reader ricostruisce i residui per centroidi, per kNN/degree boundary, o per feature row-local?",
+    "consecutio": "Separare i due target. Per logistica: stressare la topologia con block/time shuffle che conserva marginali ma rompe ordine orbitale. Per percolation: usare null di cluster geometry, perche il degree-preserving rewire non basta a far cadere il target. Nessuna promozione finche il null fisico interno non produce costo non ricostruibile dalla label permutation.",
+    "pair_mentions": []
+  },
+  "graph_focus": {
+    "report_node": "report_20260516_1230",
+    "report_theories": [
+      "Q"
+    ],
+    "report_edges": [
+      {
+        "source": "report_20260516_1230",
+        "target": "Q",
+        "tipo": "report"
+      }
+    ],
+    "void_edges": [
+      {
+        "source": "Q",
+        "target": "G",
+        "tipo": "ponte",
+        "ponte": "",
+        "ponte_en": "",
+        "domanda": "Come coesistono continuo e discreto?",
+        "domanda_en": "How do continuous and discrete coexist?",
+        "vuoto": true,
+        "completion_state": "fit_ready_contract_not_integrated",
+        "candidate_contract_ref": "graph_completion_20260516_1206.json",
+        "shape_hypothesis": "conditional_existence_arc",
+        "edge_contract": {
+          "question": "Come coesistono continuo e discreto?",
+          "question_en": "How do continuous and discrete coexist?",
+          "shape_hypothesis": "arco di esistenza condizionata: valore e evento si separano prima del fit",
+          "dipole": "residuo graph-only osservato / residuo ricostruito dal null.",
+          "point_zero": "la riga del dominio prima della label sorgente e prima del nome fisico.",
+          "invariant": "stesso denominatore 13 righe, stesso reader 27 letture, stesso conteggio 8/5.",
+          "possible": "possibile = usare i due target come stress test per null fisici interni; non-possibile = sommare graph-only residue al boundary o proporre ritorno fisico dal solo grafo.",
+          "not_possible": ""
+        },
+        "fit_ready_contract": {
+          "claim": "denominator_state gate transfer beyond V_c",
+          "observable": "spacing_r label row with shuffle/null availability",
+          "operator": "row-aligned domain/window prescan",
+          "null": "boundary_shuffle_audit shuffle r-statistic when present",
+          "non_possible": "claiming transfer where null/surrogate is absent",
+          "extra_null_audits": [
+            "tools/data/boundary_blank_null_audit_20260509_1430.json",
+            "tools/data/boundary_blank_null_audit_residual_20260509_1500.json"
+          ]
+        },
+        "validation": {
+          "bicono_complete": true,
+          "falsifier_coherent": true,
+          "veritas_rho": 0.985,
+          "veritas_band": "COLLASSO",
+          "fit_ready_contract_present": true
+        },
+        "annotation": "Vuoto con arco candidato: mostra il come, non chiude ancora il ponte",
+        "annotation_en": "Void with candidate arc: shows the how, does not close the bridge yet"
+      }
+    ],
+    "void_questions_total": 6
+  },
+  "bicono": {
+    "radici": "stabilita graph-only piena / caduta sotto componente nominata.",
+    "singolare": "il predicate del reader prima della scissione in feature, centroidi e kNN.",
+    "invariante": "denominatore 13 righe, 8/5 labels, 27 letture, tail `hits >= full_hits`.",
+    "campo": {
+      "raw": "possibile = progettare null fisici diversi per logistica e percolation; non-possibile = promuovere un residuo graph-only comune o sommarlo al boundary a due lettori.",
+      "possibile": "",
+      "non_possibile": ""
+    },
+    "fields_present": [
+      "radici",
+      "singolare",
+      "invariante",
+      "campo"
+    ],
+    "complete": true,
+    "_extracted_at": "2026-05-16T12:39:00.554220+00:00",
+    "_source_report": "agent_20260516_1230.md",
+    "_cycle_ts": "20260516_1230",
+    "_source": "tools/data/biconi/bicono_20260516_1230.json"
+  },
+  "candidates": [
+    {
+      "target_pair": "QxG",
+      "current_state": "void",
+      "completion_state": "fit_ready_contract_not_integrated",
+      "why_this_pair": {
+        "mentioned_in_report": false,
+        "connected_in_graph": false,
+        "opened_by_consecutio": true,
+        "report_current_theories": [
+          "Q"
+        ],
+        "missing_report_edges": [
+          "G"
+        ]
+      },
+      "edge_contract": {
+        "question": "Come coesistono continuo e discreto?",
+        "question_en": "How do continuous and discrete coexist?",
+        "shape_hypothesis": "arco di esistenza condizionata: valore e evento si separano prima del fit",
+        "dipole": "stabilita graph-only piena / caduta sotto componente nominata.",
+        "point_zero": "il predicate del reader prima della scissione in feature, centroidi e kNN.",
+        "invariant": "denominatore 13 righe, 8/5 labels, 27 letture, tail `hits >= full_hits`.",
+        "possible": "possibile = progettare null fisici diversi per logistica e percolation; non-possibile = promuovere un residuo graph-only comune o sommarlo al boundary a due lettori.",
+        "not_possible": ""
+      },
+      "observable_contract": "claim=un residuo graph-only e mechanism-specific solo se cade sotto una ablation nominata e non viene ricostruito da null comparabili; observable=hit count del target su 27 letture graph-reader sotto ablation deterministiche e null N-matched; operator=scissione del predicate originale in centroid gate, kNN cross-label gate, topology degree-preserving e feature row-local; generator=13 righe BOUNDARY con feature boundary_graph_curvature_gate; denominator=13 righe, 27 letture, 128 trial per ogni null stocastico; p_value_definition=right-tail raw_p=k/N, k = trial null con target_hits >= full observed hits; non_possible=promuovere graph-only residue se nessuna componente specifica lo fa cadere o se i null N-matched ricostruiscono spesso il full count; not_tested=nuove dinamiche fisiche, nuovi domini, scaling asintotico, promozione a due lettori.",
+      "validation": {
+        "bicono_complete": true,
+        "falsifier_coherent": true,
+        "falsifier_flags": [],
+        "veritas_rho": 0.985,
+        "veritas_band": "COLLASSO",
+        "loop_guard": {
+          "valutatore_decisions": {
+            "danger_score": 0.025,
+            "band": "OK",
+            "max_run_length": 4,
+            "violations": 0,
+            "reasons": [
+              "low entropy: 1.00 bits (threshold 1.2)"
+            ],
+            "n_events": 30,
+            "alphabet_size": 2
+          },
+          "piano_trajectory": {
+            "danger_score": 0.0,
+            "band": "OK",
+            "max_run_length": 4,
+            "violations": 0,
+            "reasons": [
+              "no loop pattern detected"
+            ],
+            "n_events": 30,
+            "alphabet_size": 17
+          }
+        },
+        "fit_ready_contract_present": true
+      },
+      "evidence": {
+        "report": "agent_20260516_1230.md",
+        "bicono_source": "tools/data/biconi/bicono_20260516_1230.json",
+        "source_files": [
+          "tools/data/agent_field_live.md",
+          "tools/data/boundary_denominator_prescan_full_20260509_1500.json",
+          "tools/data/boundary_graph_mechanism_ablation_20260516_1230.json",
+          "tools/data/reports/agent_20260516_1230.md",
+          "tools/exp_boundary_graph_mechanism_ablation.py"
+        ],
+        "fit_ready_artifacts": [
+          {
+            "file": "tools/data/boundary_denominator_prescan_full_20260509_1500.json",
+            "boundary_denominator_contract": {
+              "claim": "denominator_state gate transfer beyond V_c",
+              "observable": "spacing_r label row with shuffle/null availability",
+              "operator": "row-aligned domain/window prescan",
+              "null": "boundary_shuffle_audit shuffle r-statistic when present",
+              "non_possible": "claiming transfer where null/surrogate is absent",
+              "extra_null_audits": [
+                "tools/data/boundary_blank_null_audit_20260509_1430.json",
+                "tools/data/boundary_blank_null_audit_residual_20260509_1500.json"
+              ]
+            },
+            "summary": {
+              "n_rows": 13,
+              "by_transfer": {
+                "transfers": 13
+              },
+              "by_denominator_state": {
+                "contaminated": 5,
+                "complete": 8
+              },
+              "by_source_domain_type": {
+                "GUE": 8,
+                "Poisson": 5
+              },
+              "transfer_scope": [
+                "ising_2d:cycle_1",
+                "pendolo_doppio:cycle_2",
+                "numeri_primi:cycle_3",
+                "zeta_zeros:cycle_4",
+                "logistica_biforcazione:cycle_5",
+                "string_vibration:cycle_6",
+                "random_matrix:cycle_7",
+                "cellular_automata:cycle_8",
+                "percolation:cycle_9",
+                "coupled_oscillators:cycle_10",
+                "reaction_diffusion:cycle_11",
+                "brownian_motion:cycle_12",
+                "logistica_biforcazione_var_3.5699:cycle_13"
+              ],
+              "blank_scope": [],
+              "falls_scope": []
+            }
+          }
+        ],
+        "void_consecutio_questions": [
+          {
+            "da": "GxE",
+            "a": "QxG",
+            "perno": "G",
+            "domanda": "Cosa dice 'buco nero carico (Reissner-Nordstrom)' su '[VUOTO]'?",
+            "ponte_da": "buco nero carico (Reissner-Nordstrom)",
+            "ponte_a": "[VUOTO]",
+            "tocca_vuoto": true
+          },
+          {
+            "da": "GxR",
+            "a": "QxG",
+            "perno": "G",
+            "domanda": "Cosa dice 'orizzonte degli eventi' su '[VUOTO]'?",
+            "ponte_da": "orizzonte degli eventi",
+            "ponte_a": "[VUOTO]",
+            "tocca_vuoto": true
+          },
+          {
+            "da": "QxE",
+            "a": "QxG",
+            "perno": "Q",
+            "domanda": "Cosa dice 'atomo di idrogeno' su '[VUOTO]'?",
+            "ponte_da": "atomo di idrogeno",
+            "ponte_a": "[VUOTO]",
+            "tocca_vuoto": true
+          },
+          {
+            "da": "QxR",
+            "a": "QxG",
+            "perno": "Q",
+            "domanda": "Cosa dice 'equazione di Dirac' su '[VUOTO]'?",
+            "ponte_da": "equazione di Dirac",
+            "ponte_a": "[VUOTO]",
+            "tocca_vuoto": true
+          },
+          {
+            "da": "TxG",
+            "a": "QxG",
+            "perno": "G",
+            "domanda": "Cosa dice 'temperatura di Hawking' su '[VUOTO]'?",
+            "ponte_da": "temperatura di Hawking",
+            "ponte_a": "[VUOTO]",
+            "tocca_vuoto": true
+          },
+          {
+            "da": "TxQ",
+            "a": "QxG",
+            "perno": "Q",
+            "domanda": "Cosa dice 'matrice densita' su '[VUOTO]'?",
+            "ponte_da": "matrice densita",
+            "ponte_a": "[VUOTO]",
+            "tocca_vuoto": true
+          }
+        ]
+      },
+      "missing_pieces_before_live_integration": [
+        "report node is not connected to every theory in the target void pair"
+      ],
+      "next_move": "Usa l'arco candidato emerso nel prossimo cycle: falsifica o raffina la condizione che trasforma l'esistenza fit-ready in ponte fisico stabile, tenendo QxG aperto.",
+      "proposed_graph_delta": [
+        {
+          "op": "add_report_edge",
+          "source": "report_20260516_1230",
+          "target": "G",
+          "tipo": "report_contract",
+          "reason": "latest report mentions the void pair but live graph does not connect the report to this theory"
+        },
+        {
+          "op": "annotate_void_edge",
+          "source": "Q",
+          "target": "G",
+          "fields": {
+            "completion_state": "fit_ready_contract_not_integrated",
+            "candidate_contract_ref": "graph_completion_20260516_1230.json",
+            "shape_hypothesis": "conditional_existence_arc"
+          }
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "candidate_count": 1,
+    "ready_count": 1,
+    "has_observable_contract": true,
+    "bicono_complete": true,
+    "has_fit_ready_contract": true
+  }
+}

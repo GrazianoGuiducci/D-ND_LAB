@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import json
 import logging
+import shutil
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -123,6 +124,171 @@ def autopsy(domain: str) -> None:
     click.echo("autopsy — placeholder, will dispatch only this movement.")
 
 
+@main.command(name="restore-snapshot")
+@click.option("--domain", default="physics", show_default=True,
+              help="Domain to restore into LAB_DATA_DIR.")
+@click.option("--snapshot", default="20260516", show_default=True,
+              help="Snapshot suffix under domains/<domain>/bootstrap_<snapshot>.")
+@click.option("--force/--no-force", default=True, show_default=True,
+              help="Overwrite runtime files for the target domain.")
+def restore_snapshot(domain: str, snapshot: str, force: bool) -> None:
+    """Restore a tracked domain bootstrap into the runtime data directory.
+
+    This is used by fresh Docker installs: the repository contains the
+    bootstrap under domains/<domain>/bootstrap_<snapshot>, while runtime state
+    lives in LAB_DATA_DIR/<domain> (usually /data/<domain> in Docker).
+    """
+    try:
+        cfg.load_domain_config(domain)
+    except cfg.ConfigError as e:
+        click.echo(f"Config error: {e}", err=True)
+        sys.exit(2)
+
+    from core import paths
+
+    bootstrap = paths.domain_dir(domain) / f"bootstrap_{snapshot}"
+    target = paths.domain_data_dir(domain)
+    if not bootstrap.exists():
+        click.echo(f"Snapshot not found: {bootstrap}", err=True)
+        sys.exit(2)
+
+    target.mkdir(parents=True, exist_ok=True)
+    (target / "reports").mkdir(parents=True, exist_ok=True)
+
+    def copy_file(src: Path, dst: Path, *, required: bool = True) -> None:
+        if not src.exists():
+            if required:
+                raise click.ClickException(f"Missing snapshot file: {src}")
+            return
+        if dst.exists() and not force:
+            return
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(src, dst)
+
+    def copy_tree(src: Path, dst: Path) -> None:
+        if not src.exists():
+            raise click.ClickException(f"Missing snapshot directory: {src}")
+        if dst.exists() and force:
+            shutil.rmtree(dst)
+        if dst.exists() and not force:
+            return
+        shutil.copytree(src, dst)
+
+    copy_tree(bootstrap, target / f"bootstrap_{snapshot}")
+
+    reports = bootstrap / "reports"
+    for report in sorted(reports.glob("agent_*.md")):
+        copy_file(report, target / "reports" / report.name)
+
+    copy_file(bootstrap / "state" / "seed.json", target / "seed.json")
+    copy_file(bootstrap / "state" / "lab_data.json", target / "lab_data.json")
+    copy_file(
+        bootstrap / "ui" / "lab_cycle_monitor_latest.json",
+        target / "lab_cycle_monitor_latest.json",
+    )
+
+    lab_graph = bootstrap / "state" / "lab_graph.json"
+    if lab_graph.exists():
+        copy_file(lab_graph, target / "lab_graph.json", required=False)
+    elif (target / "lab_graph.json").exists() and force:
+        (target / "lab_graph.json").unlink()
+
+    click.echo(f"Snapshot restored: domain={domain} snapshot={snapshot} target={target}")
+
+
+@main.command(name="plan-domain")
+@click.option("--slug", default=None, help="Short domain slug, e.g. finance-risk.")
+@click.option("--title", default=None, help="Human title for the lab.")
+@click.option("--intent", default=None, help="Movement/intention the lab should serve.")
+@click.option("--kind", "domain_kind", default=None,
+              help="Domain type, e.g. research, finance, monitoring, prediction.")
+@click.option("--output-dir", default=None,
+              help="Where to write the request. Default: LAB_DATA_DIR/meta-lab/domain_requests.")
+def plan_domain(
+    slug: str | None,
+    title: str | None,
+    intent: str | None,
+    domain_kind: str | None,
+    output_dir: str | None,
+) -> None:
+    """Collect a new-domain request for the meta-lab.
+
+    This does not generate a domain yet. It creates a structured request that a
+    meta-lab cycle or an operator can turn into a full domain template.
+    """
+    if slug is None:
+        slug = click.prompt("Domain slug", type=str)
+    slug = slug.strip().lower()
+    if not slug or not slug.replace("-", "").replace("_", "").isalnum():
+        raise click.ClickException("slug must use only letters, numbers, '-' or '_'")
+    if slug.startswith("_"):
+        raise click.ClickException("slug cannot start with '_'")
+    if (Path(__file__).resolve().parent.parent / "domains" / slug).exists():
+        raise click.ClickException(f"domain already exists: {slug}")
+
+    if title is None:
+        title = click.prompt("Lab title", default=f"D-ND {slug} Lab", type=str)
+    if domain_kind is None:
+        domain_kind = click.prompt(
+            "Domain type",
+            default="research",
+            type=click.Choice(
+                ["research", "finance", "monitoring", "prediction", "operations", "other"],
+                case_sensitive=False,
+            ),
+        )
+    if intent is None:
+        intent = click.prompt(
+            "Movement / intent",
+            default="Discover what changes the state of the domain without prescribing the result.",
+            type=str,
+        )
+
+    from core import paths
+
+    base = Path(output_dir).resolve() if output_dir else paths.domain_data_dir("meta-lab") / "domain_requests"
+    base.mkdir(parents=True, exist_ok=True)
+    created_at = datetime.now(timezone.utc).isoformat()
+    request = {
+        "schema": "dndlab.domain_request.v1",
+        "created_at": created_at,
+        "slug": slug,
+        "title": title.strip(),
+        "kind": domain_kind.strip().lower(),
+        "intent": intent.strip(),
+        "status": "REQUEST_CAPTURED",
+        "next_step": "Run the meta-lab/template generator to produce config, context, seed, assertions and tools.",
+        "operator_notes": [
+            "Intent lives in movement, not in a prescribed result.",
+            "Generated domain must pass the meta-template validator before install.",
+            "If no leverage is found, archive the request instead of forcing a Lab.",
+        ],
+    }
+    json_path = base / f"{slug}_request.json"
+    md_path = base / f"{slug}_request.md"
+    json_path.write_text(json.dumps(request, indent=2, ensure_ascii=False) + "\n")
+    md_path.write_text(
+        "\n".join([
+            f"# Domain Request — {title.strip()}",
+            "",
+            f"- slug: `{slug}`",
+            f"- kind: `{domain_kind.strip().lower()}`",
+            f"- created_at: `{created_at}`",
+            "",
+            "## Movement / Intent",
+            "",
+            intent.strip(),
+            "",
+            "## Next Step",
+            "",
+            "Run the meta-lab/template generator and validate the generated domain before install.",
+            "",
+        ]),
+        encoding="utf-8",
+    )
+    click.echo(f"Domain request written:\n  {json_path}\n  {md_path}")
+
+
 @main.command(name="dry-run")
 @click.option("--domain", required=True)
 def dry_run(domain: str) -> None:
@@ -136,7 +302,21 @@ def dry_run(domain: str) -> None:
         sys.exit(2)
 
     movements = config.setdefault("movements", {})
-    movements["agent"] = {"enabled": False, "params": {"comment": "disabled by dry-run"}}
+    disabled = [
+        "agent",
+        "bias_corrector",
+        "refiner",
+        "trajectory_evaluator",
+        "promotion_proposer",
+        "ssp_pipeline",
+        "narrative_writer",
+        "notify",
+    ]
+    for movement in disabled:
+        movements[movement] = {
+            "enabled": False,
+            "params": {"comment": "disabled by dry-run; no LLM/API/side-effect calls"},
+        }
 
     # Monkey-patch loader for this run only
     original = cfg.load_domain_config

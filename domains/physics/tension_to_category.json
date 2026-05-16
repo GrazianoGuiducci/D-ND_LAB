@@ -1,0 +1,76 @@
+{
+  "ACF_1K_LAW": [
+    "T"
+  ],
+  "ACF_AMPLITUDE_SCALING": [
+    "T"
+  ],
+  "BOUNDARY": [
+    "G"
+  ],
+  "BRODY_CROSSOVER": [
+    "T",
+    "Q"
+  ],
+  "DIPOLAR_ILLUSORY_BOUNDARY": [
+    "Q",
+    "G"
+  ],
+  "DUALITA_DIPOLARE_VS_ILLUSORIA": [
+    "Q",
+    "T"
+  ],
+  "G_POTENZIALE_NULLA": [
+    "G"
+  ],
+  "GAP_ANTICORR": [
+    "Q"
+  ],
+  "METRIC_TENSOR": [
+    "G"
+  ],
+  "M_tensore_metrico_primi_L0": [
+    "G",
+    "Q"
+  ],
+  "M_firma_dello_zero_L0": [
+    "T",
+    "Q"
+  ],
+  "POISSON_CONVERGENCE": [
+    "T",
+    "Q"
+  ],
+  "PSD_BLUE_NOISE": [
+    "E",
+    "T"
+  ],
+  "SPECTRAL_NICHE": [
+    "E"
+  ],
+  "TWO_CHANNEL_DECOMPOSITION": [
+    "Q",
+    "T"
+  ],
+  "TRASCENDENZA_LIMITE": [
+    "R"
+  ],
+  "TENS_SCALE_FALSIFICA_F6": [
+    "T"
+  ],
+  "COMP_DOMAIN_PHOTONIC_METRIC_TENSOR": [
+    "E",
+    "G"
+  ],
+  "COMP_DOMAIN_PHOTONIC_FALSIFICA_F6": [
+    "E"
+  ],
+  "COMP_GEN_LYAPUNOV_METRIC_TENSOR": [
+    "T",
+    "G"
+  ],
+  "COHERENCE_LENGTH": [
+    "Q",
+    "T"
+  ]
+}

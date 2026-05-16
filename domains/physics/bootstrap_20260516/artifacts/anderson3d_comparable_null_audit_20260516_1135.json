@@ -1,0 +1,136 @@
+{
+  "experiment": "anderson3d_comparable_null_audit",
+  "observable_contract": {
+    "claim": "Nulls can be compared only when they share one observable, one row perimeter and one N",
+    "denominator": "512 trials for each null on the same 11 rows per size",
+    "generator": "same source rows; two null operators differ only in preserved structure",
+    "non_possible": "calling one null more restrictive if the perimeters or N differ",
+    "not_tested": "raw multi-seed reader, new Hamiltonian samples, L>=7, full 8 GUE / 5 Poisson seed perimeter",
+    "observable": "cross-size intersection count of stable_graph_bridge+classical_intermediate rows",
+    "operator": "compact Anderson 3D rows from 11:17, classified by the same kNN/classical reader",
+    "p_value_definition": "right tail; raw_p=k/N and add_one_p=(k+1)/(N+1), where k is null trials with cross-size count >= observed"
+  },
+  "observables_registry": "1.0.0-2026-05-06",
+  "observables_used": [
+    "SR",
+    "SR2",
+    "L1",
+    "L2",
+    "triple_var",
+    "SR_local_rigidity",
+    "brody_q",
+    "wigner_poisson_like_weight",
+    "mean_ipr",
+    "participation_entropy",
+    "two_reader_all_sizes",
+    "raw_p",
+    "add_one_p",
+    "wilson_95"
+  ],
+  "parameters": {
+    "endpoint_seed": 202605161135,
+    "full_seed": 202605161136,
+    "graph_margin_max": 0.45,
+    "k_values": [
+      2,
+      3,
+      4
+    ],
+    "null_trials": 512,
+    "sizes": [
+      5,
+      6
+    ],
+    "source_perimeter": "compact median rows from 20260516_1117"
+  },
+  "question": "On the same compact Anderson perimeter, does endpoint-preserving candidate-only scrambling differ from full feature scrambling for the same cross-size two-reader observable?",
+  "source": "tools/data/anderson3d_mobility_edge_two_reader_audit_20260516_1117.json",
+  "summary": {
+    "difference": {
+      "comparison": "full_feature_scramble_raw_p - endpoint_preserving_raw_p",
+      "difference": 0.4609375,
+      "interpretation_unit": "same compact row perimeter, same cross-size two-reader observable, same N",
+      "wald_95": {
+        "high": 0.509505354,
+        "low": 0.412369646
+      },
+      "z_approx": 18.601211
+    },
+    "endpoint_preserving": {
+      "add_one_p": 0.072124756,
+      "cross_size_named_hits": {
+        "Anderson3D_W_12.00": 41,
+        "Anderson3D_W_14.00": 37,
+        "Anderson3D_W_16.00": 33,
+        "Anderson3D_W_16.50": 37,
+        "Anderson3D_W_17.00": 39,
+        "Anderson3D_W_20.00": 54,
+        "Anderson3D_W_8.00": 32
+      },
+      "histogram": {
+        "0": 275,
+        "1": 201,
+        "2": 36
+      },
+      "k_ge_observed": 36,
+      "max_null": 2,
+      "mean_null": 0.533203125,
+      "median_null": 0.0,
+      "null_name": "endpoint_preserving_candidate_only",
+      "observed": 2,
+      "raw_p": 0.0703125,
+      "trials": 512,
+      "wilson_95": {
+        "high": 0.09580672,
+        "low": 0.051218024
+      }
+    },
+    "full_feature_scramble": {
+      "add_one_p": 0.532163743,
+      "cross_size_named_hits": {
+        "Anderson3D_W_12.00": 123,
+        "Anderson3D_W_14.00": 122,
+        "Anderson3D_W_16.00": 117,
+        "Anderson3D_W_16.50": 112,
+        "Anderson3D_W_17.00": 117,
+        "Anderson3D_W_20.00": 116,
+        "Anderson3D_W_8.00": 124
+      },
+      "histogram": {
+        "0": 64,
+        "1": 176,
+        "2": 179,
+        "3": 75,
+        "4": 18
+      },
+      "k_ge_observed": 272,
+      "max_null": 4,
+      "mean_null": 1.623046875,
+      "median_null": 2.0,
+      "null_name": "full_feature_scramble",
+      "observed": 2,
+      "raw_p": 0.53125,
+      "trials": 512,
+      "wilson_95": {
+        "high": 0.574081486,
+        "low": 0.487953078
+      }
+    },
+    "observed_all_size_count": 2,
+    "observed_all_size_rows": [
+      "Anderson3D_W_16.00",
+      "Anderson3D_W_20.00"
+    ],
+    "observed_size_audit": {
+      "5": [
+        "Anderson3D_W_16.00",
+        "Anderson3D_W_20.00"
+      ],
+      "6": [
+        "Anderson3D_W_16.00",
+        "Anderson3D_W_16.50",
+        "Anderson3D_W_20.00"
+      ]
+    }
+  }
+}
