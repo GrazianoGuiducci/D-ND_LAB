@@ -321,18 +321,54 @@ def _direction_from_tensions(tensioni: list[dict[str, Any]]) -> str:
     if not tensioni:
         return "no active tensions — direction unset"
 
+    direction_pool = [t for t in tensioni if not _is_trajectory_marker(t)]
+    if not direction_pool:
+        direction_pool = tensioni
+
     priority = ["contraddizione", "confine_inesplorato", "simmetria_sospetta"]
     by_type: dict[str, list[dict[str, Any]]] = {}
-    for t in tensioni:
+    for t in direction_pool:
         by_type.setdefault(t.get("tipo", "altro"), []).append(t)
 
     for ptype in priority:
         if ptype in by_type:
             top = by_type[ptype][0]
-            return (top.get("claim") or "")[:200]
+            return _tension_direction_text(top)
+
+    open_items = [
+        t for t in direction_pool
+        if str(t.get("status", "")).lower() not in {"resolved", "resolved_constraint", "closed"}
+    ]
+    dated_open = [t for t in open_items if t.get("origin_cycle")]
+    if dated_open:
+        top = max(dated_open, key=lambda t: str(t.get("origin_cycle") or ""))
+        return _tension_direction_text(top)
+
+    if open_items:
+        return _tension_direction_text(open_items[0])
 
     # Fallback: highest-intensity tension
-    return (tensioni[0].get("claim") or "")[:200]
+    return _tension_direction_text(direction_pool[0])
+
+
+def _is_trajectory_marker(tension: dict[str, Any]) -> bool:
+    """Return True for bookkeeping tensions created by trajectory_apply.
+
+    These markers preserve the movement history, but they must not dominate the
+    current seed direction shown in the dashboard.
+    """
+    return (
+        tension.get("porta") == "trajectory_apply"
+        or str(tension.get("id", "")).startswith("TRAJECTORY_APPLY_")
+    )
+
+
+def _tension_direction_text(tension: dict[str, Any]) -> str:
+    for key in ("claim", "label", "description"):
+        value = tension.get(key)
+        if value:
+            return str(value)[:200]
+    return "active tension without text"
 
 
 # ─── Movement registration ─────────────────────────────────────────
