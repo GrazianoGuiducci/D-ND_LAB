@@ -1102,6 +1102,37 @@
               </section>
             </div>
 
+            <template x-if="activeDomain === 'finance'">
+              <section class="mt-4 border border-cyan-900/60 rounded-md p-4 bg-cyan-950/10">
+                <div class="flex items-start justify-between gap-3 flex-wrap mb-3">
+                  <div>
+                    <h3 class="text-sm font-medium text-cyan-200">Lente finance</h3>
+                    <p class="text-xs text-slate-400 mt-1">Regime, baseline/null, data-card e confini decisionali prima di qualunque lettura operativa.</p>
+                  </div>
+                  <span class="text-[10px] font-mono px-2 py-1 rounded border border-cyan-900/70 text-cyan-200"
+                        x-text="financeWindowCounts().label"></span>
+                </div>
+                <div class="grid md:grid-cols-4 gap-3">
+                  <div class="border border-slate-800 rounded p-3 bg-slate-950/50">
+                    <div class="text-[10px] uppercase tracking-wider text-slate-400">Regime gate</div>
+                    <div class="mt-1 text-sm text-slate-200 line-clamp-3" x-text="financeRegimeGate()"></div>
+                  </div>
+                  <div class="border border-slate-800 rounded p-3 bg-slate-950/50">
+                    <div class="text-[10px] uppercase tracking-wider text-slate-400">Baseline / null</div>
+                    <div class="mt-1 text-sm text-slate-200 line-clamp-3" x-text="financeBaselineSummary()"></div>
+                  </div>
+                  <div class="border border-slate-800 rounded p-3 bg-slate-950/50">
+                    <div class="text-[10px] uppercase tracking-wider text-slate-400">Data-card</div>
+                    <div class="mt-1 text-sm text-slate-200 line-clamp-3" x-text="financeDataCardSummary()"></div>
+                  </div>
+                  <div class="border border-slate-800 rounded p-3 bg-slate-950/50">
+                    <div class="text-[10px] uppercase tracking-wider text-slate-400">Non ammissibile</div>
+                    <div class="mt-1 text-sm text-amber-200 line-clamp-3" x-text="financeDecisionBound()"></div>
+                  </div>
+                </div>
+              </section>
+            </template>
+
             <template x-if="latestDiagnostic.available">
               <section class="mt-4 border border-cyan-900/60 rounded-md p-4 bg-cyan-950/10">
                 <div class="flex items-start justify-between gap-3 flex-wrap mb-3">
@@ -3770,6 +3801,62 @@
         if (this.applicazioniSsp?.candidates?.length > 0) return 'valutare candidate';
         if (this.reports.length > 0) return 'continuare dal prossimo vincolo';
         return 'primo ciclo da eseguire';
+      },
+
+      financeDiagnosticWindows() {
+        return Array.isArray(this.latestDiagnostic?.payload?.windows)
+          ? this.latestDiagnostic.payload.windows
+          : [];
+      },
+
+      financeWindowCounts() {
+        const windows = this.financeDiagnosticWindows();
+        const dnd = windows.filter(w => String(w?.verdict || '').toUpperCase() === 'DND_DELTA').length;
+        const no = windows.filter(w => String(w?.verdict || '').toUpperCase() === 'NO_DELTA').length;
+        if (!windows.length) return { dnd, no, total: 0, label: 'diagnostica non caricata' };
+        return { dnd, no, total: windows.length, label: `${dnd} DND_DELTA · ${no} NO_DELTA` };
+      },
+
+      financePrimaryWindow() {
+        const windows = this.financeDiagnosticWindows();
+        return windows.find(w => String(w?.verdict || '').toUpperCase() === 'DND_DELTA') || windows[0] || null;
+      },
+
+      financeRegimeGate() {
+        const latest = this.latestReport();
+        const verdict = String(latest?.verdict || '').trim();
+        if (/NO_DELTA/i.test(verdict)) return 'ultimo ciclo in NO_DELTA: il detector non ha potenza recuperabile per promozione';
+        if (/DND_DELTA/i.test(verdict)) return 'delta presente: richiede replica doppia prima di qualunque promozione';
+        const w = this.financePrimaryWindow();
+        if (!w) return 'nessuna finestra finance pronta; apri Agente o lancia un cycle';
+        return `${w.asset || w.symbol || 'asset'} ${w.label || 'window'}: ${w.verdict || 'verdict n/a'}`;
+      },
+
+      financeBaselineSummary() {
+        const w = this.financePrimaryWindow();
+        if (!w) return 'baseline richiesta: ordered-vs-shuffle, random walk e VaR/RV';
+        const z = Number(w.effect_z);
+        const shuffles = w.shuffles || this.latestDiagnostic?.payload?.shuffles || '?';
+        const zText = Number.isFinite(z) ? z.toFixed(2) : 'n/a';
+        return `effect_z ${zText} vs ${shuffles} shuffle; VaR/RV restano competitor espliciti`;
+      },
+
+      financeDataCardSummary() {
+        const w = this.financePrimaryWindow();
+        if (!w) return 'provider, source_url, retrieval_ts e n_obs obbligatori';
+        const range = w.actual_start && w.actual_end ? `${w.actual_start}..${w.actual_end}` : (w.era_hint || 'finestra n/a');
+        return `${w.provider || 'provider?'} ${w.asset || w.symbol || ''} · n=${w.n || '?'} · ${range}`;
+      },
+
+      financeDecisionBound() {
+        const latestVerdict = String(this.latestReport()?.verdict || '');
+        if (/NO_DELTA|underpowered|rejected/i.test(latestVerdict)) {
+          return 'non promuovere; ridisegnare target/oggetto o baseline prima del prossimo claim';
+        }
+        if (this.latestDiagnostic?.payload?.boundary?.trading_signal === false) {
+          return 'nessun segnale trading; solo metodo o vincolo strutturale';
+        }
+        return 'vietati buy/sell/forecast/profit senza prodotto maturo e revisione';
       },
 
       sspKindLabel(s) {
