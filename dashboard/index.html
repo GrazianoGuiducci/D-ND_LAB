@@ -48,6 +48,18 @@
       --neon-sky: 56 189 248;
     }
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; background: rgb(var(--site-void)); color: rgb(var(--site-text-body)); }
+    button:not(:disabled),
+    a[href],
+    summary,
+    [role="button"],
+    .cursor-pointer {
+      cursor: pointer;
+    }
+    button:disabled,
+    [aria-disabled="true"],
+    .cursor-not-allowed {
+      cursor: not-allowed;
+    }
 
     /* Override Tailwind slate classes — boost contrast aggressivo.
        Operatore: "i colori sembrano smorti come prima". Fix: muted text
