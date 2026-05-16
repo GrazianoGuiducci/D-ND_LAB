@@ -1042,7 +1042,7 @@
               <section class="border border-slate-800 rounded-md p-4 bg-slate-950/30">
                 <div class="flex items-center justify-between gap-3 mb-3">
                   <h3 class="text-sm font-medium text-slate-200">Lettura di campo</h3>
-                  <span class="text-[11px] font-mono text-slate-400" x-text="`${graphStats.n_nodes ?? 0} nodi · ${graphStats.n_edges ?? 0} archi`"></span>
+                  <span class="text-[11px] font-mono text-slate-400" x-text="`${graphDisplayStats().n_nodes} nodi · ${graphDisplayStats().n_edges} archi`"></span>
                 </div>
                 <div class="space-y-3 text-sm text-slate-300">
                   <p x-show="campoStats().prodotti > 0">
@@ -1052,7 +1052,7 @@
                     Il dominio ha applicazioni candidate ma nessun prodotto maturo: la risultante è ancora in verifica.
                   </p>
                   <p x-show="campoStats().prodotti === 0 && campoStats().applicazioni === 0 && campoStats().scoperte > 0">
-                    Il dominio ha scoperte o report utili, ma non ha ancora prodotto ricadute operative.
+                    Il dominio ha vincoli e report utili, ma non ha ancora prodotto ricadute operative.
                   </p>
                   <p x-show="campoStats().cicli === 0">
                     Il dominio è seme: il grafo mostra struttura concettuale finché un cycle non produce evidenza.
@@ -1060,6 +1060,22 @@
                   <p>
                     La sequenza percettiva consigliata è: <span class="text-cyan-300">Campo</span> per la risultante, <span class="text-cyan-300">Grafo</span> per le relazioni, <span class="text-purple-300">Bicono</span> per i poli, <span class="text-slate-200">Agente</span> per evidenza e falsificazione.
                   </p>
+                  <template x-if="latestReport()">
+                    <div class="mt-4 grid md:grid-cols-3 gap-3 text-xs">
+                      <div class="border border-slate-800 rounded p-3 bg-slate-950/50">
+                        <div class="uppercase tracking-wider text-slate-400 text-[10px]">Ultimo verdict</div>
+                        <div class="mt-1 text-slate-200 line-clamp-3" x-text="reportVerdictLabel(latestReport())"></div>
+                      </div>
+                      <div class="border border-slate-800 rounded p-3 bg-slate-950/50">
+                        <div class="uppercase tracking-wider text-slate-400 text-[10px]">Direzione corrente</div>
+                        <div class="mt-1 text-cyan-200 line-clamp-3" x-text="seed.direzione || 'direzione non impostata'"></div>
+                      </div>
+                      <div class="border border-slate-800 rounded p-3 bg-slate-950/50">
+                        <div class="uppercase tracking-wider text-slate-400 text-[10px]">Decisione</div>
+                        <div class="mt-1 text-amber-200 line-clamp-3" x-text="domainDecisionHint()"></div>
+                      </div>
+                    </div>
+                  </template>
                 </div>
               </section>
 
@@ -1079,7 +1095,7 @@
                         <span class="text-sm text-slate-200 truncate" x-text="r.title || r.filename"></span>
                         <span class="text-[10px] text-slate-400 font-mono flex-shrink-0" x-text="new Date(r.mtime).toISOString().slice(0,10)"></span>
                       </div>
-                      <div class="text-xs text-slate-400 mt-1 line-clamp-2" x-text="r.verdict || 'verdict non estratto'"></div>
+                      <div class="text-xs text-slate-400 mt-1 line-clamp-2" x-text="reportVerdictLabel(r)"></div>
                     </button>
                   </template>
                 </div>
@@ -1125,7 +1141,7 @@
             <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
               <h2 class="text-lg font-medium flex items-center gap-2">
                 <span data-i18n="dash.graph.kg">Knowledge graph</span>
-                <span class="text-xs text-slate-300 font-mono" x-show="graphStats.n_nodes !== undefined" x-text="`${graphStats.n_nodes ?? 0} ${t('dash.graph.nodes', 'nodes')} · ${graphStats.n_edges ?? 0} ${t('dash.graph.edges', 'edges')}`"></span>
+                <span class="text-xs text-slate-300 font-mono" x-show="graphDisplayStats().n_nodes !== undefined" x-text="`${graphDisplayStats().n_nodes} ${t('dash.graph.nodes', 'nodes')} · ${graphDisplayStats().n_edges} ${t('dash.graph.edges', 'edges')}`"></span>
               </h2>
               <div class="flex items-center gap-2">
                 <template x-if="selectedNode">
@@ -1143,13 +1159,17 @@
               <div id="graph-viz"></div>
               <!-- Banner seed concettuale: visibile quando lab è vuoto e
                    abbiamo popolato con il grafo del modello D-ND -->
-              <div x-show="(graphData?.graph?.nodes?.length || 0) === 0"
+              <div x-show="(graphData?.graph?.nodes?.length || 0) === 0 && reports.length === 0"
                    class="absolute top-3 left-3 right-3 sm:right-auto sm:max-w-md bg-purple-500/10 border border-purple-500/30 rounded-md px-3 py-2 text-xs text-purple-200 backdrop-blur-sm z-10 pointer-events-none">
                 <span class="font-semibold">Seed concettuale</span> · il lab non ha ancora prodotto output verificati. Il grafo mostra il modello D-ND con il dominio come keyword centrale. Esegui un cycle per popolarlo con dati, controlli e verdetti.
               </div>
+              <div x-show="(graphData?.graph?.nodes?.length || 0) === 0 && reports.length > 0"
+                   class="absolute top-3 left-3 right-3 sm:right-auto sm:max-w-lg bg-cyan-500/10 border border-cyan-500/30 rounded-md px-3 py-2 text-xs text-cyan-100 backdrop-blur-sm z-10 pointer-events-none">
+                <span class="font-semibold">Grafo ricostruito dai report</span> · il build_graph non ha ancora prodotto nodi reali; questa vista collega dominio, direzione, ultimi report, vincoli e falsifier per non lasciare il campo cieco.
+              </div>
               <!-- Floating controls visibili in fullscreen (refactor 03/05 sera) -->
               <div x-show="graphFullscreen" class="graph-fs-controls">
-                <span class="label" x-text="`${graphStats.n_nodes ?? 0}n · ${graphStats.n_edges ?? 0}e`"></span>
+                <span class="label" x-text="`${graphDisplayStats().n_nodes}n · ${graphDisplayStats().n_edges}e`"></span>
                 <button @click="resetGraphLayout()" title="Relayout (fcose, rispetta nodi pinnati)">↻ relayout</button>
                 <button @click="unpinAllGraphNodes(); resetGraphLayout()" title="Sblocca tutti i nodi pinnati + relayout">⌖ unpin</button>
                 <button @click="reloadGraph().then(() => renderGraph())" title="Refresh dati">⟳ refresh</button>
@@ -1167,8 +1187,8 @@
           <div class="bg-slate-900 border border-slate-800 rounded-lg p-5">
             <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
               <div>
-                <h2 class="text-lg font-medium" data-i18n="dash.bicono.h2">Bicono — galleria delle scoperte</h2>
-                <p class="text-xs text-slate-300" data-i18n="dash.bicono.lead">Ogni report compila i propri 4 poli (radici · singolare · invariante · campo). Click → apri in Agente.</p>
+                <h2 class="text-lg font-medium" data-i18n="dash.bicono.h2">Bicono — galleria dei passaggi</h2>
+                <p class="text-xs text-slate-300" data-i18n="dash.bicono.lead">Ogni report compila i propri 4 poli: due radici, singolare, invariante e campo di possibilità. Click → apri in Agente.</p>
               </div>
               <label class="flex items-center gap-2 text-xs text-slate-400">
                 <input type="checkbox" x-model="biconoOnlyComplete">
@@ -1193,13 +1213,20 @@
                     <svg viewBox="0 0 200 110" class="bicono-svg" preserveAspectRatio="xMidYMid meet" style="max-height:90px">
                       <line class="axis" x1="14" y1="55" x2="186" y2="55"></line>
                       <circle :class="biconoCardPoles(b).leftEmpty ? 'root-circle pole-empty' : 'root-circle'" cx="40" cy="55" r="22"></circle>
-                      <text class="label-text" x="40" y="58" text-anchor="middle" style="font-size:8px" :style="biconoCardPoles(b).leftEmpty ? 'opacity:.4' : ''" x-text="biconoCardPoles(b).left || '—'"></text>
+                      <text class="label-text" x="40" y="58" text-anchor="middle" style="font-size:9px" :style="biconoCardPoles(b).leftEmpty ? 'opacity:.4' : ''" x-text="biconoCardPoles(b).leftEmpty ? '—' : 'R1'"></text>
                       <circle class="singular-circle" cx="100" cy="55" r="14"></circle>
-                      <text class="label-text" x="100" y="58" text-anchor="middle" style="font-size:8px" :style="!b.bicono.singular ? 'opacity:.4' : ''" x-text="biconoCardSingular(b)"></text>
+                      <text class="label-text" x="100" y="58" text-anchor="middle" style="font-size:9px" :style="!b.bicono.singular ? 'opacity:.4' : ''" x-text="b.bicono.singular ? 'S' : '—'"></text>
                       <circle :class="biconoCardPoles(b).rightEmpty ? 'root-circle pole-empty' : 'root-circle'" cx="160" cy="55" r="22"></circle>
-                      <text class="label-text" x="160" y="58" text-anchor="middle" style="font-size:8px" :style="biconoCardPoles(b).rightEmpty ? 'opacity:.4' : ''" x-text="biconoCardPoles(b).right || '—'"></text>
+                      <text class="label-text" x="160" y="58" text-anchor="middle" style="font-size:9px" :style="biconoCardPoles(b).rightEmpty ? 'opacity:.4' : ''" x-text="biconoCardPoles(b).rightEmpty ? '—' : 'R2'"></text>
                       <path class="invariant-arc" d="M 18,55 Q 100,8 182,55" :style="!b.bicono.invariant ? 'opacity:.2' : ''"></path>
                     </svg>
+                  </template>
+                  <template x-if="b.bicono">
+                    <div class="mt-1 text-[10px] text-slate-400 grid grid-cols-3 gap-1">
+                      <span class="truncate" :title="biconoCardPoles(b).left || ''" x-text="biconoCardPoles(b).left || 'radice 1'"></span>
+                      <span class="truncate text-center" :title="b.bicono.singular || ''" x-text="biconoCardSingular(b)"></span>
+                      <span class="truncate text-right" :title="biconoCardPoles(b).right || ''" x-text="biconoCardPoles(b).right || 'radice 2'"></span>
+                    </div>
                   </template>
 
                   <template x-if="!b.bicono">
@@ -1511,19 +1538,19 @@
         <div x-show="activeTab === 'prodotti'" x-transition.opacity.duration.150ms class="prodotti-pane">
           <div class="bg-slate-900 border border-slate-800 rounded-lg p-6 space-y-4">
             <div>
-              <h2 class="text-lg font-medium" data-i18n="dash.products.h2">Prodotti — pipeline SSP</h2>
+              <h2 class="text-lg font-medium" data-i18n="dash.products.h2">Risultanti — vincoli, candidate, prodotti</h2>
               <p class="text-xs text-slate-300 mt-1" data-i18n="dash.products.lead">
-                Scoperte (Stage 1) → Applicazioni candidate (Stage 2) → Prodotti maturi (Stage 4 verified).
-                Ogni scoperta espande in card. Pre-discovery / transitional pubblicate con disclaimer.
+                Nei domini giovani molti output non sono ancora prodotti: sono vincoli metodologici, falsificazioni utili o candidate operative.
+                La pipeline li separa prima di promuovere qualcosa a prodotto maturo.
               </p>
             </div>
 
             <!-- Riepilogo SSP -->
             <div class="grid grid-cols-3 gap-3 mt-2 text-sm">
               <div class="bg-slate-950 border border-slate-800 rounded p-3">
-                <div class="text-slate-300 text-xs uppercase tracking-wider" data-i18n="dash.tab.scoperte">Scoperte</div>
+                <div class="text-slate-300 text-xs uppercase tracking-wider">Vincoli / report</div>
                 <div class="text-2xl font-mono text-cyan-400 mt-1" x-text="(scoperteSsp || []).length"></div>
-                <div class="text-xs text-slate-400 mt-1">lab-note + cycle-report drafts</div>
+                <div class="text-xs text-slate-400 mt-1">falsificazioni, metodi, passaggi</div>
               </div>
               <div class="bg-slate-950 border border-slate-800 rounded p-3">
                 <div class="text-slate-300 text-xs uppercase tracking-wider" data-i18n="dash.products.applicazioniCandidate">Applicazioni candidate</div>
@@ -1540,7 +1567,7 @@
             <!-- Lista scoperte (raggruppa applicazioni per cycle_ts) -->
             <template x-if="(scoperteSsp || []).length > 0">
               <div class="space-y-3 mt-4">
-                <h3 class="text-sm font-medium text-slate-300"><span data-i18n="dash.products.scoperteCount">Scoperte</span> (<span x-text="scoperteSsp.length"></span>)</h3>
+                <h3 class="text-sm font-medium text-slate-300">Vincoli e risultanti provvisorie (<span x-text="scoperteSsp.length"></span>)</h3>
                 <template x-for="s in scoperteSsp" :key="s.dir">
                   <div class="bg-slate-950 border border-slate-800 rounded p-4 space-y-2 cursor-pointer hover:border-cyan-700 transition"
                        :class="selectedScopertaSsp?.dir === s.dir && 'border-cyan-600'"
@@ -1549,6 +1576,8 @@
                       <div class="flex-1">
                         <div class="text-sm font-medium text-slate-200" x-text="s.title_proposal || s.dir"></div>
                         <div class="text-xs text-slate-300 mt-1">
+                          <span class="font-mono px-1.5 py-0.5 rounded bg-slate-800 text-cyan-300" x-text="sspKindLabel(s)"></span>
+                          ·
                           <span class="font-mono text-cyan-400" x-text="s.cycle_ts"></span> ·
                           <span data-i18n="dash.products.status">status:</span> <span class="font-mono"
                             :class="{
@@ -3090,7 +3119,11 @@
             },
           };
         });
-        if (nodes.length === 0) {
+        if (nodes.length === 0 && this.reports.length > 0) {
+          const evidence = this._buildReportEvidenceGraph();
+          nodes.push(...evidence.nodes);
+          edges.push(...evidence.edges);
+        } else if (nodes.length === 0) {
           // Seed concettuale D-ND: invece di mostrare grafo vuoto, popoliamo
           // con un'immagine concettuale che parte dal modello — assiomi,
           // dipoli, biconi — più il dominio attivo come keyword centrale
@@ -3524,6 +3557,65 @@
         };
       },
 
+      _buildReportEvidenceGraph() {
+        const latest = this.latestReport();
+        const domainLabel = (this.activeDomain || 'lab').replace(/[-_]/g, ' ');
+        const reportItems = (this.reports || []).slice(0, 6);
+        const nodesRaw = [
+          { id: '__ev_domain__', label: domainLabel, type: 'tensione', intensity: 1, _doc: 'Dominio attivo' },
+          { id: '__ev_direction__', label: 'direzione', type: 'tensione', intensity: 0.85, _doc: this.seed?.direzione || '' },
+          { id: '__ev_falsifier__', label: 'falsifier', type: 'ghost', _doc: `${this.falsifierSummary?.n_total_flags || 0} flag su ${this.falsifierSummary?.n_reports_checked || 0} report` },
+          { id: '__ev_products__', label: 'prodotti', type: 'scoperta', _doc: `${this.prodottiSsp?.length || 0} prodotti maturi` },
+        ];
+        for (const r of reportItems) {
+          const ts = (r.filename || '').match(/agent_(\d{8}_\d{4})/)?.[1] || r.filename;
+          nodesRaw.push({
+            id: `__ev_report_${ts}`,
+            label: r.title || r.filename,
+            type: 'report',
+            file: r.filename,
+            _doc: this.reportVerdictLabel(r),
+          });
+        }
+        const edgesRaw = [
+          { source: '__ev_domain__', target: '__ev_direction__', type: 'rel', label: 'muove' },
+          { source: '__ev_direction__', target: latest ? `__ev_report_${(latest.filename || '').match(/agent_(\d{8}_\d{4})/)?.[1] || latest.filename}` : '__ev_domain__', type: 'rel', label: 'testa' },
+          { source: '__ev_domain__', target: '__ev_falsifier__', type: 'rel', label: 'controlla' },
+          { source: '__ev_domain__', target: '__ev_products__', type: 'rel', label: 'produce' },
+        ];
+        reportItems.forEach((r, i) => {
+          const ts = (r.filename || '').match(/agent_(\d{8}_\d{4})/)?.[1] || r.filename;
+          edgesRaw.push({ source: '__ev_domain__', target: `__ev_report_${ts}`, type: 'covers', label: i === 0 ? 'latest' : 'report' });
+          if ((r.n_flags || 0) > 0 || r.falsifier_coherent === false) {
+            edgesRaw.push({ source: `__ev_report_${ts}`, target: '__ev_falsifier__', type: 'rel', label: `${r.n_flags || 0} flag` });
+          }
+        });
+        const wrap = (n) => ({
+          data: {
+            id: n.id,
+            label: this._truncate(n.label || n.id, 30),
+            type: n.type || 'unknown',
+            letter: '',
+            size: n.type === 'tensione' ? Math.round(14 + (n.intensity || 0.5) * 12)
+                : n.type === 'report' ? 16
+                : 14,
+            full: n,
+            seed: true,
+          },
+        });
+        const wrapEdge = (e, i) => ({
+          data: {
+            id: 'eev' + i,
+            source: e.source,
+            target: e.target,
+            type: e.type || 'rel',
+            label: e.label || '',
+            seed: true,
+          },
+        });
+        return { nodes: nodesRaw.map(wrap), edges: edgesRaw.map(wrapEdge) };
+      },
+
       resetGraphLayout() {
         if (!this.cy) return;
         // Drag-fix integration: pinned nodes (manualmente draggati dall'utente)
@@ -3606,6 +3698,50 @@
           prodotti: this.prodottiSsp?.length || 0,
           cicli: this.reports.length,
         };
+      },
+
+      graphDisplayStats() {
+        const realNodes = this.graphStats?.n_nodes ?? (this.graphData?.graph?.nodes?.length || 0);
+        const realEdges = this.graphStats?.n_edges ?? (this.graphData?.graph?.edges?.length || 0);
+        if (realNodes || realEdges) return { n_nodes: realNodes, n_edges: realEdges };
+        if (this.reports.length > 0) {
+          const nReports = Math.min(this.reports.length, 6);
+          return { n_nodes: 4 + nReports, n_edges: 4 + nReports };
+        }
+        return { n_nodes: 8, n_edges: 10 };
+      },
+
+      latestReport() {
+        return this.reports?.[0] || null;
+      },
+
+      reportVerdictLabel(r) {
+        if (!r) return 'nessun report';
+        const verdict = String(r.verdict || '').trim();
+        if (verdict) return verdict;
+        if (r.falsifier_coherent === false) return `${r.n_flags || 0} flag dal falsifier`;
+        if (r.falsifier_coherent === true) return 'falsifier coerente; verdict non parsato';
+        return 'verdict non disponibile';
+      },
+
+      domainDecisionHint() {
+        const direction = String(this.seed?.direzione || '').toLowerCase();
+        if (direction.includes('abandon') || direction.includes('redesign') || direction.includes('replace')) {
+          return 'ridisegnare l’oggetto, non promuovere';
+        }
+        if (this.prodottiSsp?.length > 0) return 'verificare prodotti maturi';
+        if (this.applicazioniSsp?.candidates?.length > 0) return 'valutare candidate';
+        if (this.reports.length > 0) return 'continuare dal prossimo vincolo';
+        return 'primo ciclo da eseguire';
+      },
+
+      sspKindLabel(s) {
+        const title = String(s?.title_proposal || '').toLowerCase();
+        const status = String(s?.status || '').toLowerCase();
+        if (status.includes('provisional') || title.includes('underpowered') || title.includes('fails') || title.includes('reject')) return 'vincolo';
+        if (status.includes('mature')) return 'maturo';
+        if (status.includes('pre') || status.includes('transitional')) return 'transizione';
+        return 'risultante';
       },
 
       // v3 — freschezza dei report. 'oggi' = <24h, 'fresche' = <7d.

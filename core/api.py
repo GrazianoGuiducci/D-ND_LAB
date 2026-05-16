@@ -605,7 +605,7 @@ async def list_reports(domain: str, request: Request, limit: int = 50) -> list[d
         except Exception:
             continue
         title_m = re.search(r"^#\s+(.+)$", text, re.MULTILINE)
-        verdict_m = re.search(r"##\s*Verdict[^\n]*\n([^\n]+)", text)
+        verdict = _extract_report_verdict(text)
         # v4.4 — annota con falsifier outcome se esiste, per badge nel list.
         # Cheap read: solo i campi che ci servono.
         n_flags = 0
@@ -623,7 +623,7 @@ async def list_reports(domain: str, request: Request, limit: int = 50) -> list[d
         out.append({
             "filename": f.name,
             "title": (title_m.group(1).strip() if title_m else f.name)[:200],
-            "verdict": (verdict_m.group(1).strip() if verdict_m else "")[:200],
+            "verdict": verdict,
             "size": f.stat().st_size,
             "mtime": datetime.fromtimestamp(f.stat().st_mtime, tz=timezone.utc).isoformat(),
             "n_flags": n_flags,
@@ -649,14 +649,14 @@ async def get_report(domain: str, filename: str, request: Request) -> dict[str, 
     # internally — no duplicated regex.
     from core import semantic_bridge as sb
     bicono = sb._extract_bicono(content)
-    verdict_m = re.search(r"##\s*Verdict[^\n]*\n([^\n]+)", content)
+    verdict = _extract_report_verdict(content)
     title_m = re.search(r"^#\s+(.+)$", content, re.MULTILINE)
 
     return {
         "filename": filename,
         "content": content,
         "title": (title_m.group(1).strip() if title_m else "")[:200],
-        "verdict": (verdict_m.group(1).strip() if verdict_m else "")[:200],
+        "verdict": verdict,
         "bicono": bicono,  # may be None if absent or unparseable
         "size": fp.stat().st_size,
         "mtime": datetime.fromtimestamp(fp.stat().st_mtime, tz=timezone.utc).isoformat(),
@@ -4373,6 +4373,26 @@ def _agent_report_files(reports_dir: Path) -> list[Path]:
     if not reports_dir.exists():
         return []
     return [f for f in reports_dir.glob("agent_*.md") if ".original." not in f.name]
+
+
+def _extract_report_verdict(text: str) -> str:
+    """Extract a compact verdict line from report markdown.
+
+    Reports commonly put a blank line after `## Verdict` and then start with
+    bold markdown. The dashboard list needs the first meaningful line, not an
+    empty string.
+    """
+    m = re.search(r"^##\s*Verdict[^\n]*\n+([\s\S]*?)(?=\n##\s|\Z)", text, re.MULTILINE)
+    if not m:
+        return ""
+    section = m.group(1).strip()
+    if not section:
+        return ""
+    for line in section.splitlines():
+        cleaned = re.sub(r"^[>\-\s*`_]+|[\s*`_]+$", "", line).strip()
+        if cleaned:
+            return cleaned[:200]
+    return ""
 
 
 def _read_json_safe(p: Path, default: Any) -> Any:
