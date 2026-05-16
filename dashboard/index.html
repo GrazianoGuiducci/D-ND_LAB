@@ -3164,6 +3164,15 @@
                 'height': 'data(size)',
               },
             },
+            {
+              selector: 'node[?compactLabel]',
+              style: {
+                'label': 'data(compactLabel)',
+                'font-size': 10,
+                'text-max-width': 78,
+                'text-margin-y': 5,
+              },
+            },
             // Theory nodes — cerchio grande con LETTERA centrale (Q/T/G/E/R)
             {
               selector: 'node[type = "teoria"]',
@@ -3238,6 +3247,13 @@
                 'text-background-padding': '3px',
                 'text-rotation': 'autorotate',
                 'text-opacity': 1,
+              },
+            },
+            {
+              selector: 'edge[?compactLabel]',
+              style: {
+                'font-size': 9,
+                'text-background-opacity': 0.85,
               },
             },
             {
@@ -3561,22 +3577,33 @@
         const latest = this.latestReport();
         const domainLabel = (this.activeDomain || 'lab').replace(/[-_]/g, ' ');
         const reportItems = (this.reports || []).slice(0, 6);
+        const reportCompact = (r, idx) => {
+          const title = String(r?.title || r?.filename || `report ${idx + 1}`);
+          if (/paired block/i.test(title)) return 'paired block';
+          if (/block21/i.test(title)) return 'block21';
+          if (/drift residual/i.test(title)) return 'drift residual';
+          if (/paired residual/i.test(title)) return 'paired residual';
+          if (/signed orientation/i.test(title)) return 'signed gate';
+          if (/component ablation/i.test(title)) return 'ablation';
+          return `report ${idx + 1}`;
+        };
         const nodesRaw = [
           { id: '__ev_domain__', label: domainLabel, type: 'tensione', intensity: 1, _doc: 'Dominio attivo' },
-          { id: '__ev_direction__', label: 'direzione', type: 'tensione', intensity: 0.85, _doc: this.seed?.direzione || '' },
+          { id: '__ev_direction__', label: 'direzione', compactLabel: 'direzione', type: 'tensione', intensity: 0.85, _doc: this.seed?.direzione || '' },
           { id: '__ev_falsifier__', label: 'falsifier', type: 'ghost', _doc: `${this.falsifierSummary?.n_total_flags || 0} flag su ${this.falsifierSummary?.n_reports_checked || 0} report` },
           { id: '__ev_products__', label: 'prodotti', type: 'scoperta', _doc: `${this.prodottiSsp?.length || 0} prodotti maturi` },
         ];
-        for (const r of reportItems) {
+        reportItems.forEach((r, idx) => {
           const ts = (r.filename || '').match(/agent_(\d{8}_\d{4})/)?.[1] || r.filename;
           nodesRaw.push({
             id: `__ev_report_${ts}`,
             label: r.title || r.filename,
+            compactLabel: reportCompact(r, idx),
             type: 'report',
             file: r.filename,
             _doc: this.reportVerdictLabel(r),
           });
-        }
+        });
         const edgesRaw = [
           { source: '__ev_domain__', target: '__ev_direction__', type: 'rel', label: 'muove' },
           { source: '__ev_direction__', target: latest ? `__ev_report_${(latest.filename || '').match(/agent_(\d{8}_\d{4})/)?.[1] || latest.filename}` : '__ev_domain__', type: 'rel', label: 'testa' },
@@ -3596,6 +3623,7 @@
             label: this._truncate(n.label || n.id, 30),
             type: n.type || 'unknown',
             letter: '',
+            compactLabel: n.compactLabel || '',
             size: n.type === 'tensione' ? Math.round(14 + (n.intensity || 0.5) * 12)
                 : n.type === 'report' ? 16
                 : 14,
@@ -3726,7 +3754,16 @@
 
       domainDecisionHint() {
         const direction = String(this.seed?.direzione || '').toLowerCase();
-        if (direction.includes('abandon') || direction.includes('redesign') || direction.includes('replace')) {
+        const latestVerdict = String(this.latestReport()?.verdict || '').toLowerCase();
+        const text = `${direction} ${latestVerdict}`;
+        if (
+          text.includes('abandon') ||
+          text.includes('redesign') ||
+          text.includes('replace') ||
+          text.includes('rejected') ||
+          text.includes('underpowered') ||
+          text.includes('no_delta')
+        ) {
           return 'ridisegnare l’oggetto, non promuovere';
         }
         if (this.prodottiSsp?.length > 0) return 'verificare prodotti maturi';
