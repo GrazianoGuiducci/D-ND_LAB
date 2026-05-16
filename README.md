@@ -98,6 +98,8 @@ docker compose run --rm lab plan-domain
 This records the domain, kind and movement/intention under the `meta-lab`
 runtime data. It does not force-generate a Lab: the request must pass through
 the meta-lab/template validator before becoming a new installable domain.
+The transduction rules used to preserve the Lab movement across domains live in
+[docs/DOMAIN_TRANSCENDENCE_AWARENESS.md](docs/DOMAIN_TRANSCENDENCE_AWARENESS.md).
 
 ## Provider-agnostic by design
 

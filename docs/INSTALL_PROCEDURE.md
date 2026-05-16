@@ -26,6 +26,11 @@ Quello che facciamo a mano oggi per il dominio physics del demo D-ND_LAB
 (finance, biology, ricerca aziendale). La procedura è universale; i
 contenuti specifici vengono dall'intervista all'utente.
 
+La procedura non deve pero' appiattire i domini. Prima di generare un lab
+nuovo, il generatore deve applicare
+`docs/DOMAIN_TRANSCENDENCE_AWARENESS.md`: si eredita il contratto del
+movimento, non il contenuto del Lab sorgente.
+
 ---
 
 ## 1. Intervista (raccolta info)
@@ -42,6 +47,12 @@ dndlab plan-domain
 
 Il comando raccoglie slug, titolo, tipo dominio e movimento/intento. Non genera
 ancora un Lab: crea input per meta-lab/template generator e validator.
+
+Il passaggio successivo alla richiesta e' la transduzione: il meta-lab deve
+produrre `domains/<slug>/transduction.md` insieme a `context.md`,
+`seed.json`, `assertions.py`, tools iniziali e `mml.json`. Questa nota
+dichiara osservabili domain-native, null/baseline, regole adattive,
+contaminazioni specifiche, UI contract e test E2E attesi.
 
 Le sezioni sono ordinate per dipendenza causale.
 
@@ -76,6 +87,8 @@ Le sezioni sono ordinate per dipendenza causale.
 - **Tensione iniziale**: cosa vuoi che il lab esplori per primo?
 - **Direzione**: orizzonte di ricerca per il primo piano del seme.
 - **Cosa NON vuoi che il lab faccia** (anti-pattern, scope esclusi).
+- **Movimento da conservare**: quale dinamica deve poter compiere il
+  sistema anche quando nessun operatore osserva il ciclo?
 
 ### 1.5 Capability attive
 
@@ -152,6 +165,8 @@ Da config:
 - `domains/<slug>/context.md` — modello del dominio (testo dell'intervista)
 - `domains/<slug>/assertions.py` — test riproducibili (template + content)
 - `domains/<slug>/seed_tensions.json` — tensioni iniziali
+- `domains/<slug>/transduction.md` — come il contratto del movimento
+  e' stato tradotto nel dominio senza copiare contenuto sorgente improprio
 - `domains/<slug>/tension_to_category.json` — mapping (può iniziare vuoto)
 - `domains/<slug>/cimitero.md` — opzionale, importato se forniti claim
 

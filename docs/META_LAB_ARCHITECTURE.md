@@ -96,6 +96,19 @@ Il sistema è già pronto a essere usato da agent runtime diversi.
 
 ## 2. Concetti — definizioni canoniche
 
+### 2.0 Domain Transcendence Awareness
+
+Prima di generare un nuovo lab di dominio, il meta-lab deve applicare
+`docs/DOMAIN_TRANSCENDENCE_AWARENESS.md`.
+
+La regola e' conservare il contratto del movimento, non copiare il
+contenuto del Lab sorgente. Un nuovo dominio eredita combo, falsificazione,
+null/baseline, runtime awareness, regole adattive e E2E; sostituisce invece
+materiale, osservabili, strumenti, UI lens e contaminazioni specifiche.
+
+Questa consapevolezza diventa criterio di validita' del template generato:
+il lab figlio deve produrre anche `domains/<slug>/transduction.md`.
+
 ### 2.1 KTHIA
 Kernel attivo del sistema THIA. Contiene identità (chi è THIA), nucleo
 assiomatico (modello D-ND), MMSp sorgente, KSAR, skill kernel, memorie

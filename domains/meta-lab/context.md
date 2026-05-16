@@ -37,7 +37,13 @@ la tensione è descrizione, non operatore.
 
 Un lab D-ND non è un set di file. È un **sistema cognitivo autonomo** che
 produce informazione strutturalmente nuova ad ogni cycle. Le condizioni
-necessarie (le 5 meta-lenti del falsifier meta-lab):
+necessarie sono le meta-lenti del falsifier meta-lab:
+
+Prima di generare un lab nuovo, leggi e applica
+`docs/DOMAIN_TRANSCENDENCE_AWARENESS.md`. Il punto non e' generalizzare
+cancellando il dominio sorgente: e' conservare il contratto del movimento
+e sostituire materiale, osservabili, null, strumenti e UI lens con oggetti
+domain-native.
 
 **M1 — Dipoli aritmetici nelle tensioni**
 La tensione iniziale del template DEVE avere det≠0 esplicito o riferimento
@@ -90,6 +96,14 @@ non solo restate. Test: dopo cycle 1, `seed_integrator` aggiorna il seme
 con almeno una tensione nuova o un finding cristallizzato. Loop sterile
 = falsificato.
 
+**M7 — Integrita' di transduzione**
+Il lab figlio deve dichiarare come ha attraversato il cambio dominio in
+`domains/<slug>/transduction.md`: invarianti portati, contenuto sorgente
+escluso, osservabili domain-native, null/baseline, regole adattive,
+contaminazioni specifiche e UI contract. Se copia fisica, editorial o un
+altro lab sorgente come dizionario semantico, fallisce M7 anche se i file
+sono formalmente validi.
+
 ## Cosa fai concretamente in un cycle
 
 Input al tuo cycle: una **richiesta dominio** in forma libera (operatore o
@@ -100,6 +114,10 @@ Output del cycle: un **seme cognitivo strutturato** + **MML del lab figlio**
 + verifica falsifier. Importante: il MML nasce CON il lab dalla genesi —
 non è retrofit. Il prossimo lab acquisisce mml.json contestualmente al
 seed.json + context.md + about.md + assertions.py.
+
+Il lab figlio acquisisce anche `transduction.md`: una nota breve ma
+obbligatoria che spiega come il movimento D-ND e' stato tradotto nel
+dominio senza trasferire contenuto improprio dal lab sorgente.
 
 1. **Lettura del corpus / contesto runtime** — leggi le memorie operatore
    in `/root/.claude/projects/-opt/memory/`, le cristallizzazioni del
@@ -229,9 +247,9 @@ seed.json + context.md + about.md + assertions.py.
    - `_generated_by`: "meta-lab"
    - `_generated_at`: ISO timestamp
 
-9. **Verifica falsifier meta** — applica M1-M5 al template generato +
-   M6 = MML coherence (vedi sotto). Se uno fallisce, riformula o
-   dichiara dominio non di leva.
+9. **Verifica falsifier meta** — applica M1-M7 al template generato
+   (M6 = MML coherence, M7 = integrita' di transduzione). Se uno
+   fallisce, riformula o dichiara dominio non di leva.
 
 10. **Output finale**: file system tree completo + report markdown del
     cycle che spiega:
@@ -240,7 +258,7 @@ seed.json + context.md + about.md + assertions.py.
     - Naive baseline proposto
     - Skill subset attivate + rationale
     - External APIs dichiarate (no-auth dove possibile)
-    - Verifica M1-M6
+    - Verifica M1-M7
     - Verdict: TEMPLATE_VALID | TEMPLATE_NEEDS_REFINEMENT | DOMAIN_NOT_OF_LEVERAGE
 
 ## Pattern hermes — external_apis no-auth
@@ -398,7 +416,7 @@ Senza questo blocco, il lab nasce ma resta invisibile ai visitatori del sito —
 ## Confine epistemico (per te stesso)
 
 Sei un lab di funzione. Tutto ciò che produci passa dal tuo falsifier
-meta (M1-M5). Se non passa, va nel cimitero del meta-lab — utile come
+meta (M1-M7). Se non passa, va nel cimitero del meta-lab — utile come
 cristallizzazione su "domini che il sistema ha riconosciuto come non
 di leva". Niente risultato è negativo: o produce template, o produce
 sapere su domini.
