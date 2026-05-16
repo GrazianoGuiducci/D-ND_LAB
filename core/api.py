@@ -69,6 +69,8 @@ class Settings:
         self.host: str = os.environ.get("DASHBOARD_HOST", "0.0.0.0")
         self.port: int = int(os.environ.get("DASHBOARD_PORT", "5000"))
         self.demo_mode: bool = os.environ.get("DASHBOARD_DEMO_MODE", "false").lower() == "true"
+        self.admin_token: str = os.environ.get("DND_LAB_ADMIN_TOKEN", "")
+        self.admin_write_guard: bool = os.environ.get("DND_LAB_ADMIN_WRITE_GUARD", "enabled").lower() != "disabled"
         self.cycle_python: str = os.environ.get(
             "DASHBOARD_CYCLE_PYTHON",
             os.environ.get("PYTHON", "python3"),
@@ -214,6 +216,8 @@ async def _check_auth(request: Request) -> None:
     implementation lands in Phase 6 v2. Localhost binding (127.0.0.1)
     is the recommended security boundary for v1.
     """
+    if _is_admin_request(request):
+        return
     if not settings.auth_enabled:
         return
     if settings.demo_mode and (
@@ -233,6 +237,37 @@ def _check_demo_writes(request: Request, *, allow_chat: bool = False) -> None:
         return
     if settings.demo_mode and request.method != "GET":
         raise HTTPException(403, "Demo mode is read-only.")
+
+
+def _admin_identity(request: Request) -> str | None:
+    """Return admin identity for server-to-server admin calls.
+
+    The public dashboard may live on a lab subdomain while the real admin
+    session lives on d-nd.com. The safe bridge is for the d-nd.com THIA backend
+    to verify the logged-in admin, then call this API with a private bearer
+    token. The browser never needs this token.
+    """
+    if settings.admin_token:
+        auth = request.headers.get("authorization", "")
+        token = ""
+        if auth.lower().startswith("bearer "):
+            token = auth.split(" ", 1)[1].strip()
+        token = token or request.headers.get("x-dnd-lab-admin-token", "").strip()
+        if token and token == settings.admin_token:
+            return "server-token"
+    return None
+
+
+def _is_admin_request(request: Request) -> bool:
+    return _admin_identity(request) is not None
+
+
+def _check_admin_write(request: Request) -> None:
+    if not settings.admin_write_guard:
+        return
+    if _is_admin_request(request):
+        return
+    raise HTTPException(403, "Admin token required for Lab write operations.")
 
 
 def _call_thia_chat_fallback(
@@ -479,12 +514,16 @@ def _call_thia_chat_fallback(
 
 
 @app.get("/api/health")
-async def health() -> dict[str, Any]:
+async def health(request: Request) -> dict[str, Any]:
     return {
         "status": "ok",
         "version": "0.1.0-alpha",
         "auth_enabled": settings.auth_enabled,
         "demo_mode": settings.demo_mode,
+        "admin_write_guard": settings.admin_write_guard,
+        "admin_token_configured": bool(settings.admin_token),
+        "admin": _is_admin_request(request),
+        "admin_identity": _admin_identity(request),
         "data_dir": str(paths._data_dir()),
     }
 
@@ -2609,6 +2648,7 @@ async def assistant_context_endpoint(domain: str, request: Request) -> dict[str,
 async def run_cycle_endpoint(domain: str, body: RunRequest, request: Request) -> dict[str, str]:
     await _check_auth(request)
     _check_demo_writes(request)
+    _check_admin_write(request)
     _validate_domain(domain)
     cycle_id = _start_cycle(domain, body.direction_override)
     return {"cycle_id": cycle_id, "domain": domain, "status": "running"}
@@ -2696,6 +2736,7 @@ async def chat_endpoint(domain: str, body: ChatRequest, request: Request) -> dic
     await _check_auth(request)
     _check_demo_writes(request, allow_chat=True)
     _validate_domain(domain)
+    is_admin = _is_admin_request(request)
 
     from core import llm_adapter
 
@@ -2896,11 +2937,22 @@ async def chat_endpoint(domain: str, body: ChatRequest, request: Request) -> dic
         "You have read tools (list_reports, read_report, read_falsifier, "
         "read_seed_tension, list_cimitero) — call them when the user asks "
         "about specific reports, flags, or tensions. Don't guess; lookup.\n"
-        "You also have PROPOSAL tools (propose_inject_tension, propose_run_cycle): "
-        "calling them does NOT execute the action — it returns a structured "
-        "proposal the user must confirm via the UI. Use them when the user "
-        "explicitly asks to add a tension or run a cycle.\n"
     )
+    if is_admin:
+        system_prompt += (
+            "Admin bridge is active for this request. You also have PROPOSAL "
+            "tools (propose_inject_tension, propose_run_cycle): calling them "
+            "does NOT execute the action — it returns a structured proposal "
+            "the admin must confirm via the UI or calling client. Use them "
+            "when the admin explicitly asks to add a tension or run a cycle.\n"
+        )
+    else:
+        system_prompt += (
+            "Admin bridge is NOT active for this request. Do not propose run "
+            "cycle or inject tension actions. If asked, explain that Lab writes "
+            "must be requested from the logged-in admin surface on d-nd.com, "
+            "which calls the Lab API server-to-server.\n"
+        )
     system_prompt += (
         "\n\n## CONTRIBUTION INTAKE\n"
         "If the visitor is an expert or wants to help improve the lab, guide them "
@@ -2954,6 +3006,11 @@ async def chat_endpoint(domain: str, body: ChatRequest, request: Request) -> dic
     client = openai.OpenAI(base_url=config.base_url, api_key=config.api_key)
     schemas, fn_map, mutation_names = _chat_tools(domain)
     if settings.demo_mode:
+        schemas = [
+            schema for schema in schemas
+            if schema.get("function", {}).get("name") not in mutation_names
+        ]
+    elif not is_admin:
         schemas = [
             schema for schema in schemas
             if schema.get("function", {}).get("name") not in mutation_names
@@ -3659,6 +3716,7 @@ async def inject_tension(domain: str, body: InjectTensionRequest, request: Reque
     so seed_integrator preserves it across cycles."""
     await _check_auth(request)
     _check_demo_writes(request)
+    _check_admin_write(request)
     _validate_domain(domain)
 
     seed_path = paths.seed_path(domain)

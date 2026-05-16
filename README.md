@@ -101,6 +101,10 @@ the meta-lab/template validator before becoming a new installable domain.
 The transduction rules used to preserve the Lab movement across domains live in
 [docs/DOMAIN_TRANSCENDENCE_AWARENESS.md](docs/DOMAIN_TRANSCENDENCE_AWARENESS.md).
 
+Admin-triggered cycle runs from the main-site THIA Assistant are supported via
+a server-to-server bridge; see
+[docs/ADMIN_LAB_RUN_BRIDGE.md](docs/ADMIN_LAB_RUN_BRIDGE.md).
+
 ## Provider-agnostic by design
 
 Single environment variable controls the entire LLM choice. The

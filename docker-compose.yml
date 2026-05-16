@@ -80,6 +80,9 @@ services:
       # Auth: set DASHBOARD_AUTH=enabled and use port mapping below to
       # restrict access (Phase 6 v1: localhost-only is the recommended
       # boundary — magic-link auth lands in Phase 6 v2).
+      # Admin writes: set DND_LAB_ADMIN_TOKEN for server-to-server calls
+      # from the logged-in d-nd.com THIA backend. Never expose this token
+      # in browser JavaScript.
     ports:
       - "${DASHBOARD_PORT:-5000}:5000"
     volumes:
