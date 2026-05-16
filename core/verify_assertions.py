@@ -88,7 +88,22 @@ def verify_assertions(ctx: CycleContext) -> None:
         spec.loader.exec_module(module)
         assertions = getattr(module, "ASSERTIONS", None)
         if not isinstance(assertions, list):
-            raise ValueError("ASSERTIONS is not a list (or missing)")
+            verifica_asserzioni = getattr(module, "verifica_asserzioni", None)
+            if not callable(verifica_asserzioni):
+                raise ValueError("ASSERTIONS is not a list and verifica_asserzioni() is missing")
+            direct_results = verifica_asserzioni()
+            if not isinstance(direct_results, list):
+                raise ValueError("verifica_asserzioni() did not return a list")
+            assertions = [
+                {
+                    "id": str(item.get("id", "?")),
+                    "claim": str(item.get("claim", item.get("detail", ""))),
+                    "source": str(item.get("source", "verifica_asserzioni")),
+                    "test": (lambda item=item: item),
+                }
+                for item in direct_results
+                if isinstance(item, dict)
+            ]
     except Exception as e:
         logger.warning("verify_assertions: cannot load %s: %s", assertions_path, e)
         ctx.movement_status["verify_assertions"] = f"pending: load failed: {e}"

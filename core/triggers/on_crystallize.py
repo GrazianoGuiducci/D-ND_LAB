@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""on_crystallize — SSP intake automatico per cicli del Lab fisica D-ND.
+"""on_crystallize — SSP intake automatico per cicli dei Lab D-ND.
 
 Input: cycle_ts (es. 20260429_1041) o --latest
 Reads: agent_<ts>.md + falsifier_<ts>.json + valutatore_log.jsonl + seme.json
@@ -62,6 +62,21 @@ VALUT_LOG = _PATHS["trajectory_log"]
 SESSION_LOG = _PATHS["session_log"]
 SEME = _PATHS["seed"]
 APPS_BASE = _PATHS["apps_base"]
+
+
+def current_domain() -> str:
+    return _PATHS.get("domain", os.environ.get("DOMAIN", "physics"))
+
+
+def lab_display_name() -> str:
+    domain = current_domain()
+    if domain == "physics":
+        return "Lab fisica D-ND"
+    return f"Lab {domain} D-ND"
+
+
+def data_ref(*parts: str) -> str:
+    return str(Path("data") / current_domain() / Path(*parts))
 
 
 def slugify(text: str) -> str:
@@ -343,12 +358,12 @@ audience: visitatore esterno · vocabolario livello 1-2 (TM7 terminology rule)
 copy_authority: TM1 (will refine before publish)
 provenance:
   cycle_ts: "{ctx['cycle_ts']}"
-  lab_instance: fisica
+  lab_instance: {current_domain()}
   seme_version: {ctx['seme_version']}
   exp_script: {ctx['report']['exp_script']}
   data_file: {ctx['report']['data_file']}
-  agent_report: tools/data/reports/agent_{ctx['cycle_ts']}.md
-  falsifier_report: tools/data/reports/falsifier_{ctx['cycle_ts']}.json
+  agent_report: {data_ref('reports', f"agent_{ctx['cycle_ts']}.md")}
+  falsifier_report: {data_ref('falsifier', f"falsifier_{ctx['cycle_ts']}.json")}
   falsifier_verdict: {fals['verdict_label']}
   valutatore_decision: {ctx.get('valutatore_decision','unknown')}_{ctx.get('valutatore_confidence','unknown')}
   gate_status: {ctx.get('gate_status','unknown')}{(chr(10) + 'pending_consecutio: ' + json.dumps(ctx.get('pending_consecutio',''))) if ctx.get('pending_consecutio') else ''}
@@ -365,7 +380,7 @@ generated_by: on_crystallize.py
 
 # [TARGET — TM1 refinement] {ctx['report']['title']}
 
-> Nota di laboratorio · Lab fisica D-ND · ciclo del {ctx['report']['date']}
+> Nota di laboratorio · {lab_display_name()} · ciclo del {ctx['report']['date']}
 {transitional_banner}
 > [SCAFFOLD AUTO-GENERATO] Body da scrivere a mano da TM3 o agente narrativo.
 > Sorgente: `{ctx['report_path']}`. Vocabolario livello 1-2 (TM7 terminology rule).
@@ -439,13 +454,13 @@ copy_authority: TM3 (technical) · TM1 (refinement before publish)
 provenance:
   cycle_ts: "{ctx['cycle_ts']}"
   piano: {ctx['report']['piano']}
-  lab_instance: fisica
+  lab_instance: {current_domain()}
   seme_version: {ctx['seme_version']}
   tension_explored: {json.dumps(ctx['report']['tension'])}
   exp_script: {ctx['report']['exp_script']}
   data_file: {ctx['report']['data_file']}
-  agent_report: tools/data/reports/agent_{ctx['cycle_ts']}.md
-  falsifier_report: tools/data/reports/falsifier_{ctx['cycle_ts']}.json
+  agent_report: {data_ref('reports', f"agent_{ctx['cycle_ts']}.md")}
+  falsifier_report: {data_ref('falsifier', f"falsifier_{ctx['cycle_ts']}.json")}
   falsifier_verdict: {fals['verdict_label']}
   valutatore_decision: {ctx.get('valutatore_decision','unknown')}_{ctx.get('valutatore_confidence','unknown')}{(chr(10) + 'pending_consecutio: ' + json.dumps(ctx.get('pending_consecutio',''))) if ctx.get('pending_consecutio') else ''}
 target_route: lab.d-nd.com/cycles/{ctx['cycle_ts']}
@@ -482,7 +497,7 @@ Vedi front matter sopra.
 ## Files
 
 - Report originale: `{ctx['report_path']}`
-- Falsifier audit: `tools/data/reports/falsifier_{ctx['cycle_ts']}.json`
+- Falsifier audit: `{data_ref('falsifier', f"falsifier_{ctx['cycle_ts']}.json")}`
 - Data: {ctx['report']['data_file']}
 - Script: {ctx['report']['exp_script']}
 

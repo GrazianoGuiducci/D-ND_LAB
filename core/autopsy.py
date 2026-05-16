@@ -119,20 +119,20 @@ def autopsy(ctx: CycleContext) -> None:
 
 
 def _find_previous_run_ts(reports_dir: Path, exclude_ts: str | None = None) -> str | None:
-    """Find the most recent run by parsing agent_*_raw.log filenames.
+    """Find the most recent run by parsing agent report/log filenames.
 
     Excludes the current cycle's timestamp (a run that is the current
     cycle would not be a 'previous' run to autopsy).
     """
     if not reports_dir.exists():
         return None
-    raw_logs = sorted(
-        reports_dir.glob("agent_*_raw.log"),
+    candidates = sorted(
+        list(reports_dir.glob("agent_*_raw.log")) + list(reports_dir.glob("agent_*.md")),
         key=lambda p: p.stat().st_mtime,
         reverse=True,
     )
-    for log in raw_logs:
-        m = re.search(r"agent_(\d{8}_\d{4})_raw\.log", log.name)
+    for path in candidates:
+        m = re.search(r"agent_(\d{8}_\d{4})(?:_raw\.log|\.md)$", path.name)
         if m:
             ts = m.group(1)
             if ts != exclude_ts:
@@ -288,6 +288,14 @@ def _classify(
     """Classify run outcome from session + raw_log + report presence."""
     report_exists = report_md.exists() and report_md.stat().st_size > 0
     raw_log_size = raw_log.stat().st_size if raw_log.exists() else 0
+
+    if session is None and report_exists:
+        return {
+            "status": "completed",
+            "regressive_node": None,
+            "duration_s": None,
+            "note": "report exists but no legacy session/raw log was found",
+        }
 
     if session is None:
         return {
