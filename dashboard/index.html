@@ -1113,22 +1113,22 @@
                         x-text="financeWindowCounts().label"></span>
                 </div>
                 <div class="grid md:grid-cols-4 gap-3">
-                  <div class="border border-slate-800 rounded p-3 bg-slate-950/50">
+                  <button @click="selectFinanceLens('regime')" class="text-left border border-slate-800 rounded p-3 bg-slate-950/50 hover:border-cyan-700 transition">
                     <div class="text-[10px] uppercase tracking-wider text-slate-400">Regime gate</div>
                     <div class="mt-1 text-sm text-slate-200 line-clamp-3" x-text="financeRegimeGate()"></div>
-                  </div>
-                  <div class="border border-slate-800 rounded p-3 bg-slate-950/50">
+                  </button>
+                  <button @click="selectFinanceLens('baseline')" class="text-left border border-slate-800 rounded p-3 bg-slate-950/50 hover:border-cyan-700 transition">
                     <div class="text-[10px] uppercase tracking-wider text-slate-400">Baseline / null</div>
                     <div class="mt-1 text-sm text-slate-200 line-clamp-3" x-text="financeBaselineSummary()"></div>
-                  </div>
-                  <div class="border border-slate-800 rounded p-3 bg-slate-950/50">
+                  </button>
+                  <button @click="selectFinanceLens('data')" class="text-left border border-slate-800 rounded p-3 bg-slate-950/50 hover:border-cyan-700 transition">
                     <div class="text-[10px] uppercase tracking-wider text-slate-400">Data-card</div>
                     <div class="mt-1 text-sm text-slate-200 line-clamp-3" x-text="financeDataCardSummary()"></div>
-                  </div>
-                  <div class="border border-slate-800 rounded p-3 bg-slate-950/50">
+                  </button>
+                  <button @click="selectFinanceLens('bounds')" class="text-left border border-slate-800 rounded p-3 bg-slate-950/50 hover:border-cyan-700 transition">
                     <div class="text-[10px] uppercase tracking-wider text-slate-400">Non ammissibile</div>
                     <div class="mt-1 text-sm text-amber-200 line-clamp-3" x-text="financeDecisionBound()"></div>
-                  </div>
+                  </button>
                 </div>
               </section>
             </template>
@@ -1930,9 +1930,31 @@
         <div x-show="sidebarRightOpen || mobileDrawer === 'right'" class="pt-1">
 
           <!-- Empty state contestuale: dipende dal tab attivo. -->
-          <template x-if="!selectedNode && !selectedScopertaSsp && !selectedProdottoSsp">
+          <template x-if="!selectedNode && !selectedScopertaSsp && !selectedProdottoSsp && !selectedCampoLens">
             <p class="text-slate-300 text-xs italic py-4"
                x-text="activeTab === 'campo' ? 'La tab Campo mostra la risultante; apri una lente per il dettaglio.' : (activeTab === 'prodotti' ? t('dash.detail.click.scoperta', 'Click su una scoperta o prodotto per vedere il dettaglio qui.') : (activeTab === 'grafo' ? t('dash.detail.click.grafo', 'Click su un nodo del grafo per vedere il dettaglio qui.') : (activeTab === 'agente' ? t('dash.detail.click.agente', 'Apri un report per vedere il dettaglio del cycle qui.') : t('dash.detail.click.default', 'Seleziona un elemento per vedere il dettaglio qui.'))))"></p>
+          </template>
+
+          <template x-if="selectedCampoLens">
+            <div class="detail-card space-y-3">
+              <div class="flex items-center gap-2">
+                <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-cyan-900/40 text-cyan-300">CAMPO</span>
+                <span class="text-[10px] font-mono text-slate-300" x-text="selectedCampoLens.kind"></span>
+                <button @click="selectedCampoLens = null" class="ml-auto text-slate-300 hover:text-slate-200 text-xs">×</button>
+              </div>
+              <div class="text-sm text-slate-100" x-text="selectedCampoLens.title"></div>
+              <p class="text-xs text-slate-300 leading-relaxed" x-text="selectedCampoLens.body"></p>
+              <div class="border-t border-slate-800 pt-3 text-[11px] space-y-2">
+                <div>
+                  <div class="uppercase tracking-wider text-slate-500">Evidenza</div>
+                  <div class="text-slate-300 mt-0.5" x-text="selectedCampoLens.evidence"></div>
+                </div>
+                <div>
+                  <div class="uppercase tracking-wider text-slate-500">Limite operativo</div>
+                  <div class="text-amber-200 mt-0.5" x-text="selectedCampoLens.boundary"></div>
+                </div>
+              </div>
+            </div>
           </template>
 
           <!-- Dettaglio scoperta SSP selezionata (tab Prodotti) -->
@@ -2573,6 +2595,7 @@
       excludedExpanded: {},        // cycle_ts → bool (espansione findings non applicativi)
       selectedScopertaSsp: null,   // scoperta SSP selezionata → dettaglio sidebar destra
       selectedProdottoSsp: null,   // prodotto maturo selezionato → dettaglio sidebar destra
+      selectedCampoLens: null,     // lente Campo selezionata → dettaglio sidebar destra
       // Modale candidato (refactor 03/05 sera): card click → modale 3 tab
       modaleCandidato: { open: false, tab: 'overview', loading: false, candidate: null,
                          manifest: null, summary_md: '', lab_note_md: '', cycle_report_md: '' },
@@ -3857,6 +3880,54 @@
           return 'nessun segnale trading; solo metodo o vincolo strutturale';
         }
         return 'vietati buy/sell/forecast/profit senza prodotto maturo e revisione';
+      },
+
+      selectFinanceLens(kind) {
+        const w = this.financePrimaryWindow();
+        const counts = this.financeWindowCounts();
+        const latest = this.latestReport();
+        const dataRange = w?.actual_start && w?.actual_end ? `${w.actual_start}..${w.actual_end}` : (w?.era_hint || 'finestra non disponibile');
+        const commonBoundary = 'Non e un segnale trading e non autorizza buy/sell/forecast/profit.';
+        const lenses = {
+          regime: {
+            kind: 'finance',
+            title: 'Regime gate',
+            body: this.financeRegimeGate(),
+            evidence: latest?.verdict || 'Nessun verdict recente disponibile.',
+            boundary: /NO_DELTA|underpowered|rejected/i.test(latest?.verdict || '')
+              ? 'Il ciclo corrente blocca la promozione: serve ridisegnare oggetto o target.'
+              : commonBoundary,
+          },
+          baseline: {
+            kind: 'finance',
+            title: 'Baseline / null',
+            body: this.financeBaselineSummary(),
+            evidence: counts.total
+              ? `${counts.dnd} finestre DND_DELTA, ${counts.no} NO_DELTA su ${counts.total}; shuffle=${w?.shuffles || this.latestDiagnostic?.payload?.shuffles || 'n/a'}.`
+              : 'Baseline non caricata nella diagnostica corrente.',
+            boundary: 'Un delta isolato non basta: servono replica doppia, null coerenti e competitor VaR/RV prima della promozione.',
+          },
+          data: {
+            kind: 'finance',
+            title: 'Data-card',
+            body: this.financeDataCardSummary(),
+            evidence: w ? `${w.provider || 'provider?'} ${w.source_url || ''} · retrieved ${w.retrieval_ts || 'n/a'} · ${dataRange}.` : 'Nessuna data-card disponibile.',
+            boundary: 'Senza provider, source_url, retrieval_ts e n_obs il claim resta non auditabile.',
+          },
+          bounds: {
+            kind: 'finance',
+            title: 'Non ammissibile',
+            body: this.financeDecisionBound(),
+            evidence: this.latestDiagnostic?.payload?.boundary
+              ? `operational=${!!this.latestDiagnostic.payload.boundary.operational}, trading_signal=${!!this.latestDiagnostic.payload.boundary.trading_signal}, public_claim=${!!this.latestDiagnostic.payload.boundary.public_claim}.`
+              : 'Boundary non disponibile.',
+            boundary: commonBoundary,
+          },
+        };
+        this.selectedNode = null;
+        this.selectedScopertaSsp = null;
+        this.selectedProdottoSsp = null;
+        this.selectedCampoLens = lenses[kind] || null;
       },
 
       sspKindLabel(s) {
