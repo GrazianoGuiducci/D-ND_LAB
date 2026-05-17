@@ -20,6 +20,7 @@ Lo specs contiene:
   "ui_contract_json": <dict matching docs/templates/ui_contract.v1.json>,
   "skill_intent_map_json": <dict: intent -> movement_class -> skill/meta-prompt/artifact/UI mapping>,
   "archive_retrieval_json": <optional list/dict: cognitive archive capsules/body read plan>,
+  "onboarding_contract_json": <optional dict: information intake channels and gates>,
   "tools_exp_files": [
     {"name": "exp_regime_shift.py", "content": "..."},
     ...
@@ -188,6 +189,35 @@ def validate_specs(specs: dict[str, Any]) -> list[str]:
                 errors.append(
                     f"archive_retrieval_json[{idx}] usa read_depth=CAPSULE ma body_required=false"
                 )
+    onboarding_contract = specs.get("onboarding_contract_json")
+    if onboarding_contract is not None:
+        if not isinstance(onboarding_contract, dict):
+            errors.append("onboarding_contract_json deve essere dict")
+        else:
+            if onboarding_contract.get("schema") != "dndlab.onboarding_contract.v1":
+                errors.append("onboarding_contract_json.schema deve essere dndlab.onboarding_contract.v1")
+            channels = onboarding_contract.get("channels")
+            if not isinstance(channels, dict):
+                errors.append("onboarding_contract_json.channels deve essere dict")
+            else:
+                required_channels = {
+                    "domain_request",
+                    "human_clarification",
+                    "operator_corpus",
+                    "public_contribution",
+                    "dataset_api",
+                    "cognitive_archives",
+                    "runtime_self_observation",
+                }
+                missing_channels = sorted(required_channels - set(channels))
+                if missing_channels:
+                    errors.append(f"onboarding_contract_json.channels manca: {missing_channels}")
+            gates = onboarding_contract.get("promotion_gates")
+            if not isinstance(gates, list) or not gates:
+                errors.append("onboarding_contract_json.promotion_gates deve essere lista non vuota")
+            never_direct = onboarding_contract.get("never_direct_to_seed")
+            if not isinstance(never_direct, list) or not never_direct:
+                errors.append("onboarding_contract_json.never_direct_to_seed deve essere lista non vuota")
     return errors
 
 
@@ -404,6 +434,9 @@ def write_template(specs: dict[str, Any], dry_run: bool = False, force: bool = F
     files_to_write.append((target_dir / "transduction.md", transduction_md))
     files_to_write.append((target_dir / "ui_contract.json",
                            json.dumps(specs["ui_contract_json"], indent=2, ensure_ascii=False) + "\n"))
+    if specs.get("onboarding_contract_json"):
+        files_to_write.append((target_dir / "onboarding_contract.json",
+                               json.dumps(specs["onboarding_contract_json"], indent=2, ensure_ascii=False) + "\n"))
     # mml.json (refactor P2.A.5: MML nasce con il lab dalla genesi)
     files_to_write.append((target_dir / "mml.json",
                            json.dumps(specs["mml_json"], indent=2, ensure_ascii=False) + "\n"))

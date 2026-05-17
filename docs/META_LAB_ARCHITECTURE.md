@@ -153,6 +153,27 @@ La distinzione e' operativa:
 Ogni uso deve produrre `archive_retrieval`: path, read_depth, pattern
 estratto, artefatto modificato, contaminazione esclusa e test/E2E previsto.
 
+### 2.0.3 Information Onboarding
+
+Prima di considerare autonomo un nuovo Lab, il meta-lab deve applicare
+`docs/LAB_INFORMATION_ONBOARDING.md`.
+
+Un Lab non deve solo ricevere un seme iniziale: deve sapere come continuare ad
+acquisire informazione senza contaminarsi. I canali ammessi sono separati:
+
+- `domain_request` per progettazione;
+- chiarimenti umani per vincoli e non-ammissibile;
+- corpus operatore come fonte, non seed diretto;
+- contributi pubblici come pre-report in quarantena;
+- dataset/API dopo source-card, data-card, baseline/null e leakage guard;
+- archivi cognitivi tramite capsule/read-depth;
+- runtime self-observation tramite cycle trace.
+
+Il template puo' produrre `onboarding_contract.json` usando
+`docs/templates/onboarding_contract.v1.json`. Se manca, almeno
+`transduction.md` deve dichiarare come le informazioni future entreranno nel
+Lab e quali input non possono mai passare direttamente al seme.
+
 ### 2.1 KTHIA
 Kernel attivo del sistema THIA. Contiene identità (chi è THIA), nucleo
 assiomatico (modello D-ND), MMSp sorgente, KSAR, skill kernel, memorie

@@ -1,0 +1,60 @@
+{
+  "schema": "dndlab.onboarding_contract.v1",
+  "domain": "<slug>",
+  "channels": {
+    "domain_request": {
+      "status": "present",
+      "authority": "planning",
+      "notes": "Input for meta-lab transduction, not direct seed authority."
+    },
+    "human_clarification": {
+      "status": "allowed",
+      "authority": "constraints",
+      "notes": "Clarifies movement, exclusions, non-admissible decisions and success condition."
+    },
+    "operator_corpus": {
+      "status": "optional",
+      "authority": "source",
+      "notes": "Private/source material stays out of Git unless explicitly public."
+    },
+    "public_contribution": {
+      "status": "quarantine",
+      "authority": "preport_only",
+      "notes": "Visitor inputs require pre-report and operator review before any Lab contamination."
+    },
+    "dataset_api": {
+      "status": "optional",
+      "authority": "evidence_after_baseline",
+      "notes": "Requires source/data-card, fallback or open data, and leakage guard."
+    },
+    "cognitive_archives": {
+      "status": "capsule_first",
+      "authority": "by_read_depth",
+      "notes": "Capsules orient planning; BODY/BODY_PLUS_REFS/E2E needed for operational authority."
+    },
+    "runtime_self_observation": {
+      "status": "required",
+      "authority": "cycle_trace",
+      "notes": "Cycle trace and runtime report describe how the Lab moved, not only what it produced."
+    }
+  },
+  "promotion_gates": [
+    "source_provenance",
+    "privacy_secret_scan",
+    "baseline_null",
+    "falsification_test",
+    "operator_review_when_public_or_sensitive",
+    "runtime_trace"
+  ],
+  "never_direct_to_seed": [
+    "public contributions",
+    "private corpus",
+    "capsule-only archive patterns",
+    "human preference without falsification"
+  ],
+  "ui_surfaces": {
+    "left": ["source_status", "contribution_counts", "warnings"],
+    "center": ["domain_movement_view"],
+    "right": ["source_detail", "preport", "cycle_trace", "assistant_context"]
+  }
+}

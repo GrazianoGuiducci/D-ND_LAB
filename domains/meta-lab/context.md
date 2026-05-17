@@ -66,6 +66,12 @@ campo skill/enzimi:
 - `/opt/MM_D-ND/tools/data/cognitive_enzymes_archive.md`: archivio degli
   enzimi cognitivi gia' estratti dal sistema.
 
+Prima di considerare un lab figlio autonomo, leggi anche
+`docs/LAB_INFORMATION_ONBOARDING.md`. Un Lab valido non deve solo nascere:
+deve sapere come acquisire nuove informazioni da umano, corpus, contributi,
+dataset/API, archivi cognitivi e runtime self-observation senza contaminare
+direttamente il seme.
+
 Questa lettura non e' decorativa. Il meta-lab non deve reinventare una
 grammatica se il sistema possiede gia' una skill, un enzima o una
 collaborazione inter-skill che risolve il passaggio. Il recupero da archivio
@@ -150,6 +156,9 @@ Il lab figlio acquisisce anche:
   improprio dal lab sorgente;
 - `ui_contract.json`: contratto macchina per popolare il template dashboard
   a tre colonne con moduli comuni e domain-native.
+- `onboarding_contract.json` opzionale ma raccomandato: contratto macchina
+  per i canali informativi del Lab, basato su
+  `docs/templates/onboarding_contract.v1.json`.
 
 1. **Lettura del corpus / contesto runtime** — leggi le memorie operatore
    in `/root/.claude/projects/-opt/memory/`, le cristallizzazioni del
@@ -184,6 +193,8 @@ Il lab figlio acquisisce anche:
      e capacita' mancante se presente.
    - `skill_intent_map`: mappa intento -> movement_class -> use_dynamics
      -> skill_layers -> meta_prompts -> artefatti -> UI/test.
+   - `onboarding_contract`: canali informativi ammessi, autorita', gate di
+     promozione e input che non possono entrare direttamente nel seme.
 
    Regola: il meta-lab usa l'archivio come **campo di progettazione**, non
    come prompt library. Una skill puo' diventare:

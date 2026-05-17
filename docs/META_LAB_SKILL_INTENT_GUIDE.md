@@ -467,6 +467,11 @@ Stato operativo attuale:
 - il validator M8 controlla skill/enzyme retrieval, MML layered,
   `skill_intent_map` e, quando vengono nominati archivi/capsule esterne,
   `archive_retrieval` con profondita' di lettura.
+- `docs/LAB_INFORMATION_ONBOARDING.md` definisce come un Lab nuovo acquisisce
+  informazione dopo l'installazione tramite umano, corpus, contributi,
+  dataset/API, archivi cognitivi e runtime self-observation.
+- `tools/lab_template_generator.py` accetta `onboarding_contract_json` e lo
+  scrive come `onboarding_contract.json` nel Lab figlio.
 - `dndlab plan-domain` puo' raccogliere `movement_class`, `use_dynamics`,
   `exclusions` e `success_condition` per ridurre inferenza cieca nella fase
   meta-lab.

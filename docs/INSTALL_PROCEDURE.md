@@ -63,6 +63,15 @@ produrre `domains/<slug>/transduction.md` e
 osservabili domain-native, null/baseline, regole adattive, contaminazioni
 specifiche, contratto UI e test E2E attesi.
 
+Prima che il Lab venga considerato autonomo, deve dichiarare anche come
+acquisira' informazioni dopo l'installazione. Applicare
+`docs/LAB_INFORMATION_ONBOARDING.md` e, se utile, produrre
+`domains/<slug>/onboarding_contract.json` da
+`docs/templates/onboarding_contract.v1.json`. Questo separa dominio/intento,
+corpus operatore, contributi pubblici, dataset/API, archivi cognitivi e
+runtime self-observation, impedendo che input non revisionati entrino
+direttamente nel seme.
+
 Prima della transduzione operativa c'e' ora una fase obbligatoria:
 **recupero skill/enzimi**. Il meta-lab consulta `docs/SKILL_CATALOG.md`,
 `docs/SKILL_FIELD_MAP.md`, `docs/SKILL_DIAGNOSTIC.md`,
@@ -173,6 +182,8 @@ chiede conferma. Validazioni automatiche:
 - [ ] URL non collide con nginx esistente
 - [ ] `skill_intent_map` collega intento, movimento, skill/meta-prompt,
       artefatti, UI e test E2E
+- [ ] `onboarding_contract` dichiara canali informativi, autorita', gate e
+      cosa non puo' entrare direttamente nel seme
 
 Se tutto OK, salva `config.final.json` e procede.
 
@@ -206,6 +217,10 @@ Da config:
   deve contenere o ricevere dal generator anche `skill_intent_map`
 - `domains/<slug>/ui_contract.json` — come il template dashboard a tre
   colonne viene popolato con moduli comuni e domain-native
+- `domains/<slug>/onboarding_contract.json` — come il Lab acquisisce nuove
+  informazioni da umano/corpus/contributi/dati/API/archivi/runtime senza
+  contaminare direttamente il seme. Se il meta-lab produce
+  `onboarding_contract_json`, il generator lo scrive automaticamente.
 - `domains/<slug>/mml.json` — skill attive per layer, scelte dopo recupero
   skill/enzimi e validate da M6/M8
 - `domains/<slug>/tension_to_category.json` — mapping (può iniziare vuoto)
