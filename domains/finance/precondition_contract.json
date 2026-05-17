@@ -67,7 +67,9 @@
       "Expose the artifact through latest_diagnostic/dashboard before any product claim."
     ],
     "current_artifact": "data/finance/diagnostics/finance_recurrence_diagnostic_20260517_134619.json",
-    "next_gate": "Use exact-window recurrence artifacts as authority after transfer rejection. If only the current SPY window passes iid/block5 and no window passes block21, classify current_iid_partial and suspend cluster or recurrence promotion."
+    "result": "The reference real-market E2E is complete as a negative constraint: exact-window transfer and SPY recurrence classify current_iid_partial with operational=false, public_claim=false and trading_signal=false.",
+    "next_gate": "Use exact-window recurrence artifacts as authority after transfer rejection. If only the current SPY window passes iid/block5 and no window passes block21, classify current_iid_partial and suspend cluster or recurrence promotion.",
+    "after_result_policy": "Do not relaunch transfer or recurrence on the same SPY current-window premise. Future REAL_MARKET_TRANSFER_DIAGNOSTIC work must predeclare a materially new object/mechanism and falsifier, or yield to meta-lab comparison against docs/FINANCE_REFERENCE_E2E_20260517.md."
   },
   "retire_when": [
     "The precondition fails to keep controls below the 5% selection or robust ceiling.",

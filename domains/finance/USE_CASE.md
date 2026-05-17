@@ -150,6 +150,19 @@ movement is to preserve this as a provisional promotion boundary, not to
 broaden tuning. Below-gate survivors are visible exceptions (`2/10` in cycle
 `20260517_1050`) and cannot be rescued without a new predeclared mechanism.
 
+Current real-market reference:
+
+```text
+docs/FINANCE_REFERENCE_E2E_20260517.md
+```
+
+The first value-facing real-market E2E ended as a useful constraint:
+`current_iid_partial`, `operational=false`, `public_claim=false`,
+`trading_signal=false`. The same SPY current-window transfer/recurrence premise
+is exhausted. A future cycle may not relaunch it silently; it must either
+declare a materially new object/mechanism and falsifier before testing, or use
+this reference as the comparison target for the meta-lab.
+
 ## UI Implications
 
 The finance dashboard should make these surfaces visible before any narrative:

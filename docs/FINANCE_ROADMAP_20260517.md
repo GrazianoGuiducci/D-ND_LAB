@@ -1,12 +1,13 @@
 # Finance Lab Roadmap — 2026-05-17
 
-Status: roadmap after synthetic promotion-boundary crystallization
+Status: roadmap after finance reference E2E and trajectory observability repair
 Domain: `finance`
-Current policy: `CRYSTALLIZE_PROMOTION_BOUNDARY`
+Current policy: `REFERENCE_E2E_READY_FOR_META_LAB_COMPARISON`
 
 ## Where We Are
 
-The finance Lab has closed the first useful synthetic phase:
+The finance Lab has closed the first useful synthetic phase and one
+value-facing real-market E2E:
 
 - score threshold: `matched_filter_score_at_candidate_split >= 0.55`;
 - admitted positives: `26/36`;
@@ -24,6 +25,23 @@ The threshold is a provisional synthetic promotion boundary, not a hard
 evidence boundary and not a market signal.
 ```
 
+The real-market lane then narrowed an apparent SPY/QQQ signal into a
+non-operational SPY locality artifact:
+
+- exact-window transfer: SPY iid/block5 pass, block21 fail; QQQ and controls
+  reject;
+- recurrence: current SPY iid/block5 pass, block21 fail; three prior exact
+  windows reject;
+- class: `current_iid_partial`;
+- public claim: `false`;
+- trading signal: `false`.
+
+Reference doc:
+
+```text
+docs/FINANCE_REFERENCE_E2E_20260517.md
+```
+
 ## Tabella Di Marcia
 
 | Step | Goal | Entry Gate | Work | Exit Gate | Output |
@@ -31,8 +49,8 @@ evidence boundary and not a market signal.
 | 1 | Close synthetic promotion boundary | Cycle `20260517_1050` complete; falsifier correction applied | Preserve gate, survivor counts and non-hard-boundary rule in contracts/UI/docs | Audit returns `CRYSTALLIZE_PROMOTION_BOUNDARY`; dashboard shows gate and survivors | Current state, done |
 | 2 | Check THIA/Lab Assistant context grounding | Dashboard card visible; `/precondition_contract` returns `200` | Ask the THIA/Lab Dashboard Assistant about gate, survivor exceptions, and what is not promotable | THIA/Lab Assistant answers: provisional threshold, `2/10` survivors visible, no trading signal | Done via deterministic boundary fallback |
 | 3 | Choose next branch | Step 1 done; Step 2 acceptable or explicitly skipped | Decide one branch: real-market transfer, meta-lab comparison, or new synthetic object | Branch documented before execution | Selected: 4A real-market transfer before meta-lab comparison |
-| 4A | Real-market transfer | Branch chosen; no synthetic ambiguity hidden | Test SPY/BTC/FX with data-card, iid/block nulls, VaR/RV baselines | No market claim unless real-data nulls and baselines pass | In progress: transfer rejected; recurrence artifact says `current_iid_partial` |
-| 4B | Meta-lab comparison | Branch chosen; finance reference stable | Ask meta-lab to regenerate finance-like Lab from intent/domain | Generated Lab preserves contracts, nulls, UI boundary, survivor handling | Comparison report and meta-lab improvements |
+| 4A | Real-market transfer | Branch chosen; no synthetic ambiguity hidden | Test SPY/BTC/FX with data-card, iid/block nulls, VaR/RV baselines | No market claim unless real-data nulls and baselines pass | Done as negative E2E: `current_iid_partial`, no market claim |
+| 4B | Meta-lab comparison | Finance reference stable; no stale SPY rerun pending | Ask meta-lab to regenerate finance-like Lab from intent/domain | Generated Lab preserves contracts, nulls, UI boundary, survivor handling and trajectory observability | Next recommended comparison report and meta-lab improvements |
 | 4C | New synthetic object | Branch chosen; new mechanism predeclared | Define target variable and falsifier before running a cycle | New object beats controls without rescuing old rejected cases silently | New synthetic candidate or rejection |
 | 5 | Product/readiness gate | One branch produces replicated value | Add cost/slippage, double replication, review and packaging gates | Product-stage evidence exists | Candidate kernel or explicit stop |
 
@@ -48,10 +66,10 @@ The public widget exists as another THIA-facing surface and must be checked
 separately if the next task concerns public navigation or public assistant
 behavior.
 
-Step 3 is selected:
+Step 4A is complete as a negative/constraint E2E:
 
 ```text
-4A real-market transfer, then 4B meta-lab comparison.
+current_iid_partial; operational=false; public_claim=false; trading_signal=false.
 ```
 
 Verified THIA/Lab Assistant/UI answer:
@@ -64,9 +82,9 @@ Verified THIA/Lab Assistant/UI answer:
 - no buy/sell/forecast/profit/alpha labels;
 - no sub-gate rescue without a new predeclared mechanism.
 
-Rationale: finance must complete one autonomous value-facing E2E before the
-meta-lab generator is judged against it. The meta-lab comparison follows after
-the real-data lane has a concrete reference surface.
+Rationale: finance has now completed one autonomous value-facing E2E before the
+meta-lab generator is judged against it. The next recommended step is 4B:
+meta-lab comparison against `docs/FINANCE_REFERENCE_E2E_20260517.md`.
 
 ## Branch Details
 
@@ -103,9 +121,13 @@ SPY recurrence result (`current` plus three previous 3-month exact windows,
 
 This means Branch 4A has produced value as a negative/constraint E2E: the lab
 found and then narrowed an apparent opportunity until only a non-operational
-method limit remained. The next step is not another same-frame transfer retry;
-it is either crystallize this limit as a reference example or design a new
-object with a predeclared falsifier.
+method limit remained. The limit is crystallized in
+`docs/FINANCE_REFERENCE_E2E_20260517.md`.
+
+Do not relaunch transfer or recurrence on the same SPY current-window premise.
+If a future runtime surface still says `REAL_MARKET_TRANSFER_DIAGNOSTIC`, read
+it as policy context only: the actual next movement must be either a materially
+new object/mechanism with predeclared falsifier or the meta-lab comparison.
 
 Minimum test:
 
