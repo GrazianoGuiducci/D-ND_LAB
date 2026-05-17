@@ -539,31 +539,29 @@
     @media (max-width: 760px) {
       .lab-topbar {
         display: grid !important;
-        grid-template-columns: minmax(0, 1fr) auto;
-        grid-template-areas:
-          "brand nav"
-          "tabs tabs";
+        grid-template-columns: auto minmax(118px, 1fr) auto;
+        grid-template-areas: "brand tabs nav";
         align-items: center;
         padding: 10px 12px 8px !important;
-        gap: 8px 10px !important;
+        gap: 8px !important;
       }
       .lab-brand { grid-area: brand; min-width: 0; }
-      .lab-brand-text { font-size: 1.1rem !important; max-width: 128px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .lab-brand-text { font-size: 1.1rem !important; max-width: 116px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       .lab-tabs-mobile { grid-area: tabs; flex: none; width: 100%; max-width: none; min-width: 0; }
       .lab-tabs-mobile .tab-label { max-width: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       .dashboard-topnav { grid-area: nav; gap: 4px !important; margin-left: 0 !important; justify-self: end; }
       .dashboard-domains-label { display: none; }
-      .domain-breadcrumb { max-width: 150px; }
-      .domain-pill { max-width: 126px; padding-left: 6px !important; padding-right: 6px !important; }
+      .domain-breadcrumb { max-width: 132px; }
+      .domain-pill { max-width: 108px; padding-left: 6px !important; padding-right: 6px !important; }
       .lang-switcher { display: none !important; }
     }
-    @media (max-width: 430px) {
-      .lab-brand-text { max-width: 118px; }
-      .domain-breadcrumb { max-width: 118px; }
-      .domain-pill { max-width: 96px; }
-    }
-    @media (max-width: 370px) {
+    @media (max-width: 560px) {
       .domain-breadcrumb { display: none !important; }
+      .lab-tabs-mobile { min-width: 0; }
+    }
+    @media (max-width: 430px) {
+      .lab-brand-text { max-width: 94px; }
+      .lab-topbar { padding-left: 10px !important; padding-right: 10px !important; gap: 6px !important; }
     }
 
     /* Chips (sidebar dettaglio) */
