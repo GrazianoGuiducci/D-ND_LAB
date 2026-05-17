@@ -291,17 +291,46 @@
     .cycle-metric .k { font: 10px ui-monospace, monospace; letter-spacing: .1em; text-transform: uppercase; color: rgb(148 151 168); }
     .cycle-metric .v { margin-top: 3px; font: 18px ui-monospace, monospace; color: rgb(34 211 238); }
     .domain-intent-grid { position: relative; display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; margin: 16px 0; }
+    .domain-intent-grid .domain-intent-card:not(:last-child)::after {
+      content: '→';
+      position: absolute;
+      top: 50%;
+      right: -14px;
+      transform: translateY(-50%);
+      color: rgb(34 211 238);
+      font: 18px ui-monospace, monospace;
+      opacity: .75;
+    }
     .domain-intent-card {
       border: 1px solid rgba(148,163,184,.18);
       border-radius: 8px;
       background: rgba(8,8,12,.56);
       padding: 14px;
       min-height: 150px;
+      position: relative;
     }
     .domain-intent-card .label { font: 10px ui-monospace, monospace; letter-spacing: .12em; text-transform: uppercase; color: rgb(148 151 168); }
     .domain-intent-card .headline { margin-top: 5px; font-size: 17px; line-height: 1.25; font-weight: 650; color: rgb(240 240 245); }
     .domain-intent-card .copy { margin-top: 8px; font-size: 13px; line-height: 1.5; color: rgb(220 222 230); }
     .domain-intent-card .meta { margin-top: 10px; font: 11px ui-monospace, monospace; color: rgb(34 211 238); }
+    .cycle-architecture-details {
+      position: relative;
+      margin-top: 12px;
+      border-top: 1px solid rgba(148,163,184,.16);
+      padding-top: 10px;
+    }
+    .cycle-architecture-details summary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: rgb(196 181 253);
+      font-size: 12px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .cycle-architecture-details summary::-webkit-details-marker { display: none; }
+    .cycle-architecture-details summary::before { content: '▸'; color: rgb(167 139 250); }
+    .cycle-architecture-details[open] summary::before { content: '▾'; }
     @media (max-width: 900px) {
       .cycle-flow { grid-template-columns: 1fr; }
       .cycle-column { grid-template-columns: repeat(2, minmax(0,1fr)); }
@@ -309,6 +338,13 @@
       .cycle-core svg { min-height: 260px; }
       .cycle-metric-row { grid-template-columns: repeat(2, minmax(0,1fr)); }
       .domain-intent-grid { grid-template-columns: 1fr; }
+      .domain-intent-grid .domain-intent-card:not(:last-child)::after {
+        content: '↓';
+        top: auto;
+        right: 50%;
+        bottom: -18px;
+        transform: translateX(50%);
+      }
     }
     @media (max-width: 560px) {
       .lab-cycle-map { padding: 12px; }
@@ -1980,131 +2016,141 @@
             <section class="lab-cycle-map">
               <div class="relative flex items-start justify-between gap-4 flex-wrap mb-4">
                 <div>
-                  <div class="text-[10px] uppercase tracking-[0.18em] text-cyan-300 font-mono">Ciclo cognitivo del Lab</div>
+                  <div class="text-[10px] uppercase tracking-[0.18em] text-cyan-300 font-mono"
+                       x-text="lang === 'en' ? 'Lab cognitive cycle' : 'Ciclo cognitivo del Lab'"></div>
                   <h3 class="text-xl font-medium mt-1" x-text="domainIntentTitle()"></h3>
                   <p class="text-sm text-slate-300 mt-1 max-w-3xl" x-text="domainIntentIntro()"></p>
                 </div>
                 <div class="text-right text-[11px] font-mono text-slate-400">
                   <div x-text="activeDomain || 'dominio'"></div>
-                  <div><span x-text="campoStats().cicli"></span> cicli · <span x-text="cimiteroCount()"></span> filtrati</div>
+                  <div>
+                    <span x-text="campoStats().cicli"></span>
+                    <span x-text="lang === 'en' ? 'cycles' : 'cicli'"></span>
+                    ·
+                    <span x-text="cimiteroCount()"></span>
+                    <span x-text="lang === 'en' ? 'filtered' : 'filtrati'"></span>
+                  </div>
                 </div>
               </div>
 
               <div class="domain-intent-grid">
                 <div class="domain-intent-card">
-                  <div class="label">cosa consuma</div>
+                  <div class="label" x-text="domainIntentInput().label"></div>
                   <div class="headline" x-text="domainIntentInput().headline"></div>
                   <div class="copy" x-text="domainIntentInput().copy"></div>
                   <div class="meta" x-text="domainIntentInput().meta"></div>
                 </div>
                 <div class="domain-intent-card">
-                  <div class="label">come decide</div>
+                  <div class="label" x-text="domainIntentTest().label"></div>
                   <div class="headline" x-text="domainIntentTest().headline"></div>
                   <div class="copy" x-text="domainIntentTest().copy"></div>
                   <div class="meta" x-text="domainIntentTest().meta"></div>
                 </div>
                 <div class="domain-intent-card">
-                  <div class="label">cosa produce</div>
+                  <div class="label" x-text="domainIntentOutput().label"></div>
                   <div class="headline" x-text="domainIntentOutput().headline"></div>
                   <div class="copy" x-text="domainIntentOutput().copy"></div>
                   <div class="meta" x-text="domainIntentOutput().meta"></div>
                 </div>
               </div>
 
-              <div class="cycle-flow">
-                <div class="cycle-column">
-                  <div class="cycle-node cyan">
-                    <div class="eyebrow">01 · seed</div>
-                    <div class="title">Intento in movimento</div>
-                    <div class="body">Il seme porta dominio, tensioni, assiomi locali e vincoli. Non prescrive il risultato: prepara il campo.</div>
+              <details class="cycle-architecture-details">
+                <summary x-text="lang === 'en' ? 'Internal cycle architecture' : 'Architettura interna del ciclo'"></summary>
+                <div class="cycle-flow mt-3">
+                  <div class="cycle-column">
+                    <div class="cycle-node cyan">
+                      <div class="eyebrow">01 · seed</div>
+                      <div class="title">Intento in movimento</div>
+                      <div class="body">Il seme porta dominio, tensioni, assiomi locali e vincoli. Non prescrive il risultato: prepara il campo.</div>
+                    </div>
+                    <div class="cycle-node purple">
+                      <div class="eyebrow">02 · campo</div>
+                      <div class="title">Osservazione situata</div>
+                      <div class="body">Report, dati, graph, diagnostiche e artifact entrano come superficie osservabile, non come verità già accettata.</div>
+                    </div>
+                    <div class="cycle-node amber">
+                      <div class="eyebrow">03 · agent</div>
+                      <div class="title">Ipotesi falsificabile</div>
+                      <div class="body">L’agente produce un claim operativo, con baseline o null espliciti e una traccia runtime del modo in cui ha ciclato.</div>
+                    </div>
                   </div>
-                  <div class="cycle-node purple">
-                    <div class="eyebrow">02 · campo</div>
-                    <div class="title">Osservazione situata</div>
-                    <div class="body">Report, dati, graph, diagnostiche e artifact entrano come superficie osservabile, non come verità già accettata.</div>
+
+                  <div class="cycle-core" aria-label="Diagramma del ciclo Lab">
+                    <svg viewBox="0 0 520 360" role="img">
+                      <defs>
+                        <marker id="cycleArrow" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                          <path d="M 0 0 L 10 5 L 0 10 z" fill="#22d3ee" opacity="0.9"></path>
+                        </marker>
+                        <filter id="softGlow" x="-30%" y="-30%" width="160%" height="160%">
+                          <feGaussianBlur stdDeviation="4" result="blur"></feGaussianBlur>
+                          <feMerge>
+                            <feMergeNode in="blur"></feMergeNode>
+                            <feMergeNode in="SourceGraphic"></feMergeNode>
+                          </feMerge>
+                        </filter>
+                      </defs>
+                      <rect x="20" y="26" width="480" height="308" rx="16" fill="rgba(8,8,12,0.28)" stroke="rgba(148,163,184,0.16)"></rect>
+                      <path d="M260 68 C365 68 438 126 438 180 C438 236 365 292 260 292 C155 292 82 236 82 180 C82 126 155 68 260 68"
+                            fill="none" stroke="#22d3ee" stroke-width="2.2" stroke-dasharray="7 7" opacity="0.78" marker-end="url(#cycleArrow)"></path>
+                      <path d="M142 180 L378 180" stroke="rgba(148,163,184,0.42)" stroke-width="1.6"></path>
+                      <path d="M260 94 L260 266" stroke="rgba(148,163,184,0.34)" stroke-width="1.2"></path>
+                      <circle cx="260" cy="180" r="58" fill="rgba(167,139,250,0.16)" stroke="#a78bfa" stroke-width="2" filter="url(#softGlow)"></circle>
+                      <circle cx="260" cy="180" r="28" fill="rgba(34,211,238,0.24)" stroke="#22d3ee" stroke-width="2"></circle>
+                      <text x="260" y="174" text-anchor="middle" fill="#f0f0f5" font-size="15" font-weight="700">D-ND</text>
+                      <text x="260" y="193" text-anchor="middle" fill="#cbd5e1" font-size="10" font-family="monospace">cycle engine</text>
+
+                      <g>
+                        <circle cx="102" cy="180" r="30" fill="rgba(34,211,238,0.22)" stroke="#22d3ee" stroke-width="2"></circle>
+                        <text x="102" y="176" text-anchor="middle" fill="#f0f0f5" font-size="12" font-weight="700">Campo</text>
+                        <text x="102" y="193" text-anchor="middle" fill="#94a3b8" font-size="9">osserva</text>
+                      </g>
+                      <g>
+                        <circle cx="260" cy="68" r="30" fill="rgba(251,191,36,0.18)" stroke="#fbbf24" stroke-width="2"></circle>
+                        <text x="260" y="64" text-anchor="middle" fill="#f0f0f5" font-size="12" font-weight="700">Agente</text>
+                        <text x="260" y="81" text-anchor="middle" fill="#94a3b8" font-size="9">propone</text>
+                      </g>
+                      <g>
+                        <circle cx="418" cy="180" r="30" fill="rgba(251,113,133,0.16)" stroke="#fb7185" stroke-width="2"></circle>
+                        <text x="418" y="176" text-anchor="middle" fill="#f0f0f5" font-size="12" font-weight="700">Falsifier</text>
+                        <text x="418" y="193" text-anchor="middle" fill="#94a3b8" font-size="9">attacca</text>
+                      </g>
+                      <g>
+                        <circle cx="260" cy="292" r="30" fill="rgba(52,211,153,0.18)" stroke="#34d399" stroke-width="2"></circle>
+                        <text x="260" y="288" text-anchor="middle" fill="#f0f0f5" font-size="12" font-weight="700">Deposito</text>
+                        <text x="260" y="305" text-anchor="middle" fill="#94a3b8" font-size="9">conserva</text>
+                      </g>
+
+                      <path d="M128 164 C170 116 202 86 232 72" fill="none" stroke="#a78bfa" stroke-width="1.8" marker-end="url(#cycleArrow)" opacity="0.85"></path>
+                      <path d="M288 72 C326 88 368 118 402 160" fill="none" stroke="#fbbf24" stroke-width="1.8" marker-end="url(#cycleArrow)" opacity="0.85"></path>
+                      <path d="M402 200 C368 244 326 272 290 288" fill="none" stroke="#fb7185" stroke-width="1.8" marker-end="url(#cycleArrow)" opacity="0.85"></path>
+                      <path d="M232 288 C190 270 150 232 126 200" fill="none" stroke="#34d399" stroke-width="1.8" marker-end="url(#cycleArrow)" opacity="0.85"></path>
+
+                      <text x="48" y="48" fill="#67e8f9" font-size="10" font-family="monospace">runtime trace</text>
+                      <text x="382" y="48" fill="#c4b5fd" font-size="10" font-family="monospace">null / baseline</text>
+                      <text x="44" y="324" fill="#6ee7b7" font-size="10" font-family="monospace">graph + products</text>
+                      <text x="376" y="324" fill="#fcd34d" font-size="10" font-family="monospace">next seed</text>
+                    </svg>
                   </div>
-                  <div class="cycle-node amber">
-                    <div class="eyebrow">03 · agent</div>
-                    <div class="title">Ipotesi falsificabile</div>
-                    <div class="body">L’agente produce un claim operativo, con baseline o null espliciti e una traccia runtime del modo in cui ha ciclato.</div>
+
+                  <div class="cycle-column">
+                    <div class="cycle-node rose">
+                      <div class="eyebrow">04 · counter-pole</div>
+                      <div class="title">Falsificazione</div>
+                      <div class="body">Un polo separato cerca hard-zero, bias, edge case, continuità assiomatica e ri-scoperta.</div>
+                    </div>
+                    <div class="cycle-node green">
+                      <div class="eyebrow">05 · deposito</div>
+                      <div class="title">Artifact e grafo</div>
+                      <div class="body">Solo ciò che resta leggibile entra in report, value artifact, graph, bicono, cimitero o pipeline prodotti.</div>
+                    </div>
+                    <div class="cycle-node cyan">
+                      <div class="eyebrow">06 · ritorno</div>
+                      <div class="title">Auto-affinamento</div>
+                      <div class="body">Il ciclo successivo eredita vincoli, errori, runtime e direzione aggiornata senza dipendere da una prescrizione esterna.</div>
+                    </div>
                   </div>
                 </div>
-
-                <div class="cycle-core" aria-label="Diagramma del ciclo Lab">
-                  <svg viewBox="0 0 520 360" role="img">
-                    <defs>
-                      <marker id="cycleArrow" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-                        <path d="M 0 0 L 10 5 L 0 10 z" fill="#22d3ee" opacity="0.9"></path>
-                      </marker>
-                      <filter id="softGlow" x="-30%" y="-30%" width="160%" height="160%">
-                        <feGaussianBlur stdDeviation="4" result="blur"></feGaussianBlur>
-                        <feMerge>
-                          <feMergeNode in="blur"></feMergeNode>
-                          <feMergeNode in="SourceGraphic"></feMergeNode>
-                        </feMerge>
-                      </filter>
-                    </defs>
-                    <rect x="20" y="26" width="480" height="308" rx="16" fill="rgba(8,8,12,0.28)" stroke="rgba(148,163,184,0.16)"></rect>
-                    <path d="M260 68 C365 68 438 126 438 180 C438 236 365 292 260 292 C155 292 82 236 82 180 C82 126 155 68 260 68"
-                          fill="none" stroke="#22d3ee" stroke-width="2.2" stroke-dasharray="7 7" opacity="0.78" marker-end="url(#cycleArrow)"></path>
-                    <path d="M142 180 L378 180" stroke="rgba(148,163,184,0.42)" stroke-width="1.6"></path>
-                    <path d="M260 94 L260 266" stroke="rgba(148,163,184,0.34)" stroke-width="1.2"></path>
-                    <circle cx="260" cy="180" r="58" fill="rgba(167,139,250,0.16)" stroke="#a78bfa" stroke-width="2" filter="url(#softGlow)"></circle>
-                    <circle cx="260" cy="180" r="28" fill="rgba(34,211,238,0.24)" stroke="#22d3ee" stroke-width="2"></circle>
-                    <text x="260" y="174" text-anchor="middle" fill="#f0f0f5" font-size="15" font-weight="700">D-ND</text>
-                    <text x="260" y="193" text-anchor="middle" fill="#cbd5e1" font-size="10" font-family="monospace">cycle engine</text>
-
-                    <g>
-                      <circle cx="102" cy="180" r="30" fill="rgba(34,211,238,0.22)" stroke="#22d3ee" stroke-width="2"></circle>
-                      <text x="102" y="176" text-anchor="middle" fill="#f0f0f5" font-size="12" font-weight="700">Campo</text>
-                      <text x="102" y="193" text-anchor="middle" fill="#94a3b8" font-size="9">osserva</text>
-                    </g>
-                    <g>
-                      <circle cx="260" cy="68" r="30" fill="rgba(251,191,36,0.18)" stroke="#fbbf24" stroke-width="2"></circle>
-                      <text x="260" y="64" text-anchor="middle" fill="#f0f0f5" font-size="12" font-weight="700">Agente</text>
-                      <text x="260" y="81" text-anchor="middle" fill="#94a3b8" font-size="9">propone</text>
-                    </g>
-                    <g>
-                      <circle cx="418" cy="180" r="30" fill="rgba(251,113,133,0.16)" stroke="#fb7185" stroke-width="2"></circle>
-                      <text x="418" y="176" text-anchor="middle" fill="#f0f0f5" font-size="12" font-weight="700">Falsifier</text>
-                      <text x="418" y="193" text-anchor="middle" fill="#94a3b8" font-size="9">attacca</text>
-                    </g>
-                    <g>
-                      <circle cx="260" cy="292" r="30" fill="rgba(52,211,153,0.18)" stroke="#34d399" stroke-width="2"></circle>
-                      <text x="260" y="288" text-anchor="middle" fill="#f0f0f5" font-size="12" font-weight="700">Deposito</text>
-                      <text x="260" y="305" text-anchor="middle" fill="#94a3b8" font-size="9">conserva</text>
-                    </g>
-
-                    <path d="M128 164 C170 116 202 86 232 72" fill="none" stroke="#a78bfa" stroke-width="1.8" marker-end="url(#cycleArrow)" opacity="0.85"></path>
-                    <path d="M288 72 C326 88 368 118 402 160" fill="none" stroke="#fbbf24" stroke-width="1.8" marker-end="url(#cycleArrow)" opacity="0.85"></path>
-                    <path d="M402 200 C368 244 326 272 290 288" fill="none" stroke="#fb7185" stroke-width="1.8" marker-end="url(#cycleArrow)" opacity="0.85"></path>
-                    <path d="M232 288 C190 270 150 232 126 200" fill="none" stroke="#34d399" stroke-width="1.8" marker-end="url(#cycleArrow)" opacity="0.85"></path>
-
-                    <text x="48" y="48" fill="#67e8f9" font-size="10" font-family="monospace">runtime trace</text>
-                    <text x="382" y="48" fill="#c4b5fd" font-size="10" font-family="monospace">null / baseline</text>
-                    <text x="44" y="324" fill="#6ee7b7" font-size="10" font-family="monospace">graph + products</text>
-                    <text x="376" y="324" fill="#fcd34d" font-size="10" font-family="monospace">next seed</text>
-                  </svg>
-                </div>
-
-                <div class="cycle-column">
-                  <div class="cycle-node rose">
-                    <div class="eyebrow">04 · counter-pole</div>
-                    <div class="title">Falsificazione</div>
-                    <div class="body">Un polo separato cerca hard-zero, bias, edge case, continuità assiomatica e ri-scoperta.</div>
-                  </div>
-                  <div class="cycle-node green">
-                    <div class="eyebrow">05 · deposito</div>
-                    <div class="title">Artifact e grafo</div>
-                    <div class="body">Solo ciò che resta leggibile entra in report, value artifact, graph, bicono, cimitero o pipeline prodotti.</div>
-                  </div>
-                  <div class="cycle-node cyan">
-                    <div class="eyebrow">06 · ritorno</div>
-                    <div class="title">Auto-affinamento</div>
-                    <div class="body">Il ciclo successivo eredita vincoli, errori, runtime e direzione aggiornata senza dipendere da una prescrizione esterna.</div>
-                  </div>
-                </div>
-              </div>
+              </details>
 
               <div class="cycle-metric-row">
                 <div class="cycle-metric">
@@ -4210,87 +4256,107 @@
       },
 
       domainIntentTitle() {
-        if (this.activeDomain === 'research-radar') return 'Research Radar: da claim emergente a roadmap verificabile';
-        if (this.activeDomain === 'finance') return 'Finance: distinguere regime utile da falso segnale operativo';
-        if (this.activeDomain === 'physics') return 'Physics: far sopravvivere solo ponti fisici falsificabili';
-        return 'Dal dominio alla prova, poi di nuovo al seme';
+        if (this.activeDomain === 'research-radar') return this.lang === 'en' ? 'Research Radar: from emerging claim to verifiable roadmap' : 'Research Radar: da claim emergente a roadmap verificabile';
+        if (this.activeDomain === 'finance') return this.lang === 'en' ? 'Finance: separate useful regime from false operational signal' : 'Finance: distinguere regime utile da falso segnale operativo';
+        if (this.activeDomain === 'physics') return this.lang === 'en' ? 'Physics: only falsifiable physical bridges survive' : 'Physics: far sopravvivere solo ponti fisici falsificabili';
+        return this.lang === 'en' ? 'From domain to test, then back to the seed' : 'Dal dominio alla prova, poi di nuovo al seme';
       },
 
       domainIntentIntro() {
         if (this.activeDomain === 'research-radar') {
-          return 'Questo Lab osserva claim pubblici di ricerca o tecnologia, pretende fonte e data-card, poi decide se il claim va testato, tenuto in watch, rigettato o promosso a roadmap.';
+          return this.lang === 'en'
+            ? 'This Lab watches public research and technology claims, requires source and data-card, then decides whether the claim should be tested, watched, rejected or promoted into a roadmap.'
+            : 'Questo Lab osserva claim pubblici di ricerca o tecnologia, pretende fonte e data-card, poi decide se il claim va testato, tenuto in watch, rigettato o promosso a roadmap.';
         }
         if (this.activeDomain === 'finance') {
-          return 'Questo Lab non predice il mercato: controlla quando un’ipotesi di regime smette di reggere contro baseline, null, costi e vincoli decisionali.';
+          return this.lang === 'en'
+            ? 'This Lab does not predict markets: it checks when a regime hypothesis stops surviving baselines, nulls, costs and decision constraints.'
+            : 'Questo Lab non predice il mercato: controlla quando un’ipotesi di regime smette di reggere contro baseline, null, costi e vincoli decisionali.';
         }
         if (this.activeDomain === 'physics') {
-          return 'Questo Lab cerca ponti tra domini fisico-matematici e li lascia avanzare solo se sopravvivono a controlli, null e falsificazioni strutturali.';
+          return this.lang === 'en'
+            ? 'This Lab searches for bridges across physical and mathematical domains and lets them advance only when they survive controls, nulls and structural falsification.'
+            : 'Questo Lab cerca ponti tra domini fisico-matematici e li lascia avanzare solo se sopravvivono a controlli, null e falsificazioni strutturali.';
         }
-        return 'Il Lab osserva un dominio, produce una proposta falsificabile, la attacca con controlli separati e conserva solo ciò che migliora il ciclo successivo.';
+        return this.lang === 'en'
+          ? 'The Lab observes a domain, produces a falsifiable proposal, attacks it with separate controls and keeps only what improves the next cycle.'
+          : 'Il Lab osserva un dominio, produce una proposta falsificabile, la attacca con controlli separati e conserva solo ciò che migliora il ciclo successivo.';
       },
 
       domainIntentInput() {
+        const isEn = this.lang === 'en';
         if (this.activeDomain === 'research-radar') {
           return {
-            headline: 'Claim + fonte + data-card',
-            copy: 'Legge affermazioni emergenti, fonte pubblica, dataset o paper associato, contesto di provenienza e condizioni minime di audit.',
+            label: isEn ? 'input' : 'cosa consuma',
+            headline: isEn ? 'Claim + source + data-card' : 'Claim + fonte + data-card',
+            copy: isEn ? 'Reads emerging claims, public source, related dataset or paper, provenance context and minimum audit conditions.' : 'Legge affermazioni emergenti, fonte pubblica, dataset o paper associato, contesto di provenienza e condizioni minime di audit.',
             meta: this.latestValueArtifact()?.filename || 'value artifact richiesto',
           };
         }
         if (this.activeDomain === 'finance') {
           return {
-            headline: 'Serie, finestre e costi',
-            copy: 'Consuma prezzi, finestre walk-forward, volatilità, baseline VaR/RV e null block-preserving prima di ammettere un delta.',
+            label: isEn ? 'input' : 'cosa consuma',
+            headline: isEn ? 'Series, windows and costs' : 'Serie, finestre e costi',
+            copy: isEn ? 'Consumes prices, walk-forward windows, volatility, VaR/RV baselines and block-preserving nulls before admitting a delta.' : 'Consuma prezzi, finestre walk-forward, volatilità, baseline VaR/RV e null block-preserving prima di ammettere un delta.',
             meta: this.financeDataCardSummary(),
           };
         }
         return {
-          headline: 'Seme, report e artifact',
-          copy: 'Consuma dominio, intento, direzione corrente, report, diagnostiche, graph e contributi osservabili.',
+          label: isEn ? 'input' : 'cosa consuma',
+          headline: isEn ? 'Seed, reports and artifacts' : 'Seme, report e artifact',
+          copy: isEn ? 'Consumes domain, intent, current direction, reports, diagnostics, graph and observable contributions.' : 'Consuma dominio, intento, direzione corrente, report, diagnostiche, graph e contributi osservabili.',
           meta: this.seed?.direzione || 'direzione dal seed',
         };
       },
 
       domainIntentTest() {
+        const isEn = this.lang === 'en';
         if (this.activeDomain === 'research-radar') {
           return {
-            headline: 'Falsifier prima della promozione',
-            copy: 'Un claim senza source/data-card resta watch o reject. Una fonte reale non basta: serve un null adatto al tipo di claim.',
+            label: isEn ? 'falsifier' : 'come decide',
+            headline: isEn ? 'Falsifier before promotion' : 'Falsifier prima della promozione',
+            copy: isEn ? 'A claim without source/data-card remains watch or reject. A real source is not enough: the null must fit the claim type.' : 'Un claim senza source/data-card resta watch o reject. Una fonte reale non basta: serve un null adatto al tipo di claim.',
             meta: this.reportVerdictLabel(this.latestReport()),
           };
         }
         if (this.activeDomain === 'finance') {
           return {
-            headline: 'No signal senza baseline',
-            copy: 'Ogni ipotesi viene confrontata contro shuffle, random walk, costi e competitor. Il confine sintetico non diventa mai buy/sell.',
+            label: isEn ? 'falsifier' : 'come decide',
+            headline: isEn ? 'No signal without baseline' : 'No signal senza baseline',
+            copy: isEn ? 'Every hypothesis is checked against shuffle, random walk, costs and competitors. A synthetic boundary never becomes buy/sell.' : 'Ogni ipotesi viene confrontata contro shuffle, random walk, costi e competitor. Il confine sintetico non diventa mai buy/sell.',
             meta: this.domainDecisionHint(),
           };
         }
         return {
-          headline: 'Counter-pole operativo',
-          copy: 'Cerca bias, hard-zero, edge case, ri-scoperta, incoerenza assiomatica e baseline mancante.',
+          label: isEn ? 'falsifier' : 'come decide',
+          headline: isEn ? 'Operational counter-pole' : 'Counter-pole operativo',
+          copy: isEn ? 'Searches for bias, hard-zero, edge cases, rediscovery, axiom inconsistency and missing baseline.' : 'Cerca bias, hard-zero, edge case, ri-scoperta, incoerenza assiomatica e baseline mancante.',
           meta: `${this.falsifierSummary?.n_total_flags || 0} flag su ${this.falsifierSummary?.n_reports_checked || 0} report`,
         };
       },
 
       domainIntentOutput() {
+        const isEn = this.lang === 'en';
         if (this.activeDomain === 'research-radar') {
           return {
+            label: isEn ? 'output' : 'cosa produce',
             headline: 'Watch / test / reject / promote',
-            copy: 'Produce claim-card leggibili, motivo della decisione, prossimo test richiesto e memoria di ciò che non può essere promosso.',
+            copy: isEn ? 'Produces readable claim-cards, decision reason, required next test and memory of what cannot be promoted.' : 'Produce claim-card leggibili, motivo della decisione, prossimo test richiesto e memoria di ciò che non può essere promosso.',
             meta: this.latestValueArtifact()?.summary ? JSON.stringify(this.latestValueArtifact().summary) : this.domainDecisionHint(),
           };
         }
         if (this.activeDomain === 'finance') {
           return {
-            headline: 'Vincoli decisionali',
-            copy: 'Produce boundary, non-ammissibile, diagnostica ricorsiva e possibili prodotti solo dopo verifica SSP.',
+            label: isEn ? 'output' : 'cosa produce',
+            headline: isEn ? 'Decision constraints' : 'Vincoli decisionali',
+            copy: isEn ? 'Produces boundary, non-admissible actions, recursive diagnostics and possible products only after SSP verification.' : 'Produce boundary, non-ammissibile, diagnostica ricorsiva e possibili prodotti solo dopo verifica SSP.',
             meta: this.financeWindowCounts().label,
           };
         }
         return {
-          headline: 'Grafo, prodotti, cimitero',
-          copy: 'Aggiorna graph, bicono, report, artifact, pipeline prodotti e memoria degli errori.',
+          label: isEn ? 'output' : 'cosa produce',
+          headline: isEn ? 'Graph, products, cemetery' : 'Grafo, prodotti, cimitero',
+          copy: isEn ? 'Updates graph, bicono, reports, artifacts, product pipeline and error memory.' : 'Aggiorna graph, bicono, report, artifact, pipeline prodotti e memoria degli errori.',
           meta: `${this.campoStats().prodotti} prodotti · ${this.cimiteroCount()} filtrati`,
         };
       },
