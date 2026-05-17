@@ -765,12 +765,12 @@
       bottom: auto;
       top: calc(100% + 6px);
     }
-    [data-tip].tip-left:hover::after {
-      bottom: auto;
-      top: 50%;
-      left: auto;
-      right: calc(100% + 8px);
-      transform: translateY(-50%);
+    [data-tip].tip-right-panel:hover::after {
+      bottom: calc(100% + 6px);
+      top: auto;
+      left: 0;
+      right: auto;
+      transform: none;
       width: 220px;
       white-space: normal;
       line-height: 1.35;
@@ -2191,7 +2191,7 @@
             </section>
 
             <template x-if="contextIntro.intro">
-              <div class="info-context-intro markdown text-sm text-slate-200" x-html="renderMarkdown(contextIntro.intro)"></div>
+              <div class="info-context-intro markdown text-sm text-slate-200" x-html="renderContextIntro(contextIntro.intro)"></div>
             </template>
 
             <!-- Pipeline SSP — sezione dedicata, descrive il flusso scoperta → prodotto -->
@@ -2312,37 +2312,37 @@
                      : 'Usa questa colonna come mappa rapida mentre il centro spiega il dominio attivo.'"></p>
               </div>
               <div class="space-y-1.5">
-                <button @click="setActiveTab('campo')" class="detail-action text-cyan-300 tip-left"
+                <button @click="setActiveTab('campo')" class="detail-action text-cyan-300 tip-right-panel"
                         :data-tip="lang === 'en' ? 'Open current resultant, diagnostics and recent signals.' : 'Apri risultante, diagnostiche e segnali recenti.'">
                   <span class="font-medium">Campo</span>
                   <span class="block text-[11px] text-slate-400"
                         x-text="lang === 'en' ? 'Current resultant and recent signals.' : 'Risultante e segnali recenti.'"></span>
                 </button>
-                <button @click="setActiveTab('grafo')" class="detail-action text-cyan-300 tip-left"
+                <button @click="setActiveTab('grafo')" class="detail-action text-cyan-300 tip-right-panel"
                         :data-tip="lang === 'en' ? 'Open domain relations, nodes and bridges.' : 'Apri relazioni, nodi e ponti del dominio.'">
                   <span class="font-medium">Grafo</span>
                   <span class="block text-[11px] text-slate-400"
                         x-text="lang === 'en' ? 'Relations, nodes and bridges.' : 'Relazioni, nodi e ponti.'"></span>
                 </button>
-                <button @click="setActiveTab('bicono')" class="detail-action text-purple-300 tip-left"
+                <button @click="setActiveTab('bicono')" class="detail-action text-purple-300 tip-right-panel"
                         :data-tip="lang === 'en' ? 'Open discovery poles extracted from reports.' : 'Apri i poli delle scoperte estratti dai report.'">
                   <span class="font-medium">Bicono</span>
                   <span class="block text-[11px] text-slate-400"
                         x-text="lang === 'en' ? 'Discovery poles extracted from reports.' : 'Poli delle scoperte estratti dai report.'"></span>
                 </button>
-                <button @click="setActiveTab('agente')" class="detail-action text-purple-300 tip-left"
+                <button @click="setActiveTab('agente')" class="detail-action text-purple-300 tip-right-panel"
                         :data-tip="lang === 'en' ? 'Open reports, evidence, verdicts and falsifier flags.' : 'Apri report, evidenza, verdict e flag del falsifier.'">
                   <span class="font-medium">Agente</span>
                   <span class="block text-[11px] text-slate-400"
                         x-text="lang === 'en' ? 'Evidence, verdicts and falsifier flags.' : 'Evidenza, verdict e flag del falsifier.'"></span>
                 </button>
-                <button @click="setActiveTab('incrocio')" class="detail-action text-purple-300 tip-left"
+                <button @click="setActiveTab('incrocio')" class="detail-action text-purple-300 tip-right-panel"
                         :data-tip="lang === 'en' ? 'Open aggregate taxonomy and cycle trajectory.' : 'Apri tassonomia aggregata e traiettoria dei cicli.'">
                   <span class="font-medium">Tassonomia</span>
                   <span class="block text-[11px] text-slate-400"
                         x-text="lang === 'en' ? 'Aggregate map and cycle trajectory.' : 'Mappa aggregata e traiettoria dei cicli.'"></span>
                 </button>
-                <button @click="setActiveTab('prodotti')" class="detail-action text-green-300 tip-left"
+                <button @click="setActiveTab('prodotti')" class="detail-action text-green-300 tip-right-panel"
                         :data-tip="lang === 'en' ? 'Open discoveries, candidates and verified outputs.' : 'Apri scoperte, candidati e output verificati.'">
                   <span class="font-medium">Prodotti</span>
                   <span class="block text-[11px] text-slate-400"
@@ -5311,6 +5311,14 @@
         } catch (e) {
           return `<pre>${this.escapeHtml(text)}</pre>`;
         }
+      },
+
+      renderContextIntro(text) {
+        if (!text) return '';
+        const normalized = String(text)
+          .replace(/\r\n/g, '\n')
+          .replace(/([^\n])\n(?!\n|[-*#>`])/g, '$1 ');
+        return this.renderMarkdown(normalized);
       },
 
       // v4.10 — ToC parsato dai header del markdown
