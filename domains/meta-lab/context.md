@@ -60,6 +60,9 @@ campo skill/enzimi:
 - `docs/COGNITIVE_ARCHIVE_INTEGRATION.md`: mappa degli archivi cognitivi
   esterni (`/opt/skill`, `/opt/KPhi1`, cockpit storico MMSp) e regole per
   usarli come lineage/transduzione, non come prompt library;
+- `docs/cognitive_archives/*.json`: capsule portabili che permettono di
+  progettare anche quando i path locali non sono disponibili o leggere tutto
+  consumerebbe troppo contesto;
 - `/opt/MM_D-ND/tools/data/cognitive_enzymes_archive.md`: archivio degli
   enzimi cognitivi gia' estratti dal sistema.
 
@@ -166,7 +169,9 @@ Il lab figlio acquisisce anche:
      sono pertinenti al dominio/intento;
    - `archive_retrieval`: eventuali fonti da `/opt/skill`, `/opt/KPhi1` o
      `/opt/d-nd_cockpit/docs/system/kernel`, con path, read_depth, pattern
-     estratto e rischio contaminazione;
+     estratto e rischio contaminazione. Se il corpo completo non e'
+     disponibile, usare le capsule `docs/cognitive_archives/*.json` e
+     dichiarare `read_depth=CAPSULE` + `body_required=true`;
    - `missing_capabilities`: cosa manca davvero e deve diventare tool,
      null, baseline, assertion o nuova skill;
    - `contamination_risk`: quali skill/enzimi non vanno usati perche'

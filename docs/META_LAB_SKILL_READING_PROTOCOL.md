@@ -54,7 +54,9 @@ Ordine di consultazione:
 5. `docs/COGNITIVE_ARCHIVE_INTEGRATION.md` per distinguere archivi
    correnti, semi installabili e lineage storico prima di scegliere una
    fonte non standard.
-6. Corpi reali delle skill candidate:
+6. Capsule portabili in `docs/cognitive_archives/` quando la fonte completa
+   non e' disponibile o leggere tutto costerebbe troppo contesto.
+7. Corpi reali delle skill candidate:
    - `/opt/.claude/skills/*.md`;
    - `/opt/MM_D-ND/kernel/reference/skills/*.md`;
    - skill THIA in `/opt/THIA/.agent/skills/` se disponibili e pertinenti.
@@ -62,12 +64,14 @@ Ordine di consultazione:
    - `/opt/KPhi1/skills/*/SKILL.md` quando serve il seme strutturato KPhi1;
    - `/opt/d-nd_cockpit/docs/system/kernel/*` solo per lineage storico
      letto e transdotto esplicitamente.
-7. `/opt/MM_D-ND/tools/data/cognitive_enzymes_archive.md` per enzimi gia'
+8. `/opt/MM_D-ND/tools/data/cognitive_enzymes_archive.md` per enzimi gia'
    estratti.
 
 Catalogo, mappa e diagnostica orientano. Il corpo della skill decide.
 Gli archivi esterni al Lab non sono autorita' implicita: entrano solo con
 path, profondita' di lettura, pattern estratto e rischio contaminazione.
+Una capsula vale come livello `CAPSULE`: puo' restringere il campo, ma non
+autorizza una skill attiva nel MML quando serve il corpo.
 
 ## Profondita' di lettura
 

@@ -24,6 +24,29 @@ si trasferisce la procedura verificabile, non la persona narrativa;
 si dichiara provenance e profondita' di lettura prima di usarla nel MML.
 ```
 
+## Capsule portabili
+
+La repo pubblica include distillati portabili in
+`docs/cognitive_archives/`. Servono quando una nuova istanza non puo' leggere
+i path locali del VPS o quando leggere l'intero archivio consumerebbe troppo
+contesto.
+
+File iniziali:
+
+- `docs/cognitive_archives/archive_capsule.v1.json`: schema logico;
+- `docs/cognitive_archives/kphi1_omega_kernel_20260517.json`;
+- `docs/cognitive_archives/thia_skill_snapshot_20260517.json`;
+- `docs/cognitive_archives/cockpit_mmsp_lineage_20260517.json`.
+
+Regola:
+
+```text
+capsula -> candidate pattern -> body read if needed -> transduction -> E2E
+```
+
+La capsula puo' orientare la progettazione. Non basta per dichiarare una
+skill attiva nel MML se serve il corpo completo.
+
 ## Archivi oggi rilevanti
 
 ### `/opt/skill`
@@ -145,21 +168,24 @@ Rischio:
 Quando un dominio o sistema AI richiede nuove capacita' cognitive:
 
 1. Definisci il movimento richiesto, non la skill desiderata.
-2. Consulta gli archivi in ordine di prossimita':
+2. Consulta prima le capsule in `docs/cognitive_archives/` per restringere
+   il campo senza caricare tutto in contesto.
+3. Consulta gli archivi completi in ordine di prossimita' solo quando la
+   capsula indica che il corpo e' necessario:
    - docs correnti del Lab (`SKILL_CATALOG`, `SKILL_FIELD_MAP`,
      `SKILL_DIAGNOSTIC`, `META_LAB_SKILL_*`);
    - `/opt/KPhi1` se serve un seme installabile o una struttura autonoma;
    - `/opt/skill` se serve una skill THIA flat/portabile;
    - `/opt/d-nd_cockpit/docs/system/kernel` se serve lineage storico o una
      logica originaria non piu' presente in runtime.
-3. Per ogni fonte candidata registra:
+4. Per ogni fonte candidata registra:
    - path esatto;
    - `read_depth`;
    - pattern estratto;
    - artefatto che modifica;
    - contaminazione esclusa;
    - test o evidenza E2E prevista.
-4. Trasduci il pattern in uno di questi output:
+5. Trasduci il pattern in uno di questi output:
    - layer MML;
    - sezione `context.md`;
    - `_AI_CONTEXT.md` locale o equivalente;
@@ -167,7 +193,21 @@ Quando un dominio o sistema AI richiede nuove capacita' cognitive:
    - UI lens;
    - veto/check pre-modifica;
    - nuova skill con parentage dichiarato.
-5. Se non puoi indicare l'output modificato, la fonte resta `support_only`.
+6. Se non puoi indicare l'output modificato, la fonte resta `support_only`.
+
+## Agente Archive Curator
+
+Quando servono molti file completi, il main agent non deve leggerli tutti nel
+proprio contesto. Deve delegare a un processo separato di tipo **Archive
+Curator**:
+
+- input: archivio assegnato, intento/movimento, capsule esistenti;
+- output: capsula aggiornata, lista dei corpi necessari, pattern esclusi,
+  contaminazioni, domande residue;
+- limite: non genera il Lab e non modifica MML/context direttamente.
+
+Questo mantiene il main context sulla decisione e lascia la lettura estesa a
+un worker dedicato.
 
 ## Contratto per nuovi sistemi AI
 

@@ -1,0 +1,73 @@
+{
+  "schema": "dnd.cognitive_archive_capsule.v1",
+  "archive_id": "thia_skill_snapshot",
+  "title": "THIA skill flat snapshot and thinker-pack",
+  "source_kind": "flat_skill_repo",
+  "source_origin": {
+    "observed_local_path": "/opt/skill",
+    "portable_status": "not vendored",
+    "repo_required_if_body_read_needed": true
+  },
+  "snapshot_date": "2026-05-17",
+  "availability": "Capsule is in D-ND_LAB. Full flat skill files must be provided separately or vendored before BODY use.",
+  "use_when": [
+    "A new runtime needs portable cognitive skills without full KPhi1.",
+    "A chat/coder environment needs a thinker-pack style install.",
+    "The meta-lab needs to compare current skill catalog against older THIA taxonomy.",
+    "A domain needs one or two flat skills as support, not an entire kernel."
+  ],
+  "do_not_use_for": [
+    "Assuming every flat skill is current runtime authority.",
+    "Using retired skills without checking status.",
+    "Replacing D-ND_LAB skill diagnostics with a flat list.",
+    "Loading all skills into context before selecting by movement."
+  ],
+  "distilled_patterns": [
+    {
+      "pattern_id": "three_plane_taxonomy",
+      "summary": "Plane 0 Kernel MM, Plane 1 portable cognitive skills, Plane 2 THIA-bound operative skills, Plane 3 bridges/connectors.",
+      "transduction_target": ["skill_retrieval", "mml.json", "install_profile"],
+      "body_required_for_mml": false
+    },
+    {
+      "pattern_id": "thinker_pack",
+      "summary": "Portable cognitive pack for chat systems: Kernel MM plus cognitive skills, without THIA infrastructure dependency.",
+      "transduction_target": ["install_procedure", "new_ai_system_seed"],
+      "body_required_for_mml": true
+    },
+    {
+      "pattern_id": "flat_skill_distribution",
+      "summary": "Single-file agent_skills_*.md format can be copied into runtime environments more easily than structured repos.",
+      "transduction_target": ["skill_loader", "runtime_adapter"],
+      "body_required_for_mml": true
+    },
+    {
+      "pattern_id": "retired_skill_awareness",
+      "summary": "Some files are historical/retired; capsule use requires diagnostic status before activation.",
+      "transduction_target": ["skill_diagnostic", "exclusions"],
+      "body_required_for_mml": false
+    }
+  ],
+  "candidate_sources": [
+    {"path": "/opt/skill/README.md", "use": "taxonomy, active/retired grouping, channel distinction"},
+    {"path": "/opt/skill/thinker-pack/README_IT.md", "use": "portable chat install pattern"},
+    {"path": "/opt/skill/thinker-pack/KERNEL_MM_v1.md", "use": "portable Kernel MM seed if explicitly needed"},
+    {"path": "/opt/skill/agent_skills_*.md", "use": "flat skill bodies after candidate selection"}
+  ],
+  "read_depth_policy": {
+    "minimum_for_planning": "CAPSULE",
+    "minimum_for_context_generation": "CAPSULE",
+    "minimum_for_mml_active_skill": "BODY plus diagnostic status",
+    "minimum_for_runtime_install": "BODY_PLUS_REFS"
+  },
+  "contamination_risks": [
+    "Flat snapshot may lag behind current THIA/D-ND_LAB runtime.",
+    "Retired files may still be present.",
+    "Plane 2 operative skills may assume THIA infrastructure unavailable to a public install.",
+    "Thinker-pack can be useful but too broad for a narrow domain Lab."
+  ],
+  "archive_retrieval_contract": {
+    "required": true,
+    "extra_fields": ["plane", "skill_status_if_known", "runtime_dependency"]
+  }
+}

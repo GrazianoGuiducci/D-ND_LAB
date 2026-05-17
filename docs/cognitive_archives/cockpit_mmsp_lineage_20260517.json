@@ -1,0 +1,75 @@
+{
+  "schema": "dnd.cognitive_archive_capsule.v1",
+  "archive_id": "cockpit_mmsp_lineage",
+  "title": "Historical MMSp / cockpit kernel archive",
+  "source_kind": "historical_lineage_archive",
+  "source_origin": {
+    "observed_local_path": "/opt/d-nd_cockpit/docs/system/kernel",
+    "portable_status": "not vendored",
+    "repo_required_if_body_read_needed": true
+  },
+  "snapshot_date": "2026-05-17",
+  "availability": "Capsule is in D-ND_LAB. Full historical prompts must be provided separately or vendored before BODY use.",
+  "use_when": [
+    "Current Lab/meta-lab docs show a conceptual hole that may have been solved in older MMSp.",
+    "A named older entity such as ALAN, SACS-PS, Halo, COAC, AWO, OCC, Morpheus or AETO is directly relevant.",
+    "The system needs lineage clarification before creating a new skill or meta-prompt.",
+    "A future instance must understand why a current pattern exists."
+  ],
+  "do_not_use_for": [
+    "Directly injecting old system prompts into a Lab cycle.",
+    "Treating historical language as current runtime procedure.",
+    "Overriding current validators, MML, assertions or UI contracts.",
+    "Promoting a pattern without checking against live repo behavior."
+  ],
+  "distilled_patterns": [
+    {
+      "pattern_id": "historical_lineage_recovery",
+      "summary": "Older prompts can explain origin and missing intent of current skill/lab behavior.",
+      "transduction_target": ["docs", "skill_reading_matrix", "exclusions"],
+      "body_required_for_mml": true
+    },
+    {
+      "pattern_id": "named_entity_source_map",
+      "summary": "Named entities like ALAN, SACS-PS, Halo, COAC, OCC and Morpheus map to logic, architecture, genome, orchestration and stalling patterns.",
+      "transduction_target": ["candidate_sources", "skill_intent_map"],
+      "body_required_for_mml": true
+    },
+    {
+      "pattern_id": "anti_wholesale_import",
+      "summary": "Historical prompts must be reduced to procedure and compared with the living repo before use.",
+      "transduction_target": ["contamination_risk", "veto"],
+      "body_required_for_mml": false
+    }
+  ],
+  "candidate_sources": [
+    {"path": "/opt/d-nd_cockpit/docs/system/kernel/MMS_Master.txt", "use": "master MMSp lineage"},
+    {"path": "/opt/d-nd_cockpit/docs/system/kernel/D-ND_PrimaryRules.txt", "use": "primary D-ND rules lineage"},
+    {"path": "/opt/d-nd_cockpit/docs/system/kernel/00_Assioma_di_Invarianza_Ontologica.txt", "use": "invariance lineage"},
+    {"path": "/opt/d-nd_cockpit/docs/system/kernel/System_Prompt_Architettura_Assiomatica_Halo_Genoma_v3_0.txt", "use": "Halo/genome architecture lineage"},
+    {"path": "/opt/d-nd_cockpit/docs/system/kernel/System_Prompt_Yi_Synaptic_Navigator_YSN_v4_0.txt", "use": "lateral navigation lineage"},
+    {"path": "/opt/d-nd_cockpit/docs/system/kernel/System_Prompt_ALAN_v14_2_1.txt", "use": "adaptive logic lineage"},
+    {"path": "/opt/d-nd_cockpit/docs/system/kernel/System_Prompt_SACS_PS_v14_0.txt", "use": "structural architecture lineage"},
+    {"path": "/opt/d-nd_cockpit/docs/system/kernel/System_Prompt_Morpheus_v1_0.txt", "use": "stall/collapse lineage"},
+    {"path": "/opt/d-nd_cockpit/docs/system/kernel/Meta_System_Prompt_v2_5_Orchestratore_Flussi_Lavoro_Adattivi_AWO.txt", "use": "adaptive workflow orchestration lineage"},
+    {"path": "/opt/d-nd_cockpit/docs/system/kernel/Meta_System_Prompt_v5_0_COAC.txt", "use": "field conductor lineage"},
+    {"path": "/opt/d-nd_cockpit/docs/system/kernel/Orchestratore_Cercatore_Costruttore_OCC_v1_0.txt", "use": "orchestrator/searcher/builder lineage"},
+    {"path": "/opt/d-nd_cockpit/docs/system/kernel/metaprompt_in_sviluppo/System_Prompt_Orchestratore_del_Training_Auto-Evolutivo_AETO.txt", "use": "self-training lineage"}
+  ],
+  "read_depth_policy": {
+    "minimum_for_planning": "CAPSULE",
+    "minimum_for_context_generation": "BODY for exact file used",
+    "minimum_for_mml_active_skill": "BODY_PLUS_REFS plus current-repo comparison",
+    "minimum_for_public_template": "E2E or explicit support_only"
+  },
+  "contamination_risks": [
+    "Historical prompts can be semantically rich but procedurally obsolete.",
+    "Old cockpit assumptions may conflict with D-ND_LAB public install constraints.",
+    "Named entities can become persona theater if not reduced to outputs.",
+    "Lineage files may include broad system instructions not appropriate for public repo reuse."
+  ],
+  "archive_retrieval_contract": {
+    "required": true,
+    "extra_fields": ["lineage_entity", "current_equivalent_if_any", "support_only_if_not_tested"]
+  }
+}

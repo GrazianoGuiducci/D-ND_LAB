@@ -1,0 +1,36 @@
+{
+  "schema": "dnd.cognitive_archive_capsule.v1",
+  "description": "Portable distilled map of an external cognitive archive. It is planning context, not full authority.",
+  "required_fields": [
+    "archive_id",
+    "title",
+    "source_kind",
+    "source_origin",
+    "snapshot_date",
+    "availability",
+    "use_when",
+    "do_not_use_for",
+    "distilled_patterns",
+    "candidate_sources",
+    "read_depth_policy",
+    "contamination_risks",
+    "archive_retrieval_contract"
+  ],
+  "read_depth_policy": {
+    "CAPSULE": "Only this distilled capsule was read. May orient planning, cannot authoritatively alter MML/context/tools.",
+    "BODY": "The exact source body was read. May become procedure or prompt section if transduced.",
+    "BODY_PLUS_REFS": "Body plus referenced docs/tools/evals were read. May enter MML with diagnostic status.",
+    "E2E": "Pattern was exercised in a generated Lab, test, cycle or UI/runtime trace."
+  },
+  "archive_retrieval_contract": {
+    "archive_id": "string",
+    "capsule": "repo-relative path",
+    "pattern": "string",
+    "read_depth": "CAPSULE|BODY|BODY_PLUS_REFS|E2E",
+    "used_for": "context.md|mml.json|tool|assertion|null|baseline|ui_contract|new_skill|veto|support_only",
+    "body_required": "boolean",
+    "body_source": "path/url/repo/ref/null",
+    "contamination_excluded": "string",
+    "test_expected": "string"
+  }
+}

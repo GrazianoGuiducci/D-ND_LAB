@@ -1,0 +1,103 @@
+{
+  "schema": "dnd.cognitive_archive_capsule.v1",
+  "archive_id": "kphi1_omega_kernel",
+  "title": "KPhi1 Omega Kernel v4.0 / installable cognitive seed",
+  "source_kind": "structured_repo",
+  "source_origin": {
+    "observed_local_path": "/opt/KPhi1",
+    "portable_status": "not vendored",
+    "repo_required_if_body_read_needed": true
+  },
+  "snapshot_date": "2026-05-17",
+  "availability": "Capsule is in D-ND_LAB. Full source must be provided separately or vendored before BODY/BODY_PLUS_REFS use.",
+  "use_when": [
+    "A generated Lab must become an autonomous AI system, not only a domain report loop.",
+    "The system needs local context/genome propagation.",
+    "The system needs safe self-modification with veto.",
+    "The system needs memory as process/KLI rather than plain logs.",
+    "The system must regenerate a minimum runtime from a bootstrap."
+  ],
+  "do_not_use_for": [
+    "Copying KPhi1 ontology into a domain Lab report.",
+    "Replacing domain-native observables with KPhi1 vocabulary.",
+    "Declaring KPhi1 skills active without reading their bodies.",
+    "Making finance/physics/editorial imitate KPhi1 as content."
+  ],
+  "distilled_patterns": [
+    {
+      "pattern_id": "p0_p6_stream_guard",
+      "summary": "System actions are checked against lineage/intent, integrity, entropy, resonance, resultant quality, learning/KLI, and bias/ethics.",
+      "transduction_target": ["assertion", "veto", "runtime_awareness"],
+      "body_required_for_mml": true
+    },
+    {
+      "pattern_id": "vra_cycle",
+      "summary": "Observe without immediate collapse, relate faculties/tools, let a resultant emerge, then integrate learning.",
+      "transduction_target": ["context.md", "cycle_protocol", "runtime_report"],
+      "body_required_for_mml": false
+    },
+    {
+      "pattern_id": "local_genome_context",
+      "summary": "Global DNA plus local _AI_CONTEXT.md per significant directory/domain; local context can restrict but not contradict global seed.",
+      "transduction_target": ["context.md", "transduction.md", "install_procedure"],
+      "body_required_for_mml": false
+    },
+    {
+      "pattern_id": "conductor_router",
+      "summary": "Select a minimal capability combo from a faculty map according to movement class and task type.",
+      "transduction_target": ["mml.json", "skill_intent_map", "archive_retrieval"],
+      "body_required_for_mml": true
+    },
+    {
+      "pattern_id": "aeternitas_veto",
+      "summary": "Before seed/MML/skill/UI self-modification, scan for source/integrity/autopoiesis violation and block if needed.",
+      "transduction_target": ["veto", "seed_integrator", "promotion_gate"],
+      "body_required_for_mml": true
+    },
+    {
+      "pattern_id": "mnemos_kli_memory",
+      "summary": "Memory is process: crystallize only what increases autonomy/coherence; otherwise decay or vault. Significant cycles produce KLI/triplets.",
+      "transduction_target": ["runtime_awareness", "seed_integrator", "cimitero"],
+      "body_required_for_mml": true
+    },
+    {
+      "pattern_id": "genesis_bootstrap",
+      "summary": "An inert environment can generate minimum runtime files from a blueprint.",
+      "transduction_target": ["install_procedure", "restore_snapshot", "new_lab_bootstrap"],
+      "body_required_for_mml": true
+    },
+    {
+      "pattern_id": "chimera_parentage",
+      "summary": "New skills are synthesized from declared parents and goal; not concatenated; permanent vs ephemeral scope is explicit.",
+      "transduction_target": ["new_skill", "missing_capabilities"],
+      "body_required_for_mml": true
+    }
+  ],
+  "candidate_sources": [
+    {"path": "/opt/KPhi1/_AI_CONTEXT.md", "use": "kernel overview, P0-P6, VRA, faculty map"},
+    {"path": "/opt/KPhi1/DNA.md", "use": "identity and Stream-Guard framing"},
+    {"path": "/opt/KPhi1/kernel/guard_rules.md", "use": "P0-P6 thresholds and DONE checklist"},
+    {"path": "/opt/KPhi1/kernel/context_protocol.md", "use": "local _AI_CONTEXT.md pattern"},
+    {"path": "/opt/KPhi1/kernel/genesis_bootstrap.md", "use": "runtime bootstrap pattern"},
+    {"path": "/opt/KPhi1/kernel/chimera_protocol.md", "use": "new-skill parentage pattern"},
+    {"path": "/opt/KPhi1/skills/kernel-conductor/SKILL.md", "use": "router pattern"},
+    {"path": "/opt/KPhi1/skills/aeternitas-sys/SKILL.md", "use": "self-modification veto"},
+    {"path": "/opt/KPhi1/skills/mnemos-sys/SKILL.md", "use": "process memory/KLI"}
+  ],
+  "read_depth_policy": {
+    "minimum_for_planning": "CAPSULE",
+    "minimum_for_context_generation": "CAPSULE plus explicit archive_retrieval",
+    "minimum_for_mml_active_skill": "BODY_PLUS_REFS or E2E",
+    "minimum_for_new_skill_generation": "BODY for parents plus contamination statement"
+  },
+  "contamination_risks": [
+    "Ontological language can become decorative instead of executable.",
+    "Skill names may be treated as authority without body/eval.",
+    "KPhi1 can overwrite domain-native observables if copied literally.",
+    "Older registry entries may be renamed/retired compared with current Lab diagnostics."
+  ],
+  "archive_retrieval_contract": {
+    "required": true,
+    "extra_fields": ["pattern_id", "body_required_for_mml", "portable_source_status"]
+  }
+}
