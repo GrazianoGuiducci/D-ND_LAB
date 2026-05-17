@@ -459,10 +459,14 @@ Stato operativo attuale:
 - `docs/META_LAB_SKILL_READING_PROTOCOL.md` distingue recupero da archivio,
   lettura del corpo e attivazione operativa della skill;
 - `tools/lab_template_generator.py` richiede `skill_intent_map_json`;
+- `tools/lab_template_generator.py` accetta `archive_retrieval_json` e lo
+  appende a `transduction.md` quando un template usa capsule o archivi
+  cognitivi esterni;
 - il generator appende `skill_intent_map` a `transduction.md` se l'agent
   lo ha prodotto solo come JSON specs;
-- il validator M8 controlla skill/enzyme retrieval, MML layered e
-  `skill_intent_map`.
+- il validator M8 controlla skill/enzyme retrieval, MML layered,
+  `skill_intent_map` e, quando vengono nominati archivi/capsule esterne,
+  `archive_retrieval` con profondita' di lettura.
 - `dndlab plan-domain` puo' raccogliere `movement_class`, `use_dynamics`,
   `exclusions` e `success_condition` per ridurre inferenza cieca nella fase
   meta-lab.

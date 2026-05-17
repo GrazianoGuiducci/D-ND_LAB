@@ -172,6 +172,8 @@ Il lab figlio acquisisce anche:
      estratto e rischio contaminazione. Se il corpo completo non e'
      disponibile, usare le capsule `docs/cognitive_archives/*.json` e
      dichiarare `read_depth=CAPSULE` + `body_required=true`;
+     se prodotto come JSON separato, passarlo al generator come
+     `archive_retrieval_json` per conservarlo in `transduction.md`;
    - `missing_capabilities`: cosa manca davvero e deve diventare tool,
      null, baseline, assertion o nuova skill;
    - `contamination_risk`: quali skill/enzimi non vanno usati perche'

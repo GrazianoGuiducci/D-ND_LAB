@@ -19,6 +19,7 @@ Lo specs contiene:
   "transduction_md": "<full markdown with invariants, exclusions, baselines, UI and skill_intent_map>",
   "ui_contract_json": <dict matching docs/templates/ui_contract.v1.json>,
   "skill_intent_map_json": <dict: intent -> movement_class -> skill/meta-prompt/artifact/UI mapping>,
+  "archive_retrieval_json": <optional list/dict: cognitive archive capsules/body read plan>,
   "tools_exp_files": [
     {"name": "exp_regime_shift.py", "content": "..."},
     ...
@@ -46,6 +47,11 @@ from typing import Any
 def _domains_root() -> Path:
     """domains/ del repo D-ND_LAB (parent di meta-lab/tools)."""
     return Path(__file__).resolve().parents[2]
+
+
+def _repo_root() -> Path:
+    """Root del repo D-ND_LAB."""
+    return _domains_root().parent
 
 
 SLUG_FIELDS_REQUIRED = {
@@ -139,6 +145,49 @@ def validate_specs(specs: dict[str, Any]) -> list[str]:
         ):
             if fld not in skill_intent_map:
                 errors.append(f"skill_intent_map_json manca campo richiesto: {fld}")
+    archive_retrieval = specs.get("archive_retrieval_json")
+    if archive_retrieval is not None:
+        archive_entries: list[Any]
+        if isinstance(archive_retrieval, dict):
+            archive_entries = archive_retrieval.get("archive_retrieval", [])
+            if not isinstance(archive_entries, list):
+                errors.append("archive_retrieval_json.archive_retrieval deve essere list")
+                archive_entries = []
+        elif isinstance(archive_retrieval, list):
+            archive_entries = archive_retrieval
+        else:
+            errors.append("archive_retrieval_json deve essere list o dict")
+            archive_entries = []
+
+        required_archive_fields = {
+            "archive_id",
+            "pattern",
+            "read_depth",
+            "used_for",
+            "body_required",
+            "contamination_excluded",
+            "test_expected",
+        }
+        valid_depths = {"CAPSULE", "BODY", "BODY_PLUS_REFS", "E2E"}
+        for idx, entry in enumerate(archive_entries):
+            if not isinstance(entry, dict):
+                errors.append(f"archive_retrieval_json[{idx}] deve essere dict")
+                continue
+            missing = sorted(required_archive_fields - set(entry))
+            if missing:
+                errors.append(f"archive_retrieval_json[{idx}] manca campi: {missing}")
+            depth = entry.get("read_depth")
+            if depth and depth not in valid_depths:
+                errors.append(f"archive_retrieval_json[{idx}].read_depth non valido: {depth}")
+            capsule = entry.get("capsule")
+            if capsule and isinstance(capsule, str) and not capsule.startswith(("/opt/", "http://", "https://")):
+                capsule_path = _repo_root() / capsule
+                if not capsule_path.exists():
+                    errors.append(f"archive_retrieval_json[{idx}].capsule non esiste nel repo: {capsule}")
+            if depth == "CAPSULE" and entry.get("body_required") is False:
+                errors.append(
+                    f"archive_retrieval_json[{idx}] usa read_depth=CAPSULE ma body_required=false"
+                )
     return errors
 
 
@@ -160,6 +209,34 @@ def _ensure_skill_intent_map_in_transduction(
         "Auto-generated from specs by `lab_template_generator.py`.\n\n"
         "```json\n"
         + json.dumps(skill_intent_map, indent=2, ensure_ascii=False)
+        + "\n```\n"
+    )
+    return transduction_md.rstrip() + block, True
+
+
+def _ensure_archive_retrieval_in_transduction(
+    transduction_md: str,
+    archive_retrieval: Any,
+) -> tuple[str, bool]:
+    """Appende una sezione `archive_retrieval` se lo specs usa capsule o
+    archivi cognitivi e la transduction non li espone gia'.
+
+    Serve a rendere M8 verificabile senza affidarsi alla memoria dell'agent:
+    se un template ha letto solo capsule (`read_depth=CAPSULE`) o pianifica
+    lettura di corpi esterni, il Lab figlio deve conservarne provenance e
+    limiti d'uso.
+    """
+    if not archive_retrieval:
+        return transduction_md, False
+    if "archive_retrieval" in transduction_md.lower():
+        return transduction_md, False
+    block = (
+        "\n\n## archive_retrieval\n\n"
+        "Auto-generated from specs by `lab_template_generator.py`.\n"
+        "Capsule are planning context, not active authority unless the body "
+        "has been read at the required depth.\n\n"
+        "```json\n"
+        + json.dumps(archive_retrieval, indent=2, ensure_ascii=False)
         + "\n```\n"
     )
     return transduction_md.rstrip() + block, True
@@ -320,6 +397,10 @@ def write_template(specs: dict[str, Any], dry_run: bool = False, force: bool = F
         specs["transduction_md"],
         specs["skill_intent_map_json"],
     )
+    transduction_md, archive_retrieval_appended = _ensure_archive_retrieval_in_transduction(
+        transduction_md,
+        specs.get("archive_retrieval_json"),
+    )
     files_to_write.append((target_dir / "transduction.md", transduction_md))
     files_to_write.append((target_dir / "ui_contract.json",
                            json.dumps(specs["ui_contract_json"], indent=2, ensure_ascii=False) + "\n"))
@@ -346,6 +427,7 @@ def write_template(specs: dict[str, Any], dry_run: bool = False, force: bool = F
             "helpers_applied": {
                 "quick_reference_appended": qr_appended,
                 "skill_intent_map_appended": skill_map_appended,
+                "archive_retrieval_appended": archive_retrieval_appended,
             },
         }
 
@@ -362,6 +444,7 @@ def write_template(specs: dict[str, Any], dry_run: bool = False, force: bool = F
         "helpers_applied": {
             "quick_reference_appended": qr_appended,
             "skill_intent_map_appended": skill_map_appended,
+            "archive_retrieval_appended": archive_retrieval_appended,
         },
     }
 

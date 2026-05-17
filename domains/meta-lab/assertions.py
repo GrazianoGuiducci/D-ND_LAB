@@ -461,6 +461,8 @@ def _check_m8_skill_archive_retrieval(template_dir: Path) -> dict[str, Any]:
       e la meta-guida intento->skill;
     - mml.json usa skills_attive layered object, non solo lista flat;
     - almeno 3 layer cognitivi sono dichiarati.
+    Se il template nomina archivi cognitivi esterni o capsule, M8 richiede
+    anche `archive_retrieval`: path/capsula, read_depth, pattern e limiti.
     """
     strict = os.environ.get("META_LAB_STRICT_M7", "").lower() in {"1", "true", "yes"}
     legacy_names = {"physics", "editorial", "meta-lab", "finance", "bio-rhythms", "ops-decisions"}
@@ -484,6 +486,30 @@ def _check_m8_skill_archive_retrieval(template_dir: Path) -> dict[str, Any]:
         "movement_class", "use_dynamics",
     ]
     has_skill_intent_guide = any(s in text for s in guide_signals)
+    external_archive_signals = [
+        "docs/cognitive_archives",
+        "cognitive_archives",
+        "archive capsule",
+        "archive_capsule",
+        "read_depth=capsule",
+        '"read_depth": "capsule"',
+        "kphi1",
+        "/opt/kphi1",
+        "/opt/skill",
+        "thia_skill_snapshot",
+        "cockpit_mmsp",
+        "d-nd_cockpit",
+    ]
+    mentions_external_archive = any(s in text for s in external_archive_signals)
+    archive_retrieval_signals = [
+        "archive_retrieval",
+        "archive retrieval",
+    ]
+    has_archive_retrieval = any(s in text for s in archive_retrieval_signals)
+    has_capsule_depth = (
+        "read_depth" in text
+        and ("capsule" in text or "body_plus_refs" in text or "body" in text or "e2e" in text)
+    )
 
     mml_file = template_dir / "mml.json"
     layered = False
@@ -501,13 +527,20 @@ def _check_m8_skill_archive_retrieval(template_dir: Path) -> dict[str, Any]:
         except Exception:
             layered = False
 
-    score = int(has_skill_retrieval) + int(has_skill_intent_guide) + int(layered)
+    archive_ok = (not mentions_external_archive) or (has_archive_retrieval and has_capsule_depth)
+    score = (
+        int(has_skill_retrieval)
+        + int(has_skill_intent_guide)
+        + int(layered)
+        + int(archive_ok)
+    )
 
-    if has_skill_retrieval and has_skill_intent_guide and layered:
+    if has_skill_retrieval and has_skill_intent_guide and layered and archive_ok:
+        archive_detail = " + archive_retrieval" if mentions_external_archive else ""
         return {
             "id": "M8",
             "status": "PASS",
-            "detail": f"skill/enzimi + skill_intent_map dichiarati e MML layered con {layer_count} layer",
+            "detail": f"skill/enzimi + skill_intent_map{archive_detail} dichiarati e MML layered con {layer_count} layer",
             "metric": score,
         }
     if template_dir.name in legacy_names and not strict:
@@ -518,6 +551,8 @@ def _check_m8_skill_archive_retrieval(template_dir: Path) -> dict[str, Any]:
             missing.append("skill_intent_map")
         if not layered:
             missing.append("layered_mml")
+        if not archive_ok:
+            missing.append("archive_retrieval")
         return {
             "id": "M8",
             "status": "SKIP",
@@ -531,6 +566,8 @@ def _check_m8_skill_archive_retrieval(template_dir: Path) -> dict[str, Any]:
         missing.append("skill_intent_map")
     if not layered:
         missing.append("layered_mml>=3_layers")
+    if not archive_ok:
+        missing.append("archive_retrieval_for_external_archive")
     return {
         "id": "M8",
         "status": "FAIL",
