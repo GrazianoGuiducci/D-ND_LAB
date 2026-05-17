@@ -419,10 +419,9 @@
     .mobile-close-btn { display: none; }
     @media (max-width: 1024px) { .mobile-close-btn { display: inline-flex; } }
 
-    /* Mobile/tablet: tab bar compatta — evita scroll orizzontale sul header
-       quando viewport stretto (tabs + nav + title eccedono lo spazio). */
+    /* Mobile/tablet: layout compatto — evita scroll orizzontale sul header
+       quando nav + dominio + controlli eccedono lo spazio. */
     @media (max-width: 1024px) {
-      .lab-tabs { -webkit-overflow-scrolling: touch; }
       .lab-tab { padding: 0.4rem 0.7rem; font-size: 0.78rem; }
       .lab-tab .tab-icon { display: none; }
       .agente-grid { gap: 8px !important; }   /* margine tra list e viewer ridotto */
@@ -522,19 +521,37 @@
     }
     @media (max-width: 1024px) { .stat-tip { display: none !important; } }
 
-    /* Tab bar — desktop: inline buttons. Mobile (<768): dropdown nativo. */
-    .lab-tabs { display: flex; align-items: center; gap: 0; border-bottom: 1px solid rgb(30 41 59); overflow-x: auto; }
-    .lab-tabs-mobile { display: none; max-width: 240px; }
-    /* Dropdown mobile deve stare SOPRA tutto (header z-10, dropdown z-50). */
-    .lab-tabs-mobile > div[x-show] { z-index: 50; }
-    @media (max-width: 1024px) {
-      .lab-tabs { display: none !important; }
-      .lab-tabs-mobile { display: block; }
-    }
+    /* Dashboard top navigation.
+       Le tab possono crescere per dominio: tenerle tutte inline affolla il
+       desktop e rompe il mobile. La superficie stabile e' quindi un singolo
+       selector compatto, con dropdown sopra la shell. */
+    .lab-topbar { min-width: 0; }
+    .lab-tabs { display: none !important; }
+    .lab-tabs-mobile { display: block; flex: 0 1 220px; max-width: 220px; min-width: 150px; }
+    .lab-tabs-mobile > div[x-show] { z-index: 80; }
+    .dashboard-topnav { min-width: 0; }
+    .domain-breadcrumb { min-width: 0; max-width: 190px; }
+    .domain-pill { max-width: 155px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .lab-tab { padding: 0.6rem 1.2rem; font-size: 0.875rem; font-weight: 500; border-bottom: 2px solid transparent; transition: all 0.15s; white-space: nowrap; color: #94a3b8; background: none; border-left: 0; border-right: 0; border-top: 0; cursor: pointer; }
     .lab-tab:hover { color: #cbd5e1; }
     .lab-tab.active { color: #c4b5fd; border-bottom-color: #a78bfa; }
     .lab-tab .tab-icon { display: inline-block; margin-right: 6px; opacity: .7; }
+    @media (max-width: 760px) {
+      .lab-topbar { padding-left: 12px !important; padding-right: 12px !important; gap: 8px !important; }
+      .lab-brand-text { font-size: 1.1rem !important; max-width: 116px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .lab-tabs-mobile { flex-basis: 96px; min-width: 96px; max-width: 112px; }
+      .lab-tabs-mobile .tab-label { max-width: 58px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .dashboard-topnav { gap: 4px !important; }
+      .dashboard-domains-label { display: none; }
+      .domain-breadcrumb { max-width: 132px; }
+      .domain-pill { max-width: 112px; padding-left: 6px !important; padding-right: 6px !important; }
+      .lang-switcher { display: none !important; }
+    }
+    @media (max-width: 430px) {
+      .lab-brand-text { max-width: 86px; }
+      .domain-breadcrumb { max-width: 104px; }
+      .domain-pill { max-width: 84px; }
+    }
 
     /* Chips (sidebar dettaglio) */
     .chip { display: inline-block; padding: 1px 7px; font-size: 10px; font-family: ui-monospace, monospace; background: rgba(167,139,250,.18); color: #c4b5fd; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.04em; }
@@ -687,13 +704,13 @@
   <!-- Header — tabs inline nel toolbar (operatore: una sola riga per
        eliminare il page scroll causato dal compensare con calc viewport) -->
   <header class="border-b border-slate-800 bg-slate-900/50 sticky top-0 z-10 backdrop-blur">
-    <div class="px-5 py-2 flex items-center gap-4">
+    <div class="lab-topbar px-5 py-2 flex items-center gap-4">
       <div class="flex items-center gap-3 flex-shrink-0">
         <a href="/" class="flex items-center gap-2 text-slate-100 hover:text-cyan-300 transition" title="Lab D-ND">
           <img src="/assets/logos/logo_40px.jpg" alt="D-ND" class="w-7 h-7 rounded shadow ring-1 ring-white/10">
-          <span class="text-xl font-light tracking-tight" data-i18n="dash.brand">D-ND_LAB</span>
+          <span class="lab-brand-text text-xl font-light tracking-tight" data-i18n="dash.brand">D-ND_LAB</span>
         </a>
-        <span class="text-xs text-slate-300 uppercase tracking-wider hidden sm:inline" data-i18n="dash.brandSub">dashboard</span>
+        <span class="lab-brand-sub text-xs text-slate-300 uppercase tracking-wider hidden sm:inline" data-i18n="dash.brandSub">dashboard</span>
         <!-- Version label rimosso dalla toolbar (operatore: 'occupa spazio e non serve').
              Resta visibile in tab Info → Reference. -->
       </div>
@@ -706,14 +723,16 @@
           </button>
         </template>
       </nav>
-      <!-- Mobile/narrow viewport: custom dropdown Alpine (stesso pattern
-           del Reports selector — niente <select> nativo per evitare
-           rendering OS-default sul popover). -->
+      <!-- Compact tab selector. Le tab sono moduli del Lab, quindi passano
+           da inline list a selector stabile per non affollare la shell. -->
       <div class="lab-tabs-mobile relative flex-1" x-show="view === 'domain' && activeDomain"
            @click.outside="tabsDropdownOpen = false">
         <button @click="tabsDropdownOpen = !tabsDropdownOpen"
                 class="w-full bg-slate-900 border border-slate-700 hover:border-purple-700 focus:border-purple-500 rounded px-3 py-1.5 text-sm text-slate-200 text-left flex items-center justify-between transition">
-          <span class="truncate" x-text="(() => { const tab = TABS.find(x => x.id === activeTab); return tab ? t(tab.labelKey, tab.label) : t('dash.tab.fallback', 'Tab'); })()"></span>
+          <span class="flex items-center gap-1.5 min-w-0">
+            <span class="text-purple-400 flex-shrink-0" x-text="(() => { const tab = TABS.find(x => x.id === activeTab); return tab ? tab.icon : '◌'; })()"></span>
+            <span class="tab-label truncate" x-text="(() => { const tab = TABS.find(x => x.id === activeTab); return tab ? t(tab.labelKey, tab.label) : t('dash.tab.fallback', 'Tab'); })()"></span>
+          </span>
           <span class="text-purple-400 text-xs ml-2 flex-shrink-0" x-text="tabsDropdownOpen ? '▴' : '▾'"></span>
         </button>
         <div x-show="tabsDropdownOpen" x-cloak x-transition.opacity.duration.120ms
@@ -732,7 +751,7 @@
            (refactor 03/05 sera: pattern unificato col sito 4 pagine).
            ml-auto: in home view le lab-tabs sono x-show=false e flex-1 non
            riempie — ml-auto spinge il cluster a destra always. -->
-      <nav class="flex items-center gap-2 text-sm flex-shrink-0 ml-auto">
+      <nav class="dashboard-topnav flex items-center gap-2 text-sm flex-shrink-0 ml-auto">
         <!-- Home dashboard (Domains list) -->
         <button class="tip-below px-3 py-1 rounded hover:bg-slate-800 flex items-center gap-1.5"
                 :class="{'bg-slate-800': view === 'home'}"
@@ -742,12 +761,12 @@
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0">
             <path d="M3 9.5L12 3l9 6.5V21a1 1 0 0 1-1 1h-5v-7h-6v7H4a1 1 0 0 1-1-1V9.5z"/>
           </svg>
-          <span data-i18n="dash.nav.domains">Domains</span>
+          <span class="dashboard-domains-label" data-i18n="dash.nav.domains">Domains</span>
         </button>
         <template x-if="activeDomain">
-          <div class="flex items-center gap-1">
+          <div class="domain-breadcrumb flex items-center gap-1">
             <span class="text-slate-500 text-xs">/</span>
-            <button class="px-3 py-1 rounded hover:bg-slate-800 font-mono text-cyan-400 text-xs" @click="view = 'domain'" x-text="activeDomain"></button>
+            <button class="domain-pill px-3 py-1 rounded hover:bg-slate-800 font-mono text-cyan-400 text-xs" @click="view = 'domain'" x-text="activeDomain"></button>
           </div>
         </template>
 
