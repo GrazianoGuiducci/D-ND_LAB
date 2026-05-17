@@ -2172,34 +2172,6 @@
               </div>
             </section>
 
-            <div class="grid md:grid-cols-3 gap-3">
-              <button @click="setActiveTab('campo')" class="text-left bg-slate-950/50 border border-slate-800 hover:border-cyan-700 rounded-md p-3 transition">
-                <div class="text-sm font-medium text-cyan-300">Campo</div>
-                <p class="text-xs text-slate-400 mt-1">Risultante, diagnostiche e segnali recenti.</p>
-              </button>
-              <button @click="setActiveTab('grafo')" class="text-left bg-slate-950/50 border border-slate-800 hover:border-cyan-700 rounded-md p-3 transition">
-                <div class="text-sm font-medium text-cyan-300">Grafo</div>
-                <p class="text-xs text-slate-400 mt-1">Relazioni, nodi, vuoti e ponti del dominio.</p>
-              </button>
-              <button @click="setActiveTab('prodotti')" class="text-left bg-slate-950/50 border border-slate-800 hover:border-green-700 rounded-md p-3 transition">
-                <div class="text-sm font-medium text-green-300">Prodotti</div>
-                <p class="text-xs text-slate-400 mt-1">Scoperte, applicazioni candidate e verifiche.</p>
-              </button>
-              <button @click="setActiveTab('agente')" class="text-left bg-slate-950/50 border border-slate-800 hover:border-purple-700 rounded-md p-3 transition">
-                <div class="text-sm font-medium text-purple-300">Report</div>
-                <p class="text-xs text-slate-400 mt-1">Evidenza, verdict, falsifier e cimitero.</p>
-              </button>
-              <button @click="askImproveLab()" class="text-left bg-slate-950/50 border border-slate-800 hover:border-amber-700 rounded-md p-3 transition">
-                <div class="text-sm font-medium text-amber-300">Contribuisci</div>
-                <p class="text-xs text-slate-400 mt-1">Proponi dati, controlli, correzioni o un nuovo dominio.</p>
-              </button>
-              <a href="mailto:info@d-nd.com?subject=D-ND_LAB%20newsletter%20e%20report&body=Interessi%3A%0ADominio%20o%20lab%20che%20voglio%20seguire%3A%0AEmail%20per%20aggiornamenti%3A%0ANote%3A"
-                 class="text-left bg-slate-950/50 border border-slate-800 hover:border-amber-700 rounded-md p-3 transition">
-                <div class="text-sm font-medium text-amber-300">Newsletter / report</div>
-                <p class="text-xs text-slate-400 mt-1">Richiedi aggiornamenti sugli sviluppi e sui cicli del Lab.</p>
-              </a>
-            </div>
-
             <template x-if="contextIntro.intro">
               <div class="markdown text-sm text-slate-200" x-html="renderMarkdown(contextIntro.intro)"></div>
             </template>
@@ -2279,14 +2251,6 @@
               </div>
             </div>
 
-            <div class="border-t border-slate-800 pt-4">
-              <h3 class="text-sm font-medium text-purple-300 mb-2" data-i18n="dash.info.reference">Reference</h3>
-              <div class="text-sm text-slate-300 space-y-1">
-                <div>· Repo: <a href="https://github.com/GrazianoGuiducci/D-ND_LAB" target="_blank" class="text-cyan-400 hover:underline">github.com/GrazianoGuiducci/D-ND_LAB</a></div>
-                <div>· Modello D-ND: f(x)=1+1/x · M=[[1,1],[1,0]] · det(M)=−1 · punto fisso φ</div>
-                <div>· Versione dashboard: <span class="font-mono text-slate-300" x-text="health.version || '?'"></span></div>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -2330,36 +2294,52 @@
                      : 'Usa questa colonna come mappa rapida mentre il centro spiega il dominio attivo.'"></p>
               </div>
               <div class="space-y-1.5">
-                <button @click="setActiveTab('campo')" class="detail-action text-cyan-300">
+                <button @click="setActiveTab('campo')" class="detail-action text-cyan-300"
+                        :title="lang === 'en' ? 'Open current resultant, diagnostics and recent signals.' : 'Apri risultante, diagnostiche e segnali recenti.'">
                   <span class="font-medium">Campo</span>
                   <span class="block text-[11px] text-slate-400"
                         x-text="lang === 'en' ? 'Current resultant and recent signals.' : 'Risultante e segnali recenti.'"></span>
                 </button>
-                <button @click="setActiveTab('grafo')" class="detail-action text-cyan-300">
+                <button @click="setActiveTab('grafo')" class="detail-action text-cyan-300"
+                        :title="lang === 'en' ? 'Open domain relations, nodes and bridges.' : 'Apri relazioni, nodi e ponti del dominio.'">
                   <span class="font-medium">Grafo</span>
                   <span class="block text-[11px] text-slate-400"
                         x-text="lang === 'en' ? 'Relations, nodes and bridges.' : 'Relazioni, nodi e ponti.'"></span>
                 </button>
-                <button @click="setActiveTab('bicono')" class="detail-action text-purple-300">
+                <button @click="setActiveTab('bicono')" class="detail-action text-purple-300"
+                        :title="lang === 'en' ? 'Open discovery poles extracted from reports.' : 'Apri i poli delle scoperte estratti dai report.'">
                   <span class="font-medium">Bicono</span>
                   <span class="block text-[11px] text-slate-400"
                         x-text="lang === 'en' ? 'Discovery poles extracted from reports.' : 'Poli delle scoperte estratti dai report.'"></span>
                 </button>
-                <button @click="setActiveTab('agente')" class="detail-action text-purple-300">
+                <button @click="setActiveTab('agente')" class="detail-action text-purple-300"
+                        :title="lang === 'en' ? 'Open reports, evidence, verdicts and falsifier flags.' : 'Apri report, evidenza, verdict e flag del falsifier.'">
                   <span class="font-medium">Agente</span>
                   <span class="block text-[11px] text-slate-400"
                         x-text="lang === 'en' ? 'Evidence, verdicts and falsifier flags.' : 'Evidenza, verdict e flag del falsifier.'"></span>
                 </button>
-                <button @click="setActiveTab('incrocio')" class="detail-action text-purple-300">
+                <button @click="setActiveTab('incrocio')" class="detail-action text-purple-300"
+                        :title="lang === 'en' ? 'Open aggregate taxonomy and cycle trajectory.' : 'Apri tassonomia aggregata e traiettoria dei cicli.'">
                   <span class="font-medium">Tassonomia</span>
                   <span class="block text-[11px] text-slate-400"
                         x-text="lang === 'en' ? 'Aggregate map and cycle trajectory.' : 'Mappa aggregata e traiettoria dei cicli.'"></span>
                 </button>
-                <button @click="setActiveTab('prodotti')" class="detail-action text-green-300">
+                <button @click="setActiveTab('prodotti')" class="detail-action text-green-300"
+                        :title="lang === 'en' ? 'Open discoveries, candidates and verified outputs.' : 'Apri scoperte, candidati e output verificati.'">
                   <span class="font-medium">Prodotti</span>
                   <span class="block text-[11px] text-slate-400"
                         x-text="lang === 'en' ? 'Discoveries, candidates and verified outputs.' : 'Scoperte, candidati e output verificati.'"></span>
                 </button>
+              </div>
+              <div class="border-t border-slate-800 pt-3 text-xs text-slate-300 space-y-1">
+                <h4 class="text-xs uppercase tracking-wider text-slate-300 mb-1"
+                    x-text="lang === 'en' ? 'Reference' : 'Reference'"></h4>
+                <div>Repo:
+                  <a href="https://github.com/GrazianoGuiducci/D-ND_LAB" target="_blank"
+                     class="text-cyan-400 hover:underline">D-ND_LAB</a>
+                </div>
+                <div>D-ND: <span class="font-mono">f(x)=1+1/x · det(M)=-1</span></div>
+                <div>Dashboard: <span class="font-mono" x-text="health.version || '?'"></span></div>
               </div>
             </div>
           </template>
