@@ -1,6 +1,6 @@
 """lab_template_validator.py — CLI front-end del falsifier meta-lab.
 
-Applica le meta-lenti M1-M7 (definite in domains/meta-lab/assertions.py)
+Applica le meta-lenti M1-M8 (definite in domains/meta-lab/assertions.py)
 a un template di lab dato come path. Invocabile da:
 - pipeline lab_agent.sh (validation post-generazione)
 - operatore in CLI (verifica manuale di un template prima dell'install)
@@ -34,7 +34,7 @@ def main():
     ap.add_argument("--self-test", action="store_true",
                     help="gira il falsifier meta su domains/physics/ come ground truth")
     ap.add_argument("--strict-m7", action="store_true",
-                    help="rende M7 bloccante anche per template legacy senza transduction.md")
+                    help="rende M7/M8 bloccanti anche per template legacy senza transduction.md o skill retrieval")
     ap.add_argument("--json", action="store_true", help="output JSON pulito (no testo umano)")
     args = ap.parse_args()
 

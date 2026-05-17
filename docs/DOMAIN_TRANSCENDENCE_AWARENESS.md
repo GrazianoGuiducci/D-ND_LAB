@@ -161,6 +161,30 @@ Prima di generare tool o UI, il meta-lab deve capire:
 - quali pattern possono essere stressati;
 - quali parti del dominio non hanno ancora leva sufficiente.
 
+### 2b. Recupero skill ed enzimi
+
+Prima di progettare il Lab figlio, il meta-lab deve interrogare il campo
+skill/enzimi gia' disponibile:
+
+- `docs/SKILL_CATALOG.md`;
+- `docs/SKILL_FIELD_MAP.md`;
+- `docs/SKILL_DIAGNOSTIC.md`;
+- `/opt/MM_D-ND/tools/data/cognitive_enzymes_archive.md`;
+- eventuali skill domain-specific gia' presenti in `/opt/.claude/skills/`,
+  `/opt/MM_D-ND/kernel/reference/skills/` o archivi THIA.
+
+Output minimo della fase:
+
+- skill candidate per layer MML;
+- enzimi cognitivi rilevanti con source;
+- skill escluse per rischio contaminazione;
+- capacita' mancanti che devono diventare tool, null, baseline, assertion
+  o nuova skill.
+
+Questo passaggio serve a evitare una perdita di logiche fini: non si
+generalizza cancellando le skill, si sceglie quali parti del sistema gia'
+esistente devono essere attivate nel nuovo dominio.
+
 ### 3. Mappa degli osservabili
 
 Gli osservabili devono essere domain-native. Non si traducono i termini
@@ -329,6 +353,24 @@ Un Lab generato passa M7 solo se:
 
 M7 serve a impedire la generalizzazione povera: quella che conserva parole
 e perde movimento.
+
+## Meta-lente aggiunta: M8
+
+**M8 — Recupero skill/enzimi prima dell'installazione**
+
+Un Lab generato passa M8 solo se:
+
+- dichiara nel report o in `transduction.md` quali skill/enzimi sono stati
+  consultati prima della progettazione;
+- produce un `mml.json` in formato layered object, non solo lista piatta;
+- motiva per ogni skill scelta il layer, il trigger e il ruolo nel dominio;
+- dichiara quali skill/enzimi sono stati esclusi per evitare contaminazione;
+- dichiara le capacita' mancanti come strumenti/null/gate da creare, invece
+  di nasconderle nella copy.
+
+M8 serve a impedire la seconda forma di generalizzazione povera: quella che
+ricostruisce da zero cio' che il sistema possiede gia' come skill, perdendo
+architettura e memoria operativa.
 
 ## Persistenza
 

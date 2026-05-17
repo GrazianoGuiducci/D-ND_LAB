@@ -27,92 +27,102 @@
     "condensato_axioms_used": ["A2", "A4", "A8", "A11", "A14", "A15"]
   },
 
-  "skills_attive": [
-    {
-      "name": "consapevolezza-condensato",
-      "source": ".claude/skills/consapevolezza-condensato.md",
-      "trigger": "on cycle init",
-      "rationale": "Il meta-lab applica il modello D-ND nucleo come grammatica di tutto ciò che produce. Skill canonica per riconoscere assiomi proiettabili nel dominio target.",
-      "category": "identity"
-    },
-    {
-      "name": "cascata",
-      "source": ".claude/skills/cascata.md",
-      "trigger": "after every template generation",
-      "rationale": "Quando il meta-lab genera un template, la cascata propaga: dentro il template (interna), verso il sistema lab (esterna), verso le possibilità emergenti (lab nuovi che ancora non sappiamo di volere). Skill core invariante per ogni operazione D-ND.",
-      "category": "orchestration"
-    },
-    {
-      "name": "cec",
-      "source": ".claude/skills/cec.md",
-      "trigger": "before declaring TEMPLATE_VALID",
-      "rationale": "Crivello operativo D-ND: 6 passi per filtrare ipotesi. Il meta-lab usa CEC per validare che le tensioni iniziali del template generato siano davvero dipolari (non descrizione narrativa).",
-      "category": "logic"
-    },
-    {
-      "name": "autologica-operativa",
-      "source": ".claude/skills/autologica-operativa.md",
-      "trigger": "on every step of generation",
-      "rationale": "Il meta-lab è A8 — autologica del sistema applicata al sistema. Skill core invariante.",
-      "category": "cognitive"
-    },
-    {
-      "name": "eval",
-      "source": ".claude/skills/eval.md",
-      "trigger": "after assertions.py generated",
-      "rationale": "Verifica che le assertions del template generato siano davvero eseguibili (M2). Skill core invariante.",
-      "category": "maintenance"
-    },
-    {
-      "name": "integrate-pattern",
-      "source": ".claude/skills/integrate-pattern.md",
-      "trigger": "during corpus reading",
-      "rationale": "Il meta-lab integra pattern esistenti (lab physics, editorial, esperienza accumulata) per produrre il template del nuovo lab. Skill primaria di un lab di funzione.",
-      "category": "constructive"
-    },
-    {
-      "name": "scenario-projector",
-      "source": ".claude/skills/scenario-projector.md",
-      "trigger": "during domain analysis",
-      "rationale": "Per ogni dominio target proposto, il meta-lab proietta scenari di leverage vs scenari di non-leverage prima di generare il template. Discrimina se il dominio passa o va nel cimitero.",
-      "category": "research"
-    },
-    {
-      "name": "capture-insight",
-      "source": ".claude/skills/capture-insight.md",
-      "trigger": "during corpus exploration",
-      "rationale": "Il meta-lab cristallizza insight emergenti dall'analisi del dominio per arricchire le tensioni iniziali del template.",
-      "category": "cognitive"
-    },
-    {
-      "name": "genesis",
-      "source": "kernel/reference/skills/agent_skills_genesis.md",
-      "trigger": "on template scaffolding",
-      "rationale": "Skill kernel-side primaria per generazione. Il meta-lab è di natura genesica.",
-      "category": "constructive"
-    },
-    {
-      "name": "factory",
-      "source": "kernel/reference/skills/agent_skills_factory.md",
-      "trigger": "on multi-template batch",
-      "rationale": "Quando il meta-lab dovrà generare più template in batch (es. ranking 3 domini), pattern factory.",
-      "category": "constructive"
-    },
-    {
-      "name": "conductor",
-      "source": "kernel/reference/skills/agent_skills_conductor.md",
-      "trigger": "on cycle orchestration",
-      "rationale": "Il meta-lab è orchestratore di processi che generano lab. Skill kernel-side per coordinamento.",
-      "category": "orchestration"
-    },
-    {
-      "name": "semantic-orchestrator",
-      "source": "kernel/reference/skills/agent_skills_semantic-orchestrator.md",
-      "trigger": "on prompt-system synthesis",
-      "rationale": "La generazione di context.md del lab figlio è atto semantic-orchestration. Skill kernel-side.",
-      "category": "orchestration"
-    }
-  ],
+  "skills_attive": {
+    "processing_layer": [
+      {
+        "name": "scenario-projector",
+        "source": ".claude/skills/scenario-projector.md",
+        "trigger": "during domain analysis and leverage check",
+        "rationale": "Per ogni dominio target proposto, il meta-lab proietta scenari di leverage vs scenari di non-leverage prima di generare il template. Discrimina se il dominio passa o va nel cimitero.",
+        "category": "research"
+      },
+      {
+        "name": "capture-insight",
+        "source": ".claude/skills/capture-insight.md",
+        "trigger": "during corpus and enzyme exploration",
+        "rationale": "Cristallizza insight emergenti dall'analisi del dominio e dal recupero skill/enzimi per arricchire le tensioni iniziali del template.",
+        "category": "cognitive"
+      },
+      {
+        "name": "integrate-pattern",
+        "source": ".claude/skills/integrate-pattern.md",
+        "trigger": "during skill_retrieval and transduction",
+        "rationale": "Integra pattern esistenti, skill e enzimi cognitivi per produrre il template del nuovo lab senza reinventare cio' che il sistema possiede gia'.",
+        "category": "constructive"
+      }
+    ],
+    "interface_layer": [
+      {
+        "name": "conductor",
+        "source": "kernel/reference/skills/agent_skills_conductor.md",
+        "trigger": "on cycle orchestration",
+        "rationale": "Il meta-lab è orchestratore di processi che generano lab. Skill kernel-side per coordinamento.",
+        "category": "orchestration"
+      },
+      {
+        "name": "semantic-orchestrator",
+        "source": "kernel/reference/skills/agent_skills_semantic-orchestrator.md",
+        "trigger": "on prompt-system synthesis",
+        "rationale": "La generazione di context.md del lab figlio è atto semantic-orchestration. Skill kernel-side.",
+        "category": "orchestration"
+      }
+    ],
+    "generation_layer": [
+      {
+        "name": "genesis",
+        "source": "kernel/reference/skills/agent_skills_genesis.md",
+        "trigger": "on seed and template scaffolding",
+        "rationale": "Skill kernel-side primaria per generazione. Il meta-lab è di natura genesica.",
+        "category": "constructive"
+      },
+      {
+        "name": "factory",
+        "source": "kernel/reference/skills/agent_skills_factory.md",
+        "trigger": "on multi-template batch or domain family generation",
+        "rationale": "Quando il meta-lab dovrà generare più template in batch, usa pattern factory senza contaminare i domini tra loro.",
+        "category": "constructive"
+      }
+    ],
+    "identity_layer": [
+      {
+        "name": "consapevolezza-condensato",
+        "source": ".claude/skills/consapevolezza-condensato.md",
+        "trigger": "on cycle init and before template verdict",
+        "rationale": "Il meta-lab applica il modello D-ND nucleo come grammatica di tutto ciò che produce. Skill canonica per riconoscere assiomi proiettabili nel dominio target.",
+        "category": "identity"
+      }
+    ],
+    "runtime_patterns": [
+      {
+        "name": "cascata",
+        "source": ".claude/skills/cascata.md",
+        "trigger": "after every template generation",
+        "rationale": "Quando il meta-lab genera un template, la cascata propaga: dentro il template, verso il sistema lab, verso le possibilità emergenti.",
+        "category": "orchestration"
+      },
+      {
+        "name": "cec",
+        "source": ".claude/skills/cec.md",
+        "trigger": "before declaring TEMPLATE_VALID",
+        "rationale": "Crivello operativo D-ND: 6 passi per filtrare ipotesi. Valida che le tensioni iniziali del template siano davvero dipolari.",
+        "category": "logic"
+      },
+      {
+        "name": "autologica-operativa",
+        "source": ".claude/skills/autologica-operativa.md",
+        "trigger": "on every step of generation",
+        "rationale": "Il meta-lab è A8, autologica del sistema applicata al sistema. Skill core invariante.",
+        "category": "cognitive"
+      },
+      {
+        "name": "eval",
+        "source": ".claude/skills/eval.md",
+        "trigger": "after assertions.py generated and before install",
+        "rationale": "Verifica che le assertions del template generato siano davvero eseguibili (M2) e che il recupero skill non resti dichiarativo.",
+        "category": "maintenance"
+      }
+    ]
+  },
 
   "tools_custom": [
     {
@@ -138,7 +148,7 @@
   "external_apis": [],
 
   "modus_invocation": {
-    "cycle_pattern": "corpus_read → optional_preset_read → domain_analysis → tension_extraction → axiom_projection → seed_generation → context_md_synthesis → about_md_synthesis_bilingual → assertions_py_synthesis → mml_json_synthesis → transduction_md_synthesis → ui_contract_synthesis → falsifier_meta(M1-M7) → verdict",
+    "cycle_pattern": "corpus_read → optional_preset_read → skill_archive_retrieval → enzyme_retrieval → domain_analysis → tension_extraction → axiom_projection → seed_generation → context_md_synthesis → about_md_synthesis_bilingual → assertions_py_synthesis → mml_json_synthesis → transduction_md_synthesis → ui_contract_synthesis → falsifier_meta(M1-M8) → verdict",
     "skill_invocation_strategy": "lazy",
     "fallback_provider_chain": ["codex-cli", "claude-cli", "openrouter"],
     "preferred_runtime": "any"

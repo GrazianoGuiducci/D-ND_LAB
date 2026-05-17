@@ -1,4 +1,4 @@
-"""assertions.py — Meta-lab falsifier (M1-M7).
+"""assertions.py — Meta-lab falsifier (M1-M8).
 
 Il falsifier meta-lab non valuta findings scientifici. Valuta TEMPLATE
 di lab generati. Ogni assertion controlla una condizione strutturale:
@@ -449,6 +449,85 @@ def _check_m7_transduction_integrity(template_dir: Path) -> dict[str, Any]:
     }
 
 
+# ─── M8: Skill archive retrieval before install ──────────────────
+
+def _check_m8_skill_archive_retrieval(template_dir: Path) -> dict[str, Any]:
+    """Verifica che il template dichiari il recupero skill/enzimi in fase di
+    progettazione, prima dell'installazione.
+
+    Per domini legacy resta SKIP non bloccante salvo strict M7/M8. Per nuovi
+    template il requisito minimo e':
+    - transduction.md o context.md menziona skill/enzimi/archive retrieval;
+    - mml.json usa skills_attive layered object, non solo lista flat;
+    - almeno 3 layer cognitivi sono dichiarati.
+    """
+    strict = os.environ.get("META_LAB_STRICT_M7", "").lower() in {"1", "true", "yes"}
+    legacy_names = {"physics", "editorial", "meta-lab", "finance", "bio-rhythms", "ops-decisions"}
+
+    text_parts = []
+    for name in ("transduction.md", "context.md", "README.md"):
+        f = template_dir / name
+        if f.exists():
+            text_parts.append(f.read_text(errors="replace").lower())
+    text = "\n".join(text_parts)
+
+    skill_signals = [
+        "skill_retrieval", "skill retrieval", "skill archive", "skill catalog",
+        "skill field", "skill_field_map", "skill_catalog", "enzim", "enzyme",
+        "cognitive_enzymes", "cognitive enzymes", "archivio skill",
+    ]
+    has_skill_retrieval = any(s in text for s in skill_signals)
+
+    mml_file = template_dir / "mml.json"
+    layered = False
+    layer_count = 0
+    if mml_file.exists():
+        try:
+            mml = json.loads(mml_file.read_text())
+            skills_attive = mml.get("skills_attive")
+            if isinstance(skills_attive, dict):
+                layer_count = sum(
+                    1 for k, v in skills_attive.items()
+                    if not k.startswith("_") and isinstance(v, list) and v
+                )
+                layered = layer_count >= 3
+        except Exception:
+            layered = False
+
+    score = int(has_skill_retrieval) + int(layered)
+
+    if has_skill_retrieval and layered:
+        return {
+            "id": "M8",
+            "status": "PASS",
+            "detail": f"skill/enzimi dichiarati e MML layered con {layer_count} layer",
+            "metric": score,
+        }
+    if template_dir.name in legacy_names and not strict:
+        missing = []
+        if not has_skill_retrieval:
+            missing.append("skill_retrieval")
+        if not layered:
+            missing.append("layered_mml")
+        return {
+            "id": "M8",
+            "status": "SKIP",
+            "detail": f"dominio legacy/pre-M8; mancanti/non bloccanti: {missing}",
+            "metric": score,
+        }
+    missing = []
+    if not has_skill_retrieval:
+        missing.append("skill_retrieval")
+    if not layered:
+        missing.append("layered_mml>=3_layers")
+    return {
+        "id": "M8",
+        "status": "FAIL",
+        "detail": f"recupero skill/enzimi insufficiente; mancanti: {missing}",
+        "metric": score,
+    }
+
+
 # ─── Verifica top-level (interfaccia standard) ───────────────────
 
 def verifica_asserzioni() -> list[dict[str, Any]]:
@@ -469,6 +548,7 @@ def verifica_asserzioni() -> list[dict[str, Any]]:
         _check_m5_auto_increment(template_dir),
         _check_m6_mml_coherence(template_dir),
         _check_m7_transduction_integrity(template_dir),
+        _check_m8_skill_archive_retrieval(template_dir),
     ]
 
 

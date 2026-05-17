@@ -45,6 +45,22 @@ cancellando il dominio sorgente: e' conservare il contratto del movimento
 e sostituire materiale, osservabili, null, strumenti e UI lens con oggetti
 domain-native.
 
+Prima di installare o anche solo progettare un lab nuovo, leggi anche il
+campo skill/enzimi:
+
+- `docs/SKILL_CATALOG.md`: catalogo kernel/runtime e pertinenza tipica;
+- `docs/SKILL_FIELD_MAP.md`: architettura per layer e collaborazioni;
+- `docs/SKILL_DIAGNOSTIC.md`: quali skill sono vive, quali sono stub o
+  richiedono eval;
+- `/opt/MM_D-ND/tools/data/cognitive_enzymes_archive.md`: archivio degli
+  enzimi cognitivi gia' estratti dal sistema.
+
+Questa lettura non e' decorativa. Il meta-lab non deve reinventare una
+grammatica se il sistema possiede gia' una skill, un enzima o una
+collaborazione inter-skill che risolve il passaggio. Il recupero da archivio
+deve avvenire **prima** di generare `context.md`, `tools/`, `assertions.py`,
+`ui_contract.json` e `mml.json` del lab figlio.
+
 **M1 — Dipoli aritmetici nelle tensioni**
 La tensione iniziale del template DEVE avere det≠0 esplicito o riferimento
 a un assioma D-ND con dipolo generativo. "Esploriamo X" non passa M1.
@@ -129,7 +145,28 @@ Il lab figlio acquisisce anche:
    condensato, l'esperienza dei lab esistenti (`domains/physics/`,
    `domains/editorial/`). Se l'utente ha passato un corpus, leggilo.
 
-2. **Identificazione tensioni dipolari del dominio** — applica il modus:
+2. **Richiamo skill/enzimi pre-progettazione** — prima di scegliere
+   tensioni, strumenti o UI, cerca nel catalogo skill e nell'archivio
+   enzimi cosa il sistema sa gia' fare. Output obbligatorio di questa fase:
+   - `skill_retrieval`: skill candidate per layer (`validation`,
+     `processing`, `output`, `observation`, `generation`, `domain`,
+     `identity`, `runtime_patterns`);
+   - `enzyme_retrieval`: enzimi cognitivi rilevanti, con source e perche'
+     sono pertinenti al dominio/intento;
+   - `missing_capabilities`: cosa manca davvero e deve diventare tool,
+     null, baseline, assertion o nuova skill;
+   - `contamination_risk`: quali skill/enzimi non vanno usati perche'
+     porterebbero contenuto del dominio sorgente invece del movimento.
+
+   Regola: il meta-lab usa l'archivio come **campo di progettazione**, non
+   come prompt library. Una skill puo' diventare:
+   - layer MML del lab figlio;
+   - procedura nel `context.md`;
+   - tool o assertion da generare;
+   - vincolo di transduzione;
+   - oppure esclusione motivata.
+
+3. **Identificazione tensioni dipolari del dominio** — applica il modus:
    dove vivono i dipoli aritmetici naturali del dominio target?
    Non inventare tensioni; estraile dal materiale. Se il dominio non
    produce tensioni dipolari (det~0 ovunque dopo shuffle), il dominio
@@ -140,17 +177,17 @@ Il lab figlio acquisisce anche:
    scarta cio' che non appartiene all'intento reale. Un preset copiato senza
    adattamento e' contaminazione, non transduzione.
 
-3. **Proiezione assiomi** — quale degli A1-A16 si applica naturalmente
+4. **Proiezione assiomi** — quale degli A1-A16 si applica naturalmente
    al dominio? Le tensioni iniziali devono referenziare almeno un
    condensato_ref (es. A2,A10).
 
-4. **Generazione seme** — produci JSON strutturato:
+5. **Generazione seme** — produci JSON strutturato:
    - `domain`: slug del dominio
    - `tensioni`: 3-5 tensioni iniziali con tipo/id/claim/intensita/condensato_ref
    - `direzione`: una frase italiana che descrive la direzione di esplorazione
    - `direzione_en`: traduzione inglese (per UI dashboard bilingue)
 
-5. **Generazione context.md** — prompt agente per il lab nuovo. Pattern:
+6. **Generazione context.md** — prompt agente per il lab nuovo. Pattern:
    - "Chi sei" — l'identità del lab di dominio (es. "Sei l'AI-Lab finance...")
    - "Il modello D-ND — nucleo" — invariante, copia da physics
    - "Confine epistemico" — cosa il dominio deve falsificare prima di accumulare
@@ -174,11 +211,11 @@ Il lab figlio acquisisce anche:
      moduli importable. Il context.md deve riflettere questa realtà —
      altrimenti l'agent ne parla a voce nel report invece di eseguirli.
 
-6. **Generazione about.md** (IT) + about.en.md (EN) — copy visitor-facing
+7. **Generazione about.md** (IT) + about.en.md (EN) — copy visitor-facing
    onesta: cosa fa il lab, perché esiste, come si usa. NON è il prompt
    agente. È testo per chi visita la dashboard.
 
-7. **Generazione ui_contract.json** — processo cognitivo per costruire la
+8. **Generazione ui_contract.json** — processo cognitivo per costruire la
    UI del lab figlio. Non creare tab a mano per ogni dominio: usa il
    template comune a tre colonne e dichiara quali moduli lo popolano.
    Leggi `docs/UI_COGNITIVE_PROCESS.md` e usa
@@ -208,11 +245,11 @@ Il lab figlio acquisisce anche:
    - ops-decisions: DecisionTree, FailureModes, ActionConstraints,
      EscalationMap.
 
-8. **Generazione assertions.py** — funzione `verifica_asserzioni()` che
+9. **Generazione assertions.py** — funzione `verifica_asserzioni()` che
    ritorna `[{"id": "...", "status": "PASS"|"FAIL"|"SKIP", ...}, ...]`.
    Almeno 5 asserzioni del dominio che testano invarianti del modello.
 
-9. **Generazione mml.json (Metamasterlab del lab figlio)** —
+10. **Generazione mml.json (Metamasterlab del lab figlio)** —
    passaggio NUOVO. Il MML è il primo atto di autocoscienza del lab
    nascente. Conformi a `mml.schema.json` del repo. Devi produrre:
    - `lab` (slug del nuovo dominio)
@@ -227,9 +264,12 @@ Il lab figlio acquisisce anche:
    - `kernel_refs.condensato_axioms_used` (sottoinsieme A1-A16/F1-F6/C1-C3
      che il dominio proietta — DEVE matchare le condensato_ref delle
      tensioni iniziali generate al passo 4)
-   - `skills_attive` — subset delle 113 skill totali (vedere
-     `docs/SKILL_CATALOG.md` + `docs/SKILL_FIELD_MAP.md` per i 9 layer
-     del sistema cognitivo MMSp).
+   - `skills_attive` — subset delle 113 skill totali, scelto dalla fase
+     `skill_retrieval` del passo 2. Vedere `docs/SKILL_CATALOG.md` +
+     `docs/SKILL_FIELD_MAP.md` per i 9 layer del sistema cognitivo MMSp.
+     Non dichiarare skill solo per prestigio: ogni skill deve avere
+     `rationale`, `trigger` e, se non e' pienamente verificata, nota di
+     gap in `transduction.md`.
 
      **Formato canonico: layered object** (vedi `mml.schema.json`
      definitions.skill_layered_object). Skill organizzate per layer
@@ -287,18 +327,19 @@ Il lab figlio acquisisce anche:
    - `_generated_by`: "meta-lab"
    - `_generated_at`: ISO timestamp
 
-9. **Verifica falsifier meta** — applica M1-M7 al template generato
+11. **Verifica falsifier meta** — applica M1-M8 al template generato
    (M6 = MML coherence, M7 = integrita' di transduzione). Se uno
    fallisce, riformula o dichiara dominio non di leva.
 
-10. **Output finale**: file system tree completo + report markdown del
+12. **Output finale**: file system tree completo + report markdown del
     cycle che spiega:
     - Tensioni identificate + giustificazione (perché dipolari?)
+    - Skill/enzimi recuperati + esclusioni motivate
     - Assiomi proiettati + come
     - Naive baseline proposto
     - Skill subset attivate + rationale
     - External APIs dichiarate (no-auth dove possibile)
-    - Verifica M1-M7
+    - Verifica M1-M8
     - Verdict: TEMPLATE_VALID | TEMPLATE_NEEDS_REFINEMENT | DOMAIN_NOT_OF_LEVERAGE
 
 ## Pattern hermes — external_apis no-auth

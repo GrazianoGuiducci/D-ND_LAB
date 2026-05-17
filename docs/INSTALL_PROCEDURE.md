@@ -60,6 +60,15 @@ produrre `domains/<slug>/transduction.md` e
 osservabili domain-native, null/baseline, regole adattive, contaminazioni
 specifiche, contratto UI e test E2E attesi.
 
+Prima della transduzione operativa c'e' ora una fase obbligatoria:
+**recupero skill/enzimi**. Il meta-lab consulta `docs/SKILL_CATALOG.md`,
+`docs/SKILL_FIELD_MAP.md`, `docs/SKILL_DIAGNOSTIC.md` e
+`/opt/MM_D-ND/tools/data/cognitive_enzymes_archive.md` per capire quali
+capacita' il sistema possiede gia'. Il risultato entra nel `mml.json`
+layered del nuovo Lab, nella nota `transduction.md` e nei tool/null/gate
+da generare. Se il recupero non viene dichiarato, il template fallisce la
+meta-lente M8.
+
 Le sezioni sono ordinate per dipendenza causale.
 
 ### 1.1 Identità del lab
@@ -142,6 +151,8 @@ chiede conferma. Validazioni automatiche:
 - [ ] Slug univoco (non collide con `/opt/labs/<altro>` esistente)
 - [ ] `assertions.py` (se richiesto) ha funzioni test_fn callable
 - [ ] Tensioni iniziali ben formate (id, claim, intensità)
+- [ ] `skill_retrieval` documentato: skill/enzimi usati, esclusi e mancanti
+- [ ] `mml.json` usa `skills_attive` per layer, non solo lista piatta
 - [ ] LLM_API_KEY o subscription disponibile per il provider scelto
 - [ ] Cron schedule sintatticamente valido
 - [ ] URL non collide con nginx esistente
@@ -177,6 +188,8 @@ Da config:
   e' stato tradotto nel dominio senza copiare contenuto sorgente improprio
 - `domains/<slug>/ui_contract.json` — come il template dashboard a tre
   colonne viene popolato con moduli comuni e domain-native
+- `domains/<slug>/mml.json` — skill attive per layer, scelte dopo recupero
+  skill/enzimi e validate da M6/M8
 - `domains/<slug>/tension_to_category.json` — mapping (può iniziare vuoto)
 - `domains/<slug>/cimitero.md` — opzionale, importato se forniti claim
 
