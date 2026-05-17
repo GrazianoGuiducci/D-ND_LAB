@@ -179,3 +179,27 @@ Target rule:
 If a generated Lab would fail M1, M5, M6 or M8, the meta-lab must repair the
 spec before writing the domain.
 ```
+
+## Follow-Up Runtime Cycle
+
+See:
+
+```text
+docs/META_LAB_AUTONOMOUS_FINANCE_REQUEST_20260517.md
+```
+
+The first autonomous request cycle exposed that `plan-domain` requests were
+side files: the meta-lab did not see them in `agent_field_live.md` and
+continued the older finance direction. The runtime was repaired so
+`plan-domain` activates the request as a meta-lab seed tension and
+`build_field` surfaces pending domain requests.
+
+After the repair, cycle `20260517_2045` consumed
+`DOMAIN_REQUEST_FINANCE_REFERENCE_AUTOGEN`. It produced a useful finance
+precondition result, not a new isolated candidate domain. The remaining
+generator gap is therefore explicit:
+
+```text
+domain_request -> spec draft -> preflight -> generator dry-run -> strict
+validator -> install or block report
+```

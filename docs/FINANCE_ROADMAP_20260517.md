@@ -48,6 +48,12 @@ First meta-lab comparison:
 docs/META_LAB_FINANCE_REFERENCE_COMPARISON_20260517.md
 ```
 
+Autonomous meta-lab request cycle:
+
+```text
+docs/META_LAB_AUTONOMOUS_FINANCE_REQUEST_20260517.md
+```
+
 ## Tabella Di Marcia
 
 | Step | Goal | Entry Gate | Work | Exit Gate | Output |
@@ -56,7 +62,7 @@ docs/META_LAB_FINANCE_REFERENCE_COMPARISON_20260517.md
 | 2 | Check THIA/Lab Assistant context grounding | Dashboard card visible; `/precondition_contract` returns `200` | Ask the THIA/Lab Dashboard Assistant about gate, survivor exceptions, and what is not promotable | THIA/Lab Assistant answers: provisional threshold, `2/10` survivors visible, no trading signal | Done via deterministic boundary fallback |
 | 3 | Choose next branch | Step 1 done; Step 2 acceptable or explicitly skipped | Decide one branch: real-market transfer, meta-lab comparison, or new synthetic object | Branch documented before execution | Selected: 4A real-market transfer before meta-lab comparison |
 | 4A | Real-market transfer | Branch chosen; no synthetic ambiguity hidden | Test SPY/BTC/FX with data-card, iid/block nulls, VaR/RV baselines | No market claim unless real-data nulls and baselines pass | Done as negative E2E: `current_iid_partial`, no market claim |
-| 4B | Meta-lab comparison | Finance reference stable; no stale SPY rerun pending | Generate an isolated finance-like Lab and validate it against M1-M8/reference lenses | Generated Lab preserves contracts, nulls, UI boundary, survivor handling and trajectory observability | First controlled comparison done; next is hardening spec preflight |
+| 4B | Meta-lab comparison | Finance reference stable; no stale SPY rerun pending | Generate an isolated finance-like Lab and validate it against M1-M8/reference lenses | Generated Lab preserves contracts, nulls, UI boundary, survivor handling and trajectory observability | Controlled spec comparison done; autonomous request cycle now sees requests but still needs install-or-block generator movement |
 | 4C | New synthetic object | Branch chosen; new mechanism predeclared | Define target variable and falsifier before running a cycle | New object beats controls without rescuing old rejected cases silently | New synthetic candidate or rejection |
 | 5 | Product/readiness gate | One branch produces replicated value | Add cost/slippage, double replication, review and packaging gates | Product-stage evidence exists | Candidate kernel or explicit stop |
 
@@ -92,8 +98,19 @@ Rationale: finance has now completed one autonomous value-facing E2E before the
 meta-lab generator is judged against it. A first controlled 4B comparison is in
 `docs/META_LAB_FINANCE_REFERENCE_COMPARISON_20260517.md`. It proves the
 generator pathway is viable when the spec includes condensato anchors, live
-cycle movement, core invariant skill layers and `skill_retrieval`; it does not
-yet prove a full autonomous LLM meta-lab cycle.
+cycle movement, core invariant skill layers and `skill_retrieval`.
+
+The next runtime test is recorded in
+`docs/META_LAB_AUTONOMOUS_FINANCE_REQUEST_20260517.md`: the meta-lab now sees
+`domain_request` inputs in its live field and consumed
+`finance-reference-autogen`, but it produced a finance precondition result
+rather than a new installable candidate domain. Therefore the remaining 4B gap
+is orchestration, not finance evidence:
+
+```text
+domain_request -> spec draft -> preflight -> generator dry-run -> strict
+validator -> install or block report
+```
 
 ## Branch Details
 
@@ -158,10 +175,22 @@ First comparison artifact:
 docs/META_LAB_FINANCE_REFERENCE_COMPARISON_20260517.md
 ```
 
+Autonomous request artifact:
+
+```text
+docs/META_LAB_AUTONOMOUS_FINANCE_REQUEST_20260517.md
+```
+
 Result: `TEMPLATE_VALID`, 8/8 M1-M8 PASS after repairing the spec. The first
 iteration failed M1/M5/M6/M8, which exposed the important generator contract:
 incomplete specs must be repaired before file generation, not after a domain is
 installed.
+
+Runtime request result: `finance-reference-autogen` was made visible through
+`plan-domain` seed activation and `build_field` pending request surfacing.
+Cycle `20260517_2045` consumed it and verified the finance admission
+precondition (`PRECONDITION_FOUND`), but did not yet emit an isolated generated
+domain or block artifact. This is the next meta-lab implementation target.
 
 Comparison lenses:
 

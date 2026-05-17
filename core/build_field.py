@@ -80,6 +80,14 @@ def build_field(ctx: CycleContext) -> None:
     parts.append(_seed_header_section(ctx.seed))
     sections_written.append("seed_header")
 
+    # 3b. Pending domain requests (optional, mainly meta-lab)
+    domain_requests_path = params.get("domain_requests_path")
+    if domain_requests_path:
+        req_md = _domain_requests_section(_resolve_data_path(ctx.domain, domain_requests_path))
+        if req_md:
+            parts.append(req_md)
+            sections_written.append("domain_requests")
+
     # 4. Active tensions
     parts.append(_tensions_section(ctx.seed))
     sections_written.append("tensions")
@@ -231,6 +239,57 @@ def _tensions_section(seme: dict[str, Any]) -> str:
         tid = t.get("id", "?")
         claim = (t.get("claim", "") or "")[:150]
         parts.append(f"- [{tid}] ({i}) {claim}")
+    parts.append("")
+    return "\n".join(parts)
+
+
+def _domain_requests_section(request_dir: Path, n: int = 5) -> str | None:
+    """Surface captured domain requests in the live field.
+
+    The meta-lab can only generate from what the field exposes. Keeping
+    requests as side files made plan-domain invisible to the next cycle.
+    """
+    if not request_dir.exists():
+        return None
+
+    requests: list[dict[str, Any]] = []
+    for path in sorted(request_dir.glob("*_request.json"), key=lambda p: p.stat().st_mtime, reverse=True):
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        data["_path"] = path
+        requests.append(data)
+        if len(requests) >= n:
+            break
+
+    if not requests:
+        return None
+
+    parts = ["## Pending domain requests"]
+    for req in requests:
+        slug = req.get("slug", "?")
+        title = req.get("title", slug)
+        kind = req.get("kind", "?")
+        movement = req.get("movement_class", "?")
+        status = req.get("status", "?")
+        path = req.get("_path")
+        intent = (req.get("intent", "") or "")[:220]
+        parts.append(f"- `{slug}` — {title} ({kind}/{movement}, {status})")
+        parts.append(f"  intent: {intent}")
+        if path:
+            parts.append(f"  request: {path}")
+        dynamics = req.get("use_dynamics") or []
+        if dynamics:
+            parts.append("  use_dynamics: " + "; ".join(str(x) for x in dynamics[:3]))
+        exclusions = req.get("exclusions") or []
+        if exclusions:
+            parts.append("  exclusions: " + "; ".join(str(x) for x in exclusions[:3]))
+    parts.append("")
+    parts.append(
+        "If a pending request is active in seed tensions, generate or block that request explicitly. "
+        "Do not silently continue an older direction."
+    )
     parts.append("")
     return "\n".join(parts)
 
@@ -635,6 +694,13 @@ def _resolve_domain_path(domain: str, rel: str) -> Path:
     if Path(rel).is_absolute():
         return Path(rel)
     return paths.domain_dir(domain) / rel
+
+
+def _resolve_data_path(domain: str, rel: str) -> Path:
+    """Resolve a path that's relative to the domain runtime data directory."""
+    if Path(rel).is_absolute():
+        return Path(rel)
+    return paths.domain_data_dir(domain) / rel
 
 
 # ─── Movement registration ─────────────────────────────────────────

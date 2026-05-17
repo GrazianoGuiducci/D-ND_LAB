@@ -21,7 +21,7 @@
   ],
   "movements": {
     "autopsy":            { "enabled": true },
-    "build_field":        { "enabled": true },
+    "build_field":        { "enabled": true, "params": {"domain_requests_path": "domain_requests"} },
     "agent":              { "enabled": true },
     "validate_seed":      { "enabled": true },
     "verify_assertions":  { "enabled": true },

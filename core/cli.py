@@ -229,6 +229,8 @@ def restore_snapshot(domain: str, snapshot: str, force: bool) -> None:
               help="Domain type, e.g. research, finance, monitoring, prediction.")
 @click.option("--output-dir", default=None,
               help="Where to write the request. Default: LAB_DATA_DIR/meta-lab/domain_requests.")
+@click.option("--activate/--no-activate", default=True, show_default=True,
+              help="Also inject the request as active meta-lab seed direction.")
 def plan_domain(
     slug: str | None,
     title: str | None,
@@ -239,6 +241,7 @@ def plan_domain(
     success_condition: str | None,
     domain_kind: str | None,
     output_dir: str | None,
+    activate: bool,
 ) -> None:
     """Collect a new-domain request for the meta-lab.
 
@@ -345,7 +348,58 @@ def plan_domain(
         ]),
         encoding="utf-8",
     )
+    activated = False
+    if activate and output_dir is None:
+        _activate_meta_domain_request(request, json_path)
+        activated = True
     click.echo(f"Domain request written:\n  {json_path}\n  {md_path}")
+    if activated:
+        click.echo("Meta-lab seed activated for this request.")
+
+
+def _activate_meta_domain_request(request: dict[str, Any], request_path: Path) -> None:
+    """Inject a captured domain request into the active meta-lab seed.
+
+    `plan-domain` used to create side files only. The next cycle could miss
+    them because build_field primarily follows seed direction/tensions. This
+    keeps the request in the live movement without generating a domain yet.
+    """
+    from core import paths
+
+    seed_path = paths.seed_path("meta-lab")
+    try:
+        seed = json.loads(seed_path.read_text(encoding="utf-8")) if seed_path.exists() else {}
+    except Exception:
+        seed = {}
+
+    tensioni = list(seed.get("tensioni") or [])
+    slug = str(request.get("slug", "domain")).strip()
+    tension_id = "DOMAIN_REQUEST_" + slug.upper().replace("-", "_")
+    claim = (
+        f"Generate or explicitly block domain request `{slug}`: "
+        f"{request.get('intent', '')}"
+    )
+    tension = {
+        "tipo": "task",
+        "id": tension_id,
+        "claim": claim,
+        "intensita": 1.0,
+        "porta": "domain_request",
+        "request_path": str(request_path),
+        "domain_kind": request.get("kind"),
+        "movement_class": request.get("movement_class"),
+        "condensato_ref": "A2,A8,A14,A15",
+    }
+    tensioni = [t for t in tensioni if t.get("id") != tension_id]
+    seed["tensioni"] = [tension] + tensioni
+    seed["piano"] = int(seed.get("piano") or 0) + 1
+    seed["direzione"] = (
+        f"Process domain request `{slug}` through meta-lab generation: "
+        "produce a complete spec/domain package or block with explicit M1-M8 reasons."
+    )
+    seed["timestamp"] = datetime.now(timezone.utc).isoformat()
+    seed_path.parent.mkdir(parents=True, exist_ok=True)
+    seed_path.write_text(json.dumps(seed, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
 @main.command(name="dry-run")
