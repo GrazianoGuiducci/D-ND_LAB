@@ -510,6 +510,84 @@ def _call_thia_chat_fallback(
     }
 
 
+def _local_finance_boundary_reply(domain: str, body: ChatRequest) -> dict[str, Any] | None:
+    """Deterministic grounding for the finance promotion-boundary card.
+
+    This is not a generic chatbot fallback. It only answers the crystallized
+    finance boundary contract so the UI can explain the visible card even when
+    the LLM adapter is not configured.
+    """
+    if domain != "finance":
+        return None
+    last_user = ""
+    for msg in reversed(body.messages):
+        if msg.role == "user":
+            last_user = msg.content or ""
+            break
+    view = body.context_view if isinstance(body.context_view, dict) else {}
+    focus = " ".join(
+        str(x)
+        for x in (
+            last_user,
+            body.context_tab or "",
+            view.get("active_heading", ""),
+            view.get("focus_marker", {}).get("focus", "") if isinstance(view.get("focus_marker"), dict) else "",
+            view.get("focus_marker", {}).get("section_label", "") if isinstance(view.get("focus_marker"), dict) else "",
+        )
+    ).lower()
+    if not any(token in focus for token in (
+        "soglia",
+        "promotion",
+        "promozione",
+        "precondition",
+        "precondizione",
+        "score",
+        "0.55",
+        "survivor",
+        "sotto soglia",
+        "gate",
+    )):
+        return None
+
+    contract_path = paths.domain_dir(domain) / "precondition_contract.json"
+    contract = _read_json_safe(contract_path, {})
+    selected = contract.get("selected_precondition", {}) if isinstance(contract, dict) else {}
+    boundary = contract.get("boundary_crystallization", {}) if isinstance(contract, dict) else {}
+    if not selected or not boundary:
+        return None
+
+    score_min = selected.get("score_min", "n/a")
+    admitted = f"{boundary.get('admitted_robust_positives', '?')}/{boundary.get('admitted_positives', '?')}"
+    rejected = f"{boundary.get('rejected_robust_positives', '?')}/{boundary.get('rejected_positives', '?')}"
+    controls = f"{boundary.get('selected_controls', '?')}/{boundary.get('control_cases', '?')}"
+    control_robust = f"{boundary.get('control_robust_all_null', '?')}/{boundary.get('control_cases', '?')}"
+
+    reply = (
+        f"La soglia `score >= {score_min}` e' la promotion boundary sintetica "
+        "corrente del Finance Lab.\n\n"
+        f"- Ammessi robusti: `{admitted}`.\n"
+        f"- Survivor sotto soglia: `{rejected}`.\n"
+        f"- Controlli selezionati: `{controls}`.\n"
+        f"- Controlli robust all-null: `{control_robust}`.\n\n"
+        "Il punto importante: non e' un hard boundary. I sotto-soglia non sono "
+        "rumore da cancellare, perche' alcuni survivor esistono e devono restare "
+        "visibili. Pero' non sono promuovibili con il contratto attuale: per "
+        "recuperarli servirebbe un nuovo meccanismo dichiarato prima del test e "
+        "un null che lo possa falsificare.\n\n"
+        "Cosa NON puoi concludere: non e' un segnale trading, non autorizza "
+        "buy/sell/forecast/profit/alpha, non e' evidenza di mercato reale e non "
+        "giustifica un altro rescue layer sulla stessa famiglia solo per salvare "
+        "i casi sotto soglia."
+    )
+    return {
+        "reply": reply,
+        "session_id": body.session_id or f"lab_{uuid.uuid4().hex[:12]}",
+        "tool_trace": [{"tool": "local_finance_boundary", "source": str(contract_path)}],
+        "pending_actions": [],
+        "usage": {"mode": "deterministic_boundary_fallback"},
+    }
+
+
 # ─── Endpoints ──────────────────────────────────────────────────────
 
 
@@ -3009,6 +3087,9 @@ async def chat_endpoint(domain: str, body: ChatRequest, request: Request) -> dic
     try:
         config.validate()
     except ValueError as e:
+        local_boundary = _local_finance_boundary_reply(domain, body)
+        if local_boundary:
+            return local_boundary
         if settings.demo_mode:
             return _call_thia_chat_fallback(domain=domain, body=body, system_prompt=system_prompt)
         raise HTTPException(503, f"LLM not configured: {e}")
@@ -3554,6 +3635,35 @@ def _build_chat_system_prompt(domain: str) -> str:
             parts.append(cim_text)
         except Exception:
             pass
+
+    precondition_path = paths.domain_dir(domain) / "precondition_contract.json"
+    precondition = _read_json_safe(precondition_path, {})
+    if isinstance(precondition, dict) and precondition.get("selected_precondition"):
+        selected = precondition.get("selected_precondition", {}) or {}
+        boundary = precondition.get("boundary_crystallization", {}) or {}
+        parts.append("")
+        parts.append("## PRECONDITION / PROMOTION BOUNDARY")
+        parts.append(f"- metric: {selected.get('metric', '?')}")
+        parts.append(f"- score_min: {selected.get('score_min', '?')}")
+        parts.append(f"- policy: {precondition.get('allowed_next_cycle', {}).get('policy', '?') if isinstance(precondition.get('allowed_next_cycle'), dict) else '?'}")
+        if isinstance(boundary, dict) and boundary:
+            parts.append(f"- source_cycle: {boundary.get('source_cycle', '?')}")
+            parts.append(
+                "- admitted robust: "
+                f"{boundary.get('admitted_robust_positives', '?')}/{boundary.get('admitted_positives', '?')}"
+            )
+            parts.append(
+                "- below-gate survivors: "
+                f"{boundary.get('rejected_robust_positives', '?')}/{boundary.get('rejected_positives', '?')}"
+            )
+            parts.append(
+                "- selected controls: "
+                f"{boundary.get('selected_controls', '?')}/{boundary.get('control_cases', '?')}"
+            )
+        parts.append(
+            "Interpret this as a provisional synthetic promotion threshold, not "
+            "as a hard evidence/impossibility boundary and never as a trading signal."
+        )
 
     # SSP pipeline summary (Atto UX 7 — consapevolezza dei prodotti)
     domain_dir = paths.domain_data_dir(domain)

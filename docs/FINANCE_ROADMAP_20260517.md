@@ -29,7 +29,7 @@ evidence boundary and not a market signal.
 | Step | Goal | Entry Gate | Work | Exit Gate | Output |
 |---:|---|---|---|---|---|
 | 1 | Close synthetic promotion boundary | Cycle `20260517_1050` complete; falsifier correction applied | Preserve gate, survivor counts and non-hard-boundary rule in contracts/UI/docs | Audit returns `CRYSTALLIZE_PROMOTION_BOUNDARY`; dashboard shows gate and survivors | Current state, done |
-| 2 | Check THIA/context grounding | Dashboard card visible; `/precondition_contract` returns `200` | Ask THIA about gate, survivor exceptions, and what is not promotable | THIA answers: provisional threshold, `2/10` survivors visible, no trading signal | Optional UI/assistant fix if needed |
+| 2 | Check THIA/context grounding | Dashboard card visible; `/precondition_contract` returns `200` | Ask THIA about gate, survivor exceptions, and what is not promotable | THIA answers: provisional threshold, `2/10` survivors visible, no trading signal | Done via deterministic boundary fallback |
 | 3 | Choose next branch | Step 1 done; Step 2 acceptable or explicitly skipped | Decide one branch: real-market transfer, meta-lab comparison, or new synthetic object | Branch documented before execution | Branch packet / direction |
 | 4A | Real-market transfer | Branch chosen; no synthetic ambiguity hidden | Test SPY/BTC/FX with data-card, iid/block nulls, VaR/RV baselines | No market claim unless real-data nulls and baselines pass | Real-data report, likely `SOSPENSIONE` first |
 | 4B | Meta-lab comparison | Branch chosen; finance reference stable | Ask meta-lab to regenerate finance-like Lab from intent/domain | Generated Lab preserves contracts, nulls, UI boundary, survivor handling | Comparison report and meta-lab improvements |
@@ -38,13 +38,17 @@ evidence boundary and not a market signal.
 
 ## Recommended Next Step
 
-Do **Step 2** before another Lab cycle:
+Step 2 is now done. The dashboard chat has a deterministic boundary fallback,
+so the finance card can be explained even when the LLM adapter is not
+configured.
+
+Next do **Step 3** before another Lab cycle:
 
 ```text
-Verify that THIA and the dashboard explain the promotion boundary correctly.
+Choose one branch: real-market transfer, meta-lab comparison, or new synthetic object.
 ```
 
-Expected answer from THIA/UI:
+Verified THIA/UI answer:
 
 - gate is `score >= 0.55`;
 - it is provisional and synthetic;
@@ -117,4 +121,3 @@ No finance output is a trading signal. Do not use `buy`, `sell`, `forecast`,
 `profit`, or `alpha signal` labels until a product-stage verification exists
 with real-data gates, robust nulls, slippage/cost baselines, and explicit
 review.
-
