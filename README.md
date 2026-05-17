@@ -98,6 +98,16 @@ docker compose run --rm lab plan-domain
 This records the domain, kind and movement/intention under the `meta-lab`
 runtime data. It does not force-generate a Lab: the request must pass through
 the meta-lab/template validator before becoming a new installable domain.
+To run the local install-or-block path without touching `domains/`, use:
+
+```bash
+python3 domains/meta-lab/tools/domain_request_runner.py --force
+```
+
+The runner consumes the latest `data/meta-lab/domain_requests/*_request.json`,
+writes an isolated candidate under `data/meta-lab/generated_domains/`, and
+returns either `INSTALLABLE_CANDIDATE` with strict M1-M8 validation or a block
+report with explicit reasons.
 The transduction rules used to preserve the Lab movement across domains live in
 [docs/DOMAIN_TRANSCENDENCE_AWARENESS.md](docs/DOMAIN_TRANSCENDENCE_AWARENESS.md).
 The UI generation process for domain-native dashboards lives in

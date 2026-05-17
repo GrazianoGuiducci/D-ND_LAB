@@ -137,3 +137,48 @@ Add or wire an explicit meta-lab movement/tool that consumes the active
 
 Do not judge the meta-lab as complete until a blind domain request can reach
 that install-or-block artifact without a hand-written spec.
+
+## Install-Or-Block Runner
+
+Implemented after the runtime gap was observed:
+
+```bash
+python3 domains/meta-lab/tools/domain_request_runner.py \
+  --request data/meta-lab/domain_requests/finance-reference-autogen_request.json \
+  --force --json
+```
+
+The runner is deterministic and isolated. It does not write into `domains/`.
+It writes candidate packages under:
+
+```text
+data/meta-lab/generated_domains/<slug>/
+```
+
+and reports under:
+
+```text
+data/meta-lab/generated_domains/_reports/
+data/meta-lab/generated_domains/_specs/
+```
+
+Verified result for `finance-reference-autogen`:
+
+```text
+status: INSTALLABLE_CANDIDATE
+validator: TEMPLATE_VALID
+M1-M8: 8 PASS / 0 FAIL / 0 SKIP
+candidate_dir: data/meta-lab/generated_domains/finance-reference-autogen
+```
+
+Additional verification:
+
+```bash
+python3 data/meta-lab/generated_domains/finance-reference-autogen/tools/exp_request_smoke.py --json
+test ! -d domains/finance-reference-autogen
+```
+
+This closes the first install-or-block artifact path. It is still a
+deterministic candidate generator, not yet a full LLM-designed domain. The next
+quality step is to let a meta-lab cycle call this runner and then compare the
+deterministic candidate against a richer LLM-authored spec.

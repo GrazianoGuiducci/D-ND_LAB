@@ -475,8 +475,15 @@ Stato operativo attuale:
 - `dndlab plan-domain` puo' raccogliere `movement_class`, `use_dynamics`,
   `exclusions` e `success_condition` per ridurre inferenza cieca nella fase
   meta-lab.
+- `tools/domain_request_runner.py` consuma una `domain_request`, genera una
+  spec candidata in modo deterministico, scrive il candidato in area isolata
+  `data/meta-lab/generated_domains/`, esegue dry-run + strict validator M1-M8 e
+  produce un report install-or-block. Questo chiude il ponte operativo minimo
+  tra richiesta e pacchetto candidato senza contaminare `domains/`.
 
 I prossimi passi naturali sono:
 
 - usare il finance lab come primo caso valutativo della guida;
+- far invocare il runner da un ciclo meta-lab e confrontare il candidato
+  deterministico con una spec LLM piu' ricca;
 - aggiornare il seed autoinstallante quando la procedura regge in E2E.
