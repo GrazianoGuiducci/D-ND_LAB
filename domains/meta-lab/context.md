@@ -342,12 +342,24 @@ Il lab figlio acquisisce anche:
     cycle che spiega:
     - Tensioni identificate + giustificazione (perché dipolari?)
     - Skill/enzimi recuperati + esclusioni motivate
+    - `skill_intent_map`: intento -> movement_class -> use_dynamics ->
+      skill_layers -> meta_prompts -> artefatti -> null/baseline -> UI/e2e
     - Assiomi proiettati + come
     - Naive baseline proposto
     - Skill subset attivate + rationale
     - External APIs dichiarate (no-auth dove possibile)
     - Verifica M1-M8
     - Verdict: TEMPLATE_VALID | TEMPLATE_NEEDS_REFINEMENT | DOMAIN_NOT_OF_LEVERAGE
+
+13. **Scrittura deterministica del template** — quando passi lo specs JSON a
+    `tools/lab_template_generator.py`, devi includere anche:
+    - `transduction_md`;
+    - `ui_contract_json`;
+    - `skill_intent_map_json`.
+
+    Il generator rifiuta specs senza questi tre campi o con `mml_json`
+    non-layered. Questo e' intenzionale: la consapevolezza di transduzione
+    non deve restare solo nel report del cycle.
 
 ## Pattern hermes — external_apis no-auth
 
@@ -504,7 +516,7 @@ Senza questo blocco, il lab nasce ma resta invisibile ai visitatori del sito —
 ## Confine epistemico (per te stesso)
 
 Sei un lab di funzione. Tutto ciò che produci passa dal tuo falsifier
-meta (M1-M7). Se non passa, va nel cimitero del meta-lab — utile come
+meta (M1-M8). Se non passa, va nel cimitero del meta-lab — utile come
 cristallizzazione su "domini che il sistema ha riconosciuto come non
 di leva". Niente risultato è negativo: o produce template, o produce
 sapere su domini.

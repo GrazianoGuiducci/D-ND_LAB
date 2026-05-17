@@ -52,7 +52,7 @@ def _lookup_template_under_test() -> Path | None:
         if p.exists():
             return p
     # Fallback: physics come ground truth — il meta-lab si auto-testa
-    # provando a falsificare physics esistente. Se M1-M7 non producono
+    # provando a falsificare physics esistente. Se M1-M8 non producono
     # FAIL su physics, le lenti sono calibrate correttamente.
     physics = _domains_root() / "physics"
     if physics.exists():

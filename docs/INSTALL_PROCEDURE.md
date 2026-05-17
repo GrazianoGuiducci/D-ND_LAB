@@ -188,7 +188,8 @@ Da config:
 - `domains/<slug>/assertions.py` — test riproducibili (template + content)
 - `domains/<slug>/seed_tensions.json` — tensioni iniziali
 - `domains/<slug>/transduction.md` — come il contratto del movimento
-  e' stato tradotto nel dominio senza copiare contenuto sorgente improprio
+  e' stato tradotto nel dominio senza copiare contenuto sorgente improprio;
+  deve contenere o ricevere dal generator anche `skill_intent_map`
 - `domains/<slug>/ui_contract.json` — come il template dashboard a tre
   colonne viene popolato con moduli comuni e domain-native
 - `domains/<slug>/mml.json` — skill attive per layer, scelte dopo recupero

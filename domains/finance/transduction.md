@@ -1,6 +1,7 @@
 # Finance Lab — Transduction
 
 > M7 — integrita' di transduzione.
+> M8 — recupero skill/enzimi + skill_intent_map retrospettivo.
 >
 > Questa nota dichiara come il movimento D-ND e' stato tradotto dal caso
 > sorgente physics al dominio finance senza copiare contenuto fisico.
@@ -98,6 +99,110 @@ Null e controlli:
 Un singolo `DND_DELTA` non e' finding maturo. Un singolo `NO_DELTA` non
 falsifica il pipeline. Il Lab deve leggere la distribuzione dei risultati
 prima di nominare un regime.
+
+## M8 — skill_retrieval / enzyme_retrieval / skill_intent_map
+
+Questo retrofit M8 non cambia i risultati finance gia' prodotti. Rende
+esplicito cio' che il meta-lab dovra' fare prima di generare altri Lab:
+collegare intento, dinamica d'uso, skill/meta-prompt, strumenti, null,
+baseline e UI.
+
+### skill_retrieval
+
+Skill gia' dichiarate in `mml.json` e pertinenti al movimento finance:
+
+- `assertion-verifier`: blocca promozioni senza PASS/FAIL/SKIP numerici;
+- `autoresearch`: genera varianti di test senza fissarsi su asset/finestra;
+- `capture-insight`: cristallizza nel seed il vincolo emerso;
+- `audit-system`: controlla drift di dati, API, fallback e tool;
+- `publish-safe` / `vulcan`: impediscono linguaggio predittivo non supportato;
+- `research-lab` / `dnd-method`: mantengono il dominio come ricerca
+  quantitativa falsificabile, non advisory;
+- `cascata`, `cec`, `consapevolezza-condensato`,
+  `autologica-operativa`, `eval`: runtime invariant del Lab.
+
+Skill da non usare come autorita' del dominio:
+
+- `paper-deployer`: resta output-layer potenziale; non autorizza claim
+  finanziari pubblici finche' non esiste prodotto maturo e revisione;
+- skill persona (`observer`, `vulcan`) non sostituiscono strumenti,
+  baseline o falsifier.
+
+### enzyme_retrieval
+
+Enzimi cognitivi pertinenti al finance corrente:
+
+- separare segnale da eco narrativa;
+- trasformare detector debole in domanda sulla precondizione mancante;
+- usare il cimitero come memoria dei falsi positivi, non come fallimento;
+- leggere runtime e trace prima del report finale;
+- dichiarare `NO_DELTA` come vincolo operativo quando la potenza non e'
+  recuperabile.
+
+Capacita' mancanti da trattare come strumenti/null/gate, non come copy:
+
+- precondition detector per capire quando una famiglia di statistiche ha
+  potenza recuperabile;
+- block-preserving null espliciti per evitare shuffle troppo liberi;
+- data-card piu' forte quando si passa da synthetic a market data;
+- UI lens che renda visibile "non ammissibile" prima di ogni linguaggio
+  value-facing.
+
+### skill_intent_map
+
+```json
+{
+  "intent": "costruire un Lab finance che rileva quando un'ipotesi di regime non regge prima che diventi decisione di esposizione",
+  "movement_class": "calibration+recovery",
+  "use_dynamics": [
+    "confrontare detector di regime contro baseline e null",
+    "identificare la precondizione mancante quando purezza non produce potenza recuperabile",
+    "bloccare promozioni e linguaggio predittivo se il detector resta NO_DELTA",
+    "cristallizzare vincoli decisionali e runtime awareness"
+  ],
+  "skill_layers": {
+    "validation_layer": ["assertion-verifier", "cec"],
+    "processing_layer": ["autoresearch", "capture-insight"],
+    "observation_layer": ["audit-system"],
+    "output_layer": ["publish-safe", "vulcan"],
+    "domain_layer": ["research-lab", "dnd-method"],
+    "runtime_patterns": ["cascata", "consapevolezza-condensato", "autologica-operativa", "eval"]
+  },
+  "meta_prompts": [
+    "Non cercare un altro parametro del detector. Trova la precondizione che deve essere vera prima che un detector di regime abbia potenza recuperabile.",
+    "Confronta target, baseline VaR/RV e null block-preserving senza introdurre lookahead.",
+    "Se la precondizione non regge, produrre NO_DELTA e vincolo di ridisegno, non una nuova promessa."
+  ],
+  "generated_artifacts": [
+    "transduction.md",
+    "mml.json",
+    "ui_contract.json",
+    "tools/exp_regime_shift.py",
+    "tools/finance_diagnostic_report.py",
+    "assertions.py"
+  ],
+  "null_baseline_requirements": [
+    "random walk",
+    "shuffled returns",
+    "block bootstrap o block-preserving null",
+    "VaR/RV baseline",
+    "data-card anti-lookahead"
+  ],
+  "ui_lens": [
+    "Regime Gate",
+    "Baseline / Null",
+    "Data-card",
+    "Non ammissibile",
+    "Cycle trace"
+  ],
+  "exclusions": [
+    "buy/sell/forecast/profit",
+    "singola finestra come autorita'",
+    "fisica copiata come semantica",
+    "paper-deployer come autorizzazione pubblica"
+  ]
+}
+```
 
 ## Regole Adattive
 
@@ -202,7 +307,7 @@ sospensione, vincolo e non-ammissibile.
 
 ## Stato di Transduzione
 
-Status M7: retrofitted.
+Status M7/M8: retrofitted.
 
 Il Finance Lab e' un buon primo figlio applicato per il meta-lab perche'
 ha:

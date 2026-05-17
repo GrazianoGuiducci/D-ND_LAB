@@ -16,6 +16,9 @@ Lo specs contiene:
   "seed_tensions_json": <dict of seed_tensions.json structure>,
   "tension_to_category_json": <dict of tension_to_category.json>,
   "assertions_py": "<full python source of assertions.py>",
+  "transduction_md": "<full markdown with invariants, exclusions, baselines, UI and skill_intent_map>",
+  "ui_contract_json": <dict matching docs/templates/ui_contract.v1.json>,
+  "skill_intent_map_json": <dict: intent -> movement_class -> skill/meta-prompt/artifact/UI mapping>,
   "tools_exp_files": [
     {"name": "exp_regime_shift.py", "content": "..."},
     ...
@@ -57,6 +60,9 @@ SLUG_FIELDS_REQUIRED = {
     "tension_to_category_json",
     "assertions_py",
     "mml_json",  # Refactor P2.A.5: MML nasce con il lab dalla genesi
+    "transduction_md",  # M7: transduzione domain-native obbligatoria
+    "ui_contract_json",  # M7: contratto UI obbligatorio
+    "skill_intent_map_json",  # M8: intento -> movimento -> skill/meta-prompt
 }
 
 
@@ -89,7 +95,74 @@ def validate_specs(specs: dict[str, Any]) -> list[str]:
                 errors.append(f"mml_json manca campo richiesto: {fld}")
         if mml.get("lab") and slug and mml["lab"] != slug:
             errors.append(f"mml_json.lab='{mml.get('lab')}' != domain_slug='{slug}'")
+        skills_attive = mml.get("skills_attive")
+        if not isinstance(skills_attive, dict):
+            errors.append("mml_json.skills_attive deve essere layered object (dict)")
+        else:
+            layer_count = sum(
+                1 for key, value in skills_attive.items()
+                if not str(key).startswith("_") and isinstance(value, list) and value
+            )
+            if layer_count < 3:
+                errors.append("mml_json.skills_attive deve dichiarare almeno 3 layer non vuoti")
+    transduction = specs.get("transduction_md", "")
+    if not isinstance(transduction, str) or not transduction.strip():
+        errors.append("transduction_md deve essere markdown non vuoto")
+    else:
+        t_lower = transduction.lower()
+        for signal in ("skill", "baseline", "null", "ui"):
+            if signal not in t_lower:
+                errors.append(f"transduction_md manca segnale M7/M8: {signal}")
+    ui_contract = specs.get("ui_contract_json", {})
+    if not isinstance(ui_contract, dict):
+        errors.append("ui_contract_json deve essere dict")
+    else:
+        frame = ui_contract.get("frame") if isinstance(ui_contract.get("frame"), dict) else {}
+        if ui_contract.get("schema") != "ui_contract.v1":
+            errors.append("ui_contract_json.schema deve essere ui_contract.v1")
+        if not all(k in frame for k in ("left", "center", "right")):
+            errors.append("ui_contract_json.frame deve contenere left, center, right")
+    skill_intent_map = specs.get("skill_intent_map_json", {})
+    if not isinstance(skill_intent_map, dict):
+        errors.append("skill_intent_map_json deve essere dict")
+    else:
+        for fld in (
+            "intent",
+            "movement_class",
+            "use_dynamics",
+            "skill_layers",
+            "meta_prompts",
+            "generated_artifacts",
+            "null_baseline_requirements",
+            "ui_lens",
+            "exclusions",
+        ):
+            if fld not in skill_intent_map:
+                errors.append(f"skill_intent_map_json manca campo richiesto: {fld}")
     return errors
+
+
+def _ensure_skill_intent_map_in_transduction(
+    transduction_md: str,
+    skill_intent_map: dict[str, Any],
+) -> tuple[str, bool]:
+    """Garantisce che la transduzione contenga una sezione ispezionabile
+    `skill_intent_map`.
+
+    Il meta-lab agent dovrebbe scriverla gia' in linguaggio naturale. Il
+    generator la appende in forma JSON se manca, cosi' M8 non dipende dalla
+    memoria dell'agent e il Lab figlio conserva il ponte intento->skill.
+    """
+    if "skill_intent_map" in transduction_md.lower():
+        return transduction_md, False
+    block = (
+        "\n\n## skill_intent_map\n\n"
+        "Auto-generated from specs by `lab_template_generator.py`.\n\n"
+        "```json\n"
+        + json.dumps(skill_intent_map, indent=2, ensure_ascii=False)
+        + "\n```\n"
+    )
+    return transduction_md.rstrip() + block, True
 
 
 def _ensure_quick_reference_in_context(
@@ -243,6 +316,13 @@ def write_template(specs: dict[str, Any], dry_run: bool = False, force: bool = F
     files_to_write.append((target_dir / "tension_to_category.json",
                            json.dumps(specs["tension_to_category_json"], indent=2, ensure_ascii=False) + "\n"))
     files_to_write.append((target_dir / "assertions.py", specs["assertions_py"]))
+    transduction_md, skill_map_appended = _ensure_skill_intent_map_in_transduction(
+        specs["transduction_md"],
+        specs["skill_intent_map_json"],
+    )
+    files_to_write.append((target_dir / "transduction.md", transduction_md))
+    files_to_write.append((target_dir / "ui_contract.json",
+                           json.dumps(specs["ui_contract_json"], indent=2, ensure_ascii=False) + "\n"))
     # mml.json (refactor P2.A.5: MML nasce con il lab dalla genesi)
     files_to_write.append((target_dir / "mml.json",
                            json.dumps(specs["mml_json"], indent=2, ensure_ascii=False) + "\n"))
@@ -263,6 +343,10 @@ def write_template(specs: dict[str, Any], dry_run: bool = False, force: bool = F
             "status": "DRY_RUN",
             "would_write": [str(p) for p, _ in files_to_write],
             "files_written": [],
+            "helpers_applied": {
+                "quick_reference_appended": qr_appended,
+                "skill_intent_map_appended": skill_map_appended,
+            },
         }
 
     for path, content in files_to_write:
@@ -270,7 +354,16 @@ def write_template(specs: dict[str, Any], dry_run: bool = False, force: bool = F
         path.write_text(content, encoding="utf-8")
         written.append(str(path.relative_to(_domains_root())))
 
-    return {"status": "OK", "errors": [], "files_written": written, "target_dir": str(target_dir)}
+    return {
+        "status": "OK",
+        "errors": [],
+        "files_written": written,
+        "target_dir": str(target_dir),
+        "helpers_applied": {
+            "quick_reference_appended": qr_appended,
+            "skill_intent_map_appended": skill_map_appended,
+        },
+    }
 
 
 def main():

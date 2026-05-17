@@ -418,9 +418,18 @@ UI lens:
 ## Cosa manca ancora
 
 Questa guida non sostituisce il generatore. Serve a impedire al generatore di
-perdere logiche fini. I prossimi passi naturali sono:
+perdere logiche fini.
 
-- far leggere questa guida al meta-lab prima di generare nuovi domini;
-- far comparire `skill_intent_map` nei template prodotti;
+Stato operativo attuale:
+
+- il meta-lab legge questa guida prima di generare nuovi domini;
+- `tools/lab_template_generator.py` richiede `skill_intent_map_json`;
+- il generator appende `skill_intent_map` a `transduction.md` se l'agent
+  lo ha prodotto solo come JSON specs;
+- il validator M8 controlla skill/enzyme retrieval, MML layered e
+  `skill_intent_map`.
+
+I prossimi passi naturali sono:
+
 - usare il finance lab come primo caso valutativo della guida;
 - aggiornare il seed autoinstallante quando la procedura regge in E2E.

@@ -368,6 +368,9 @@ Un Lab generato passa M8 solo se:
   consultati prima della progettazione;
 - produce un `mml.json` in formato layered object, non solo lista piatta;
 - motiva per ogni skill scelta il layer, il trigger e il ruolo nel dominio;
+- produce `skill_intent_map`, cioe' il collegamento esplicito tra intento,
+  classe di movimento, dinamica d'uso, skill/meta-prompt, artefatti,
+  null/baseline e UI lens;
 - dichiara quali skill/enzimi sono stati esclusi per evitare contaminazione;
 - dichiara le capacita' mancanti come strumenti/null/gate da creare, invece
   di nasconderle nella copy.
