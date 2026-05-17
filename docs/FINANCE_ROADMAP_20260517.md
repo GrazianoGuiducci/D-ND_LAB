@@ -31,7 +31,7 @@ evidence boundary and not a market signal.
 | 1 | Close synthetic promotion boundary | Cycle `20260517_1050` complete; falsifier correction applied | Preserve gate, survivor counts and non-hard-boundary rule in contracts/UI/docs | Audit returns `CRYSTALLIZE_PROMOTION_BOUNDARY`; dashboard shows gate and survivors | Current state, done |
 | 2 | Check THIA/Lab Assistant context grounding | Dashboard card visible; `/precondition_contract` returns `200` | Ask the THIA/Lab Dashboard Assistant about gate, survivor exceptions, and what is not promotable | THIA/Lab Assistant answers: provisional threshold, `2/10` survivors visible, no trading signal | Done via deterministic boundary fallback |
 | 3 | Choose next branch | Step 1 done; Step 2 acceptable or explicitly skipped | Decide one branch: real-market transfer, meta-lab comparison, or new synthetic object | Branch documented before execution | Selected: 4A real-market transfer before meta-lab comparison |
-| 4A | Real-market transfer | Branch chosen; no synthetic ambiguity hidden | Test SPY/BTC/FX with data-card, iid/block nulls, VaR/RV baselines | No market claim unless real-data nulls and baselines pass | In progress: exact-window artifact says `single_or_partial_window` |
+| 4A | Real-market transfer | Branch chosen; no synthetic ambiguity hidden | Test SPY/BTC/FX with data-card, iid/block nulls, VaR/RV baselines | No market claim unless real-data nulls and baselines pass | In progress: transfer rejected; recurrence artifact says `current_iid_partial` |
 | 4B | Meta-lab comparison | Branch chosen; finance reference stable | Ask meta-lab to regenerate finance-like Lab from intent/domain | Generated Lab preserves contracts, nulls, UI boundary, survivor handling | Comparison report and meta-lab improvements |
 | 4C | New synthetic object | Branch chosen; new mechanism predeclared | Define target variable and falsifier before running a cycle | New object beats controls without rescuing old rejected cases silently | New synthetic candidate or rejection |
 | 5 | Product/readiness gate | One branch produces replicated value | Add cost/slippage, double replication, review and packaging gates | Product-stage evidence exists | Candidate kernel or explicit stop |
@@ -77,10 +77,10 @@ Purpose: test whether the admitted-gate behavior survives real market data.
 Current artifact:
 
 ```text
-data/finance/diagnostics/finance_transfer_diagnostic_20260517_133529.json
+data/finance/diagnostics/finance_recurrence_diagnostic_20260517_134619.json
 ```
 
-Exact-window result (`2026-02-09..2026-05-09`, 1024 shuffles):
+Exact-window transfer result (`2026-02-09..2026-05-09`, 4096 shuffles):
 
 - SPY: iid `DND_DELTA`, block5 `DND_DELTA`, block21 `NO_DELTA`;
 - QQQ: same exact window `NO_DELTA` at iid/block5/block21;
@@ -92,6 +92,20 @@ This corrects the previous adjacent-window narrative: QQQ adjacent-window pass
 is useful history, but it is not authority for exact-date transfer. The next
 cycle must cite the exact-window JSON and explain the collapse without
 promoting a market claim.
+
+SPY recurrence result (`current` plus three previous 3-month exact windows,
+4096 shuffles):
+
+- current SPY: iid/block5 pass, block21 rejects;
+- previous three SPY windows: iid/block5/block21 reject;
+- class: `current_iid_partial`;
+- boundary: `operational=false`, `public_claim=false`, `trading_signal=false`.
+
+This means Branch 4A has produced value as a negative/constraint E2E: the lab
+found and then narrowed an apparent opportunity until only a non-operational
+method limit remained. The next step is not another same-frame transfer retry;
+it is either crystallize this limit as a reference example or design a new
+object with a predeclared falsifier.
 
 Minimum test:
 

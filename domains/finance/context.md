@@ -284,6 +284,36 @@ Regola: una singola finestra esatta resta sempre non-operativa. Se passa solo
 iid e collassa sotto block null, classifica come review/metodo, non finding di
 mercato.
 
+### finance_recurrence_diagnostic
+
+Descrizione: testa se il residuo locale rimasto dopo il transfer esatto ricorre
+su finestre adiacenti dello stesso asset. Usa la stessa batteria
+`iid/block5/block21` di `finance_transfer_diagnostic` e scrive un artefatto
+JSON/Markdown in `data/finance/diagnostics/`.
+
+Comando:
+
+```bash
+python3 /opt/D-ND_LAB/domains/finance/tools/finance_recurrence_diagnostic.py \
+    --symbol SPY --shuffles 4096 --json
+```
+
+Default windows: current `2026-02-09..2026-05-09` piu' tre finestre
+precedenti di circa tre mesi.
+
+Trigger: invocalo quando la traiettoria chiede
+`SPY_LOCALITY_RECURRENCE_EXACT_WINDOWS` o quando un solo asset resta
+parzialmente positivo nel transfer.
+
+Output: `schema=finance_recurrence_diagnostic.v1`, righe per finestra con
+verdict `iid`, `block5`, `block21`, `robust_all_nulls`, baseline VaR/RV e
+data-card. Classi possibili: `no_recurrence_delta`, `current_iid_partial`,
+`historical_iid_partial`, `single_robust_window`, `recurring_candidate`.
+
+Regola: se solo la finestra corrente passa iid/block5 ma non block21, e le
+finestre precedenti rifiutano, il risultato e' `current_iid_partial`: utile
+per capire il limite del detector, non per promuovere un claim finance.
+
 ### lag_memory_precondition
 
 Descrizione: audit sintetico per la precondizione del detector
@@ -352,7 +382,7 @@ finestra/jitter.
 Contratto operativo per il transfer reale:
 
 - usa solo `market_data`, `exp_regime_shift`, `finance_diagnostic_report` o
-  `finance_transfer_diagnostic`;
+  `finance_transfer_diagnostic` o `finance_recurrence_diagnostic`;
 - preserva sempre `data_card` con provider, source_url, retrieval_ts, finestra
   e n_obs;
 - una finestra singola `DND_DELTA` non e' un claim: e' al massimo osservazione
@@ -364,14 +394,15 @@ Contratto operativo per il transfer reale:
 Artifact corrente del ramo 4A:
 
 ```text
-data/finance/diagnostics/finance_transfer_diagnostic_20260517_133529.json
+data/finance/diagnostics/finance_recurrence_diagnostic_20260517_134619.json
 ```
 
-Esito: `single_or_partial_window`, `public_claim=false`,
-`trading_signal=false`. SPY passa iid/block5 ma collassa su block21; QQQ nella
-stessa finestra esatta non passa a 1024 shuffle; IWM/EFA/TLT/GLD/BTC-USD
-rifiutano. Il ciclo successivo deve usare questo artefatto come sorgente
-verificabile e non ripetere il claim QQQ adiacente come se fosse exact-date.
+Esito: `current_iid_partial`, `public_claim=false`, `trading_signal=false`.
+La finestra corrente SPY passa iid/block5 ma collassa su block21; le tre
+finestre SPY precedenti rifiutano. Il ciclo successivo deve sospendere la
+promozione cluster/recurrence e decidere se cristallizzare un limite del
+detector o progettare un nuovo oggetto, non rilanciare transfer sullo stesso
+presupposto.
 
 ## Quick Reference — External APIs
 

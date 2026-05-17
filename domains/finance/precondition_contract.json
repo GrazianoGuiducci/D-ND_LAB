@@ -66,8 +66,8 @@
       "Keep no-trading-signal boundary explicit.",
       "Expose the artifact through latest_diagnostic/dashboard before any product claim."
     ],
-    "current_artifact": "data/finance/diagnostics/finance_transfer_diagnostic_20260517_133529.json",
-    "next_gate": "Use exact-window transfer artifacts as authority. If a current exact window passes only iid/block5 but collapses under block21 or fails transfer to less-correlated controls, classify method review or partial local observation, not operational signal."
+    "current_artifact": "data/finance/diagnostics/finance_recurrence_diagnostic_20260517_134619.json",
+    "next_gate": "Use exact-window recurrence artifacts as authority after transfer rejection. If only the current SPY window passes iid/block5 and no window passes block21, classify current_iid_partial and suspend cluster or recurrence promotion."
   },
   "retire_when": [
     "The precondition fails to keep controls below the 5% selection or robust ceiling.",
