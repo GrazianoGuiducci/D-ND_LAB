@@ -77,9 +77,21 @@ def latest_trajectory(data_dir: Path) -> dict[str, Any] | None:
         return {"parse_error": "last trajectory line is not valid JSON"}
 
 
+def latest_trajectory_path(data_dir: Path) -> str:
+    return str((data_dir / "trajectory_log.jsonl").relative_to(repo_root()))
+
+
 def latest_trajectory_state(data_dir: Path) -> dict[str, Any] | None:
     path = data_dir / "trajectory_state.json"
     return read_json(path)
+
+
+def latest_trajectory_state_path(data_dir: Path) -> str:
+    return str((data_dir / "trajectory_state.json").relative_to(repo_root()))
+
+
+def seed_path(data_dir: Path) -> str:
+    return str((data_dir / "seed.json").relative_to(repo_root()))
 
 
 def latest_diagnostic(data_dir: Path) -> dict[str, Any] | None:
@@ -173,6 +185,24 @@ def audit(root: Path) -> dict[str, Any]:
         next_direction = pending_direction
         next_direction_source = "unknown"
 
+    trajectory_observability = {
+        "seed_path": seed_path(data_dir),
+        "trajectory_log_path": latest_trajectory_path(data_dir),
+        "trajectory_state_path": latest_trajectory_state_path(data_dir),
+        "latest_diagnostic_path": diagnostic.get("path") if isinstance(diagnostic, dict) else None,
+        "latest_log_cycle_ref": trajectory.get("cycle_ref") if isinstance(trajectory, dict) else None,
+        "latest_log_executed": latest_executed,
+        "latest_log_decision": latest_decision,
+        "latest_log_action_type": latest_action.get("type") if isinstance(latest_action, dict) else None,
+        "latest_state_status": state_status,
+        "latest_state_cycle_ts": trajectory_state.get("cycle_ts") if isinstance(trajectory_state, dict) else None,
+        "latest_state_entry_cycle_ref": trajectory_state.get("entry_cycle_ref") if isinstance(trajectory_state, dict) else None,
+        "latest_state_decision": trajectory_state.get("decision") if isinstance(trajectory_state, dict) else None,
+        "latest_state_executed": trajectory_state.get("executed") if isinstance(trajectory_state, dict) else None,
+        "resolved_next_direction_source": next_direction_source,
+        "resolved_next_direction": next_direction,
+    }
+
     blockers: list[str] = []
     if not has_skill_matrix:
         blockers.append("missing skill_reading_matrix in transduction.md")
@@ -219,6 +249,7 @@ def audit(root: Path) -> dict[str, Any]:
         "latest_trajectory_reasoning": latest_reasoning,
         "latest_trajectory_executed": latest_executed,
         "latest_trajectory_state": trajectory_state,
+        "trajectory_observability": trajectory_observability,
         "next_direction": next_direction,
         "next_direction_source": next_direction_source,
         "latest_diagnostic": diagnostic,
