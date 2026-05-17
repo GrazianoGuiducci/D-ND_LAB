@@ -27,19 +27,22 @@ solo realized volatility vista in ritardo?
 Verifica che tutto giri (no network, sandboxed):
 
 ```bash
-# 1. Tool sintetico — regime bull/bear vs surrogati shuffle
+# 1. Audit reference — readiness prima di nuovi cycle
+python3 domains/finance/tools/finance_reference_audit.py --json
+
+# 2. Tool sintetico — regime bull/bear vs surrogati shuffle
 python3 domains/finance/tools/exp_regime_shift.py --json
 
-# 2. Report diagnostico interno — SPY shifted windows, no claim operativo
+# 3. Report diagnostico interno — SPY shifted windows, no claim operativo
 python3 domains/finance/tools/finance_diagnostic_report.py
 
-# 3. Assertions del lab — invarianti numerici D-ND
+# 4. Assertions del lab — invarianti numerici D-ND
 python3 domains/finance/assertions.py
 
-# 4. Falsifier meta — template valido?
+# 5. Falsifier meta — template valido?
 python3 domains/meta-lab/tools/lab_template_validator.py --strict-m7 domains/finance
 
-# 5. Primo cycle (lancia agent autonomo, ~5-15 min)
+# 6. Cycle agent autonomo (~5-15 min)
 bash tools/dnd-cycle.sh finance
 ```
 
@@ -57,6 +60,8 @@ domains/finance/
 ├── transduction.md             M7/M8 — passaggio sorgente -> finance + skill_intent_map
 ├── ui_contract.json            M7 — dashboard cognitiva domain-native
 └── tools/
+    ├── finance_reference_audit.py
+    │                           pre-cycle audit reference readiness
     ├── exp_regime_shift.py     CLI sintetico/real-market
     ├── market_data.py          acquisizione dati + cache + data card
     └── finance_diagnostic_report.py
@@ -91,10 +96,12 @@ senza meccanismo + controprova.
 
 ## Architettura cognitiva (MML)
 
-8 layer cooperanti, 16 skill totali (vedi `mml.json`):
+8 layer cooperanti, 19 skill totali (vedi `mml.json`). Dal 2026-05-17 le
+skill operative hanno `read_depth`, `diagnostic_status`, `output_contract` e
+`contamination_risk`; alcune sono `support_only` e non sono autorita' di ciclo.
 
-- **L1 validation** — assertion-verifier
-- **L2 processing** — autoresearch · capture-insight
+- **L1 validation** — assertion-verifier · veritas-sys
+- **L2 processing** — autoresearch · capture-insight · helix-sys · kairos-sys
 - **L3 output** — paper-deployer · publish-safe
 - **L4 observation** — audit-system
 - **L6 generation** — forgia
@@ -112,6 +119,8 @@ promotion_proposer (proposte sistemiche).
 - [x] Tool sintetico funzionante (verdict DND_DELTA su test sintetico)
 - [x] Assertions 5/5 PASS
 - [x] Primo cycle controllato del lab (`dnd-cycle.sh finance`)
+- [x] Skill-reading matrix e reference audit installabile
+- [ ] Prossimo cycle: progettare precondizione misurabile prima del block21 gate
 - [ ] Gate dati reali con yfinance/CoinGecko e controlli robusti
 - [ ] Verdict DND_DELTA su dati reali (FX major pair, crypto BTC, equity SPY)
 - [ ] Stage 5: kernel pacchettizzato `dnd_kernel_finance_regime_shift`

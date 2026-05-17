@@ -37,128 +37,230 @@
       {
         "name": "assertion-verifier",
         "source": ".claude/skills/assertion-verifier.md",
+        "read_depth": "L1",
+        "diagnostic_status": "VIVA-NO_EVAL",
         "trigger": "before promoting a regime-shift claim",
         "rationale": "Il lab deve impedire promozioni senza PASS/FAIL/SKIP numerici su baseline e null shuffle.",
-        "category": "maintenance"
+        "category": "maintenance",
+        "output_contract": "PASS/FAIL/SKIP numerici su assertion falsificabili",
+        "contamination_risk": "basso; rischio solo se le assertion diventano tautologie"
+      },
+      {
+        "name": "veritas-sys",
+        "source": "/opt/THIA/.agent/skills/agent_skills_veritas.md",
+        "read_depth": "L1",
+        "diagnostic_status": "VIVA",
+        "trigger": "before crystallizing a finance report or accepting external market evidence",
+        "rationale": "Finance richiede firewall anti-accettazione: nessun dato singolo o output LLM entra come realta' senza attrito e triangolazione.",
+        "category": "validation",
+        "output_contract": "rho/status per dati in ingresso e attrito PVI sugli output critici",
+        "contamination_risk": "medio; non trasformare rho in certezza predittiva"
       }
     ],
     "processing_layer": [
       {
         "name": "autoresearch",
         "source": ".claude/skills/autoresearch.md",
-        "trigger": "during market data exploration",
-        "rationale": "Serve per generare varianti di test e surrogati senza fissarsi su un solo asset o finestra.",
-        "category": "research"
+        "read_depth": "L1",
+        "diagnostic_status": "VIVA-NO_EVAL",
+        "trigger": "only when improving a finance skill or its eval tests, not during market exploration",
+        "rationale": "Il corpo reale ottimizza skill tramite mutate-verify; non e' un generatore di esperimenti finance.",
+        "category": "maintenance",
+        "support_only": true,
+        "output_contract": "baseline eval -> one mutation -> re-eval -> keep/revert",
+        "contamination_risk": "alto se usata come tool di ricerca dominio"
       },
       {
         "name": "capture-insight",
         "source": ".claude/skills/capture-insight.md",
+        "read_depth": "L1",
+        "diagnostic_status": "VIVA-NO_EVAL",
         "trigger": "when ordered-vs-shuffle delta appears or disappears",
-        "rationale": "Cristallizza nel seed il vincolo emerso dal confronto regime/noise.",
-        "category": "cognitive"
+        "rationale": "Il corpo reale e' quick capture/route; utile per appunti operatore, non come seed integrator autoritativo.",
+        "category": "cognitive",
+        "support_only": true,
+        "output_contract": "nota breve + route, senza deep-dive",
+        "contamination_risk": "medio; non sostituisce seed_integrator o falsifier"
+      },
+      {
+        "name": "helix-sys",
+        "source": "/opt/THIA/.agent/skills/agent_skills_helix.md",
+        "read_depth": "L1",
+        "diagnostic_status": "VIVA",
+        "trigger": "when detector redesign requires explicit algorithm/spec/test loop",
+        "rationale": "Il finance e' in calibration/recovery: ogni nuovo detector deve nascere come specifica algoritmica verificabile, non come frase di report.",
+        "category": "execution",
+        "output_contract": "spec -> targeted fetch -> structured rendering -> debugging",
+        "contamination_risk": "basso; evitare overhead su task semplici"
+      },
+      {
+        "name": "kairos-sys",
+        "source": "/opt/THIA/.agent/skills/agent_skills_kairos.md",
+        "read_depth": "L1",
+        "diagnostic_status": "VIVA",
+        "trigger": "after repeated detector failures or when hidden assumptions must be destroyed",
+        "rationale": "La traiettoria finance ha fallimenti adiacenti sullo stesso score family; Kairos serve a rompere il presupposto, non a fare tuning.",
+        "category": "evolution",
+        "output_contract": "presupposto rimosso -> substrato/anomalia -> nuova ipotesi di movimento",
+        "contamination_risk": "medio; non usare distruzione come sostituto di dati"
       }
     ],
     "output_layer": [
       {
         "name": "paper-deployer",
         "source": ".claude/skills/paper-deployer.md",
-        "trigger": "on application_eligible finance finding",
-        "rationale": "Trasforma finding validati in note o kernel leggibili senza gonfiare claim finanziari.",
-        "category": "output"
+        "read_depth": "L1",
+        "diagnostic_status": "VIVA-NO_EVAL",
+        "trigger": "deferred; only after a mature paper/site-ready artifact exists",
+        "rationale": "Il corpo reale deploya paper MM_D-ND su d-nd.com; non autorizza claim finance e non serve allo stage corrente.",
+        "category": "output",
+        "support_only": true,
+        "output_contract": "deploy content pipeline, not finance validation",
+        "contamination_risk": "alto se trattata come maturita' scientifica"
       },
       {
         "name": "publish-safe",
         "source": ".claude/skills/publish-safe.md",
+        "read_depth": "L1",
+        "diagnostic_status": "VIVA",
         "trigger": "before public output",
         "rationale": "Il dominio finance richiede copy prudente: nessuna promessa di rendimento, solo struttura verificata.",
-        "category": "output"
+        "category": "output",
+        "output_contract": "gate meccanici e scope esplicito prima di pubblicare",
+        "contamination_risk": "medio; publish safety non equivale a verita' scientifica"
       }
     ],
     "observation_layer": [
       {
         "name": "audit-system",
         "source": ".claude/skills/audit-system.md",
+        "read_depth": "L1",
+        "diagnostic_status": "VIVA-NO_EVAL",
         "trigger": "after data-source or tool changes",
         "rationale": "Controlla che API, fallback e tool restino eseguibili out-of-box.",
-        "category": "maintenance"
+        "category": "maintenance",
+        "output_contract": "repo/runtime/data health con deviazioni esplicite",
+        "contamination_risk": "medio; audit cross-repo va ristretto al perimetro finance quando serve"
       }
     ],
     "generation_layer": [
-      {
-        "name": "forgia",
-        "source": "kernel/reference/skills/agent_skills_forgia.md",
-        "trigger": "when a verified finding becomes a finance kernel",
-        "rationale": "Forgia il pacchetto dnd_kernel_finance_regime_shift con esempio, claim e axiom_refs.",
-        "category": "constructive"
-      }
-    ],
+    {
+      "name": "forgia",
+      "source": "kernel/reference/skills/agent_skills_forgia.md",
+      "read_depth": "L1",
+      "diagnostic_status": "VIVA",
+      "trigger": "when a verified finding becomes a finance kernel",
+      "rationale": "Forgia il pacchetto dnd_kernel_finance_regime_shift con esempio, claim e axiom_refs.",
+      "category": "constructive",
+      "output_contract": "nuova entita'/skill/kernel solo quando esiste vuoto funzionale verificato",
+      "contamination_risk": "medio; non forgiare entita' prima che il finding sia maturo"
+    }
+  ],
     "domain_layer": [
       {
         "name": "research-lab",
-        "source": "kernel/reference/skills/agent_skills_research_lab.md",
+        "source": "/opt/THIA/.agent/skills/agent_skills_research_lab.md",
+        "read_depth": "L1",
+        "diagnostic_status": "VIVA",
         "trigger": "on cycle init",
         "rationale": "Finance qui e' lab di ricerca quantitativa: produce finding falsificabili, non segnali trading non verificati.",
-        "category": "research"
+        "category": "research",
+        "output_contract": "claim rigorosi, rottura prima dell'uscita, taglio di overclaim",
+        "contamination_risk": "medio; non importare contenuto paper D-ND come evidenza finance"
       },
       {
         "name": "dnd-method",
-        "source": ".claude/skills/dnd-method.md",
+        "source": "/opt/MM_D-ND/.claude/skills/dnd-method.md",
+        "read_depth": "L1",
+        "diagnostic_status": "VIVA",
         "trigger": "when translating D-ND invariants into market metrics",
         "rationale": "Mantiene il passaggio A1/A2/F1/F4 dai numeri del kernel alle serie finanziarie.",
-        "category": "logic"
+        "category": "logic",
+        "output_contract": "osservazione -> dipoli -> possibilita' -> contesto -> verifica -> risultante",
+        "contamination_risk": "medio; non trasformare metodo di coding in prova di mercato"
       }
     ],
     "identity_layer": [
       {
         "name": "observer",
         "source": "kernel/reference/skills/agent_skills_observer.md",
+        "read_depth": "L1",
+        "diagnostic_status": "PERSONA-KERNEL",
         "trigger": "before interpreting a market metric",
         "rationale": "Osserva il delta ordinato-vs-shuffle prima di nominare il regime.",
-        "category": "cognitive"
+        "category": "cognitive",
+        "support_only": true,
+        "output_contract": "forma/outline/domande, non validazione statistica",
+        "contamination_risk": "medio; persona/forma non sostituisce null"
       },
       {
         "name": "vulcan",
         "source": "kernel/reference/skills/agent_skills_vulcan.md",
+        "read_depth": "L1",
+        "diagnostic_status": "PERSONA-KERNEL",
         "trigger": "when finance narrative risks exceeding evidence",
         "rationale": "Taglia linguaggio predittivo non supportato e riporta il lab a metriche falsificabili.",
-        "category": "identity"
+        "category": "identity",
+        "support_only": true,
+        "output_contract": "riduzione logica e taglio del linguaggio non supportato",
+        "contamination_risk": "basso; non e' una procedura statistica"
       }
     ],
     "runtime_patterns": [
       {
         "name": "cascata",
         "source": ".claude/skills/cascata.md",
+        "read_depth": "L1",
+        "diagnostic_status": "VIVA",
         "trigger": "after every verified finance finding",
         "rationale": "Propaga findings in seed, report e kernel prodotto.",
-        "category": "orchestration"
+        "category": "orchestration",
+        "output_contract": "propagazione interna/esterna/emergente con emergenti solo segnati",
+        "contamination_risk": "medio; evitare cascata infinita"
       },
       {
         "name": "cec",
         "source": ".claude/skills/cec.md",
+        "read_depth": "L1",
+        "diagnostic_status": "VIVA",
         "trigger": "before declaring TEMPLATE_VALID or finding valid",
         "rationale": "Filtra se il dipolo bull/bear e' generativo o solo descrittivo.",
-        "category": "logic"
+        "category": "logic",
+        "output_contract": "conditions/signature/lateral/expansion/inversion/crystallization",
+        "contamination_risk": "medio; non usare CEC quando servono dati"
       },
       {
         "name": "consapevolezza-condensato",
         "source": ".claude/skills/consapevolezza-condensato.md",
+        "read_depth": "L1",
+        "diagnostic_status": "VIVA-NO_EVAL",
         "trigger": "on cycle init",
         "rationale": "Richiama A1/A2/F1/F4 prima della traduzione in metriche finance.",
-        "category": "identity"
+        "category": "identity",
+        "output_contract": "atto -> assiomi toccati -> inversione/aggiunta -> risultante",
+        "contamination_risk": "medio; anti-pattern dichiarato: lettura rituale"
       },
       {
         "name": "autologica-operativa",
         "source": ".claude/skills/autologica-operativa.md",
+        "read_depth": "L1",
+        "diagnostic_status": "VIVA",
         "trigger": "on every experiment design",
         "rationale": "Converte la tensione astratta regime/noise in esperimento eseguibile.",
-        "category": "cognitive"
+        "category": "cognitive",
+        "output_contract": "domanda giusta, osservabile/operatore, regola eseguibile",
+        "contamination_risk": "basso; rischio se resta semantica non eseguibile"
       },
       {
         "name": "eval",
         "source": ".claude/skills/eval.md",
+        "read_depth": "L1",
+        "diagnostic_status": "VIVA",
         "trigger": "after assertions.py or exp_regime_shift.py run",
         "rationale": "Verifica che i test siano realmente eseguiti e non solo descritti.",
-        "category": "maintenance"
+        "category": "maintenance",
+        "output_contract": "trigger/fidelity/value test delle skill, non metriche market",
+        "contamination_risk": "medio; non confondere eval skill con validazione detector"
       }
     ]
   },
@@ -167,6 +269,12 @@
       "name": "exp_regime_shift",
       "path": "tools/exp_regime_shift.py",
       "description": "Synthetic bull/bear regime-shift A/B experiment with shuffle null baseline, VaR and realized volatility.",
+      "executable_inline": true
+    },
+    {
+      "name": "finance_reference_audit",
+      "path": "tools/finance_reference_audit.py",
+      "description": "Pre-cycle audit for finance reference readiness, skill-reading matrix, MML roles and next-cycle policy.",
       "executable_inline": true
     }
   ],

@@ -204,6 +204,27 @@ returns = d["returns"]      # np.ndarray, log-returns close-to-close
 meta = d["data_card"]       # provenance JSON
 ```
 
+### finance_reference_audit
+
+Descrizione: controlla se il finance lab e' pronto come reference prima di
+un nuovo ciclo. Non esegue detector e non promuove claim; verifica
+`skill_reading_matrix`, ruoli MML, presenza runtime se disponibile e policy
+del prossimo ciclo.
+
+Comando:
+
+```bash
+python3 /opt/D-ND_LAB/domains/finance/tools/finance_reference_audit.py --json
+```
+
+Trigger: invocalo prima di lanciare un nuovo ciclo finance o prima di usare
+finance come confronto contro un Lab generato dal meta-lab.
+
+Output: JSON con `reference_ready`, `next_cycle_policy`, eventuali `blockers`,
+ultimo piano/runtime disponibile e interpretazione. Se `next_cycle_policy` e'
+`DESIGN_PRECONDITION_FIRST`, il ciclo successivo deve progettare la
+precondizione misurabile; non deve rilanciare tuning dello stesso score.
+
 ## Quick Reference — External APIs
 
 Per dati reali usa il tool `market_data` (sopra) — gestisce caching,
@@ -269,6 +290,28 @@ vengono applicate automaticamente al seed all'inizio del cycle successivo.
 `trigger_cycle` non avvia processi: registra nel seme la continuita' operativa
 che il ciclo successivo deve leggere. Non aspettare un intervento manuale per
 recepire correzioni gia' decise dal sistema.
+
+## Skill reading reference — 2026-05-17
+
+Il finance lab e' ora reference per testare il meta-lab. Prima di usarlo come
+benchmark, le skill operative sono state lette nel corpo e mappate in
+`transduction.md` (`skill_reading_matrix`).
+
+Correzioni vincolanti:
+
+- `autoresearch` non e' tool di esplorazione mercati: il suo corpo ottimizza
+  skill tramite mutate/eval. Usalo solo se stai migliorando una skill o i suoi
+  test.
+- `capture-insight` e' quick capture/route: non sostituisce seed integrator,
+  falsifier o trajectory evaluator.
+- `paper-deployer` e' pipeline di deploy paper: non autorizza claim finance.
+- `observer` e `vulcan` sono supporti/persona di forma e taglio: non sono
+  null, baseline o procedure statistiche.
+- Per la traiettoria corrente (`20260517_0626`), se si prosegue con un ciclo,
+  il design deve passare da `helix-sys` + `kairos-sys`: specifica algoritmica
+  della precondizione mancante e rottura del presupposto della famiglia
+  adaptive lag-map aggregation. Non lanciare un altro tuning dello stesso
+  score family.
 
 ## Come operare nel cycle
 

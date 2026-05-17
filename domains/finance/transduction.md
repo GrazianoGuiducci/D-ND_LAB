@@ -128,6 +128,42 @@ Skill da non usare come autorita' del dominio:
 - skill persona (`observer`, `vulcan`) non sostituiscono strumenti,
   baseline o falsifier.
 
+### skill_reading_matrix
+
+Questa matrice applica il protocollo
+`docs/META_LAB_SKILL_READING_PROTOCOL.md` al finance reference. Non e'
+esaustiva di tutto l'archivio: copre le skill che influenzano il ciclo
+finance corrente, il MML o la UI.
+
+| Skill | Source reale | Profondita' | Stato | Ruolo finance | Trigger | Rischio / correzione |
+|---|---|---:|---|---|---|---|
+| `assertion-verifier` | `/opt/.claude/skills/assertion-verifier.md` | L1 | VIVA-NO_EVAL | assertion/verifica | prima di promuovere claim | utile solo se le assertion possono fallire; evitare tautologie |
+| `veritas-sys` | `/opt/THIA/.agent/skills/agent_skills_veritas.md` | L1 | VIVA | validation/firewall | prima di cristallizzare report o dato esterno | `rho` non e' previsione; serve attrito, non certezza |
+| `helix-sys` | `/opt/THIA/.agent/skills/agent_skills_helix.md` | L1 | VIVA | redesign algoritmico | quando nasce un detector nuovo | usare per spec/test loop, non per task semplici |
+| `kairos-sys` | `/opt/THIA/.agent/skills/agent_skills_kairos.md` | L1 | VIVA | rottura presupposti | dopo fallimenti ripetuti dello stesso score family | distruzione solo se produce substrato misurabile |
+| `autologica-operativa` | `/opt/.claude/skills/autologica-operativa.md` | L1 | VIVA | context/procedura | su design esperimento | tradurre in domanda eseguibile, non in semantica |
+| `cec` | `/opt/.claude/skills/cec.md` | L1 | VIVA | filtro decisionale | prima di cambio direzione/cristallizzazione | non sostituisce dati; se servono dati, si esegue tool |
+| `consapevolezza-condensato` | `/opt/.claude/skills/consapevolezza-condensato.md` | L1 | VIVA-NO_EVAL | filtro modello | su atto sistemico | anti-pattern: lettura rituale senza assioma specifico |
+| `cascata` | `/opt/.claude/skills/cascata.md` | L1 | VIVA | propagazione | dopo finding verificato | emergenti si segnano, non si implementano nella stessa cascata |
+| `eval` | `/opt/.claude/skills/eval.md` | L1 | VIVA | skill health | quando si valuta una skill | non valida detector finance; valida trigger/fidelity skill |
+| `audit-system` | `/opt/.claude/skills/audit-system.md` | L1 | VIVA-NO_EVAL | runtime audit | dopo cambio tool/dati | restringere scope a finance quando non serve cross-repo |
+| `publish-safe` | `/opt/.claude/skills/publish-safe.md` | L1 | VIVA | output gate | prima di output pubblico | sicurezza publishing non equivale a verita' del finding |
+| `research-lab` | `/opt/THIA/.agent/skills/agent_skills_research_lab.md` | L1 | VIVA | rigore ricerca | init/cambio claim | non importare contenuto Paper Zero come evidenza finance |
+| `dnd-method` | `/opt/MM_D-ND/.claude/skills/dnd-method.md` | L1 | VIVA | metodo operativo | traduzione invarianti -> metriche | metodo di coding, non prova di mercato |
+| `forgia` | `/opt/MM_D-ND/kernel/reference/skills/agent_skills_forgia.md` | L1 | VIVA | generation/deferred | solo quando finding diventa kernel | non forgiare entita' prima della maturita' |
+| `autoresearch` | `/opt/.claude/skills/autoresearch.md` | L1 | VIVA-NO_EVAL | support_only | solo per ottimizzare skill/eval | il corpo non genera esperimenti finance: declassato |
+| `capture-insight` | `/opt/.claude/skills/capture-insight.md` | L1 | VIVA-NO_EVAL | support_only | appunti operatore | quick capture, non seed integrator |
+| `paper-deployer` | `/opt/.claude/skills/paper-deployer.md` | L1 | VIVA-NO_EVAL | deferred/support_only | solo dopo artefatto paper/site-ready | deploy pipeline, non maturita' finance |
+| `observer` | `/opt/MM_D-ND/kernel/reference/skills/agent_skills_observer.md` | L1 | PERSONA-KERNEL | support_only | forma/domande | non sostituisce null/baseline |
+| `vulcan` | `/opt/MM_D-ND/kernel/reference/skills/agent_skills_vulcan.md` | L1 | PERSONA-KERNEL | support_only | taglio linguistico | non e' procedura statistica |
+
+Correzione emersa dalla lettura: il finance reference non deve piu'
+trattare `autoresearch`, `capture-insight` o `paper-deployer` come autorita'
+di ciclo. Restano supporti/deferred. La direzione operativa dopo i fallimenti
+block21 passa invece da `helix-sys` + `kairos-sys`: specificare la
+precondizione misurabile del detector e rompere il presupposto della stessa
+famiglia di score prima di ciclare di nuovo.
+
 ### enzyme_retrieval
 
 Enzimi cognitivi pertinenti al finance corrente:
