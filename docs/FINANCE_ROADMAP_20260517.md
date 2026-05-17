@@ -42,6 +42,12 @@ Reference doc:
 docs/FINANCE_REFERENCE_E2E_20260517.md
 ```
 
+First meta-lab comparison:
+
+```text
+docs/META_LAB_FINANCE_REFERENCE_COMPARISON_20260517.md
+```
+
 ## Tabella Di Marcia
 
 | Step | Goal | Entry Gate | Work | Exit Gate | Output |
@@ -50,7 +56,7 @@ docs/FINANCE_REFERENCE_E2E_20260517.md
 | 2 | Check THIA/Lab Assistant context grounding | Dashboard card visible; `/precondition_contract` returns `200` | Ask the THIA/Lab Dashboard Assistant about gate, survivor exceptions, and what is not promotable | THIA/Lab Assistant answers: provisional threshold, `2/10` survivors visible, no trading signal | Done via deterministic boundary fallback |
 | 3 | Choose next branch | Step 1 done; Step 2 acceptable or explicitly skipped | Decide one branch: real-market transfer, meta-lab comparison, or new synthetic object | Branch documented before execution | Selected: 4A real-market transfer before meta-lab comparison |
 | 4A | Real-market transfer | Branch chosen; no synthetic ambiguity hidden | Test SPY/BTC/FX with data-card, iid/block nulls, VaR/RV baselines | No market claim unless real-data nulls and baselines pass | Done as negative E2E: `current_iid_partial`, no market claim |
-| 4B | Meta-lab comparison | Finance reference stable; no stale SPY rerun pending | Ask meta-lab to regenerate finance-like Lab from intent/domain | Generated Lab preserves contracts, nulls, UI boundary, survivor handling and trajectory observability | Next recommended comparison report and meta-lab improvements |
+| 4B | Meta-lab comparison | Finance reference stable; no stale SPY rerun pending | Generate an isolated finance-like Lab and validate it against M1-M8/reference lenses | Generated Lab preserves contracts, nulls, UI boundary, survivor handling and trajectory observability | First controlled comparison done; next is hardening spec preflight |
 | 4C | New synthetic object | Branch chosen; new mechanism predeclared | Define target variable and falsifier before running a cycle | New object beats controls without rescuing old rejected cases silently | New synthetic candidate or rejection |
 | 5 | Product/readiness gate | One branch produces replicated value | Add cost/slippage, double replication, review and packaging gates | Product-stage evidence exists | Candidate kernel or explicit stop |
 
@@ -83,8 +89,11 @@ Verified THIA/Lab Assistant/UI answer:
 - no sub-gate rescue without a new predeclared mechanism.
 
 Rationale: finance has now completed one autonomous value-facing E2E before the
-meta-lab generator is judged against it. The next recommended step is 4B:
-meta-lab comparison against `docs/FINANCE_REFERENCE_E2E_20260517.md`.
+meta-lab generator is judged against it. A first controlled 4B comparison is in
+`docs/META_LAB_FINANCE_REFERENCE_COMPARISON_20260517.md`. It proves the
+generator pathway is viable when the spec includes condensato anchors, live
+cycle movement, core invariant skill layers and `skill_retrieval`; it does not
+yet prove a full autonomous LLM meta-lab cycle.
 
 ## Branch Details
 
@@ -142,6 +151,17 @@ Minimum test:
 
 Purpose: test whether the meta-lab can regenerate a finance Lab from intent
 without copying results or losing the movement logic.
+
+First comparison artifact:
+
+```text
+docs/META_LAB_FINANCE_REFERENCE_COMPARISON_20260517.md
+```
+
+Result: `TEMPLATE_VALID`, 8/8 M1-M8 PASS after repairing the spec. The first
+iteration failed M1/M5/M6/M8, which exposed the important generator contract:
+incomplete specs must be repaired before file generation, not after a domain is
+installed.
 
 Comparison lenses:
 

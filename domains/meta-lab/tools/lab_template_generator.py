@@ -91,6 +91,11 @@ def validate_specs(specs: dict[str, Any]) -> list[str]:
         errors.append("seed_tensions_json deve essere dict")
     elif len(seed.get("tensioni", [])) < 3:
         errors.append("seed_tensions_json deve avere ≥3 tensioni iniziali")
+    else:
+        tensions = seed.get("tensioni", [])
+        with_ref = [t for t in tensions if isinstance(t, dict) and t.get("condensato_ref")]
+        if len(with_ref) / max(len(tensions), 1) < 0.6:
+            errors.append("seed_tensions_json deve avere condensato_ref su almeno il 60% delle tensioni")
     # mml_json deve avere campi minimi (refactor P2.A.5)
     mml = specs.get("mml_json", {})
     if not isinstance(mml, dict):
@@ -112,6 +117,56 @@ def validate_specs(specs: dict[str, Any]) -> list[str]:
             )
             if layer_count < 3:
                 errors.append("mml_json.skills_attive deve dichiarare almeno 3 layer non vuoti")
+            skill_names = {
+                entry.get("name")
+                for entries in skills_attive.values()
+                if isinstance(entries, list)
+                for entry in entries
+                if isinstance(entry, dict) and entry.get("name")
+            }
+            core_invariant = {
+                "cascata",
+                "cec",
+                "consapevolezza-condensato",
+                "autologica-operativa",
+                "eval",
+            }
+            missing_core = sorted(core_invariant - skill_names)
+            if missing_core:
+                errors.append(f"mml_json.skills_attive manca core invariante: {missing_core}")
+        kernel_refs = mml.get("kernel_refs", {})
+        mml_axioms = set()
+        if isinstance(kernel_refs, dict):
+            raw_axioms = kernel_refs.get("condensato_axioms_used", [])
+            if isinstance(raw_axioms, list):
+                mml_axioms = {str(x).strip() for x in raw_axioms if str(x).strip()}
+        tension_refs = set()
+        if isinstance(seed, dict):
+            for tension in seed.get("tensioni", []):
+                if not isinstance(tension, dict):
+                    continue
+                raw_ref = tension.get("condensato_ref")
+                if not raw_ref:
+                    continue
+                tension_refs.update(part.strip() for part in str(raw_ref).split(",") if part.strip())
+        if tension_refs and mml_axioms and not tension_refs.intersection(mml_axioms):
+            errors.append("mml_json.kernel_refs.condensato_axioms_used deve intersecare seed_tensions condensato_ref")
+        elif tension_refs and not mml_axioms:
+            errors.append("mml_json.kernel_refs.condensato_axioms_used richiesto quando seed_tensions usa condensato_ref")
+    context_md = specs.get("context_md", "")
+    if isinstance(context_md, str):
+        ctx_lower = context_md.lower()
+        cycle_signals = [
+            "seed", "tension", "tensione", "cycle", "ciclo", "loop",
+            "cristallizz", "crystalliz", "evolution", "evolve", "evolu",
+            "integrator", "integration", "agent", "agente", "discover",
+            "scoperta", "finding",
+        ]
+        found_cycle_signals = sum(1 for signal in cycle_signals if signal in ctx_lower)
+        if found_cycle_signals < 4:
+            errors.append("context_md deve esporre ciclo vivo/auto-incremento informativo (M5)")
+    else:
+        errors.append("context_md deve essere markdown non vuoto")
     transduction = specs.get("transduction_md", "")
     if not isinstance(transduction, str) or not transduction.strip():
         errors.append("transduction_md deve essere markdown non vuoto")
@@ -120,6 +175,19 @@ def validate_specs(specs: dict[str, Any]) -> list[str]:
         for signal in ("skill", "baseline", "null", "ui"):
             if signal not in t_lower:
                 errors.append(f"transduction_md manca segnale M7/M8: {signal}")
+        combined_skill_text = f"{t_lower}\n{str(specs.get('context_md', '')).lower()}\n{str(specs.get('readme_md', '')).lower()}"
+        skill_retrieval_signals = (
+            "skill_retrieval",
+            "skill retrieval",
+            "skill archive",
+            "skill catalog",
+            "skill_field_map",
+            "skill_catalog",
+            "enzim",
+            "enzyme",
+        )
+        if not any(signal in combined_skill_text for signal in skill_retrieval_signals):
+            errors.append("transduction/context deve dichiarare skill_retrieval o recupero skill/enzimi (M8)")
     ui_contract = specs.get("ui_contract_json", {})
     if not isinstance(ui_contract, dict):
         errors.append("ui_contract_json deve essere dict")
