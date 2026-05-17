@@ -43,6 +43,7 @@ from typing import Any
 
 from core import config as cfg
 from core import llm_adapter, paths
+from core.trajectory_state import direction_from_entry, write_trajectory_state
 from core.lab_agent import CycleContext, register_movement
 
 logger = logging.getLogger(__name__)
@@ -176,6 +177,15 @@ def trajectory_evaluator(ctx: CycleContext) -> None:
             **decision,
         }
         _append_log(log_path, log_entry)
+        write_trajectory_state(
+            ctx.domain,
+            status="executed_inline" if execute else "pending",
+            source="trajectory_evaluator",
+            cycle_ts=ts,
+            entry=log_entry,
+            direction=direction_from_entry(log_entry),
+            reason=(decision.get("reasoning") or "")[:500],
+        )
 
         # Execute side-effect action if enabled
         action_result = None

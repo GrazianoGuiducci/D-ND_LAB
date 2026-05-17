@@ -77,6 +77,11 @@ def latest_trajectory(data_dir: Path) -> dict[str, Any] | None:
         return {"parse_error": "last trajectory line is not valid JSON"}
 
 
+def latest_trajectory_state(data_dir: Path) -> dict[str, Any] | None:
+    path = data_dir / "trajectory_state.json"
+    return read_json(path)
+
+
 def latest_diagnostic(data_dir: Path) -> dict[str, Any] | None:
     diagnostics = data_dir / "diagnostics"
     if not diagnostics.exists():
@@ -108,6 +113,7 @@ def audit(root: Path) -> dict[str, Any]:
     mml_state = collect_mml(domain)
     seed = read_json(data_dir / "seed.json")
     trajectory = latest_trajectory(data_dir)
+    trajectory_state = latest_trajectory_state(data_dir)
     diagnostic = latest_diagnostic(data_dir)
 
     has_skill_matrix = "skill_reading_matrix" in transduction
@@ -143,7 +149,19 @@ def audit(root: Path) -> dict[str, Any]:
         detail = {}
     pending_direction = detail.get("new_value") or detail.get("direction") or detail.get("seed_change")
     seed_direction = seed.get("direzione") if isinstance(seed, dict) else None
-    if latest_executed is False and pending_direction:
+    state_direction = None
+    state_status = None
+    if isinstance(trajectory_state, dict):
+        state_direction = trajectory_state.get("direction")
+        state_status = trajectory_state.get("status")
+
+    if state_status == "pending" and state_direction:
+        next_direction = state_direction
+        next_direction_source = "trajectory_state_pending"
+    elif state_status == "applied" and seed_direction:
+        next_direction = seed_direction
+        next_direction_source = "trajectory_state_applied_seed"
+    elif latest_executed is False and pending_direction:
         next_direction = pending_direction
         next_direction_source = "pending_trajectory"
     elif seed_direction:
@@ -175,6 +193,8 @@ def audit(root: Path) -> dict[str, Any]:
     next_cycle_policy = "DESIGN_PRECONDITION_FIRST"
     if blockers:
         next_cycle_policy = "BLOCKED_REFERENCE_INCOMPLETE"
+    elif next_direction_source == "trajectory_state_pending":
+        next_cycle_policy = "PENDING_TRAJECTORY"
     elif crystallized_boundary and followup_policy:
         next_cycle_policy = str(followup_policy)
     elif crystallized_boundary and latest_decision == "CRYSTALLIZE":
@@ -198,6 +218,7 @@ def audit(root: Path) -> dict[str, Any]:
         "latest_trajectory_decision": latest_decision,
         "latest_trajectory_reasoning": latest_reasoning,
         "latest_trajectory_executed": latest_executed,
+        "latest_trajectory_state": trajectory_state,
         "next_direction": next_direction,
         "next_direction_source": next_direction_source,
         "latest_diagnostic": diagnostic,

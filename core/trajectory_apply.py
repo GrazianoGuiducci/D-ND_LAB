@@ -57,6 +57,7 @@ from typing import Any
 from core import config as cfg
 from core import paths
 from core.lab_agent import CycleContext, register_movement
+from core.trajectory_state import write_trajectory_state
 
 logger = logging.getLogger(__name__)
 
@@ -282,6 +283,13 @@ def trajectory_apply(ctx: CycleContext) -> None:
     """
     entry = _read_last_trajectory_entry(ctx.domain)
     if entry is None:
+        write_trajectory_state(
+            ctx.domain,
+            status="none",
+            source="trajectory_apply",
+            cycle_ts=ctx.timestamp,
+            reason="no trajectory_log.jsonl or empty",
+        )
         ctx.metrics.setdefault("trajectory_apply", {}).update(
             decision="SKIP",
             reason="no trajectory_log.jsonl or empty",
@@ -291,6 +299,18 @@ def trajectory_apply(ctx: CycleContext) -> None:
 
     eligible, reason = _is_eligible(entry)
     if not eligible:
+        write_trajectory_state(
+            ctx.domain,
+            status="skipped",
+            source="trajectory_apply",
+            cycle_ts=ctx.timestamp,
+            entry=entry,
+            reason=reason,
+            extra={
+                "entry_executed": entry.get("executed"),
+                "entry_confidence": entry.get("confidence"),
+            },
+        )
         ctx.metrics.setdefault("trajectory_apply", {}).update(
             decision="SKIP",
             reason=reason,
@@ -343,6 +363,16 @@ def trajectory_apply(ctx: CycleContext) -> None:
         log_entry_marked_executed=marked,
         action_type=action_type,
         confidence=entry.get("confidence"),
+    )
+    write_trajectory_state(
+        ctx.domain,
+        status="applied",
+        source="trajectory_apply",
+        cycle_ts=ctx.timestamp,
+        entry={**entry, "executed": True},
+        direction=new_direzione,
+        reason=f"applied {action_type} from {cycle_ref}",
+        extra={"log_entry_marked_executed": marked},
     )
     logger.info(
         "trajectory_apply: APPLIED %s from %s — direzione → '%s...'",
