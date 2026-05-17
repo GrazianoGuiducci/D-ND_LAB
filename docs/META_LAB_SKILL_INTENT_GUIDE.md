@@ -373,6 +373,22 @@ azioni ammissibili. Ogni modulo deve ricevere dati reali dal ciclo o restare
 esplicitamente vuoto.
 ```
 
+### regressive_exposure_pass
+
+```text
+Prima di dichiarare il template pronto, torna indietro dalla UI e dagli
+artefatti verso l'intento. Per ogni elemento esposto chiedi: quale intento
+serve, quale movimento rende possibile, quale skill/meta-prompt lo ha
+generato, quale regola o assioma lo protegge, quale null/baseline lo puo'
+falsificare, quale evidenza E2E mostra che esiste nel Lab installato.
+Se un elemento non risponde a questa catena, rimuovilo o mettilo in
+missing_capabilities.
+```
+
+Questo passaggio e' autologica regressiva in forma operativa: non aggiunge una
+nuova meta-lente, ma obbliga ogni superficie prodotta a esporre la propria
+origine nel movimento.
+
 ## Esempio: finance corrente
 
 Il finance lab attuale non e' piu' in puro discovery. Dopo i cicli recenti,
@@ -428,6 +444,9 @@ Stato operativo attuale:
   lo ha prodotto solo come JSON specs;
 - il validator M8 controlla skill/enzyme retrieval, MML layered e
   `skill_intent_map`.
+- `dndlab plan-domain` puo' raccogliere `movement_class`, `use_dynamics`,
+  `exclusions` e `success_condition` per ridurre inferenza cieca nella fase
+  meta-lab.
 
 I prossimi passi naturali sono:
 

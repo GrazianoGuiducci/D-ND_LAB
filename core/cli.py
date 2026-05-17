@@ -200,6 +200,31 @@ def restore_snapshot(domain: str, snapshot: str, force: bool) -> None:
 @click.option("--slug", default=None, help="Short domain slug, e.g. finance-risk.")
 @click.option("--title", default=None, help="Human title for the lab.")
 @click.option("--intent", default=None, help="Movement/intention the lab should serve.")
+@click.option(
+    "--movement-class",
+    default=None,
+    type=click.Choice(
+        ["discovery", "calibration", "monitoring", "decision", "production", "meta_generation", "recovery"],
+        case_sensitive=False,
+    ),
+    help="Optional movement class from META_LAB_SKILL_INTENT_GUIDE.",
+)
+@click.option(
+    "--use-dynamics",
+    multiple=True,
+    help="Repeatable. What the lab must do during cycles, e.g. compare detector vs null.",
+)
+@click.option(
+    "--exclusion",
+    "exclusions",
+    multiple=True,
+    help="Repeatable. What the generated lab must not do or claim.",
+)
+@click.option(
+    "--success-condition",
+    default=None,
+    help="Observable condition that would make the first generated lab useful.",
+)
 @click.option("--kind", "domain_kind", default=None,
               help="Domain type, e.g. research, finance, monitoring, prediction.")
 @click.option("--output-dir", default=None,
@@ -208,6 +233,10 @@ def plan_domain(
     slug: str | None,
     title: str | None,
     intent: str | None,
+    movement_class: str | None,
+    use_dynamics: tuple[str, ...],
+    exclusions: tuple[str, ...],
+    success_condition: str | None,
     domain_kind: str | None,
     output_dir: str | None,
 ) -> None:
@@ -243,6 +272,15 @@ def plan_domain(
             default="Discover what changes the state of the domain without prescribing the result.",
             type=str,
         )
+    if movement_class is None:
+        movement_class = click.prompt(
+            "Movement class",
+            default="discovery",
+            type=click.Choice(
+                ["discovery", "calibration", "monitoring", "decision", "production", "meta_generation", "recovery"],
+                case_sensitive=False,
+            ),
+        )
 
     from core import paths
 
@@ -256,10 +294,15 @@ def plan_domain(
         "title": title.strip(),
         "kind": domain_kind.strip().lower(),
         "intent": intent.strip(),
+        "movement_class": movement_class.strip().lower(),
+        "use_dynamics": [x.strip() for x in use_dynamics if x.strip()],
+        "exclusions": [x.strip() for x in exclusions if x.strip()],
+        "success_condition": (success_condition or "").strip(),
         "status": "REQUEST_CAPTURED",
-        "next_step": "Run the meta-lab/template generator to produce config, context, seed, assertions and tools.",
+        "next_step": "Run the meta-lab/template generator to produce context, seed, assertions, MML, transduction, UI contract and tools.",
         "operator_notes": [
             "Intent lives in movement, not in a prescribed result.",
+            "Use META_LAB_SKILL_INTENT_GUIDE to turn movement_class and use_dynamics into skill_intent_map.",
             "Generated domain must pass the meta-template validator before install.",
             "If no leverage is found, archive the request instead of forcing a Lab.",
         ],
@@ -279,9 +322,25 @@ def plan_domain(
             "",
             intent.strip(),
             "",
+            "## Movement Class",
+            "",
+            movement_class.strip().lower(),
+            "",
+            "## Use Dynamics",
+            "",
+            *([f"- {x.strip()}" for x in use_dynamics if x.strip()] or ["- not specified"]),
+            "",
+            "## Exclusions",
+            "",
+            *([f"- {x.strip()}" for x in exclusions if x.strip()] or ["- not specified"]),
+            "",
+            "## Success Condition",
+            "",
+            (success_condition or "not specified").strip(),
+            "",
             "## Next Step",
             "",
-            "Run the meta-lab/template generator and validate the generated domain before install.",
+            "Run the meta-lab/template generator and validate the generated domain with M1-M8 before install.",
             "",
         ]),
         encoding="utf-8",

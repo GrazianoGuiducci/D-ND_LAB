@@ -391,5 +391,23 @@ altri Lab, va classificata in una di queste forme:
 - **UI lens**: rende visibile il movimento senza trasformarlo in copy;
 - **E2E lens**: verifica che il Lab funzioni senza memoria esterna.
 
+## Passaggio laterale / regressivo
+
+Quando il template sembra corretto, il meta-lab deve fare un ultimo passaggio
+non espansivo ma regressivo: partire dalle superfici prodotte e tornare verso
+l'intento.
+
+La domanda e':
+
+```text
+ogni meta-prompt, regola, assioma, principio, tool, null e UI lens espone
+quale movimento dell'intento serve e quale prova puo' falsificarlo?
+```
+
+Se la risposta e' no, non si crea un nuovo strato. L'elemento va rimosso,
+sospeso o dichiarato in `missing_capabilities`. Questo evita che la
+"visione multidimensionale" diventi accumulo: deve diventare qualita' della
+possibilita' sul contesto, non decorazione.
+
 La prossima istanza deve poter riprendere da qui senza sapere cosa e'
 successo in chat.

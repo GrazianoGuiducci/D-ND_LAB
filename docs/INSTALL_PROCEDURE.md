@@ -47,6 +47,9 @@ dndlab plan-domain
 
 Il comando raccoglie slug, titolo, tipo dominio e movimento/intento. Non genera
 ancora un Lab: crea input per meta-lab/template generator e validator.
+Puo' raccogliere anche `movement_class`, `use_dynamics`, `exclusions` e
+`success_condition`, cosi' il meta-lab non deve inferire tutto dalla sola
+frase di intento.
 
 Se esiste un preset compatibile in `docs/templates/domain_presets/`, il
 meta-lab puo' usarlo come acceleratore. Il preset non e' autorita': serve a
@@ -107,6 +110,12 @@ Le sezioni sono ordinate per dipendenza causale.
 - **Cosa NON vuoi che il lab faccia** (anti-pattern, scope esclusi).
 - **Movimento da conservare**: quale dinamica deve poter compiere il
   sistema anche quando nessun operatore osserva il ciclo?
+- **Classe di movimento**: discovery, calibration, monitoring, decision,
+  production, meta_generation o recovery.
+- **Dinamiche d'uso**: quali azioni cognitive/operative il Lab deve
+  ripetere nei cycle.
+- **Condizione di successo osservabile**: cosa deve essere vero nel Lab
+  installato per dire che il primo template ha valore.
 
 ### 1.5 Capability attive
 
