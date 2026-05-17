@@ -35,6 +35,7 @@ compounds across cycles.
 
 - New here? → [Quickstart](quickstart.md) gets you a running lab in 5 min.
 - Want to understand how it works? → [Architecture](architecture.md)
+- Building a new lab? → [Meta-lab Capability Stack](META_LAB_CAPABILITY_STACK.md)
 - Want to use the physics or editorial domain? → [Domains](domains/index.md)
 - Want to write your own domain? → [Extending](domains/extending.md)
 

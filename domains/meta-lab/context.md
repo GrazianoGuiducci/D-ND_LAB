@@ -57,6 +57,9 @@ campo skill/enzimi:
 - `docs/META_LAB_SKILL_READING_PROTOCOL.md`: protocollo per progettare la
   lettura delle skill candidate, leggere i corpi necessari e produrre
   `skill_reading_matrix`;
+- `docs/META_LAB_CAPABILITY_STACK.md`: stack di capacita' per ridurre
+  metaprompt storici e input esterni revisionati a trigger, contratti,
+  artefatti, test e UI lens senza installare tutto come Lab figlio;
 - `docs/COGNITIVE_ARCHIVE_INTEGRATION.md`: mappa degli archivi cognitivi
   esterni (`/opt/skill`, `/opt/KPhi1`, cockpit storico MMSp) e regole per
   usarli come lineage/transduzione, non come prompt library;
@@ -169,7 +172,11 @@ Il lab figlio acquisisce anche:
    tensioni, strumenti o UI, cerca nel catalogo skill e nell'archivio
    enzimi cosa il sistema sa gia' fare. Applica
    `docs/META_LAB_SKILL_INTENT_GUIDE.md` per trasformare intento e dinamica
-   d'uso in skill, meta-prompt, artefatti, null/baseline e UI lens. Output
+   d'uso in skill, meta-prompt, artefatti, null/baseline e UI lens. Applica
+   anche `docs/META_LAB_CAPABILITY_STACK.md`: se un input esterno o un
+   archivio storico propone molte possibilita', non installarle tutte.
+   Riducile prima a capacita' con trigger, contratto, artefatto, test e UI
+   lens. Output
    obbligatorio di questa fase:
    - `skill_retrieval`: skill candidate per layer (`validation`,
      `processing`, `output`, `observation`, `generation`, `domain`,

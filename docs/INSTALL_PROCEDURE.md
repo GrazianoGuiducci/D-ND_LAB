@@ -76,7 +76,8 @@ Prima della transduzione operativa c'e' ora una fase obbligatoria:
 **recupero skill/enzimi**. Il meta-lab consulta `docs/SKILL_CATALOG.md`,
 `docs/SKILL_FIELD_MAP.md`, `docs/SKILL_DIAGNOSTIC.md`,
 `docs/META_LAB_SKILL_INTENT_GUIDE.md`,
-`docs/META_LAB_SKILL_READING_PROTOCOL.md` e
+`docs/META_LAB_SKILL_READING_PROTOCOL.md`,
+`docs/META_LAB_CAPABILITY_STACK.md` e
 `/opt/MM_D-ND/tools/data/cognitive_enzymes_archive.md` per capire quali
 capacita' il sistema possiede gia'. Il risultato entra nel `mml.json`
 layered del nuovo Lab, nella nota `transduction.md` e nei tool/null/gate
@@ -85,6 +86,12 @@ meta-lente M8. Se una skill influenza `context.md`, `mml.json`, tool,
 assertion o UI, non basta citarla dal catalogo: deve comparire in
 `skill_reading_matrix` con source, profondita' di lettura, trigger, output,
 ruolo e rischio contaminazione.
+
+Quando il recupero produce molte possibilita' potenziali, il meta-lab non
+deve creare un Lab per ognuna. Deve applicare il capability stack:
+`semantic-transduction`, `cognitive-router`, `blueprint-genesis` se serve,
+`axiomatic-integrity` e `knowledge-atoms`. Solo le capacita' che hanno ciclo,
+stato, falsifier e valore ricorrente diventano Lab figli.
 
 Le sezioni sono ordinate per dipendenza causale.
 
