@@ -96,10 +96,16 @@ def audit(root: Path) -> dict[str, Any]:
         and isinstance(precondition_contract.get("selected_precondition"), dict)
     )
     precondition_policy = None
+    followup_policy = None
+    followup_artifact = None
     if isinstance(precondition_contract, dict):
         allowed_next = precondition_contract.get("allowed_next_cycle", {})
         if isinstance(allowed_next, dict):
             precondition_policy = allowed_next.get("policy")
+        followup = precondition_contract.get("selected_followup_branch", {})
+        if isinstance(followup, dict):
+            followup_policy = followup.get("policy")
+            followup_artifact = followup.get("current_artifact")
     runtime_present = seed is not None and trajectory is not None
 
     latest_decision = trajectory.get("decision") if isinstance(trajectory, dict) else None
@@ -133,6 +139,8 @@ def audit(root: Path) -> dict[str, Any]:
     next_cycle_policy = "DESIGN_PRECONDITION_FIRST"
     if blockers:
         next_cycle_policy = "BLOCKED_REFERENCE_INCOMPLETE"
+    elif crystallized_boundary and followup_policy:
+        next_cycle_policy = str(followup_policy)
     elif crystallized_boundary and latest_decision == "CRYSTALLIZE":
         next_cycle_policy = "CRYSTALLIZE_PROMOTION_BOUNDARY"
     elif has_precondition_contract and precondition_policy:
@@ -160,6 +168,8 @@ def audit(root: Path) -> dict[str, Any]:
             "precondition_rule": has_precondition_rule,
             "precondition_contract": has_precondition_contract,
             "precondition_policy": precondition_policy,
+            "followup_policy": followup_policy,
+            "followup_artifact": followup_artifact,
             "boundary_crystallization": crystallized_boundary,
             "mml_skill_count": mml_state["skill_count"],
             "mml_support_only": mml_state["support_only"],
@@ -168,10 +178,11 @@ def audit(root: Path) -> dict[str, Any]:
         },
         "interpretation": (
             "Finance is a reference lab only after the skill-reading substrate is "
-            "present. If the promotion boundary is crystallized, the next work is "
-            "to preserve the gate as a provisional promotion threshold with "
-            "below-gate survivors visible; otherwise the lab must discover or test "
-            "the precondition before more adaptive lag-map tuning."
+            "present. If the promotion boundary is crystallized and a follow-up "
+            "branch is selected, the next work follows that branch while preserving "
+            "the gate as provisional, keeping below-gate survivors visible, and "
+            "blocking trading-signal language. Otherwise the lab must discover or "
+            "test the precondition before more adaptive lag-map tuning."
         ),
     }
 

@@ -313,8 +313,29 @@ Quando scrivi report:
 - se proponi un recupero sotto soglia, devi specificare prima quale
   meccanismo misurabile spiega i survivor `2/10` e quale null lo falsifica.
 
-Il prossimo movimento statico e' `CRYSTALLIZE_PROMOTION_BOUNDARY`, non nuovo
-tuning di finestra/jitter.
+Il movimento statico di cristallizzazione e' completato: la soglia e' visibile
+in UI e spiegabile dal runtime THIA/Lab Assistant. Il follow-up selezionato e'
+`REAL_MARKET_TRANSFER_DIAGNOSTIC`, non nuovo tuning sintetico di
+finestra/jitter.
+
+Contratto operativo per il transfer reale:
+
+- usa solo `market_data`, `exp_regime_shift` o `finance_diagnostic_report`;
+- preserva sempre `data_card` con provider, source_url, retrieval_ts, finestra
+  e n_obs;
+- una finestra singola `DND_DELTA` non e' un claim: e' al massimo osservazione
+  locale;
+- se la finestra corrente passa e le finestre adiacenti rifiutano, classifica
+  `local_robust`, non `operational`;
+- nessun output finance e' trading signal, forecast, alpha, buy/sell o profit.
+
+Artifact corrente del ramo 4A:
+
+```text
+data/finance/diagnostics/finance_diagnostic_20260517_132200.json
+```
+
+Esito: `local_robust`, `public_claim=false`, `trading_signal=false`.
 
 ## Quick Reference — External APIs
 

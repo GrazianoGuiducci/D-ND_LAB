@@ -29,8 +29,8 @@ evidence boundary and not a market signal.
 | Step | Goal | Entry Gate | Work | Exit Gate | Output |
 |---:|---|---|---|---|---|
 | 1 | Close synthetic promotion boundary | Cycle `20260517_1050` complete; falsifier correction applied | Preserve gate, survivor counts and non-hard-boundary rule in contracts/UI/docs | Audit returns `CRYSTALLIZE_PROMOTION_BOUNDARY`; dashboard shows gate and survivors | Current state, done |
-| 2 | Check Dashboard Assistant/context grounding | Dashboard card visible; `/precondition_contract` returns `200` | Ask the Lab Dashboard Assistant about gate, survivor exceptions, and what is not promotable | Dashboard Assistant answers: provisional threshold, `2/10` survivors visible, no trading signal | Done via deterministic boundary fallback |
-| 3 | Choose next branch | Step 1 done; Step 2 acceptable or explicitly skipped | Decide one branch: real-market transfer, meta-lab comparison, or new synthetic object | Branch documented before execution | Branch packet / direction |
+| 2 | Check THIA/Lab Assistant context grounding | Dashboard card visible; `/precondition_contract` returns `200` | Ask the THIA/Lab Dashboard Assistant about gate, survivor exceptions, and what is not promotable | THIA/Lab Assistant answers: provisional threshold, `2/10` survivors visible, no trading signal | Done via deterministic boundary fallback |
+| 3 | Choose next branch | Step 1 done; Step 2 acceptable or explicitly skipped | Decide one branch: real-market transfer, meta-lab comparison, or new synthetic object | Branch documented before execution | Selected: 4A real-market transfer before meta-lab comparison |
 | 4A | Real-market transfer | Branch chosen; no synthetic ambiguity hidden | Test SPY/BTC/FX with data-card, iid/block nulls, VaR/RV baselines | No market claim unless real-data nulls and baselines pass | Real-data report, likely `SOSPENSIONE` first |
 | 4B | Meta-lab comparison | Branch chosen; finance reference stable | Ask meta-lab to regenerate finance-like Lab from intent/domain | Generated Lab preserves contracts, nulls, UI boundary, survivor handling | Comparison report and meta-lab improvements |
 | 4C | New synthetic object | Branch chosen; new mechanism predeclared | Define target variable and falsifier before running a cycle | New object beats controls without rescuing old rejected cases silently | New synthetic candidate or rejection |
@@ -38,21 +38,23 @@ evidence boundary and not a market signal.
 
 ## Recommended Next Step
 
-Step 2 is now done for the local **Lab Dashboard Assistant** surface. The
-dashboard chat has a deterministic boundary fallback, so the finance card can
-be explained even when the dashboard LLM adapter is not configured.
+Step 2 is now done for the **THIA/Lab Dashboard Assistant** runtime path. The
+dashboard chat speaks as THIA/Lab Assistant and has a deterministic finance
+boundary fallback, so the finance card can be explained even when the dashboard
+LLM adapter is not configured.
 
-This does **not** verify or modify the public THIA/DOMUS widget. THIA/DOMUS is
-a separate site-level assistant surface and must be checked separately if the
-next task concerns public navigation or public assistant behavior.
+This does **not** verify or modify the public THIA/DOMUS widget runtime path.
+The public widget exists as another THIA-facing surface and must be checked
+separately if the next task concerns public navigation or public assistant
+behavior.
 
-Next do **Step 3** before another Lab cycle:
+Step 3 is selected:
 
 ```text
-Choose one branch: real-market transfer, meta-lab comparison, or new synthetic object.
+4A real-market transfer, then 4B meta-lab comparison.
 ```
 
-Verified Dashboard Assistant/UI answer:
+Verified THIA/Lab Assistant/UI answer:
 
 - gate is `score >= 0.55`;
 - it is provisional and synthetic;
@@ -62,11 +64,9 @@ Verified Dashboard Assistant/UI answer:
 - no buy/sell/forecast/profit/alpha labels;
 - no sub-gate rescue without a new predeclared mechanism.
 
-If this passes, choose between:
-
-1. **Real-market transfer** if we want practical finance value now.
-2. **Meta-lab comparison** if we want to test whether the meta-lab can
-   regenerate this kind of Lab without losing fine logic.
+Rationale: finance must complete one autonomous value-facing E2E before the
+meta-lab generator is judged against it. The meta-lab comparison follows after
+the real-data lane has a concrete reference surface.
 
 ## Branch Details
 
@@ -117,7 +117,7 @@ Stop or redesign if:
 - below-gate survivors are hidden or reinterpreted away;
 - a report uses hard-boundary language again;
 - a real-data test lacks data-card or baseline/null;
-- the dashboard/THIA cannot explain what is not promotable.
+- the THIA/Lab Assistant runtime cannot explain what is not promotable.
 
 ## Standing Boundary
 

@@ -55,6 +55,20 @@
       "Promote a single-window result."
     ]
   },
+  "selected_followup_branch": {
+    "policy": "REAL_MARKET_TRANSFER_DIAGNOSTIC",
+    "selected_at": "2026-05-17",
+    "reason": "After the synthetic promotion boundary is visible in UI and explainable by THIA/Lab Assistant, complete one value-facing real-market E2E before using finance as meta-lab comparison target.",
+    "required_shape": [
+      "Use real data through market_data/exp_regime_shift only, preserving data_card.",
+      "Run at least one current window plus shifted or adjacent controls.",
+      "Report DND_DELTA as local diagnostic only unless recurrence/out-of-sample gates pass.",
+      "Keep no-trading-signal boundary explicit.",
+      "Expose the artifact through latest_diagnostic/dashboard before any product claim."
+    ],
+    "current_artifact": "data/finance/diagnostics/finance_diagnostic_20260517_132200.json",
+    "next_gate": "If a current window passes but shifted windows reject, classify local_robust observation, not operational signal."
+  },
   "retire_when": [
     "The precondition fails to keep controls below the 5% selection or robust ceiling.",
     "The precondition does not keep admitted positive robust recovery above 70% in an independent calibration run.",
