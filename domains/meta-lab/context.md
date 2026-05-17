@@ -54,6 +54,9 @@ campo skill/enzimi:
   richiedono eval;
 - `docs/META_LAB_SKILL_INTENT_GUIDE.md`: guida che collega intento,
   movimento, dinamica d'uso, skill/meta-prompt, artefatti, null e UI;
+- `docs/META_LAB_SKILL_READING_PROTOCOL.md`: protocollo per progettare la
+  lettura delle skill candidate, leggere i corpi necessari e produrre
+  `skill_reading_matrix`;
 - `/opt/MM_D-ND/tools/data/cognitive_enzymes_archive.md`: archivio degli
   enzimi cognitivi gia' estratti dal sistema.
 
@@ -162,6 +165,10 @@ Il lab figlio acquisisce anche:
      null, baseline, assertion o nuova skill;
    - `contamination_risk`: quali skill/enzimi non vanno usati perche'
      porterebbero contenuto del dominio sorgente invece del movimento.
+   - `skill_reading_matrix`: per ogni skill che influenza `context.md`,
+     `mml.json`, tool, assertion o UI, source reale, profondita' di lettura
+     L0-L3, trigger, output contract, ruolo nel Lab, rischio contaminazione
+     e capacita' mancante se presente.
    - `skill_intent_map`: mappa intento -> movement_class -> use_dynamics
      -> skill_layers -> meta_prompts -> artefatti -> UI/test.
 

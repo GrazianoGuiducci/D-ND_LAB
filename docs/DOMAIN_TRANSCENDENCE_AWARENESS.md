@@ -170,6 +170,7 @@ skill/enzimi gia' disponibile:
 - `docs/SKILL_FIELD_MAP.md`;
 - `docs/SKILL_DIAGNOSTIC.md`;
 - `docs/META_LAB_SKILL_INTENT_GUIDE.md`;
+- `docs/META_LAB_SKILL_READING_PROTOCOL.md`;
 - `/opt/MM_D-ND/tools/data/cognitive_enzymes_archive.md`;
 - eventuali skill domain-specific gia' presenti in `/opt/.claude/skills/`,
   `/opt/MM_D-ND/kernel/reference/skills/` o archivi THIA.
@@ -181,6 +182,10 @@ Output minimo della fase:
 - skill escluse per rischio contaminazione;
 - capacita' mancanti che devono diventare tool, null, baseline, assertion
   o nuova skill.
+- `skill_reading_matrix`: non basta nominare skill candidate; per ogni skill
+  che modifica `context.md`, `mml.json`, tool, assertion o UI bisogna
+  dichiarare source, profondita' L0-L3, trigger, output, ruolo nel Lab e
+  rischio contaminazione.
 - `skill_intent_map`: collegamento esplicito tra intento, classe di
   movimento, dinamica d'uso, skill/meta-prompt, artefatti generati,
   null/baseline e UI lens.
@@ -366,6 +371,8 @@ Un Lab generato passa M8 solo se:
 
 - dichiara nel report o in `transduction.md` quali skill/enzimi sono stati
   consultati prima della progettazione;
+- distingue skill solo recuperate da skill lette nel corpo e attivate,
+  tramite `skill_reading_matrix` quando la skill influenza artefatti del Lab;
 - produce un `mml.json` in formato layered object, non solo lista piatta;
 - motiva per ogni skill scelta il layer, il trigger e il ruolo nel dominio;
 - produce `skill_intent_map`, cioe' il collegamento esplicito tra intento,

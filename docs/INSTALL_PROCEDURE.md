@@ -66,12 +66,16 @@ specifiche, contratto UI e test E2E attesi.
 Prima della transduzione operativa c'e' ora una fase obbligatoria:
 **recupero skill/enzimi**. Il meta-lab consulta `docs/SKILL_CATALOG.md`,
 `docs/SKILL_FIELD_MAP.md`, `docs/SKILL_DIAGNOSTIC.md`,
-`docs/META_LAB_SKILL_INTENT_GUIDE.md` e
+`docs/META_LAB_SKILL_INTENT_GUIDE.md`,
+`docs/META_LAB_SKILL_READING_PROTOCOL.md` e
 `/opt/MM_D-ND/tools/data/cognitive_enzymes_archive.md` per capire quali
 capacita' il sistema possiede gia'. Il risultato entra nel `mml.json`
 layered del nuovo Lab, nella nota `transduction.md` e nei tool/null/gate
 da generare. Se il recupero non viene dichiarato, il template fallisce la
-meta-lente M8.
+meta-lente M8. Se una skill influenza `context.md`, `mml.json`, tool,
+assertion o UI, non basta citarla dal catalogo: deve comparire in
+`skill_reading_matrix` con source, profondita' di lettura, trigger, output,
+ruolo e rischio contaminazione.
 
 Le sezioni sono ordinate per dipendenza causale.
 
@@ -162,6 +166,7 @@ chiede conferma. Validazioni automatiche:
 - [ ] `assertions.py` (se richiesto) ha funzioni test_fn callable
 - [ ] Tensioni iniziali ben formate (id, claim, intensità)
 - [ ] `skill_retrieval` documentato: skill/enzimi usati, esclusi e mancanti
+- [ ] `skill_reading_matrix` presente per ogni skill che diventa operativa
 - [ ] `mml.json` usa `skills_attive` per layer, non solo lista piatta
 - [ ] LLM_API_KEY o subscription disponibile per il provider scelto
 - [ ] Cron schedule sintatticamente valido

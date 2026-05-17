@@ -12,6 +12,12 @@ Deve prima capire quale movimento deve poter compiere il Lab figlio, poi
 attivare le skill e i meta-prompt che servono a rendere quel movimento
 autonomo, falsificabile e osservabile.
 
+La lettura delle skill non e' un atto decorativo. Prima che una skill entri
+nel MML o influenzi `context.md`, tool, assertion o UI, il meta-lab deve
+applicare `docs/META_LAB_SKILL_READING_PROTOCOL.md`: candidate minime,
+corpo letto, profondita' dichiarata, rischio contaminazione e ruolo nel
+movimento.
+
 La catena corretta e':
 
 ```text
@@ -55,6 +61,7 @@ meta-lab, un blocco `skill_intent_map` con questa struttura logica:
     "domain_layer": [],
     "runtime_patterns": []
   },
+  "skill_reading_matrix": ["skill lette con source, read_depth, trigger, output e rischio"],
   "meta_prompts": ["prompt operativi da iniettare nel context.md"],
   "generated_artifacts": ["file o moduli che devono nascere"],
   "null_baseline_requirements": ["controlli minimi prima di interpretare"],
@@ -343,9 +350,11 @@ falsificare il movimento e quale output sarebbe utile solo se sopravvive.
 
 ```text
 Cerca nel catalogo skill e nell'archivio enzimi quali capacita' sono gia'
-presenti. Per ogni skill candidata dichiara layer, trigger, output atteso,
-stato diagnostico e rischio di contaminazione. Se manca una capacita',
-decidi se deve diventare tool, assertion, baseline, null o nuova skill.
+presenti. Non fermarti al catalogo: per le skill che influenzano il Lab
+leggi il corpo e compila una skill_reading_matrix con source, read_depth,
+trigger, output atteso, stato diagnostico e rischio di contaminazione.
+Se manca una capacita', decidi se deve diventare tool, assertion, baseline,
+null o nuova skill.
 ```
 
 ### artifact_contract
@@ -439,6 +448,8 @@ perdere logiche fini.
 Stato operativo attuale:
 
 - il meta-lab legge questa guida prima di generare nuovi domini;
+- `docs/META_LAB_SKILL_READING_PROTOCOL.md` distingue recupero da archivio,
+  lettura del corpo e attivazione operativa della skill;
 - `tools/lab_template_generator.py` richiede `skill_intent_map_json`;
 - il generator appende `skill_intent_map` a `transduction.md` se l'agent
   lo ha prodotto solo come JSON specs;
