@@ -765,6 +765,17 @@
       bottom: auto;
       top: calc(100% + 6px);
     }
+    [data-tip].tip-left:hover::after {
+      bottom: auto;
+      top: 50%;
+      left: auto;
+      right: calc(100% + 8px);
+      transform: translateY(-50%);
+      width: 220px;
+      white-space: normal;
+      line-height: 1.35;
+      text-align: left;
+    }
     /* Custom select coerente con .selector della home (custom chevron, no rendering OS). */
     select.dnd-select {
       appearance: none;
@@ -811,6 +822,13 @@
     .chat-fab .fab-bubble .badge-count { position: absolute; top: -4px; right: -4px; background: #f472b6; color: #18181b; font-size: 10px; font-weight: 700; border-radius: 999px; padding: 1px 6px; }
     .chat-closed-hint { position: fixed; right: 84px; bottom: 100px; max-width: 260px; padding: 9px 11px; border-radius: 10px; border: 1px solid rgba(167,139,250,.35); background: rgba(15,23,42,.94); color: #d8dbe7; font-size: 12px; line-height: 1.35; box-shadow: 0 12px 32px rgba(0,0,0,.35); cursor: pointer; }
     .chat-closed-hint:hover { border-color: rgba(167,139,250,.7); color: #f1f5f9; }
+    .info-context-intro {
+      width: 100%;
+      max-width: none;
+      border-top: 1px solid rgb(30 41 59);
+      padding-top: 1rem;
+    }
+    .info-context-intro p { max-width: none; }
     .chat-panel { position: relative; width: 100%; height: 100%; background: rgb(15 23 42); border: 1px solid rgb(51 65 85); border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,.5); display: flex; flex-direction: column; overflow: hidden; }
     .chat-panel-header { background: linear-gradient(180deg, rgba(167,139,250,.12) 0%, rgba(15,23,42,1) 100%); padding: 12px 14px; border-bottom: 1px solid rgb(30 41 59); display: flex; align-items: center; justify-content: space-between; cursor: move; user-select: none; }
     .chat-panel-header .title { font-size: 14px; font-weight: 600; color: #c4b5fd; display: flex; align-items: center; gap: 8px; }
@@ -2173,7 +2191,7 @@
             </section>
 
             <template x-if="contextIntro.intro">
-              <div class="markdown text-sm text-slate-200" x-html="renderMarkdown(contextIntro.intro)"></div>
+              <div class="info-context-intro markdown text-sm text-slate-200" x-html="renderMarkdown(contextIntro.intro)"></div>
             </template>
 
             <!-- Pipeline SSP — sezione dedicata, descrive il flusso scoperta → prodotto -->
@@ -2294,38 +2312,38 @@
                      : 'Usa questa colonna come mappa rapida mentre il centro spiega il dominio attivo.'"></p>
               </div>
               <div class="space-y-1.5">
-                <button @click="setActiveTab('campo')" class="detail-action text-cyan-300"
-                        :title="lang === 'en' ? 'Open current resultant, diagnostics and recent signals.' : 'Apri risultante, diagnostiche e segnali recenti.'">
+                <button @click="setActiveTab('campo')" class="detail-action text-cyan-300 tip-left"
+                        :data-tip="lang === 'en' ? 'Open current resultant, diagnostics and recent signals.' : 'Apri risultante, diagnostiche e segnali recenti.'">
                   <span class="font-medium">Campo</span>
                   <span class="block text-[11px] text-slate-400"
                         x-text="lang === 'en' ? 'Current resultant and recent signals.' : 'Risultante e segnali recenti.'"></span>
                 </button>
-                <button @click="setActiveTab('grafo')" class="detail-action text-cyan-300"
-                        :title="lang === 'en' ? 'Open domain relations, nodes and bridges.' : 'Apri relazioni, nodi e ponti del dominio.'">
+                <button @click="setActiveTab('grafo')" class="detail-action text-cyan-300 tip-left"
+                        :data-tip="lang === 'en' ? 'Open domain relations, nodes and bridges.' : 'Apri relazioni, nodi e ponti del dominio.'">
                   <span class="font-medium">Grafo</span>
                   <span class="block text-[11px] text-slate-400"
                         x-text="lang === 'en' ? 'Relations, nodes and bridges.' : 'Relazioni, nodi e ponti.'"></span>
                 </button>
-                <button @click="setActiveTab('bicono')" class="detail-action text-purple-300"
-                        :title="lang === 'en' ? 'Open discovery poles extracted from reports.' : 'Apri i poli delle scoperte estratti dai report.'">
+                <button @click="setActiveTab('bicono')" class="detail-action text-purple-300 tip-left"
+                        :data-tip="lang === 'en' ? 'Open discovery poles extracted from reports.' : 'Apri i poli delle scoperte estratti dai report.'">
                   <span class="font-medium">Bicono</span>
                   <span class="block text-[11px] text-slate-400"
                         x-text="lang === 'en' ? 'Discovery poles extracted from reports.' : 'Poli delle scoperte estratti dai report.'"></span>
                 </button>
-                <button @click="setActiveTab('agente')" class="detail-action text-purple-300"
-                        :title="lang === 'en' ? 'Open reports, evidence, verdicts and falsifier flags.' : 'Apri report, evidenza, verdict e flag del falsifier.'">
+                <button @click="setActiveTab('agente')" class="detail-action text-purple-300 tip-left"
+                        :data-tip="lang === 'en' ? 'Open reports, evidence, verdicts and falsifier flags.' : 'Apri report, evidenza, verdict e flag del falsifier.'">
                   <span class="font-medium">Agente</span>
                   <span class="block text-[11px] text-slate-400"
                         x-text="lang === 'en' ? 'Evidence, verdicts and falsifier flags.' : 'Evidenza, verdict e flag del falsifier.'"></span>
                 </button>
-                <button @click="setActiveTab('incrocio')" class="detail-action text-purple-300"
-                        :title="lang === 'en' ? 'Open aggregate taxonomy and cycle trajectory.' : 'Apri tassonomia aggregata e traiettoria dei cicli.'">
+                <button @click="setActiveTab('incrocio')" class="detail-action text-purple-300 tip-left"
+                        :data-tip="lang === 'en' ? 'Open aggregate taxonomy and cycle trajectory.' : 'Apri tassonomia aggregata e traiettoria dei cicli.'">
                   <span class="font-medium">Tassonomia</span>
                   <span class="block text-[11px] text-slate-400"
                         x-text="lang === 'en' ? 'Aggregate map and cycle trajectory.' : 'Mappa aggregata e traiettoria dei cicli.'"></span>
                 </button>
-                <button @click="setActiveTab('prodotti')" class="detail-action text-green-300"
-                        :title="lang === 'en' ? 'Open discoveries, candidates and verified outputs.' : 'Apri scoperte, candidati e output verificati.'">
+                <button @click="setActiveTab('prodotti')" class="detail-action text-green-300 tip-left"
+                        :data-tip="lang === 'en' ? 'Open discoveries, candidates and verified outputs.' : 'Apri scoperte, candidati e output verificati.'">
                   <span class="font-medium">Prodotti</span>
                   <span class="block text-[11px] text-slate-400"
                         x-text="lang === 'en' ? 'Discoveries, candidates and verified outputs.' : 'Scoperte, candidati e output verificati.'"></span>
@@ -2501,9 +2519,9 @@
             </div>
           </template>
 
-          <!-- Cycle trace — sostituisce la vecchia tab 'Dinamica'. Contestuale a Info/Agente/Prodotti.
+          <!-- Cycle trace — sostituisce la vecchia tab 'Dinamica'. Contestuale ad Agente/Prodotti.
                Source: cycle_trace_*.json scritti post-cycle. -->
-          <template x-if="activeTab === 'info' || activeTab === 'agente' || activeTab === 'prodotti'">
+          <template x-if="activeTab === 'agente' || activeTab === 'prodotti'">
             <div class="mt-5 border-t border-slate-800 pt-4">
               <div class="flex items-center justify-between mb-2">
                 <h4 class="text-xs uppercase tracking-wider text-slate-300">Cycle trace</h4>
@@ -2633,6 +2651,17 @@
       <template x-if="sidebarTipSide === 'right'">
         <div>
           <h5 data-i18n="dash.sb.dettaglioH3">Dettaglio</h5>
+          <template x-if="activeTab === 'info'">
+            <div>
+              <div class="stat-row flex justify-between"><span>Campo</span><span class="text-cyan-300">risultante</span></div>
+              <div class="stat-row flex justify-between"><span>Grafo</span><span class="text-cyan-300">relazioni</span></div>
+              <div class="stat-row flex justify-between"><span>Bicono</span><span class="text-purple-300">poli</span></div>
+              <div class="stat-row flex justify-between"><span>Agente</span><span class="text-purple-300">verdict</span></div>
+              <div class="stat-row flex justify-between"><span>Prodotti</span><span class="text-green-300">output</span></div>
+            </div>
+          </template>
+          <template x-if="activeTab !== 'info'">
+            <div>
           <template x-if="!selectedNode">
             <div class="text-[11px] text-slate-300 italic" data-i18n="dash.sb.tipNoNode">Nessun nodo selezionato — click su un nodo del grafo.</div>
           </template>
@@ -2643,6 +2672,8 @@
               <template x-if="selectedNode.verdict">
                 <div class="text-[10px] text-slate-400 italic mt-2 line-clamp-2 border-l-2 border-purple-700 pl-2" x-text="selectedNode.verdict"></div>
               </template>
+            </div>
+          </template>
             </div>
           </template>
           <div class="text-[10px] text-slate-300 italic mt-2" data-i18n="dash.sb.tipExpand">click per espandere</div>
