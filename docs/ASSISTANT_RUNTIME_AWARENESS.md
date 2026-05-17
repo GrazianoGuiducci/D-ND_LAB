@@ -4,13 +4,15 @@ Status: active dashboard pattern, public demo safe by default.
 
 ## Topology
 
-The Lab currently has two assistant surfaces that must not collapse into one
-ambiguous role.
+The Lab currently has two assistant runtime paths/surfaces that must not
+collapse into one ambiguous role.
 
-- `Lab Dashboard Assistant`: local technical assistant for `/dashboard/`.
+- `THIA/Lab Dashboard Assistant`: dashboard-local assistant path for
+  `/dashboard/`.
   It owns dashboard grounding: active domain, active tab, visible section,
   selected graph node, selected SSP discovery/product, report/cemetery tools,
-  contribution pre-report collection and read-only demo boundaries.
+  contribution pre-report collection and read-only demo boundaries. It speaks
+  as THIA/Lab Assistant when the dashboard chat endpoint is used.
 - `THIA/DOMUS public widget`: public orientation surface on `lab.d-nd.com`.
   It owns navigation, narrative pages, funnel explanation, site-level context,
   human/contact routing and general orientation across the Lab subdomain.
@@ -18,10 +20,15 @@ ambiguous role.
 Routing rule:
 
 ```text
-Use the Lab Dashboard Assistant for domain/dashboard/cycle/report/SSP details.
+Use the THIA/Lab Dashboard Assistant for domain/dashboard/cycle/report/SSP details.
 Use THIA/DOMUS for public orientation, page navigation and system-level context.
 Do not duplicate ownership between the two.
 ```
+
+The boundary is not "THIA vs no THIA". The boundary is which runtime path was
+grounded and verified. If the dashboard LLM adapter is not configured, the
+finance promotion-boundary card can still be answered by a deterministic local
+fallback before the public THIA fallback is attempted for broader demo chat.
 
 For the broader ecosystem boundary between the main-site physics Lab, the Lab
 subdomain, the installable repo/meta-lab and concrete domain Labs, see

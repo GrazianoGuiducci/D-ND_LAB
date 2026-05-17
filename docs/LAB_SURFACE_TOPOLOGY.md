@@ -34,11 +34,11 @@ It owns:
 
 - dashboard views for active domains;
 - graph, bicono, agent reports, taxonomy, products and info tabs;
-- Lab Dashboard Assistant context and domain-level explanation;
+- THIA/Lab Dashboard Assistant context and domain-level explanation;
 - demo/production visibility for domain Labs.
 
-It does not automatically imply that the main-site THIA/DOMUS widget has been
-tested or modified.
+It does not automatically imply that the main-site or lab-subdomain public
+THIA/DOMUS widget has been tested or modified.
 
 ### 3. Installable repository and meta-lab seed
 
@@ -81,7 +81,7 @@ It is not the meta-lab itself. It is both:
 
 ```text
 d-nd.com physics Lab page -> public physics narrative and visitor discussion.
-lab.d-nd.com dashboard -> live domain views and Lab Dashboard Assistant.
+lab.d-nd.com dashboard -> live domain views and THIA/Lab Dashboard Assistant.
 D-ND_LAB repo -> installable engine, domains, meta-lab and installer.
 finance domain -> concrete production/demo domain and reference template.
 ```
@@ -94,13 +94,14 @@ surface and verifying it there.
 The surfaces share D-ND lineage and may share THIA language or context. Shared
 genealogy means they can inform one another; it does not mean that a fix,
 credential, assistant behavior, UI state or runtime result on one surface is
-valid on the others.
+valid on the others. When a surface speaks as THIA, still name the concrete
+runtime path that was verified.
 
 When documenting or reporting, use precise names:
 
 - `main-site physics Lab`;
 - `Lab subdomain dashboard`;
-- `Lab Dashboard Assistant`;
+- `THIA/Lab Dashboard Assistant`;
 - `THIA/DOMUS public widget`;
 - `D-ND_LAB installable repo`;
 - `meta-lab`;
