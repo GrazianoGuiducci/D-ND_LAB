@@ -165,7 +165,7 @@ promotion_proposer (proposte sistemiche).
 - [x] Primo cycle controllato del lab (`dnd-cycle.sh finance`)
 - [x] Skill-reading matrix e reference audit installabile
 - [x] Precondizione lag-memory progettata e testata come promotion boundary provvisoria
-- [ ] UI finance: rendere visibili soglia 0.55, admitted/rejected e survivor sotto soglia
+- [x] UI finance: rendere visibili soglia 0.55, admitted/rejected e survivor sotto soglia
 - [ ] Gate dati reali con yfinance/CoinGecko e controlli robusti
 - [ ] Verdict DND_DELTA su dati reali (FX major pair, crypto BTC, equity SPY)
 - [ ] Stage 5: kernel pacchettizzato `dnd_kernel_finance_regime_shift`
@@ -179,3 +179,4 @@ promotion_proposer (proposte sistemiche).
 - `domains/meta-lab/tools/lab_template_validator.py` — falsifier meta M1-M8
 - `domains/finance/transduction.md` — nota M7/M8 di transduzione dominio + skill_intent_map
 - `domains/finance/USE_CASE.md` — intento pragmatico e valore operativo
+- `docs/FINANCE_ROADMAP_20260517.md` — tabella di marcia finance dopo la soglia sintetica
