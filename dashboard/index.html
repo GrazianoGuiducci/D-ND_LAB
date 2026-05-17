@@ -765,17 +765,6 @@
       bottom: auto;
       top: calc(100% + 6px);
     }
-    [data-tip].tip-right-panel:hover::after {
-      bottom: calc(100% + 6px);
-      top: auto;
-      left: 0;
-      right: auto;
-      transform: none;
-      width: 220px;
-      white-space: normal;
-      line-height: 1.35;
-      text-align: left;
-    }
     /* Custom select coerente con .selector della home (custom chevron, no rendering OS). */
     select.dnd-select {
       appearance: none;
@@ -2312,38 +2301,38 @@
                      : 'Usa questa colonna come mappa rapida mentre il centro spiega il dominio attivo.'"></p>
               </div>
               <div class="space-y-1.5">
-                <button @click="setActiveTab('campo')" class="detail-action text-cyan-300 tip-right-panel"
-                        :data-tip="lang === 'en' ? 'Open current resultant, diagnostics and recent signals.' : 'Apri risultante, diagnostiche e segnali recenti.'">
+                <button @click="setActiveTab('campo')" @mouseenter="showStatTip('nav_campo', $event)" @mouseleave="hideStatTip()"
+                        class="detail-action text-cyan-300">
                   <span class="font-medium">Campo</span>
                   <span class="block text-[11px] text-slate-400"
                         x-text="lang === 'en' ? 'Current resultant and recent signals.' : 'Risultante e segnali recenti.'"></span>
                 </button>
-                <button @click="setActiveTab('grafo')" class="detail-action text-cyan-300 tip-right-panel"
-                        :data-tip="lang === 'en' ? 'Open domain relations, nodes and bridges.' : 'Apri relazioni, nodi e ponti del dominio.'">
+                <button @click="setActiveTab('grafo')" @mouseenter="showStatTip('nav_grafo', $event)" @mouseleave="hideStatTip()"
+                        class="detail-action text-cyan-300">
                   <span class="font-medium">Grafo</span>
                   <span class="block text-[11px] text-slate-400"
                         x-text="lang === 'en' ? 'Relations, nodes and bridges.' : 'Relazioni, nodi e ponti.'"></span>
                 </button>
-                <button @click="setActiveTab('bicono')" class="detail-action text-purple-300 tip-right-panel"
-                        :data-tip="lang === 'en' ? 'Open discovery poles extracted from reports.' : 'Apri i poli delle scoperte estratti dai report.'">
+                <button @click="setActiveTab('bicono')" @mouseenter="showStatTip('nav_bicono', $event)" @mouseleave="hideStatTip()"
+                        class="detail-action text-purple-300">
                   <span class="font-medium">Bicono</span>
                   <span class="block text-[11px] text-slate-400"
                         x-text="lang === 'en' ? 'Discovery poles extracted from reports.' : 'Poli delle scoperte estratti dai report.'"></span>
                 </button>
-                <button @click="setActiveTab('agente')" class="detail-action text-purple-300 tip-right-panel"
-                        :data-tip="lang === 'en' ? 'Open reports, evidence, verdicts and falsifier flags.' : 'Apri report, evidenza, verdict e flag del falsifier.'">
+                <button @click="setActiveTab('agente')" @mouseenter="showStatTip('nav_agente', $event)" @mouseleave="hideStatTip()"
+                        class="detail-action text-purple-300">
                   <span class="font-medium">Agente</span>
                   <span class="block text-[11px] text-slate-400"
                         x-text="lang === 'en' ? 'Evidence, verdicts and falsifier flags.' : 'Evidenza, verdict e flag del falsifier.'"></span>
                 </button>
-                <button @click="setActiveTab('incrocio')" class="detail-action text-purple-300 tip-right-panel"
-                        :data-tip="lang === 'en' ? 'Open aggregate taxonomy and cycle trajectory.' : 'Apri tassonomia aggregata e traiettoria dei cicli.'">
+                <button @click="setActiveTab('incrocio')" @mouseenter="showStatTip('nav_tassonomia', $event)" @mouseleave="hideStatTip()"
+                        class="detail-action text-purple-300">
                   <span class="font-medium">Tassonomia</span>
                   <span class="block text-[11px] text-slate-400"
                         x-text="lang === 'en' ? 'Aggregate map and cycle trajectory.' : 'Mappa aggregata e traiettoria dei cicli.'"></span>
                 </button>
-                <button @click="setActiveTab('prodotti')" class="detail-action text-green-300 tip-right-panel"
-                        :data-tip="lang === 'en' ? 'Open discoveries, candidates and verified outputs.' : 'Apri scoperte, candidati e output verificati.'">
+                <button @click="setActiveTab('prodotti')" @mouseenter="showStatTip('nav_prodotti', $event)" @mouseleave="hideStatTip()"
+                        class="detail-action text-green-300">
                   <span class="font-medium">Prodotti</span>
                   <span class="block text-[11px] text-slate-400"
                         x-text="lang === 'en' ? 'Discoveries, candidates and verified outputs.' : 'Scoperte, candidati e output verificati.'"></span>
@@ -2996,6 +2985,36 @@
     legend_scoperta: {
       title: 'Scoperta',
       body: 'Claim cristallizzato (sopravvissuto) o falsificato (cimitero). Endpoint di un percorso di tensione. Color rose.',
+    },
+    nav_campo: {
+      title: 'Campo · risultante',
+      body: 'Prima lettura del dominio: cicli, scoperte, prodotti, filtri e segnali recenti.',
+      logic: (s) => `${s.campoStats().cicli} cicli · ${s.campoStats().scoperte} scoperte · ${s.cimiteroCount()} filtrati.`,
+    },
+    nav_grafo: {
+      title: 'Grafo · relazioni',
+      body: 'Knowledge graph ricostruito dai report: nodi, direzioni, vincoli e ponti visibili.',
+      logic: (s) => `${s.graphDisplayStats().n_nodes} nodi · ${s.graphDisplayStats().n_edges} archi.`,
+    },
+    nav_bicono: {
+      title: 'Bicono · poli',
+      body: 'Galleria delle scoperte: radici, singolare, invariante e campo estratti dai report.',
+      logic: (s) => `${s.scoperteSsp?.length || 0} scoperte indicizzate.`,
+    },
+    nav_agente: {
+      title: 'Agente · evidenza',
+      body: 'Report completi, verdict, flag del counter-pole e trace dei cicli.',
+      logic: (s) => `${s.reports?.length || 0} report disponibili.`,
+    },
+    nav_tassonomia: {
+      title: 'Tassonomia · traiettoria',
+      body: 'Mappa aggregata del dominio e timeline dei cicli, utile per vedere movimento e ricorrenze.',
+      logic: (s) => `${s.campoStats().cicli} cicli nella traiettoria corrente.`,
+    },
+    nav_prodotti: {
+      title: 'Prodotti · SSP',
+      body: 'Pipeline Scoperte/Soluzioni/Prodotti: candidate, verifiche, output maturi e metriche.',
+      logic: (s) => `${s.campoStats().prodotti} prodotti · ${s.campoStats().applicazioni} applicazioni candidate.`,
     },
   };
 
