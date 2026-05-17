@@ -263,11 +263,12 @@ mercato (n~250-1000). Per evitare false certezze:
 
 ## Loop A8+A15 attivo
 
-`trajectory_apply` e' enabled. Le decisioni REDESIGN del
-trajectory_evaluator con confidence alta e action `modify_seme` o
-`direzione` vengono applicate automaticamente al seed all'inizio del cycle
-successivo. Non aspettare un intervento manuale per recepire correzioni gia'
-decise dal sistema.
+`trajectory_apply` e' enabled. Le decisioni del trajectory_evaluator con
+confidence alta e action `modify_seme/direzione` o `trigger_cycle/NEXT_CYCLE`
+vengono applicate automaticamente al seed all'inizio del cycle successivo.
+`trigger_cycle` non avvia processi: registra nel seme la continuita' operativa
+che il ciclo successivo deve leggere. Non aspettare un intervento manuale per
+recepire correzioni gia' decise dal sistema.
 
 ## Come operare nel cycle
 

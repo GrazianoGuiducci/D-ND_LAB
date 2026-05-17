@@ -16,9 +16,10 @@ Safety:
   - log-only by default. Decisions written to trajectory_log.jsonl but
     NOT executed automatically. Operator reviews at next session.
   - To enable execution: movements.trajectory_evaluator.params.execute=true
-  - Action whitelist: notify_operator, crystallize_note, modify_seme
-    (direzione only, confidence=high), escalate_cowork. trigger_cycle
-    is reserved for the operator (continuous mode = Approve).
+  - Action whitelist when execute=true: notify_operator, crystallize_note,
+    modify_seme (direzione only, confidence=high), escalate_cowork.
+    trigger_cycle is not executed here; log-only NEXT_CYCLE continuity can be
+    absorbed by trajectory_apply at the start of the following run.
 
 Refactor changes from lab_valutatore.py:
   - TELOS, condensate, cimitero: paths via domain config + core.paths
@@ -609,9 +610,11 @@ def _execute_action(ctx: CycleContext, decision: dict[str, Any]) -> dict[str, An
             return {"type": "escalate_cowork", "ok": False, "error": str(e)}
 
     if action_type == "trigger_cycle":
-        # Reserved for operator authorization — continuous mode is Approve
+        # Reserved for operator authorization when execute=true.
+        # trajectory_apply handles log-only NEXT_CYCLE continuity; this
+        # function must not spawn cycles.
         return {"type": "trigger_cycle", "ok": False,
-                "error": "continuous mode reserved for operator authorization"}
+                "error": "trigger_cycle execution reserved; trajectory_apply handles log-only continuity"}
 
     return {"type": action_type, "ok": False, "error": "unknown action type"}
 

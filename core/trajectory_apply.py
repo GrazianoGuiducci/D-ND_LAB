@@ -13,8 +13,8 @@ Con trajectory_apply, il loop si chiude:
   cycle N+1:
     autopsy → trajectory_apply (legge ultima entry log) → build_field
       ↓
-      Se entry eligible (executed=false, confidence=high, modify_seme):
-        - applica action.detail al seed (modifica direzione)
+      Se entry eligible (executed=false, confidence=high, modify_seme/trigger_cycle):
+        - applica action.detail al seed (modifica direzione o continuità)
         - aggiunge tensione marker porta=trajectory_apply
         - marca executed=true nel log
       Se non eligible: skip + log info
@@ -29,10 +29,16 @@ Whitelist conservativa (matched al trajectory_evaluator design notes):
   - confidence == 'high'
   - executed == false
   - new_value non vuoto
+  - action.type == 'trigger_cycle'
+  - decision == 'NEXT_CYCLE'
+  - confidence == 'high'
+  - action.detail contiene un testo operativo (seed_change/direction/directive/instruction/next_focus)
 
 Altri action types (notify_operator, crystallize_note, escalate_cowork)
 sono skip — sono effetti collaterali, non modifiche al seed.
-trigger_cycle è riservato all'operatore.
+trigger_cycle NON avvia processi: registra nel seed la continuità del
+NEXT_CYCLE così il ciclo successivo legge la traiettoria invece di dipendere
+da inferenza implicita sui log.
 
 Idempotente: marca executed=true dopo application. Re-runs non
 re-applicano la stessa entry.
@@ -56,9 +62,21 @@ logger = logging.getLogger(__name__)
 
 
 # Whitelist conservativa — extend solo dopo che il pattern è validato in vivo
-ELIGIBLE_ACTION_TYPES = {"modify_seme"}
+ELIGIBLE_ACTION_TYPES = {"modify_seme", "trigger_cycle"}
 ELIGIBLE_FIELDS = {"direzione"}
 ELIGIBLE_CONFIDENCES = {"high"}
+
+TRIGGER_TEXT_KEYS = (
+    "seed_change",
+    "direction",
+    "directive",
+    "instruction",
+    "next_focus",
+    "target",
+    "constraint",
+    "success_gate",
+    "reason",
+)
 
 
 def _read_last_trajectory_entry(domain: str) -> dict[str, Any] | None:
@@ -99,13 +117,50 @@ def _is_eligible(entry: dict[str, Any]) -> tuple[bool, str]:
     detail = action.get("detail") or {}
     if not isinstance(detail, dict):
         return False, "action.detail not dict"
-    field = detail.get("field")
-    if field not in ELIGIBLE_FIELDS:
-        return False, f"action.detail.field='{field}' not in {ELIGIBLE_FIELDS}"
-    new_value = detail.get("new_value", "")
-    if not isinstance(new_value, str) or not new_value.strip():
-        return False, "action.detail.new_value empty or non-string"
+
+    if a_type == "modify_seme":
+        field = detail.get("field")
+        if field not in ELIGIBLE_FIELDS:
+            return False, f"action.detail.field='{field}' not in {ELIGIBLE_FIELDS}"
+        new_value = detail.get("new_value", "")
+        if not isinstance(new_value, str) or not new_value.strip():
+            return False, "action.detail.new_value empty or non-string"
+        return True, "eligible"
+
+    if a_type == "trigger_cycle":
+        decision = entry.get("decision")
+        if decision != "NEXT_CYCLE":
+            return False, f"trigger_cycle requires decision='NEXT_CYCLE' (got: {decision})"
+        if not _trigger_cycle_direction(detail):
+            return False, "trigger_cycle detail has no operational text"
+        return True, "eligible"
+
     return True, "eligible"
+
+
+def _trigger_cycle_direction(detail: dict[str, Any]) -> str:
+    """Extract a concise continuation direction from trigger_cycle.detail.
+
+    The evaluator may use slightly different keys by domain. Prefer the
+    explicit seed movement, then fall back to directive/instruction fields.
+    `success_gate` and `reason` are useful in the marker but should not win
+    over a concrete next action when one exists.
+    """
+    preferred = ("seed_change", "direction", "directive", "instruction", "next_focus", "target")
+    for key in preferred:
+        value = detail.get(key)
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+
+    for key in TRIGGER_TEXT_KEYS:
+        value = detail.get(key)
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+        if isinstance(value, list):
+            joined = "; ".join(str(v).strip() for v in value if str(v).strip())
+            if joined:
+                return joined
+    return ""
 
 
 def _apply_to_seed(
@@ -115,32 +170,51 @@ def _apply_to_seed(
 ) -> dict[str, Any]:
     """Apply entry.action.detail to seed. Returns mutated copy.
 
-    For modify_seme + field=direzione + new_value: replaces seed["direzione"]
-    and adds a marker tension to track the apply (operator-equivalent
-    porta=trajectory_apply, condensato_ref derived from action context).
+    For modify_seme + field=direzione + new_value: replaces seed["direzione"].
+    For trigger_cycle: records the NEXT_CYCLE continuation as seed direction.
+    Both add a marker tension to track the apply (porta=trajectory_apply,
+    condensato_ref derived from action context).
     """
     mutated = json.loads(json.dumps(seed))  # deep copy
-    detail = entry["action"]["detail"]
-    new_value = detail["new_value"]
+    action = entry["action"]
+    action_type = action["type"]
+    detail = action["detail"]
+    if action_type == "modify_seme":
+        new_value = detail["new_value"]
+        marker_kind = "APPLY"
+        decision_label = entry.get("decision", "REDESIGN")
+    else:
+        new_value = _trigger_cycle_direction(detail)
+        marker_kind = "TRIGGER"
+        decision_label = "NEXT_CYCLE"
     cycle_ref = entry.get("cycle_ref", "?")
 
-    # Apply direzione change
+    # Apply direzione/continuation change
     mutated["direzione"] = new_value
 
     # Add marker tension for traceability + lignaggio (P0-compliant)
-    marker_id = f"TRAJECTORY_APPLY_{cycle_ref}"
+    marker_id = f"TRAJECTORY_{marker_kind}_{cycle_ref}"
     tensioni = list(mutated.get("tensioni", []))
     # Skip if already present (idempotent on re-run)
     existing_ids = {t.get("id") for t in tensioni if isinstance(t, dict)}
     if marker_id not in existing_ids:
+        extra = []
+        for key in ("success_gate", "constraint", "constraints", "reason"):
+            value = detail.get(key)
+            if isinstance(value, list):
+                value = "; ".join(str(v) for v in value)
+            if value:
+                extra.append(f"{key}: {str(value)[:180]}")
         tensioni.append({
             "tipo": "task",
             "id": marker_id,
-            "claim": f"Applied trajectory_evaluator REDESIGN from {cycle_ref}: {new_value[:200]}",
+            "claim": f"Applied trajectory_evaluator {decision_label} from {cycle_ref}: {new_value[:200]}",
+            "description": " | ".join(extra)[:500],
             "intensità": 0.7,
             "porta": "trajectory_apply",
             "condensato_ref": "A8,A14,A15",
             "manuale": False,
+            "action_type": action_type,
             "_source_log": entry.get("ts", ""),
             "_source_reasoning": (entry.get("reasoning", "") or "")[:300],
         })
@@ -150,7 +224,7 @@ def _apply_to_seed(
     history = mutated.setdefault("_seed_history", {})
     if isinstance(history, dict):
         history[f"trajectory_apply_{cycle_ts}"] = (
-            f"applied {entry['action']['type']} from {cycle_ref}: "
+            f"applied {action_type} from {cycle_ref}: "
             f"direzione → '{new_value[:100]}...'"
         )
 
@@ -257,17 +331,22 @@ def trajectory_apply(ctx: CycleContext) -> None:
     marked = _mark_entry_executed(ctx.domain, entry.get("ts", ""))
 
     cycle_ref = entry.get("cycle_ref", "?")
-    new_direzione = entry["action"]["detail"]["new_value"]
+    action_type = entry["action"]["type"]
+    if action_type == "modify_seme":
+        new_direzione = entry["action"]["detail"]["new_value"]
+    else:
+        new_direzione = _trigger_cycle_direction(entry["action"]["detail"])
     ctx.metrics.setdefault("trajectory_apply", {}).update(
         decision="APPLIED",
         from_cycle_ref=cycle_ref,
         new_direzione=new_direzione[:100],
         log_entry_marked_executed=marked,
-        action_type=entry["action"]["type"],
+        action_type=action_type,
         confidence=entry.get("confidence"),
     )
     logger.info(
-        "trajectory_apply: APPLIED REDESIGN from %s — direzione → '%s...'",
+        "trajectory_apply: APPLIED %s from %s — direzione → '%s...'",
+        action_type,
         cycle_ref,
         new_direzione[:80],
     )
