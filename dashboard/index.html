@@ -4023,6 +4023,16 @@
         }, 120);
       },
 
+      closeStatTipNow() {
+        if (this._statTipHideTimer) {
+          clearTimeout(this._statTipHideTimer);
+          this._statTipHideTimer = null;
+        }
+        const tip = document.getElementById('stat-tip');
+        if (tip) tip.classList.remove('visible');
+        this.statTipContent = null;
+      },
+
       cancelStatTipHide() {
         if (this._statTipHideTimer) {
           clearTimeout(this._statTipHideTimer);
@@ -4675,6 +4685,7 @@
 
       // v3 — tab navigation (Cytoscape needs re-render when tab GRAFO becomes visible)
       setActiveTab(id) {
+        this.closeStatTipNow();
         this.activeTab = id;
         if (id === 'grafo') {
           this.$nextTick(() => {
