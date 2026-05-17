@@ -253,6 +253,37 @@ Se `next_cycle_policy` e' `CRYSTALLIZE_PROMOTION_BOUNDARY`, non serve un altro
 cycle immediato sullo stesso gate: prima rendi esplicita la soglia nella UI,
 nel contratto e nelle note operative, mantenendo visibili le eccezioni.
 
+### finance_transfer_diagnostic
+
+Descrizione: genera un artefatto macchina per il transfer real-market su una
+finestra esatta, invece di lasciare i numeri multi-asset solo dentro il report
+narrativo. Usa `market_data` + `exp_regime_shift`, preserva `data_card` per
+ogni asset, aggiunge null a blocchi 5/21 e scrive JSON/Markdown in
+`data/finance/diagnostics/`.
+
+Comando:
+
+```bash
+python3 /opt/D-ND_LAB/domains/finance/tools/finance_transfer_diagnostic.py \
+    --start 2026-02-09 --end 2026-05-09 --shuffles 1024 --json
+```
+
+Default asset: `SPY, QQQ, IWM, EFA, TLT, GLD, BTC-USD`.
+
+Trigger: invocalo quando il ciclo deve testare
+`REAL_MARKET_TRANSFER_DIAGNOSTIC` o quando un report cita transfer SPY/QQQ/BTC.
+Il report deve citare il JSON prodotto; non basta incorporare numeri non
+verificabili in prosa.
+
+Output: `schema=finance_transfer_diagnostic.v1`, righe per asset con verdict
+`iid`, `block5`, `block21`, `robust_all_nulls`, baseline VaR/RV e data-card.
+Classi possibili: `no_transfer_delta`, `single_or_partial_window`,
+`iid_only_review`, `correlated_equity_local`, `cross_asset_candidate`.
+
+Regola: una singola finestra esatta resta sempre non-operativa. Se passa solo
+iid e collassa sotto block null, classifica come review/metodo, non finding di
+mercato.
+
 ### lag_memory_precondition
 
 Descrizione: audit sintetico per la precondizione del detector
@@ -320,7 +351,8 @@ finestra/jitter.
 
 Contratto operativo per il transfer reale:
 
-- usa solo `market_data`, `exp_regime_shift` o `finance_diagnostic_report`;
+- usa solo `market_data`, `exp_regime_shift`, `finance_diagnostic_report` o
+  `finance_transfer_diagnostic`;
 - preserva sempre `data_card` con provider, source_url, retrieval_ts, finestra
   e n_obs;
 - una finestra singola `DND_DELTA` non e' un claim: e' al massimo osservazione
@@ -332,10 +364,14 @@ Contratto operativo per il transfer reale:
 Artifact corrente del ramo 4A:
 
 ```text
-data/finance/diagnostics/finance_diagnostic_20260517_132200.json
+data/finance/diagnostics/finance_transfer_diagnostic_20260517_133529.json
 ```
 
-Esito: `local_robust`, `public_claim=false`, `trading_signal=false`.
+Esito: `single_or_partial_window`, `public_claim=false`,
+`trading_signal=false`. SPY passa iid/block5 ma collassa su block21; QQQ nella
+stessa finestra esatta non passa a 1024 shuffle; IWM/EFA/TLT/GLD/BTC-USD
+rifiutano. Il ciclo successivo deve usare questo artefatto come sorgente
+verificabile e non ripetere il claim QQQ adiacente come se fosse exact-date.
 
 ## Quick Reference — External APIs
 

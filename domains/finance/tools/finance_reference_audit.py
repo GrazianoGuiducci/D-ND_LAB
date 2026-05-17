@@ -77,6 +77,28 @@ def latest_trajectory(data_dir: Path) -> dict[str, Any] | None:
         return {"parse_error": "last trajectory line is not valid JSON"}
 
 
+def latest_diagnostic(data_dir: Path) -> dict[str, Any] | None:
+    diagnostics = data_dir / "diagnostics"
+    if not diagnostics.exists():
+        return None
+    files = sorted(
+        diagnostics.glob("*diagnostic*.json"),
+        key=lambda p: p.stat().st_mtime,
+        reverse=True,
+    )
+    if not files:
+        return None
+    payload = read_json(files[0]) or {}
+    return {
+        "path": str(files[0].relative_to(repo_root())),
+        "kind": payload.get("kind"),
+        "schema": payload.get("schema"),
+        "classification": payload.get("classification"),
+        "maturity": payload.get("maturity"),
+        "boundary": payload.get("boundary"),
+    }
+
+
 def audit(root: Path) -> dict[str, Any]:
     domain = root / "domains" / "finance"
     data_dir = root / "data" / "finance"
@@ -86,6 +108,7 @@ def audit(root: Path) -> dict[str, Any]:
     mml_state = collect_mml(domain)
     seed = read_json(data_dir / "seed.json")
     trajectory = latest_trajectory(data_dir)
+    diagnostic = latest_diagnostic(data_dir)
 
     has_skill_matrix = "skill_reading_matrix" in transduction
     has_reference_correction = "Skill reading reference" in context
@@ -162,6 +185,7 @@ def audit(root: Path) -> dict[str, Any]:
         "latest_trajectory_decision": latest_decision,
         "latest_trajectory_reasoning": latest_reasoning,
         "next_direction": next_direction,
+        "latest_diagnostic": diagnostic,
         "checks": {
             "skill_reading_matrix": has_skill_matrix,
             "context_reference_correction": has_reference_correction,
@@ -171,6 +195,8 @@ def audit(root: Path) -> dict[str, Any]:
             "followup_policy": followup_policy,
             "followup_artifact": followup_artifact,
             "boundary_crystallization": crystallized_boundary,
+            "latest_diagnostic_kind": diagnostic.get("kind") if isinstance(diagnostic, dict) else None,
+            "latest_diagnostic_path": diagnostic.get("path") if isinstance(diagnostic, dict) else None,
             "mml_skill_count": mml_state["skill_count"],
             "mml_support_only": mml_state["support_only"],
             "mml_missing_read_depth": mml_state["missing_read_depth"],

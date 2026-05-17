@@ -66,8 +66,8 @@
       "Keep no-trading-signal boundary explicit.",
       "Expose the artifact through latest_diagnostic/dashboard before any product claim."
     ],
-    "current_artifact": "data/finance/diagnostics/finance_diagnostic_20260517_132200.json",
-    "next_gate": "If a current window passes but shifted windows reject, classify local_robust observation, not operational signal."
+    "current_artifact": "data/finance/diagnostics/finance_transfer_diagnostic_20260517_133529.json",
+    "next_gate": "Use exact-window transfer artifacts as authority. If a current exact window passes only iid/block5 but collapses under block21 or fails transfer to less-correlated controls, classify method review or partial local observation, not operational signal."
   },
   "retire_when": [
     "The precondition fails to keep controls below the 5% selection or robust ceiling.",
