@@ -227,6 +227,84 @@
     .bicono-field.empty { opacity: .4; border-left-color: rgba(148,163,184,.3); }
     .bicono-field.empty .value::after { content: '— assente nel report'; color: #64748b; font-style: italic; }
 
+    /* Info cycle diagram — first-viewport explanation of how a lab cycles.
+       Built as HTML/SVG, not a bitmap, so domain counts can stay live and the
+       layout remains readable on mobile. */
+    .lab-cycle-map {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(34,211,238,.24);
+      border-radius: 8px;
+      background:
+        radial-gradient(circle at 22% 18%, rgba(34,211,238,.10), transparent 28%),
+        radial-gradient(circle at 80% 20%, rgba(167,139,250,.12), transparent 30%),
+        linear-gradient(180deg, rgba(15,23,42,.72), rgba(8,8,12,.92));
+      padding: 18px;
+    }
+    .lab-cycle-map::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(148,163,184,.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(148,163,184,.05) 1px, transparent 1px);
+      background-size: 32px 32px;
+      mask-image: linear-gradient(to bottom, black, transparent 92%);
+      pointer-events: none;
+    }
+    .cycle-flow { position: relative; display: grid; grid-template-columns: minmax(180px,.9fr) minmax(260px,1.2fr) minmax(180px,.9fr); gap: 14px; align-items: stretch; }
+    .cycle-column { display: grid; gap: 10px; align-content: center; }
+    .cycle-node {
+      position: relative;
+      border: 1px solid rgba(148,163,184,.18);
+      border-radius: 8px;
+      background: rgba(8,8,12,.54);
+      padding: 12px;
+      box-shadow: 0 10px 28px rgba(0,0,0,.25);
+    }
+    .cycle-node .eyebrow { font: 10px ui-monospace, monospace; letter-spacing: .12em; text-transform: uppercase; color: rgb(148 151 168); }
+    .cycle-node .title { margin-top: 4px; font-size: 14px; font-weight: 600; color: rgb(240 240 245); }
+    .cycle-node .body { margin-top: 5px; font-size: 12px; line-height: 1.45; color: rgb(200 202 215); }
+    .cycle-node.cyan { border-color: rgba(34,211,238,.34); }
+    .cycle-node.purple { border-color: rgba(167,139,250,.34); }
+    .cycle-node.amber { border-color: rgba(251,191,36,.34); }
+    .cycle-node.green { border-color: rgba(52,211,153,.34); }
+    .cycle-node.rose { border-color: rgba(251,113,133,.34); }
+    .cycle-core {
+      position: relative;
+      min-height: 312px;
+      border: 1px solid rgba(148,163,184,.14);
+      border-radius: 10px;
+      background: rgba(0,0,0,.22);
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+    }
+    .cycle-core svg { width: 100%; height: 100%; min-height: 312px; display: block; }
+    .cycle-metric-row { position: relative; display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 8px; margin-top: 14px; }
+    .cycle-metric {
+      border: 1px solid rgba(148,163,184,.16);
+      border-radius: 6px;
+      background: rgba(8,8,12,.48);
+      padding: 9px 10px;
+    }
+    .cycle-metric .k { font: 10px ui-monospace, monospace; letter-spacing: .1em; text-transform: uppercase; color: rgb(148 151 168); }
+    .cycle-metric .v { margin-top: 3px; font: 18px ui-monospace, monospace; color: rgb(34 211 238); }
+    @media (max-width: 900px) {
+      .cycle-flow { grid-template-columns: 1fr; }
+      .cycle-column { grid-template-columns: repeat(2, minmax(0,1fr)); }
+      .cycle-core { min-height: 260px; }
+      .cycle-core svg { min-height: 260px; }
+      .cycle-metric-row { grid-template-columns: repeat(2, minmax(0,1fr)); }
+    }
+    @media (max-width: 560px) {
+      .lab-cycle-map { padding: 12px; }
+      .cycle-column { grid-template-columns: 1fr; }
+      .cycle-node { padding: 10px; }
+      .cycle-core { min-height: 230px; }
+      .cycle-core svg { min-height: 230px; }
+    }
+
     /* v4.3 + UI fix #6 — Sidebar peek tooltip (closed-state preview).
        Pattern Shell3Col s3c-tip-portal portato fedelmente: width 260..340,
        elev background, JetBrains Mono per il title in caps + tracking,
@@ -1885,6 +1963,136 @@
               <h2 class="text-lg font-medium" x-text="contextIntro.title || 'Info'"></h2>
               <p class="text-xs text-slate-300 mt-1" data-i18n="dash.info.subtitle">Dove sei, cosa puoi leggere, come contribuire al ciclo successivo.</p>
             </div>
+
+            <section class="lab-cycle-map">
+              <div class="relative flex items-start justify-between gap-4 flex-wrap mb-4">
+                <div>
+                  <div class="text-[10px] uppercase tracking-[0.18em] text-cyan-300 font-mono">Ciclo cognitivo del Lab</div>
+                  <h3 class="text-xl font-medium mt-1">Dal seme alla prova, poi di nuovo al seme</h3>
+                  <p class="text-sm text-slate-300 mt-1 max-w-3xl">
+                    Ogni dominio viene letto come campo vivo: il Lab osserva una tensione, produce evidenza, la attacca con un polo separato e conserva solo ciò che resta utile per il ciclo successivo.
+                  </p>
+                </div>
+                <div class="text-right text-[11px] font-mono text-slate-400">
+                  <div x-text="activeDomain || 'dominio'"></div>
+                  <div><span x-text="campoStats().cicli"></span> cicli · <span x-text="cimiteroCount()"></span> filtrati</div>
+                </div>
+              </div>
+
+              <div class="cycle-flow">
+                <div class="cycle-column">
+                  <div class="cycle-node cyan">
+                    <div class="eyebrow">01 · seed</div>
+                    <div class="title">Intento in movimento</div>
+                    <div class="body">Il seme porta dominio, tensioni, assiomi locali e vincoli. Non prescrive il risultato: prepara il campo.</div>
+                  </div>
+                  <div class="cycle-node purple">
+                    <div class="eyebrow">02 · campo</div>
+                    <div class="title">Osservazione situata</div>
+                    <div class="body">Report, dati, graph, diagnostiche e artifact entrano come superficie osservabile, non come verità già accettata.</div>
+                  </div>
+                  <div class="cycle-node amber">
+                    <div class="eyebrow">03 · agent</div>
+                    <div class="title">Ipotesi falsificabile</div>
+                    <div class="body">L’agente produce un claim operativo, con baseline o null espliciti e una traccia runtime del modo in cui ha ciclato.</div>
+                  </div>
+                </div>
+
+                <div class="cycle-core" aria-label="Diagramma del ciclo Lab">
+                  <svg viewBox="0 0 520 360" role="img">
+                    <defs>
+                      <marker id="cycleArrow" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                        <path d="M 0 0 L 10 5 L 0 10 z" fill="#22d3ee" opacity="0.9"></path>
+                      </marker>
+                      <filter id="softGlow" x="-30%" y="-30%" width="160%" height="160%">
+                        <feGaussianBlur stdDeviation="4" result="blur"></feGaussianBlur>
+                        <feMerge>
+                          <feMergeNode in="blur"></feMergeNode>
+                          <feMergeNode in="SourceGraphic"></feMergeNode>
+                        </feMerge>
+                      </filter>
+                    </defs>
+                    <rect x="20" y="26" width="480" height="308" rx="16" fill="rgba(8,8,12,0.28)" stroke="rgba(148,163,184,0.16)"></rect>
+                    <path d="M260 68 C365 68 438 126 438 180 C438 236 365 292 260 292 C155 292 82 236 82 180 C82 126 155 68 260 68"
+                          fill="none" stroke="#22d3ee" stroke-width="2.2" stroke-dasharray="7 7" opacity="0.78" marker-end="url(#cycleArrow)"></path>
+                    <path d="M142 180 L378 180" stroke="rgba(148,163,184,0.42)" stroke-width="1.6"></path>
+                    <path d="M260 94 L260 266" stroke="rgba(148,163,184,0.34)" stroke-width="1.2"></path>
+                    <circle cx="260" cy="180" r="58" fill="rgba(167,139,250,0.16)" stroke="#a78bfa" stroke-width="2" filter="url(#softGlow)"></circle>
+                    <circle cx="260" cy="180" r="28" fill="rgba(34,211,238,0.24)" stroke="#22d3ee" stroke-width="2"></circle>
+                    <text x="260" y="174" text-anchor="middle" fill="#f0f0f5" font-size="15" font-weight="700">D-ND</text>
+                    <text x="260" y="193" text-anchor="middle" fill="#cbd5e1" font-size="10" font-family="monospace">cycle engine</text>
+
+                    <g>
+                      <circle cx="102" cy="180" r="30" fill="rgba(34,211,238,0.22)" stroke="#22d3ee" stroke-width="2"></circle>
+                      <text x="102" y="176" text-anchor="middle" fill="#f0f0f5" font-size="12" font-weight="700">Campo</text>
+                      <text x="102" y="193" text-anchor="middle" fill="#94a3b8" font-size="9">osserva</text>
+                    </g>
+                    <g>
+                      <circle cx="260" cy="68" r="30" fill="rgba(251,191,36,0.18)" stroke="#fbbf24" stroke-width="2"></circle>
+                      <text x="260" y="64" text-anchor="middle" fill="#f0f0f5" font-size="12" font-weight="700">Agente</text>
+                      <text x="260" y="81" text-anchor="middle" fill="#94a3b8" font-size="9">propone</text>
+                    </g>
+                    <g>
+                      <circle cx="418" cy="180" r="30" fill="rgba(251,113,133,0.16)" stroke="#fb7185" stroke-width="2"></circle>
+                      <text x="418" y="176" text-anchor="middle" fill="#f0f0f5" font-size="12" font-weight="700">Falsifier</text>
+                      <text x="418" y="193" text-anchor="middle" fill="#94a3b8" font-size="9">attacca</text>
+                    </g>
+                    <g>
+                      <circle cx="260" cy="292" r="30" fill="rgba(52,211,153,0.18)" stroke="#34d399" stroke-width="2"></circle>
+                      <text x="260" y="288" text-anchor="middle" fill="#f0f0f5" font-size="12" font-weight="700">Deposito</text>
+                      <text x="260" y="305" text-anchor="middle" fill="#94a3b8" font-size="9">conserva</text>
+                    </g>
+
+                    <path d="M128 164 C170 116 202 86 232 72" fill="none" stroke="#a78bfa" stroke-width="1.8" marker-end="url(#cycleArrow)" opacity="0.85"></path>
+                    <path d="M288 72 C326 88 368 118 402 160" fill="none" stroke="#fbbf24" stroke-width="1.8" marker-end="url(#cycleArrow)" opacity="0.85"></path>
+                    <path d="M402 200 C368 244 326 272 290 288" fill="none" stroke="#fb7185" stroke-width="1.8" marker-end="url(#cycleArrow)" opacity="0.85"></path>
+                    <path d="M232 288 C190 270 150 232 126 200" fill="none" stroke="#34d399" stroke-width="1.8" marker-end="url(#cycleArrow)" opacity="0.85"></path>
+
+                    <text x="48" y="48" fill="#67e8f9" font-size="10" font-family="monospace">runtime trace</text>
+                    <text x="382" y="48" fill="#c4b5fd" font-size="10" font-family="monospace">null / baseline</text>
+                    <text x="44" y="324" fill="#6ee7b7" font-size="10" font-family="monospace">graph + products</text>
+                    <text x="376" y="324" fill="#fcd34d" font-size="10" font-family="monospace">next seed</text>
+                  </svg>
+                </div>
+
+                <div class="cycle-column">
+                  <div class="cycle-node rose">
+                    <div class="eyebrow">04 · counter-pole</div>
+                    <div class="title">Falsificazione</div>
+                    <div class="body">Un polo separato cerca hard-zero, bias, edge case, continuità assiomatica e ri-scoperta.</div>
+                  </div>
+                  <div class="cycle-node green">
+                    <div class="eyebrow">05 · deposito</div>
+                    <div class="title">Artifact e grafo</div>
+                    <div class="body">Solo ciò che resta leggibile entra in report, value artifact, graph, bicono, cimitero o pipeline prodotti.</div>
+                  </div>
+                  <div class="cycle-node cyan">
+                    <div class="eyebrow">06 · ritorno</div>
+                    <div class="title">Auto-affinamento</div>
+                    <div class="body">Il ciclo successivo eredita vincoli, errori, runtime e direzione aggiornata senza dipendere da una prescrizione esterna.</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="cycle-metric-row">
+                <div class="cycle-metric">
+                  <div class="k">cicli</div>
+                  <div class="v" x-text="campoStats().cicli"></div>
+                </div>
+                <div class="cycle-metric">
+                  <div class="k">scoperte</div>
+                  <div class="v text-purple-300" x-text="campoStats().scoperte"></div>
+                </div>
+                <div class="cycle-metric">
+                  <div class="k">prodotti</div>
+                  <div class="v text-green-300" x-text="campoStats().prodotti"></div>
+                </div>
+                <div class="cycle-metric">
+                  <div class="k">filtro</div>
+                  <div class="v text-amber-300" x-text="cimiteroCount()"></div>
+                </div>
+              </div>
+            </section>
 
             <div class="grid md:grid-cols-3 gap-3">
               <button @click="setActiveTab('campo')" class="text-left bg-slate-950/50 border border-slate-800 hover:border-cyan-700 rounded-md p-3 transition">
