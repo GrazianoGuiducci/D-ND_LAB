@@ -1,0 +1,83 @@
+{
+  "schema": "dndlab.onboarding_contract.v1",
+  "domain": "finance",
+  "status": "alpha",
+  "intent": "detect when a market-regime hypothesis fails before it becomes an exposure decision",
+  "channels": {
+    "domain_request": {
+      "status": "present",
+      "authority": "planning",
+      "notes": "Defines the market family, horizon, evidence target and forbidden conclusions."
+    },
+    "human_clarification": {
+      "status": "allowed",
+      "authority": "constraints",
+      "notes": "May define decision boundaries, costs of error and non-admissible outputs; cannot promote findings directly."
+    },
+    "operator_corpus": {
+      "status": "optional",
+      "authority": "source",
+      "notes": "Private market notes or papers stay outside public git unless explicitly sanitized."
+    },
+    "public_contribution": {
+      "status": "quarantine",
+      "authority": "preport_only",
+      "notes": "Visitor suggestions can become pre-reports, never direct seed updates."
+    },
+    "dataset_api": {
+      "status": "required_for_real_market_claims",
+      "authority": "evidence_after_baseline",
+      "notes": "yfinance/CoinGecko or equivalent must emit data_card and pass leakage/null checks."
+    },
+    "cognitive_archives": {
+      "status": "capsule_first",
+      "authority": "by_read_depth",
+      "notes": "Archive patterns may shape method only after transduction and contamination exclusion."
+    },
+    "runtime_self_observation": {
+      "status": "required",
+      "authority": "cycle_trace",
+      "notes": "Cycle trace, falsifier and cemetery drive self-correction."
+    }
+  },
+  "promotion_gates": [
+    "source_provenance",
+    "privacy_secret_scan",
+    "baseline_null",
+    "falsification_test",
+    "data_card",
+    "leakage_guard",
+    "operator_review_when_public_or_sensitive",
+    "runtime_trace"
+  ],
+  "never_direct_to_seed": [
+    "public contributions",
+    "private corpus",
+    "capsule-only archive patterns",
+    "human preference without falsification",
+    "single-window market result",
+    "LLM interpretation without detector output"
+  ],
+  "finance_required_inputs": [
+    "ordered returns",
+    "data_card",
+    "VaR baseline",
+    "realized volatility baseline",
+    "shuffle null",
+    "block-preserving null or explicit reason for absence",
+    "decision boundary",
+    "non-admissible conclusion list"
+  ],
+  "finance_forbidden_outputs": [
+    "buy signal",
+    "sell signal",
+    "price forecast",
+    "guaranteed return language",
+    "single-window regime authority",
+    "investment advice"
+  ],
+  "current_policy": {
+    "next_cycle_policy": "DESIGN_PRECONDITION_FIRST",
+    "meaning": "The next strong cycle should design a measurable precondition for recoverable detector power before tuning the same score family again."
+  }
+}

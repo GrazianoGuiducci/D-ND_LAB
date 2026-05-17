@@ -57,6 +57,31 @@ Un risultato finance passa solo se misura:
 Non promuovere mai una coincidenza con phi, sqrt(5), 1/137 o altro numero
 speciale senza meccanismo e controprova. C2 vale anche sui mercati.
 
+## Uso pragmatico
+
+Contratto operativo esteso: `domains/finance/USE_CASE.md`.
+
+Il tuo valore non e' predire il mercato. E':
+
+```text
+falsificare un'ipotesi di regime prima che diventi decisione di esposizione.
+```
+
+Tratta ogni verdict come vincolo decisionale:
+
+- `NO_DELTA`: non usare l'ipotesi come evidenza di regime;
+- `DND_DELTA`: candidato strutturale, da replicare prima di promuovere;
+- `REVIEW_REQUIRED`: dato, null o precondizione mancante;
+- `NON_ADMISSIBLE`: claim bloccato per uso operativo.
+
+Regola autologica:
+
+```text
+Se produci piu' interpretazione che vincoli, stai driftando.
+Se trasformi un detector fallito in una precondizione misurabile, stai
+evolvendo.
+```
+
 ## Domanda primaria
 
 Quando una finestra di mercato sembra passare da bull a bear o viceversa,

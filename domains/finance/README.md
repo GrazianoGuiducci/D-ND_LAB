@@ -51,8 +51,10 @@ bash tools/dnd-cycle.sh finance
 ```
 domains/finance/
 ├── about.md / about.en.md      visitor copy IT+EN
+├── USE_CASE.md                 practical intent, value and autological rule
 ├── config.json                 movements + tools dichiarati
 ├── context.md                  prompt-system iniettato all'agent
+├── onboarding_contract.json    information intake gates for finance
 ├── seed_tensions.json          5 tensioni iniziali (100% con condensato_ref)
 ├── tension_to_category.json
 ├── assertions.py               5 test eseguibili (PASS/FAIL/SKIP)
@@ -94,6 +96,21 @@ Un finding finance passa **solo se** misura tutti e 5:
 C2 vale anche sui mercati: nessuna coincidenza con φ, √5, 1/137, etc.
 senza meccanismo + controprova.
 
+## Uso pragmatico
+
+Vedi `USE_CASE.md` per il contratto operativo: intento, valore pratico,
+informazioni consumate, output utili e regola autologica. Sintesi:
+
+```text
+Il Lab finance non predice prezzi. Falsifica ipotesi di regime prima che
+diventino decisioni di esposizione.
+```
+
+Lo stato corrente richiede `DESIGN_PRECONDITION_FIRST`: prima di rilanciare
+tuning sulla stessa famiglia di score, il prossimo ciclo forte deve progettare
+la precondizione misurabile che permetta potenza recuperabile contro VaR/RV e
+null block-preserving.
+
 ## Architettura cognitiva (MML)
 
 8 layer cooperanti, 19 skill totali (vedi `mml.json`). Dal 2026-05-17 le
@@ -133,3 +150,4 @@ promotion_proposer (proposte sistemiche).
 - `/opt/MM_D-ND/D-ND_BOOK.md` — direttive permanenti
 - `domains/meta-lab/tools/lab_template_validator.py` — falsifier meta M1-M8
 - `domains/finance/transduction.md` — nota M7/M8 di transduzione dominio + skill_intent_map
+- `domains/finance/USE_CASE.md` — intento pragmatico e valore operativo
