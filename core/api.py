@@ -590,6 +590,21 @@ async def get_seed(domain: str, request: Request) -> dict[str, Any]:
     return _read_json_safe(paths.seed_path(domain), {})
 
 
+@app.get("/api/domains/{domain}/precondition_contract")
+async def get_precondition_contract(domain: str, request: Request) -> dict[str, Any]:
+    await _check_auth(request)
+    _validate_domain(domain)
+    p = paths.domain_dir(domain) / "precondition_contract.json"
+    if not p.exists():
+        return {"available": False, "domain": domain}
+    data = _read_json_safe(p, {})
+    if not isinstance(data, dict):
+        return {"available": False, "domain": domain}
+    data.setdefault("available", True)
+    data.setdefault("domain", domain)
+    return data
+
+
 @app.get("/api/domains/{domain}/reports")
 async def list_reports(domain: str, request: Request, limit: int = 50) -> list[dict[str, Any]]:
     await _check_auth(request)

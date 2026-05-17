@@ -146,7 +146,9 @@ matched_filter_score_at_candidate_split >= 0.55
 ```
 
 Source: `domains/finance/precondition_contract.json`. The next allowed
-movement is to test this as an admission gate, not to broaden tuning.
+movement is to preserve this as a provisional promotion boundary, not to
+broaden tuning. Below-gate survivors are visible exceptions (`2/10` in cycle
+`20260517_1050`) and cannot be rescued without a new predeclared mechanism.
 
 ## UI Implications
 
@@ -156,6 +158,8 @@ The finance dashboard should make these surfaces visible before any narrative:
 - Baseline / Null: what defeated or supported the claim;
 - Data-card: source, window and leakage boundary;
 - Non ammissibile: what the user must not infer;
+- Promotion Boundary: score threshold, admitted/rejected counts and below-gate
+  survivors;
 - Cycle trace: how the Lab reached the result;
 - Cemetery: useful false positives and retired assumptions.
 

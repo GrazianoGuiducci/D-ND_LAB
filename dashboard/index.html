@@ -1142,6 +1142,27 @@
                     <div class="mt-1 text-sm text-amber-200 line-clamp-3" x-text="financeDecisionBound()"></div>
                   </button>
                 </div>
+                <template x-if="financePromotionBoundary().available">
+                  <button @click="selectFinanceLens('promotion')"
+                          class="mt-3 w-full text-left border border-emerald-900/60 rounded-md p-3 bg-emerald-950/10 hover:border-emerald-600 transition cursor-pointer">
+                    <div class="flex items-start justify-between gap-3 flex-wrap">
+                      <div>
+                        <div class="text-[10px] uppercase tracking-wider text-emerald-300">Soglia di promozione</div>
+                        <div class="mt-1 text-sm text-slate-100" x-text="financePromotionSummary()"></div>
+                      </div>
+                      <span class="text-[10px] font-mono px-2 py-1 rounded border border-emerald-900/70 text-emerald-200"
+                            x-text="financePromotionGate()"></span>
+                    </div>
+                    <div class="grid sm:grid-cols-4 gap-2 mt-3">
+                      <template x-for="m in financePromotionMetrics()" :key="m.label">
+                        <div class="border border-slate-800 rounded bg-slate-950/50 p-2">
+                          <div class="text-[10px] uppercase tracking-wider text-slate-500" x-text="m.label"></div>
+                          <div class="text-sm font-mono mt-1" :class="m.tone" x-text="m.value"></div>
+                        </div>
+                      </template>
+                    </div>
+                  </button>
+                </template>
               </section>
             </template>
 
@@ -2617,6 +2638,7 @@
       cycleTraces: [],         // riassunti dei trace
       activeCycleTrace: null,  // dettaglio del cycle selezionato
       latestDiagnostic: { available: false },
+      financePrecondition: { available: false },
 
       // Graph
       cy: null,                 // Cytoscape instance
@@ -3059,6 +3081,7 @@
           this.reloadSsp(),                                    // SSP scoperte/applicazioni/prodotti (filesystem)
           this.reloadCycleTraces(),                            // Dinamica — cycle_trace_*.json (timeline)
           this.reloadLatestDiagnostic(),                       // Campo — artifact value-facing piu' recente
+          this.reloadFinancePrecondition(),                    // Finance — promotion boundary contract
         ]);
         // wait next tick so the #graph-viz container is in the DOM (x-show=true)
         this.$nextTick(() => this.renderGraph());
@@ -3117,6 +3140,19 @@
         } catch (e) {
           console.error('latest diagnostic load failed', e);
           this.latestDiagnostic = { available: false };
+        }
+      },
+
+      async reloadFinancePrecondition() {
+        if (!this.activeDomain) return;
+        this.financePrecondition = { available: false };
+        if (this.activeDomain !== 'finance') return;
+        try {
+          const r = await fetch(`/api/domains/${this.activeDomain}/precondition_contract`);
+          this.financePrecondition = r.ok ? await r.json() : { available: false };
+        } catch (e) {
+          console.error('finance precondition load failed', e);
+          this.financePrecondition = { available: false };
         }
       },
 
@@ -3844,6 +3880,51 @@
           : [];
       },
 
+      financePromotionBoundary() {
+        const c = this.financePrecondition || {};
+        const b = c.boundary_crystallization || {};
+        const selected = c.selected_precondition || {};
+        return {
+          available: !!(c.available && selected.metric && b.status),
+          metric: selected.metric || 'matched_filter_score_at_candidate_split',
+          scoreMin: selected.score_min ?? null,
+          status: b.status || '',
+          sourceCycle: b.source_cycle || '',
+          admittedPositives: Number(b.admitted_positives),
+          admittedRobust: Number(b.admitted_robust_positives),
+          rejectedPositives: Number(b.rejected_positives),
+          rejectedRobust: Number(b.rejected_robust_positives),
+          controlCases: Number(b.control_cases),
+          selectedControls: Number(b.selected_controls),
+          controlRobust: Number(b.control_robust_all_null),
+          interpretation: b.interpretation || '',
+        };
+      },
+
+      financePromotionGate() {
+        const b = this.financePromotionBoundary();
+        if (!b.available || b.scoreMin === null) return 'gate n/a';
+        return `score ≥ ${b.scoreMin}`;
+      },
+
+      financePromotionSummary() {
+        const b = this.financePromotionBoundary();
+        if (!b.available) return 'soglia non ancora cristallizzata nel contratto finance';
+        return `Gate provvisorio: ammessi ${b.admittedRobust}/${b.admittedPositives} robusti; sotto soglia ${b.rejectedRobust}/${b.rejectedPositives} survivor visibili.`;
+      },
+
+      financePromotionMetrics() {
+        const b = this.financePromotionBoundary();
+        if (!b.available) return [];
+        const fmt = (n, d) => Number.isFinite(n) && Number.isFinite(d) ? `${n}/${d}` : 'n/a';
+        return [
+          { label: 'ammessi robusti', value: fmt(b.admittedRobust, b.admittedPositives), tone: 'text-emerald-300' },
+          { label: 'sotto soglia', value: fmt(b.rejectedRobust, b.rejectedPositives), tone: 'text-amber-300' },
+          { label: 'controlli selezionati', value: fmt(b.selectedControls, b.controlCases), tone: 'text-cyan-300' },
+          { label: 'policy', value: 'no hard boundary', tone: 'text-purple-300' },
+        ];
+      },
+
       financeWindowCounts() {
         const windows = this.financeDiagnosticWindows();
         const dnd = windows.filter(w => String(w?.verdict || '').toUpperCase() === 'DND_DELTA').length;
@@ -3884,6 +3965,10 @@
       },
 
       financeDecisionBound() {
+        const boundary = this.financePromotionBoundary();
+        if (boundary.available) {
+          return `non trattare score ${boundary.scoreMin} come confine duro; ${boundary.rejectedRobust}/${boundary.rejectedPositives} survivor sotto soglia restano visibili`;
+        }
         const latestVerdict = String(this.latestReport()?.verdict || '');
         if (/NO_DELTA|underpowered|rejected/i.test(latestVerdict)) {
           return 'non promuovere; ridisegnare target/oggetto o baseline prima del prossimo claim';
@@ -3934,6 +4019,17 @@
               ? `operational=${!!this.latestDiagnostic.payload.boundary.operational}, trading_signal=${!!this.latestDiagnostic.payload.boundary.trading_signal}, public_claim=${!!this.latestDiagnostic.payload.boundary.public_claim}.`
               : 'Boundary non disponibile.',
             boundary: commonBoundary,
+          },
+          promotion: {
+            kind: 'finance',
+            title: 'Soglia di promozione',
+            body: this.financePromotionSummary(),
+            evidence: (() => {
+              const b = this.financePromotionBoundary();
+              if (!b.available) return 'Contratto precondition non disponibile.';
+              return `${this.financePromotionGate()} · cycle ${b.sourceCycle || 'n/a'} · controlli selezionati ${b.selectedControls}/${b.controlCases}, control robust ${b.controlRobust}/${b.controlCases}.`;
+            })(),
+            boundary: 'È una soglia provvisoria di promozione sintetica: non è hard boundary, non è claim mercato, non autorizza rescue sotto soglia senza nuovo meccanismo falsificabile.',
           },
         };
         this.selectedNode = null;
