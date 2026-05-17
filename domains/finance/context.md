@@ -249,6 +249,9 @@ Output: JSON con `reference_ready`, `next_cycle_policy`, eventuali `blockers`,
 ultimo piano/runtime disponibile e interpretazione. Se `next_cycle_policy` e'
 `DESIGN_PRECONDITION_FIRST`, il ciclo successivo deve progettare la
 precondizione misurabile; non deve rilanciare tuning dello stesso score.
+Se `next_cycle_policy` e' `CRYSTALLIZE_PROMOTION_BOUNDARY`, non serve un altro
+cycle immediato sullo stesso gate: prima rendi esplicita la soglia nella UI,
+nel contratto e nelle note operative, mantenendo visibili le eccezioni.
 
 ### lag_memory_precondition
 
@@ -282,8 +285,36 @@ matched_filter_score_at_candidate_split >= 0.55
 
 Interpretazione: un candidato `lag_memory_const_vol` entra nel prossimo test
 block21 solo se mostra contrasto locale sufficiente nel matched filter prima
-dell'ammissione. Il prossimo ciclo autorizzato e' `TEST_PRECONDITION_GATE`,
-non nuovo tuning di finestra/jitter.
+dell'ammissione. Dopo il ciclo `20260517_1050`, questa non e' piu' una soglia
+da leggere come confine duro: e' una soglia provvisoria di promozione.
+
+Cristallizzazione `20260517_1050`:
+
+- admitted positives: 26/36;
+- admitted robust positives: 21/26;
+- rejected positives: 10/36;
+- rejected robust positives: 2/10;
+- selected controls: 0/108;
+- control robust all-null: 1/108.
+
+Regola operativa:
+
+```text
+Sopra soglia: puoi testare promozione sintetica con null iid/block5/block21.
+Sotto soglia: mantieni i survivor visibili, ma non aggiungere rescue layer
+senza un meccanismo nuovo, pre-dichiarato e falsificabile.
+```
+
+Quando scrivi report:
+
+- non chiamare la soglia "hard boundary";
+- non dire che i sotto-soglia sono rumore o impossibili;
+- cita sempre i raw count dei survivor sotto soglia;
+- se proponi un recupero sotto soglia, devi specificare prima quale
+  meccanismo misurabile spiega i survivor `2/10` e quale null lo falsifica.
+
+Il prossimo movimento statico e' `CRYSTALLIZE_PROMOTION_BOUNDARY`, non nuovo
+tuning di finestra/jitter.
 
 ## Quick Reference — External APIs
 

@@ -109,10 +109,23 @@ Il Lab finance non predice prezzi. Falsifica ipotesi di regime prima che
 diventino decisioni di esposizione.
 ```
 
-Lo stato corrente richiede `DESIGN_PRECONDITION_FIRST`: prima di rilanciare
-tuning sulla stessa famiglia di score, il prossimo ciclo forte deve progettare
-la precondizione misurabile che permetta potenza recuperabile contro VaR/RV e
-null block-preserving.
+Lo stato corrente ha cristallizzato `CRYSTALLIZE_PROMOTION_BOUNDARY`: la
+soglia `matched_filter_score_at_candidate_split >= 0.55` e' una soglia
+provvisoria di promozione sintetica, non un confine duro di evidenza.
+
+Ultimo ciclo utile (`20260517_1050`):
+
+- admitted positives: 26/36;
+- admitted robust positives: 21/26;
+- rejected positives: 10/36;
+- rejected robust positives: 2/10;
+- selected controls: 0/108;
+- control robust all-null: 1/108.
+
+Regola: sopra soglia si puo' testare promozione sintetica con null
+iid/block5/block21; sotto soglia i survivor restano visibili ma non si
+aggiunge un altro rescue layer senza un meccanismo nuovo, pre-dichiarato e
+falsificabile.
 
 Tool operativo:
 
@@ -121,8 +134,9 @@ python3 domains/finance/tools/lag_memory_precondition.py --json
 ```
 
 Il tool non produce claim di mercato: valida se una precondizione locale del
-detector lag-memory e' abbastanza selettiva da autorizzare il prossimo ciclo.
-La precondizione selezionata vive in `precondition_contract.json`.
+detector lag-memory e' abbastanza selettiva da autorizzare promozione
+sintetica. La precondizione selezionata e la cristallizzazione corrente vivono
+in `precondition_contract.json`.
 
 ## Architettura cognitiva (MML)
 
@@ -150,7 +164,8 @@ promotion_proposer (proposte sistemiche).
 - [x] Assertions 5/5 PASS
 - [x] Primo cycle controllato del lab (`dnd-cycle.sh finance`)
 - [x] Skill-reading matrix e reference audit installabile
-- [ ] Prossimo cycle: progettare precondizione misurabile prima del block21 gate
+- [x] Precondizione lag-memory progettata e testata come promotion boundary provvisoria
+- [ ] UI finance: rendere visibili soglia 0.55, admitted/rejected e survivor sotto soglia
 - [ ] Gate dati reali con yfinance/CoinGecko e controlli robusti
 - [ ] Verdict DND_DELTA su dati reali (FX major pair, crypto BTC, equity SPY)
 - [ ] Stage 5: kernel pacchettizzato `dnd_kernel_finance_regime_shift`

@@ -125,9 +125,16 @@ def audit(root: Path) -> dict[str, Any]:
     if not has_precondition_rule:
         blockers.append("next-cycle precondition rule not stated in context.md")
 
+    crystallized_boundary = (
+        isinstance(precondition_contract, dict)
+        and isinstance(precondition_contract.get("boundary_crystallization"), dict)
+    )
+
     next_cycle_policy = "DESIGN_PRECONDITION_FIRST"
     if blockers:
         next_cycle_policy = "BLOCKED_REFERENCE_INCOMPLETE"
+    elif crystallized_boundary and latest_decision == "CRYSTALLIZE":
+        next_cycle_policy = "CRYSTALLIZE_PROMOTION_BOUNDARY"
     elif has_precondition_contract and precondition_policy:
         next_cycle_policy = str(precondition_policy)
     elif runtime_present and latest_decision == "REDESIGN":
@@ -153,6 +160,7 @@ def audit(root: Path) -> dict[str, Any]:
             "precondition_rule": has_precondition_rule,
             "precondition_contract": has_precondition_contract,
             "precondition_policy": precondition_policy,
+            "boundary_crystallization": crystallized_boundary,
             "mml_skill_count": mml_state["skill_count"],
             "mml_support_only": mml_state["support_only"],
             "mml_missing_read_depth": mml_state["missing_read_depth"],
@@ -160,9 +168,10 @@ def audit(root: Path) -> dict[str, Any]:
         },
         "interpretation": (
             "Finance is a reference lab only after the skill-reading substrate is "
-            "present. If a precondition contract exists, the next cycle is "
-            "constrained to testing that gate; otherwise it must discover the "
-            "precondition before more adaptive lag-map tuning."
+            "present. If the promotion boundary is crystallized, the next work is "
+            "to preserve the gate as a provisional promotion threshold with "
+            "below-gate survivors visible; otherwise the lab must discover or test "
+            "the precondition before more adaptive lag-map tuning."
         ),
     }
 

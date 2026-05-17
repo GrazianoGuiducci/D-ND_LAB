@@ -100,10 +100,32 @@
     {
       "module": "DecisionBounds",
       "placement": "right",
-      "observables": ["verdict", "falsifier_flags", "replication_count", "cost_slippage"],
+      "observables": [
+        "verdict",
+        "falsifier_flags",
+        "replication_count",
+        "cost_slippage",
+        "promotion_threshold",
+        "below_gate_survivors"
+      ],
       "baseline_or_null": ["double_replication", "slippage_baseline"],
       "shows": "Cosa non e' ammesso fare con l'evidenza corrente.",
       "blocks": "Label buy/sell/forecast/profit/alpha prima di prodotto maturo e revisione."
+    },
+    {
+      "module": "PromotionBoundary",
+      "placement": "center",
+      "observables": [
+        "matched_filter_score_at_candidate_split",
+        "score_min",
+        "admitted_robust_positives",
+        "rejected_robust_positives",
+        "selected_controls",
+        "control_robust_all_null"
+      ],
+      "baseline_or_null": ["iid_shuffle", "circular_block_5", "circular_block_21"],
+      "shows": "La soglia 0.55 come confine provvisorio di promozione, con survivor sotto soglia espliciti.",
+      "blocks": "Trattare il gate come hard boundary o nascondere eccezioni sotto soglia."
     }
   ],
   "admin_actions": [
@@ -148,6 +170,10 @@
     {
       "check": "decision_bounds_visible",
       "expectation": "La vista right mostra cosa non e' ammissibile, specialmente in SOSPENSIONE."
+    },
+    {
+      "check": "promotion_boundary_visible",
+      "expectation": "La vista finance mostra la soglia 0.55 come promotion threshold provvisoria, distinguendo admitted/rejected e rendendo visibili i survivor sotto soglia."
     },
     {
       "check": "admin_run_bridge",
