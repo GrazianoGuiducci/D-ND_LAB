@@ -104,6 +104,9 @@ The UI generation process for domain-native dashboards lives in
 [docs/UI_COGNITIVE_PROCESS.md](docs/UI_COGNITIVE_PROCESS.md).
 Optional domain presets that accelerate new Lab installation live in
 [docs/DOMAIN_PRESETS.md](docs/DOMAIN_PRESETS.md).
+The boundary between the main-site physics Lab, the Lab subdomain, the
+installable repo/meta-lab and concrete domain Labs is fixed in
+[docs/LAB_SURFACE_TOPOLOGY.md](docs/LAB_SURFACE_TOPOLOGY.md).
 
 Admin-triggered cycle runs from the main-site THIA Assistant are supported via
 a server-to-server bridge; see

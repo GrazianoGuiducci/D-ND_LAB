@@ -23,6 +23,10 @@ Use THIA/DOMUS for public orientation, page navigation and system-level context.
 Do not duplicate ownership between the two.
 ```
 
+For the broader ecosystem boundary between the main-site physics Lab, the Lab
+subdomain, the installable repo/meta-lab and concrete domain Labs, see
+[LAB_SURFACE_TOPOLOGY.md](LAB_SURFACE_TOPOLOGY.md).
+
 ## Runtime Context
 
 The dashboard sends a structured `context_view` with:
