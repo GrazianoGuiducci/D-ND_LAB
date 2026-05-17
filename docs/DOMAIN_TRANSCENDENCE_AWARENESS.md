@@ -169,6 +169,7 @@ skill/enzimi gia' disponibile:
 - `docs/SKILL_CATALOG.md`;
 - `docs/SKILL_FIELD_MAP.md`;
 - `docs/SKILL_DIAGNOSTIC.md`;
+- `docs/META_LAB_SKILL_INTENT_GUIDE.md`;
 - `/opt/MM_D-ND/tools/data/cognitive_enzymes_archive.md`;
 - eventuali skill domain-specific gia' presenti in `/opt/.claude/skills/`,
   `/opt/MM_D-ND/kernel/reference/skills/` o archivi THIA.
@@ -180,6 +181,9 @@ Output minimo della fase:
 - skill escluse per rischio contaminazione;
 - capacita' mancanti che devono diventare tool, null, baseline, assertion
   o nuova skill.
+- `skill_intent_map`: collegamento esplicito tra intento, classe di
+  movimento, dinamica d'uso, skill/meta-prompt, artefatti generati,
+  null/baseline e UI lens.
 
 Questo passaggio serve a evitare una perdita di logiche fini: non si
 generalizza cancellando le skill, si sceglie quali parti del sistema gia'

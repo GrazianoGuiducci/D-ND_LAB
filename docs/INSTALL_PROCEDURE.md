@@ -62,7 +62,8 @@ specifiche, contratto UI e test E2E attesi.
 
 Prima della transduzione operativa c'e' ora una fase obbligatoria:
 **recupero skill/enzimi**. Il meta-lab consulta `docs/SKILL_CATALOG.md`,
-`docs/SKILL_FIELD_MAP.md`, `docs/SKILL_DIAGNOSTIC.md` e
+`docs/SKILL_FIELD_MAP.md`, `docs/SKILL_DIAGNOSTIC.md`,
+`docs/META_LAB_SKILL_INTENT_GUIDE.md` e
 `/opt/MM_D-ND/tools/data/cognitive_enzymes_archive.md` per capire quali
 capacita' il sistema possiede gia'. Il risultato entra nel `mml.json`
 layered del nuovo Lab, nella nota `transduction.md` e nei tool/null/gate
@@ -156,6 +157,8 @@ chiede conferma. Validazioni automatiche:
 - [ ] LLM_API_KEY o subscription disponibile per il provider scelto
 - [ ] Cron schedule sintatticamente valido
 - [ ] URL non collide con nginx esistente
+- [ ] `skill_intent_map` collega intento, movimento, skill/meta-prompt,
+      artefatti, UI e test E2E
 
 Se tutto OK, salva `config.final.json` e procede.
 

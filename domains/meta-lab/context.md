@@ -52,6 +52,8 @@ campo skill/enzimi:
 - `docs/SKILL_FIELD_MAP.md`: architettura per layer e collaborazioni;
 - `docs/SKILL_DIAGNOSTIC.md`: quali skill sono vive, quali sono stub o
   richiedono eval;
+- `docs/META_LAB_SKILL_INTENT_GUIDE.md`: guida che collega intento,
+  movimento, dinamica d'uso, skill/meta-prompt, artefatti, null e UI;
 - `/opt/MM_D-ND/tools/data/cognitive_enzymes_archive.md`: archivio degli
   enzimi cognitivi gia' estratti dal sistema.
 
@@ -147,7 +149,10 @@ Il lab figlio acquisisce anche:
 
 2. **Richiamo skill/enzimi pre-progettazione** — prima di scegliere
    tensioni, strumenti o UI, cerca nel catalogo skill e nell'archivio
-   enzimi cosa il sistema sa gia' fare. Output obbligatorio di questa fase:
+   enzimi cosa il sistema sa gia' fare. Applica
+   `docs/META_LAB_SKILL_INTENT_GUIDE.md` per trasformare intento e dinamica
+   d'uso in skill, meta-prompt, artefatti, null/baseline e UI lens. Output
+   obbligatorio di questa fase:
    - `skill_retrieval`: skill candidate per layer (`validation`,
      `processing`, `output`, `observation`, `generation`, `domain`,
      `identity`, `runtime_patterns`);
@@ -157,6 +162,8 @@ Il lab figlio acquisisce anche:
      null, baseline, assertion o nuova skill;
    - `contamination_risk`: quali skill/enzimi non vanno usati perche'
      porterebbero contenuto del dominio sorgente invece del movimento.
+   - `skill_intent_map`: mappa intento -> movement_class -> use_dynamics
+     -> skill_layers -> meta_prompts -> artefatti -> UI/test.
 
    Regola: il meta-lab usa l'archivio come **campo di progettazione**, non
    come prompt library. Una skill puo' diventare:

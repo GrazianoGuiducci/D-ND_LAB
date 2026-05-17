@@ -457,7 +457,8 @@ def _check_m8_skill_archive_retrieval(template_dir: Path) -> dict[str, Any]:
 
     Per domini legacy resta SKIP non bloccante salvo strict M7/M8. Per nuovi
     template il requisito minimo e':
-    - transduction.md o context.md menziona skill/enzimi/archive retrieval;
+    - transduction.md o context.md menziona skill/enzimi/archive retrieval
+      e la meta-guida intento->skill;
     - mml.json usa skills_attive layered object, non solo lista flat;
     - almeno 3 layer cognitivi sono dichiarati.
     """
@@ -477,6 +478,12 @@ def _check_m8_skill_archive_retrieval(template_dir: Path) -> dict[str, Any]:
         "cognitive_enzymes", "cognitive enzymes", "archivio skill",
     ]
     has_skill_retrieval = any(s in text for s in skill_signals)
+    guide_signals = [
+        "skill_intent_map", "meta_lab_skill_intent_guide",
+        "meta-lab skill intent guide", "intento -> movement",
+        "movement_class", "use_dynamics",
+    ]
+    has_skill_intent_guide = any(s in text for s in guide_signals)
 
     mml_file = template_dir / "mml.json"
     layered = False
@@ -494,19 +501,21 @@ def _check_m8_skill_archive_retrieval(template_dir: Path) -> dict[str, Any]:
         except Exception:
             layered = False
 
-    score = int(has_skill_retrieval) + int(layered)
+    score = int(has_skill_retrieval) + int(has_skill_intent_guide) + int(layered)
 
-    if has_skill_retrieval and layered:
+    if has_skill_retrieval and has_skill_intent_guide and layered:
         return {
             "id": "M8",
             "status": "PASS",
-            "detail": f"skill/enzimi dichiarati e MML layered con {layer_count} layer",
+            "detail": f"skill/enzimi + skill_intent_map dichiarati e MML layered con {layer_count} layer",
             "metric": score,
         }
     if template_dir.name in legacy_names and not strict:
         missing = []
         if not has_skill_retrieval:
             missing.append("skill_retrieval")
+        if not has_skill_intent_guide:
+            missing.append("skill_intent_map")
         if not layered:
             missing.append("layered_mml")
         return {
@@ -518,6 +527,8 @@ def _check_m8_skill_archive_retrieval(template_dir: Path) -> dict[str, Any]:
     missing = []
     if not has_skill_retrieval:
         missing.append("skill_retrieval")
+    if not has_skill_intent_guide:
+        missing.append("skill_intent_map")
     if not layered:
         missing.append("layered_mml>=3_layers")
     return {
