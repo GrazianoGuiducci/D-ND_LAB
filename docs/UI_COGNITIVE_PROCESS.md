@@ -59,6 +59,7 @@ Lab, even when a domain chooses not to surface all of them on the first screen.
 | `Cemetery` | falsified claims and assumptions that must remain visible |
 | `DiscoveryProductPanel` | findings/products only after gates |
 | `THIAContextAssistant` | domain-aware assistant grounded in current view |
+| `InfoVisualKit` | generated diagrams/infographics that explain the Lab movement and use cases |
 
 ## Domain-Native Modules
 
@@ -162,6 +163,38 @@ Admin actions must be domain-aware and narrow. Examples:
 Do not expose broad mutation actions just because the user is admin. A Lab
 should be able to correct itself; admin actions should provide observation and
 review, not continuous manual steering.
+
+## Info Visual Kit
+
+When the installer or meta-lab generates a mature Lab, it should also be able
+to generate a small visual kit for the `Info` tab. The goal is fast human
+orientation without replacing precise documentation.
+
+Useful assets:
+
+- one rich system diagram of the Lab movement;
+- one infographic for the domain-specific use case;
+- one process view: input -> quarantine -> baseline/null -> falsifier ->
+  decision/result;
+- one admin/operator view showing where runtime, cimitero and next actions
+  live.
+
+Generation rule:
+
+```text
+ui_contract + transduction + onboarding_contract + first cycle trace
+-> visual brief
+-> generated image or diagram
+-> accessibility text
+-> Info tab placement
+```
+
+The image generator must be treated as a UX agentic function, not as
+decoration. It should use proven infographic and technical-diagram patterns,
+state what the image is meant to teach, and avoid claims that the Lab has not
+verified. For public repos, generated bitmap assets should only be committed
+when license, provenance and usefulness are clear; otherwise commit only the
+visual brief.
 
 ## Anti-Patterns
 

@@ -59,12 +59,28 @@ Comando:
 python3 /opt/D-ND_LAB/domains/research-radar/tools/exp_claim_radar.py --json
 ```
 
+Real-source/null demo:
+
+```bash
+python3 /opt/D-ND_LAB/domains/research-radar/tools/exp_claim_radar.py --real-null-demo --json
+```
+
 Trigger: invocalo quando devi trasformare claim card in decisione
 `reject/watch/test/promote` con baseline e null dichiarati. Il tool e'
 offline e usa esempi sintetici finche' non viene collegato un corpus.
+Con `--real-null-demo` usa la data-card pubblica UCI Iris per dimostrare che
+un null eseguibile puo' essere inadatto all'osservabile.
 
 Output: JSON `research_radar.claim_eval.v1` con claim cards, radar_score,
-decisione e motivo.
+decisione e motivo. Il tool scrive anche l'artifact verificabile:
+
+```text
+/opt/D-ND_LAB/data/research-radar/value/claim_cards_latest.json
+```
+
+Quando citi decisioni claim-level nel report, cita anche questo path. Il
+falsifier legge gli artifact in `data/research-radar/value/*.json` e puo'
+controllare le righe invece di fidarsi della prosa.
 
 ## Runtime awareness
 

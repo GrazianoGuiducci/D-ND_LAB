@@ -188,6 +188,7 @@ register_movement("verify_assertions", verify_assertions)
 def build_lab_data(ctx: CycleContext) -> None:
     """Snapshot piano + tensions + last report into <data>/<domain>/lab_data.json."""
     reports_dir = paths.reports_dir(ctx.domain)
+    domain_data_dir = paths.domain_data_dir(ctx.domain)
     last_report_file = ""
     last_report_content = ""
     if reports_dir.exists():
@@ -222,6 +223,7 @@ def build_lab_data(ctx: CycleContext) -> None:
         ],
         "ultimo_report": {"file": last_report_file, "content": last_report_content},
         "verifica": ctx.metrics.get("verify_assertions", {}),
+        "value_artifacts": _collect_value_artifacts(domain_data_dir),
     }
 
     out_path = paths.lab_data_path(ctx.domain)
@@ -238,6 +240,37 @@ def _count_reports(reports_dir: Path) -> int:
     if not reports_dir.exists():
         return 0
     return sum(1 for _ in reports_dir.glob("agent_*.md"))
+
+
+def _collect_value_artifacts(domain_data_dir: Path) -> list[dict[str, Any]]:
+    """Expose small value-facing JSON artifacts in lab_data.
+
+    Domain tools can write checkable rows under data/<domain>/value/. The
+    dashboard and falsifier then see artifact paths and compact summaries
+    without relying on prose inside the agent report.
+    """
+    value_dir = domain_data_dir / "value"
+    if not value_dir.exists():
+        return []
+    artifacts: list[dict[str, Any]] = []
+    for path in sorted(value_dir.glob("*.json"), key=lambda p: p.stat().st_mtime, reverse=True)[:10]:
+        item: dict[str, Any] = {
+            "file": str(path),
+            "name": path.name,
+            "bytes": path.stat().st_size,
+        }
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+            item["schema"] = data.get("schema")
+            item["generated_at"] = data.get("generated_at")
+            if isinstance(data.get("summary"), dict):
+                item["summary"] = data["summary"]
+            if isinstance(data.get("cards"), list):
+                item["n_cards"] = len(data["cards"])
+        except Exception as exc:
+            item["error"] = str(exc)
+        artifacts.append(item)
+    return artifacts
 
 
 register_movement("build_lab_data", build_lab_data)

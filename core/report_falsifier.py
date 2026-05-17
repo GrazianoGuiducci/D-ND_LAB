@@ -273,6 +273,14 @@ def _collect_data_excerpts(
         for p in sorted(artifact_dir.glob("call_*.json")):
             candidates.add(p.resolve())
 
+    # Domain tools may persist value-facing rows here. These artifacts are
+    # the preferred substrate for falsifying claim cards, product candidates
+    # and other data cited by reports.
+    value_dir = domain_data / "value"
+    if value_dir.exists() and value_dir.is_dir():
+        for p in sorted(value_dir.glob("*.json"), key=lambda x: x.stat().st_mtime, reverse=True)[:10]:
+            candidates.add(p.resolve())
+
     if not candidates:
         return []
 
