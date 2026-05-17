@@ -1,0 +1,116 @@
+{
+  "$schema": "../../config.schema.json",
+  "domain": "research-radar",
+  "version": "0.1.0-alpha",
+  "title": "AI-Lab D-ND Research Radar",
+  "description": "Lab for monitoring emerging research/technology claims and turning only falsifiable signals into an evidence roadmap.",
+  "model": {
+    "context_file": "context.md",
+    "tension_to_category": "tension_to_category.json",
+    "seed_tensions": "seed_tensions.json"
+  },
+  "context": {
+    "data_dir": "research-radar",
+    "max_turns": 25,
+    "timeout_seconds": 1200
+  },
+  "tools": [
+    {
+      "name": "filesystem",
+      "type": "builtin"
+    },
+    {
+      "name": "python_exec",
+      "type": "builtin"
+    },
+    {
+      "name": "shell_exec",
+      "type": "builtin"
+    }
+  ],
+  "movements": {
+    "autopsy": {
+      "enabled": true
+    },
+    "trajectory_apply": {
+      "enabled": true,
+      "params": {
+        "comment": "Loop A8+A15: applica log-only REDESIGN al seed prima di build_field"
+      }
+    },
+    "build_field": {
+      "enabled": true
+    },
+    "agent": {
+      "enabled": true
+    },
+    "bias_corrector": {
+      "enabled": true
+    },
+    "report_falsifier": {
+      "enabled": true
+    },
+    "bicono_extractor": {
+      "enabled": true
+    },
+    "validate_seed": {
+      "enabled": true
+    },
+    "verify_assertions": {
+      "enabled": true
+    },
+    "structural_check": {
+      "enabled": false
+    },
+    "build_lab_data": {
+      "enabled": true
+    },
+    "build_graph": {
+      "enabled": false
+    },
+    "sync": {
+      "enabled": false
+    },
+    "verify_endpoints": {
+      "enabled": false
+    },
+    "refiner": {
+      "enabled": true
+    },
+    "semantic_bridge": {
+      "enabled": false
+    },
+    "refresh_detector": {
+      "enabled": false
+    },
+    "seed_integrator": {
+      "enabled": true
+    },
+    "veritas_score": {
+      "enabled": true,
+      "params": {
+        "comment": "G2 termometro qualità ρ ∈ [0,1] da 3 vettori. Decision band SCARTO/SOSPENSIONE/COLLASSO."
+      }
+    },
+    "trajectory_evaluator": {
+      "enabled": true
+    },
+    "promotion_proposer": {
+      "enabled": true,
+      "params": {
+        "comment": "G3 estrae proposte di promozione finding → skill/hook/regola sistemica. Output in data/<lab>/promotions/. NO apply automatico."
+      }
+    },
+    "ssp_pipeline": {
+      "enabled": false,
+      "params": {
+        "comment": "abilita per lab di dominio scoperta-prodotto; disable per lab di funzione"
+      }
+    },
+    "notify": {
+      "enabled": true
+    }
+  },
+  "_generated_by": "meta-lab",
+  "_generated_at": "2026-05-17T16:30:00+00:00"
+}

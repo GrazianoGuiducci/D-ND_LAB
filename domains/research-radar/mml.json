@@ -1,0 +1,100 @@
+{
+  "lab": "research-radar",
+  "version": "0.1.0-alpha",
+  "identity": "Research Radar Lab: claim provenance, baseline/null, falsifier and evidence roadmap.",
+  "kernel_refs": {
+    "condensato_axioms_used": [
+      "A2",
+      "A8",
+      "A10",
+      "A15"
+    ],
+    "capability_stack": "docs/META_LAB_CAPABILITY_STACK.md"
+  },
+  "skills_attive": {
+    "validation_layer": [
+      {
+        "name": "veritas-sys",
+        "role": "reject unsupported or overclaimed research signals"
+      },
+      {
+        "name": "assertion-verifier",
+        "role": "run local structural checks"
+      },
+      {
+        "name": "axiomatic-integrity",
+        "role": "block prompt-copy and lineage drift"
+      }
+    ],
+    "processing_layer": [
+      {
+        "name": "cec",
+        "role": "extract claim/evidence/control structure"
+      },
+      {
+        "name": "semantic-transduction",
+        "role": "convert vague claim into observables"
+      },
+      {
+        "name": "eval",
+        "role": "compare claim against baseline and null"
+      }
+    ],
+    "observation_layer": [
+      {
+        "name": "observer",
+        "role": "observe what the cycle actually read and rejected"
+      },
+      {
+        "name": "consapevolezza-condensato",
+        "role": "keep D-ND invariant references visible"
+      },
+      {
+        "name": "autologica-operativa",
+        "role": "make rule origin and retire_when explicit"
+      }
+    ],
+    "generation_layer": [
+      {
+        "name": "cascata",
+        "role": "propagate accepted constraints into next cycle"
+      },
+      {
+        "name": "knowledge-atoms",
+        "role": "quarantine source/corpus inputs as atoms"
+      },
+      {
+        "name": "blueprint-genesis",
+        "role": "open alternatives when claim architecture is ambiguous"
+      }
+    ],
+    "interface_layer": [
+      {
+        "name": "metron-sys",
+        "role": "reduce narrative overclaiming"
+      },
+      {
+        "name": "scribe",
+        "role": "write claim cards and evidence roadmap"
+      }
+    ]
+  },
+  "modus_invocation": {
+    "movement_class": "discovery",
+    "use_dynamics": [
+      "ingest public research claims and source cards",
+      "map each claim to observable evidence, baseline and falsifier",
+      "separate novelty from archive echo, marketing hype and benchmark leakage",
+      "produce decision constraints: watch, test, reject, or promote"
+    ],
+    "success_condition": "The first cycle produces at least one claim card with source provenance, explicit baseline/null, falsifier status, and a next experiment or rejection reason."
+  },
+  "tools_custom": [
+    {
+      "name": "exp_claim_radar",
+      "path": "tools/exp_claim_radar.py",
+      "style": "cli_standalone",
+      "command": "python3 /opt/D-ND_LAB/domains/research-radar/tools/exp_claim_radar.py --json"
+    }
+  ]
+}

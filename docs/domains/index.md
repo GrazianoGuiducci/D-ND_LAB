@@ -4,7 +4,7 @@ A *domain* is everything the orchestrator needs to study a specific
 field. It lives entirely under `domains/<name>/` and is loaded via
 `config.json`.
 
-The lab ships two domains:
+The lab ships several domains:
 
 - **[Physics](physics.md)** — mathematical physics through D-ND.
   Studies primes, zeta function, GUE, dynamical systems, theory
@@ -14,6 +14,13 @@ The lab ships two domains:
   source from echo, surfaces convergences not yet written, drafts
   publishable copy through the bicono filter and non-dual-copy gate.
   Test that the abstract template works on non-numeric content.
+
+- **[Research Radar](research-radar.md)** — monitors emerging research and
+  technology claims. Turns claims into source cards, baseline/null checks,
+  falsifier status and evidence roadmaps.
+
+Other generated domains, such as finance, bio-rhythms and ops-decisions,
+live under `domains/` and may still be in active demo/prototype hardening.
 
 To write your own, see [Extending](extending.md).
 

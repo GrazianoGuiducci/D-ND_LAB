@@ -1,0 +1,36 @@
+{
+  "domain": "research-radar",
+  "piano": 1,
+  "direzione": "Separare claim verificabile da hype, eco d'archivio e benchmark leakage prima di promuovere una roadmap di evidenza.",
+  "direzione_en": "Separate verifiable claims from hype, archive echo and benchmark leakage before promoting an evidence roadmap.",
+  "tensioni": [
+    {
+      "id": "RR_SOURCE_PROVENANCE",
+      "tipo": "claim_boundary",
+      "claim": "Un claim senza source/data-card resta watch o reject, non discovery.",
+      "intensita": 0.9,
+      "condensato_ref": "A2,A8"
+    },
+    {
+      "id": "RR_NOVELTY_VS_ECHO",
+      "tipo": "dipole",
+      "claim": "Novita' generativa vs eco d'archivio dopo keyword/source shuffle.",
+      "intensita": 0.82,
+      "condensato_ref": "A10,F3"
+    },
+    {
+      "id": "RR_BASELINE_NULL",
+      "tipo": "falsifier",
+      "claim": "Un claim promettente deve battere baseline naive e almeno un null pertinente.",
+      "intensita": 0.86,
+      "condensato_ref": "A2,A15"
+    },
+    {
+      "id": "RR_DECISION_BOUND",
+      "tipo": "decision_constraint",
+      "claim": "Il Lab produce reject/watch/test/promote, non verita' finali.",
+      "intensita": 0.74,
+      "condensato_ref": "A8,A15"
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "RR_SOURCE_PROVENANCE": "source_card",
+  "RR_NOVELTY_VS_ECHO": "novelty",
+  "RR_BASELINE_NULL": "baseline_null",
+  "RR_DECISION_BOUND": "decision_bounds"
+}

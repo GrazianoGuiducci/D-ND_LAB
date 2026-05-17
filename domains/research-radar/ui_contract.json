@@ -1,0 +1,82 @@
+{
+  "schema": "ui_contract.v1",
+  "domain": "research-radar",
+  "frame": {
+    "left": {
+      "purpose": "field state, source/corpus status, freshness, cemetery and counter-pole flags",
+      "modules": [
+        "field_metrics",
+        "source_status",
+        "counter_pole",
+        "legend"
+      ]
+    },
+    "center": {
+      "purpose": "primary research-radar movement",
+      "tabs": [
+        {
+          "id": "campo",
+          "label": "Campo",
+          "modules": [
+            "resultant",
+            "claim_queue",
+            "latest_signals"
+          ]
+        },
+        {
+          "id": "grafo",
+          "label": "Grafo",
+          "modules": [
+            "claim_graph",
+            "baseline_edges"
+          ]
+        },
+        {
+          "id": "bicono",
+          "label": "Bicono",
+          "modules": [
+            "claim_card_gallery"
+          ]
+        },
+        {
+          "id": "agente",
+          "label": "Agente",
+          "modules": [
+            "report_reader",
+            "cycle_trace"
+          ]
+        },
+        {
+          "id": "prodotti",
+          "label": "Prodotti",
+          "modules": [
+            "evidence_roadmap"
+          ]
+        }
+      ]
+    },
+    "right": {
+      "purpose": "selected claim detail, source card, falsifier and runtime trace",
+      "modules": [
+        "claim_detail",
+        "source_card",
+        "null_baseline",
+        "cycle_trace",
+        "assistant_context"
+      ]
+    }
+  },
+  "domain_native_modules": [
+    "ClaimCard",
+    "SourceCard",
+    "NullBaselinePanel",
+    "DecisionBounds",
+    "EvidenceRoadmap"
+  ],
+  "forbidden_labels": [
+    "truth",
+    "proven",
+    "prediction",
+    "guaranteed"
+  ]
+}
