@@ -106,3 +106,22 @@ When documenting or reporting, use precise names:
 - `D-ND_LAB installable repo`;
 - `meta-lab`;
 - `finance domain Lab`.
+
+## Meta-Lab Naming
+
+Canonical active name:
+
+```text
+meta-lab
+```
+
+Historical alias:
+
+```text
+meta-prototyper
+```
+
+The repository may still contain `_meta-prototyper` as a legacy lineage
+snapshot. Do not treat it as a second active generator. If a task says
+"meta-prototyper", route it to the active `meta-lab` unless the task explicitly
+asks for historical comparison against the legacy snapshot.

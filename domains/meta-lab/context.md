@@ -524,7 +524,10 @@ Quando completi la generazione, **emetti SEMPRE come ultimo output** un blocco m
 2. Elenca i punti **specifici di questo lab** che richiederanno copy/UI lavoro (es. "una nuova card nella sezione Sei campi di applicazione di lab.d-nd.com landing", "decisione TM1 se aggiungere pagina dedicata su d-nd.com")
 3. Stima onestamente l'effort residuo: "~2-3h TM3 lane (lab.d-nd.com integration) + Sinapsi brief a TM1 per copy d-nd.com"
 
-Senza questo blocco, il lab nasce ma resta invisibile ai visitatori del sito — il valore generativo del meta-prototyper si dimezza. La cascade è parte integrante della generazione, non un'aggiunta opzionale.
+Senza questo blocco, il lab nasce ma resta invisibile ai visitatori del sito — il valore generativo del meta-lab si dimezza. La cascade è parte integrante della generazione, non un'aggiunta opzionale.
+
+Nota terminologica: `meta-lab` è il nome canonico attivo. `meta-prototyper`
+è un alias storico/legacy e non deve essere trattato come secondo generatore.
 
 ## Anti-pattern (cosa NON fare)
 

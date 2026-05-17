@@ -148,6 +148,11 @@ extended, Gemini 3) is preserved across multi-turn loops automatically.
 After install, these domains are available out-of-box. Default is
 `physics` — change `LAB_DOMAIN` in `.env` to switch.
 
+Naming note: `meta-lab` is the canonical active generator. Older packets or
+legacy folders may say `meta-prototyper`; treat that as a historical alias
+unless you are explicitly comparing against the legacy `_meta-prototyper`
+snapshot.
+
 Each domain is a directory with `config.json`, `context.md`,
 `tension_to_category.json`, `seed_tensions.json`, `tools/`, and
 optionally `corpus/` (gitignored). See
