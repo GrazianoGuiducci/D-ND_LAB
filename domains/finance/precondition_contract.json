@@ -1,0 +1,47 @@
+{
+  "schema": "dndlab.finance_precondition_contract.v1",
+  "domain": "finance",
+  "status": "alpha",
+  "created_at": "2026-05-17",
+  "source_tool": "domains/finance/tools/lag_memory_precondition.py",
+  "intent": "Gate lag_memory_const_vol before another block21 repair or aggregation cycle.",
+  "selected_precondition": {
+    "metric": "matched_filter_score_at_candidate_split",
+    "score_min": 0.55,
+    "area_gap_abs_at_candidate_split_min": 0.0,
+    "meaning": "Candidate split is admissible only if local lag-map memory contrast is strong enough before block21 admission is tested."
+  },
+  "calibration_summary": {
+    "synthetic_cases": 144,
+    "positive_cases": 36,
+    "control_cases": 108,
+    "selected_positives": 19,
+    "selected_controls": 0,
+    "positive_robust_rate_after_precondition": 0.7894736842105263,
+    "control_selection_rate": 0.0,
+    "control_robust_rate_after_precondition": 0.0,
+    "shuffles_per_null": 48,
+    "nulls": ["iid_shuffle", "circular_block_5", "circular_block_21"]
+  },
+  "allowed_next_cycle": {
+    "policy": "TEST_PRECONDITION_GATE",
+    "must_do": [
+      "Use the selected precondition as an admission gate.",
+      "Evaluate admitted and rejected positives separately.",
+      "Keep iid_const_vol, drift_const_vol and vol_only controls.",
+      "Retain iid, block5 and block21 nulls.",
+      "Report whether the gate improves robust recovery without control leakage."
+    ],
+    "must_not_do": [
+      "Broaden window or split-jitter tuning before testing this gate.",
+      "Treat the precondition as a market claim.",
+      "Use the gate to issue trading advice.",
+      "Promote a single-window result."
+    ]
+  },
+  "retire_when": [
+    "The precondition fails to keep controls below the 5% selection or robust ceiling.",
+    "The precondition does not lift admitted positive robust recovery above 70% in an independent calibration run.",
+    "A block-preserving null reproduces the admitted-positive signal."
+  ]
+}

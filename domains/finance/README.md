@@ -55,6 +55,7 @@ domains/finance/
 ├── config.json                 movements + tools dichiarati
 ├── context.md                  prompt-system iniettato all'agent
 ├── onboarding_contract.json    information intake gates for finance
+├── precondition_contract.json  selected finance precondition for next cycle
 ├── seed_tensions.json          5 tensioni iniziali (100% con condensato_ref)
 ├── tension_to_category.json
 ├── assertions.py               5 test eseguibili (PASS/FAIL/SKIP)
@@ -66,6 +67,8 @@ domains/finance/
     │                           pre-cycle audit reference readiness
     ├── exp_regime_shift.py     CLI sintetico/real-market
     ├── market_data.py          acquisizione dati + cache + data card
+    ├── lag_memory_precondition.py
+    │                           precondition audit prima di nuovi repair block21
     └── finance_diagnostic_report.py
                                 report interno value-facing, no claim operativo
 ```
@@ -110,6 +113,16 @@ Lo stato corrente richiede `DESIGN_PRECONDITION_FIRST`: prima di rilanciare
 tuning sulla stessa famiglia di score, il prossimo ciclo forte deve progettare
 la precondizione misurabile che permetta potenza recuperabile contro VaR/RV e
 null block-preserving.
+
+Tool operativo:
+
+```bash
+python3 domains/finance/tools/lag_memory_precondition.py --json
+```
+
+Il tool non produce claim di mercato: valida se una precondizione locale del
+detector lag-memory e' abbastanza selettiva da autorizzare il prossimo ciclo.
+La precondizione selezionata vive in `precondition_contract.json`.
 
 ## Architettura cognitiva (MML)
 

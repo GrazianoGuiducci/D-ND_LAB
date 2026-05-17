@@ -129,6 +129,25 @@ Therefore the next strong finance cycle should not tune the same score family.
 It should design and test the missing precondition for recoverable power
 against VaR/RV and block-preserving nulls.
 
+Current precondition tool:
+
+```bash
+python3 domains/finance/tools/lag_memory_precondition.py --json
+```
+
+This tool asks whether `lag_memory_const_vol` has enough local matched-filter
+structure before another block21 admission or aggregation cycle is allowed. It
+does not authorize a market claim.
+
+Current selected precondition:
+
+```text
+matched_filter_score_at_candidate_split >= 0.55
+```
+
+Source: `domains/finance/precondition_contract.json`. The next allowed
+movement is to test this as an admission gate, not to broaden tuning.
+
 ## UI Implications
 
 The finance dashboard should make these surfaces visible before any narrative:
@@ -145,4 +164,3 @@ The UI is successful when a domain user can answer:
 ```text
 What claim is alive, what claim is dead, and what decision is not allowed?
 ```
-

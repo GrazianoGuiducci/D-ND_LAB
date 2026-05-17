@@ -82,6 +82,7 @@ def audit(root: Path) -> dict[str, Any]:
     data_dir = root / "data" / "finance"
     context = (domain / "context.md").read_text(encoding="utf-8")
     transduction = (domain / "transduction.md").read_text(encoding="utf-8")
+    precondition_contract = read_json(domain / "precondition_contract.json")
     mml_state = collect_mml(domain)
     seed = read_json(data_dir / "seed.json")
     trajectory = latest_trajectory(data_dir)
@@ -89,6 +90,16 @@ def audit(root: Path) -> dict[str, Any]:
     has_skill_matrix = "skill_reading_matrix" in transduction
     has_reference_correction = "Skill reading reference" in context
     has_precondition_rule = "precondizione mancante" in context or "missing precondition" in context
+    has_precondition_contract = (
+        isinstance(precondition_contract, dict)
+        and precondition_contract.get("schema") == "dndlab.finance_precondition_contract.v1"
+        and isinstance(precondition_contract.get("selected_precondition"), dict)
+    )
+    precondition_policy = None
+    if isinstance(precondition_contract, dict):
+        allowed_next = precondition_contract.get("allowed_next_cycle", {})
+        if isinstance(allowed_next, dict):
+            precondition_policy = allowed_next.get("policy")
     runtime_present = seed is not None and trajectory is not None
 
     latest_decision = trajectory.get("decision") if isinstance(trajectory, dict) else None
@@ -117,6 +128,8 @@ def audit(root: Path) -> dict[str, Any]:
     next_cycle_policy = "DESIGN_PRECONDITION_FIRST"
     if blockers:
         next_cycle_policy = "BLOCKED_REFERENCE_INCOMPLETE"
+    elif has_precondition_contract and precondition_policy:
+        next_cycle_policy = str(precondition_policy)
     elif runtime_present and latest_decision == "REDESIGN":
         next_cycle_policy = "DESIGN_PRECONDITION_FIRST"
     elif runtime_present:
@@ -138,6 +151,8 @@ def audit(root: Path) -> dict[str, Any]:
             "skill_reading_matrix": has_skill_matrix,
             "context_reference_correction": has_reference_correction,
             "precondition_rule": has_precondition_rule,
+            "precondition_contract": has_precondition_contract,
+            "precondition_policy": precondition_policy,
             "mml_skill_count": mml_state["skill_count"],
             "mml_support_only": mml_state["support_only"],
             "mml_missing_read_depth": mml_state["missing_read_depth"],
@@ -145,8 +160,9 @@ def audit(root: Path) -> dict[str, Any]:
         },
         "interpretation": (
             "Finance is a reference lab only after the skill-reading substrate is "
-            "present and the next cycle is constrained to precondition discovery. "
-            "Do not run another adaptive lag-map tuning cycle from this state."
+            "present. If a precondition contract exists, the next cycle is "
+            "constrained to testing that gate; otherwise it must discover the "
+            "precondition before more adaptive lag-map tuning."
         ),
     }
 

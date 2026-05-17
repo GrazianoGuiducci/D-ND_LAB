@@ -250,6 +250,41 @@ ultimo piano/runtime disponibile e interpretazione. Se `next_cycle_policy` e'
 `DESIGN_PRECONDITION_FIRST`, il ciclo successivo deve progettare la
 precondizione misurabile; non deve rilanciare tuning dello stesso score.
 
+### lag_memory_precondition
+
+Descrizione: audit sintetico per la precondizione del detector
+`lag_memory_const_vol`. Non usa mercato reale e non promuove claim. Misura se
+una condizione locale, leggibile prima di nuovi repair block21, seleziona casi
+con potenza recuperabile senza selezionare controlli.
+
+Comando:
+
+```bash
+python3 /opt/D-ND_LAB/domains/finance/tools/lag_memory_precondition.py --json
+```
+
+Trigger: invocalo quando `finance_reference_audit` restituisce
+`DESIGN_PRECONDITION_FIRST` e prima di proporre un nuovo ciclo su
+lag-map/block21.
+
+Output: JSON con `selected_precondition` e `verdict`. Se il verdict e'
+`PRECONDITION_FOUND`, il ciclo successivo deve testare quella precondizione
+come gate di ammissione contro iid, block5 e block21. Se non passa, fermare il
+frame invece di ampliare tuning, finestre o jitter.
+
+Contratto corrente: `domains/finance/precondition_contract.json`.
+
+Precondizione selezionata:
+
+```text
+matched_filter_score_at_candidate_split >= 0.55
+```
+
+Interpretazione: un candidato `lag_memory_const_vol` entra nel prossimo test
+block21 solo se mostra contrasto locale sufficiente nel matched filter prima
+dell'ammissione. Il prossimo ciclo autorizzato e' `TEST_PRECONDITION_GATE`,
+non nuovo tuning di finestra/jitter.
+
 ## Quick Reference — External APIs
 
 Per dati reali usa il tool `market_data` (sopra) — gestisce caching,
