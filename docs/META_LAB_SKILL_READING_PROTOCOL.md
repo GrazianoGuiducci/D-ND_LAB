@@ -51,14 +51,23 @@ Ordine di consultazione:
 2. `docs/SKILL_CATALOG.md` per trovare candidate.
 3. `docs/SKILL_FIELD_MAP.md` per capire layer e collaborazioni.
 4. `docs/SKILL_DIAGNOSTIC.md` per stato vivo/stub/eval/persona.
-5. Corpi reali delle skill candidate:
+5. `docs/COGNITIVE_ARCHIVE_INTEGRATION.md` per distinguere archivi
+   correnti, semi installabili e lineage storico prima di scegliere una
+   fonte non standard.
+6. Corpi reali delle skill candidate:
    - `/opt/.claude/skills/*.md`;
    - `/opt/MM_D-ND/kernel/reference/skills/*.md`;
    - skill THIA in `/opt/THIA/.agent/skills/` se disponibili e pertinenti.
-6. `/opt/MM_D-ND/tools/data/cognitive_enzymes_archive.md` per enzimi gia'
+   - `/opt/skill/agent_skills_*.md` quando serve la snapshot THIA flat;
+   - `/opt/KPhi1/skills/*/SKILL.md` quando serve il seme strutturato KPhi1;
+   - `/opt/d-nd_cockpit/docs/system/kernel/*` solo per lineage storico
+     letto e transdotto esplicitamente.
+7. `/opt/MM_D-ND/tools/data/cognitive_enzymes_archive.md` per enzimi gia'
    estratti.
 
 Catalogo, mappa e diagnostica orientano. Il corpo della skill decide.
+Gli archivi esterni al Lab non sono autorita' implicita: entrano solo con
+path, profondita' di lettura, pattern estratto e rischio contaminazione.
 
 ## Profondita' di lettura
 

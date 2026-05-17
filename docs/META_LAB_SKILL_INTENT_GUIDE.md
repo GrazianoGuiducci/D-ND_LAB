@@ -18,6 +18,14 @@ applicare `docs/META_LAB_SKILL_READING_PROTOCOL.md`: candidate minime,
 corpo letto, profondita' dichiarata, rischio contaminazione e ruolo nel
 movimento.
 
+Quando il dominio richiede capacita' cognitive o operative autonome nuove,
+il meta-lab deve consultare anche
+`docs/COGNITIVE_ARCHIVE_INTEGRATION.md`. Quel documento distingue:
+`/opt/skill` come snapshot THIA flat, `/opt/KPhi1` come seme installabile
+KPhi1, e `/opt/d-nd_cockpit/docs/system/kernel` come archivio storico MMSp.
+Queste fonti non vanno copiate in blocco: forniscono pattern da transdurre in
+contratti verificabili.
+
 La catena corretta e':
 
 ```text

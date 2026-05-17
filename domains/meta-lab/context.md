@@ -57,6 +57,9 @@ campo skill/enzimi:
 - `docs/META_LAB_SKILL_READING_PROTOCOL.md`: protocollo per progettare la
   lettura delle skill candidate, leggere i corpi necessari e produrre
   `skill_reading_matrix`;
+- `docs/COGNITIVE_ARCHIVE_INTEGRATION.md`: mappa degli archivi cognitivi
+  esterni (`/opt/skill`, `/opt/KPhi1`, cockpit storico MMSp) e regole per
+  usarli come lineage/transduzione, non come prompt library;
 - `/opt/MM_D-ND/tools/data/cognitive_enzymes_archive.md`: archivio degli
   enzimi cognitivi gia' estratti dal sistema.
 
@@ -161,6 +164,9 @@ Il lab figlio acquisisce anche:
      `identity`, `runtime_patterns`);
    - `enzyme_retrieval`: enzimi cognitivi rilevanti, con source e perche'
      sono pertinenti al dominio/intento;
+   - `archive_retrieval`: eventuali fonti da `/opt/skill`, `/opt/KPhi1` o
+     `/opt/d-nd_cockpit/docs/system/kernel`, con path, read_depth, pattern
+     estratto e rischio contaminazione;
    - `missing_capabilities`: cosa manca davvero e deve diventare tool,
      null, baseline, assertion o nuova skill;
    - `contamination_risk`: quali skill/enzimi non vanno usati perche'

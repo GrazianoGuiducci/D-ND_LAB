@@ -171,9 +171,11 @@ skill/enzimi gia' disponibile:
 - `docs/SKILL_DIAGNOSTIC.md`;
 - `docs/META_LAB_SKILL_INTENT_GUIDE.md`;
 - `docs/META_LAB_SKILL_READING_PROTOCOL.md`;
+- `docs/COGNITIVE_ARCHIVE_INTEGRATION.md`;
 - `/opt/MM_D-ND/tools/data/cognitive_enzymes_archive.md`;
 - eventuali skill domain-specific gia' presenti in `/opt/.claude/skills/`,
-  `/opt/MM_D-ND/kernel/reference/skills/` o archivi THIA.
+  `/opt/MM_D-ND/kernel/reference/skills/`, `/opt/skill`, `/opt/KPhi1` o
+  archivi THIA/cockpit storici.
 
 Output minimo della fase:
 
@@ -193,6 +195,12 @@ Output minimo della fase:
 Questo passaggio serve a evitare una perdita di logiche fini: non si
 generalizza cancellando le skill, si sceglie quali parti del sistema gia'
 esistente devono essere attivate nel nuovo dominio.
+
+Per nuovi sistemi AI o Lab che devono auto-installarsi, dare priorita' ai
+pattern KPhi1 gia' letti: genoma locale (`_AI_CONTEXT.md`), router di
+facolta', veto di invarianza, memoria processuale e bootstrap rigenerabile.
+Per lineage antico MMSp/cockpit, usare solo file letti e ridotti a procedura:
+l'archivio storico e' sorgente, non runtime.
 
 ### 3. Mappa degli osservabili
 

@@ -134,6 +134,25 @@ famiglie note di domini. Sono input opzionali, non template finali: il meta-lab
 deve adattarli all'intento e il validator deve comunque leggere gli artefatti
 generati.
 
+### 2.0.2 Cognitive Archive Integration
+
+Prima di trasferire capacita' cognitive o operative autonome a un nuovo Lab
+o a un sistema AI derivato, il meta-lab deve applicare
+`docs/COGNITIVE_ARCHIVE_INTEGRATION.md`.
+
+La distinzione e' operativa:
+
+- `/opt/skill` e' snapshot THIA flat e thinker-pack: utile per skill
+  cognitive portabili e confronto con cataloghi correnti.
+- `/opt/KPhi1` e' seme strutturato/installabile: utile per genoma locale,
+  router di facolta', veto di invarianza, memoria processuale e bootstrap.
+- `/opt/d-nd_cockpit/docs/system/kernel` e' archivio storico MMSp/cockpit:
+  utile per lineage e recupero di logiche antiche, mai come runtime diretto
+  senza lettura e transduzione.
+
+Ogni uso deve produrre `archive_retrieval`: path, read_depth, pattern
+estratto, artefatto modificato, contaminazione esclusa e test/E2E previsto.
+
 ### 2.1 KTHIA
 Kernel attivo del sistema THIA. Contiene identità (chi è THIA), nucleo
 assiomatico (modello D-ND), MMSp sorgente, KSAR, skill kernel, memorie
