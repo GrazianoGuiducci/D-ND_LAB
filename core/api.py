@@ -2305,6 +2305,51 @@ async def get_latest_diagnostic(domain: str, request: Request) -> dict[str, Any]
     }
 
 
+@app.get("/api/domains/{domain}/latest_value_artifacts")
+async def get_latest_value_artifacts(domain: str, request: Request) -> dict[str, Any]:
+    """Latest value-facing JSON artifacts for the domain.
+
+    Domains can write small checkable artifacts under data/<domain>/value/.
+    Unlike reports, these are row-level evidence that the falsifier and Campo
+    UI can inspect directly.
+    """
+    await _check_auth(request)
+    _validate_domain(domain)
+    value_dir = paths.domain_data_dir(domain) / "value"
+    if not value_dir.exists():
+        return {"available": False, "domain": domain, "artifacts": []}
+
+    json_files = sorted(
+        value_dir.glob("*.json"),
+        key=lambda p: p.stat().st_mtime,
+        reverse=True,
+    )[:10]
+    if not json_files:
+        return {"available": False, "domain": domain, "artifacts": []}
+
+    artifacts: list[dict[str, Any]] = []
+    for fp in json_files:
+        payload = _read_json_safe(fp, {})
+        item = {
+            "filename": fp.name,
+            "mtime": datetime.fromtimestamp(fp.stat().st_mtime, tz=timezone.utc).isoformat(),
+            "bytes": fp.stat().st_size,
+            "schema": payload.get("schema"),
+            "generated_at": payload.get("generated_at"),
+            "summary": payload.get("summary") if isinstance(payload.get("summary"), dict) else {},
+            "n_cards": len(payload.get("cards", [])) if isinstance(payload.get("cards"), list) else 0,
+            "payload": payload,
+        }
+        artifacts.append(item)
+
+    return {
+        "available": True,
+        "domain": domain,
+        "latest": artifacts[0],
+        "artifacts": artifacts,
+    }
+
+
 @app.get("/api/domains/{domain}/cimitero")
 async def get_cimitero(domain: str, request: Request) -> dict[str, str]:
     await _check_auth(request)

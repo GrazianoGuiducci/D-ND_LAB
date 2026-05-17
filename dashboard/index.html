@@ -1166,6 +1166,56 @@
               </section>
             </template>
 
+            <template x-if="latestValueArtifacts.available">
+              <section class="mt-4 border border-cyan-900/60 rounded-md p-4 bg-cyan-950/10">
+                <div class="flex items-start justify-between gap-3 flex-wrap mb-3">
+                  <div>
+                    <h3 class="text-sm font-medium text-cyan-200">Artifact verificabili</h3>
+                    <p class="text-xs text-slate-400 mt-1">Righe value-facing lette dal falsifier: claim-card, baseline, decisione e confine.</p>
+                  </div>
+                  <button @click="selectValueArtifactLens()"
+                          class="text-[11px] font-mono text-cyan-200 hover:text-cyan-100 cursor-pointer"
+                          x-text="latestValueArtifact()?.filename || 'artifact'"></button>
+                </div>
+                <div class="grid md:grid-cols-4 gap-3">
+                  <button @click="selectValueArtifactLens()"
+                          class="text-left bg-slate-950/50 border border-slate-800 hover:border-cyan-700 rounded p-3 transition cursor-pointer">
+                    <div class="text-[10px] uppercase tracking-wider text-slate-400">Schema</div>
+                    <div class="text-sm font-mono text-cyan-300 mt-1 line-clamp-2" x-text="latestValueArtifact()?.schema || 'n/a'"></div>
+                  </button>
+                  <button @click="selectValueArtifactLens()"
+                          class="text-left bg-slate-950/50 border border-slate-800 hover:border-cyan-700 rounded p-3 transition cursor-pointer">
+                    <div class="text-[10px] uppercase tracking-wider text-slate-400">Card</div>
+                    <div class="text-lg font-mono text-purple-300 mt-1" x-text="latestValueArtifact()?.n_cards ?? 0"></div>
+                  </button>
+                  <template x-for="row in latestValueArtifactSummaryRows()" :key="row.label">
+                    <button @click="selectValueArtifactLens()"
+                            class="text-left bg-slate-950/50 border border-slate-800 hover:border-cyan-700 rounded p-3 transition cursor-pointer">
+                      <div class="text-[10px] uppercase tracking-wider text-slate-400" x-text="row.label"></div>
+                      <div class="text-sm font-mono mt-1 line-clamp-2" :class="row.tone" x-text="row.value"></div>
+                    </button>
+                  </template>
+                </div>
+                <template x-if="latestValueArtifactCards().length">
+                  <div class="mt-3 grid lg:grid-cols-3 gap-3">
+                    <template x-for="card in latestValueArtifactCards()" :key="card.claim_id || card.title || JSON.stringify(card).slice(0,40)">
+                      <button @click="selectValueArtifactLens(card)"
+                              class="text-left border border-slate-800 hover:border-cyan-700 rounded-md p-3 bg-slate-950/40 transition cursor-pointer">
+                        <div class="flex items-center justify-between gap-2">
+                          <span class="text-[10px] font-mono text-cyan-300 truncate" x-text="card.claim_id || card.id || 'claim'"></span>
+                          <span class="text-[10px] uppercase tracking-wider"
+                                :class="valueArtifactDecisionTone(card)"
+                                x-text="card.decision || card.status || 'watch'"></span>
+                        </div>
+                        <div class="text-sm text-slate-200 mt-2 line-clamp-2" x-text="card.title || card.claim || card.question || 'Claim card'"></div>
+                        <div class="text-xs text-slate-400 mt-2 line-clamp-2" x-text="card.reason || card.boundary || card.evidence || ''"></div>
+                      </button>
+                    </template>
+                  </div>
+                </template>
+              </section>
+            </template>
+
             <template x-if="latestDiagnostic.available">
               <section class="mt-4 border border-cyan-900/60 rounded-md p-4 bg-cyan-950/10">
                 <div class="flex items-start justify-between gap-3 flex-wrap mb-3">
@@ -2638,6 +2688,7 @@
       cycleTraces: [],         // riassunti dei trace
       activeCycleTrace: null,  // dettaglio del cycle selezionato
       latestDiagnostic: { available: false },
+      latestValueArtifacts: { available: false, artifacts: [] },
       financePrecondition: { available: false },
 
       // Graph
@@ -3069,6 +3120,7 @@
         this.biconi = [];                                      // v3.5 — reset bicono cache cross-domain
         this.taxonomyData = { groups: [], bridges: [], nodes: [], edges: [] };  // v4.11 — reset
         this.taxonomyMeta = {};
+        this.latestValueArtifacts = { available: false, artifacts: [] };
         this.contextIntro = { title: '', intro: '' };          // v3.9 — reset
         this.contextExpanded = false;
         await Promise.all([
@@ -3081,6 +3133,7 @@
           this.reloadSsp(),                                    // SSP scoperte/applicazioni/prodotti (filesystem)
           this.reloadCycleTraces(),                            // Dinamica — cycle_trace_*.json (timeline)
           this.reloadLatestDiagnostic(),                       // Campo — artifact value-facing piu' recente
+          this.reloadLatestValueArtifacts(),                    // Campo — claim-card/data-card verificabili
           this.reloadFinancePrecondition(),                    // Finance — promotion boundary contract
         ]);
         // wait next tick so the #graph-viz container is in the DOM (x-show=true)
@@ -3140,6 +3193,18 @@
         } catch (e) {
           console.error('latest diagnostic load failed', e);
           this.latestDiagnostic = { available: false };
+        }
+      },
+
+      async reloadLatestValueArtifacts() {
+        if (!this.activeDomain) return;
+        this.latestValueArtifacts = { available: false, artifacts: [] };
+        try {
+          const r = await fetch(`/api/domains/${this.activeDomain}/latest_value_artifacts`);
+          this.latestValueArtifacts = r.ok ? await r.json() : { available: false, artifacts: [] };
+        } catch (e) {
+          console.error('latest value artifacts load failed', e);
+          this.latestValueArtifacts = { available: false, artifacts: [] };
         }
       },
 
@@ -3878,6 +3943,69 @@
         return Array.isArray(this.latestDiagnostic?.payload?.windows)
           ? this.latestDiagnostic.payload.windows
           : [];
+      },
+
+      latestValueArtifact() {
+        return this.latestValueArtifacts?.latest || null;
+      },
+
+      latestValueArtifactCards() {
+        const cards = this.latestValueArtifact()?.payload?.cards;
+        return Array.isArray(cards) ? cards.slice(0, 3) : [];
+      },
+
+      latestValueArtifactSummaryRows() {
+        const summary = this.latestValueArtifact()?.summary || {};
+        const rows = [];
+        const preferred = ['promote', 'test', 'watch', 'reject', 'pass', 'fail'];
+        const keys = Object.keys(summary);
+        const ordered = preferred.concat(keys.filter(k => !preferred.includes(k))).slice(0, 2);
+        for (const key of ordered) {
+          if (!(key in summary)) continue;
+          const value = summary[key];
+          rows.push({
+            label: key.replaceAll('_', ' '),
+            value: String(value),
+            tone: /reject|fail|block|no/i.test(key) ? 'text-amber-300' : (/promote|pass|ok/i.test(key) ? 'text-green-300' : 'text-cyan-300'),
+          });
+        }
+        if (!rows.length) {
+          rows.push({ label: 'summary', value: 'n/a', tone: 'text-slate-300' });
+        }
+        return rows;
+      },
+
+      valueArtifactDecisionTone(card) {
+        const decision = String(card?.decision || card?.status || '').toLowerCase();
+        if (/promote|pass|ok|accept/.test(decision)) return 'text-green-300';
+        if (/reject|fail|block|no_delta/.test(decision)) return 'text-amber-300';
+        if (/test|review/.test(decision)) return 'text-purple-300';
+        return 'text-cyan-300';
+      },
+
+      selectValueArtifactLens(card = null) {
+        const artifact = this.latestValueArtifact();
+        if (!artifact) return;
+        const cards = this.latestValueArtifactCards();
+        const selected = card || cards[0] || {};
+        const summary = this.latestValueArtifactSummaryRows()
+          .map(row => `${row.label}: ${row.value}`)
+          .join(' · ');
+        const title = selected.title || selected.claim || artifact.filename || 'Artifact verificabile';
+        const evidence = selected.evidence || selected.reason || selected.data_card || summary || 'Evidence non sintetizzata.';
+        const boundary = selected.boundary || selected.decision || selected.status || 'Aprire il report se serve il contesto completo.';
+        this.selectedNode = null;
+        this.selectedScopertaSsp = null;
+        this.selectedProdottoSsp = null;
+        this.selectedCampoLens = {
+          kind: 'artifact',
+          title,
+          body: artifact.schema
+            ? `${artifact.schema} · ${artifact.n_cards ?? 0} card · ${artifact.generated_at || artifact.mtime || 'timestamp n/a'}`
+            : `${artifact.filename} · ${artifact.n_cards ?? 0} card`,
+          evidence,
+          boundary,
+        };
       },
 
       financePromotionBoundary() {
@@ -4949,8 +5077,8 @@
         } else if (tab === 'campo') {
           set(
             'risultante pubblica e stato corrente del campo',
-            ['seed', 'latest_diagnostic', 'lab_graph', 'freshness'],
-            'Leggere il segnale attuale, distinguere dati osservati da inferenze e proporre controlli per il ciclo successivo.',
+            ['seed', 'latest_diagnostic', 'latest_value_artifacts', 'lab_graph', 'freshness'],
+            'Leggere il segnale attuale, distinguere dati osservati da inferenze, usare artifact verificabili quando presenti e proporre controlli per il ciclo successivo.',
             'Chiedere quale segnale, vuoto o controllo l’utente vuole approfondire.'
           );
         } else if (tab === 'grafo') {
