@@ -133,6 +133,7 @@ def audit(root: Path) -> dict[str, Any]:
 
     latest_decision = trajectory.get("decision") if isinstance(trajectory, dict) else None
     latest_reasoning = trajectory.get("reasoning") if isinstance(trajectory, dict) else None
+    latest_executed = trajectory.get("executed") if isinstance(trajectory, dict) else None
     latest_action = trajectory.get("action", {}) if isinstance(trajectory, dict) else {}
     if isinstance(latest_action, dict):
         detail = latest_action.get("detail", {})
@@ -140,7 +141,19 @@ def audit(root: Path) -> dict[str, Any]:
         detail = {}
     if not isinstance(detail, dict):
         detail = {}
-    next_direction = detail.get("new_value") or detail.get("direction") or detail.get("seed_change")
+    pending_direction = detail.get("new_value") or detail.get("direction") or detail.get("seed_change")
+    seed_direction = seed.get("direzione") if isinstance(seed, dict) else None
+    if latest_executed is False and pending_direction:
+        next_direction = pending_direction
+        next_direction_source = "pending_trajectory"
+    elif seed_direction:
+        next_direction = seed_direction
+        next_direction_source = "seed_current"
+        if latest_executed is True:
+            next_direction_source = "applied_seed_direction"
+    else:
+        next_direction = pending_direction
+        next_direction_source = "unknown"
 
     blockers: list[str] = []
     if not has_skill_matrix:
@@ -184,7 +197,9 @@ def audit(root: Path) -> dict[str, Any]:
         "seed_piano": seed.get("piano") if isinstance(seed, dict) else None,
         "latest_trajectory_decision": latest_decision,
         "latest_trajectory_reasoning": latest_reasoning,
+        "latest_trajectory_executed": latest_executed,
         "next_direction": next_direction,
+        "next_direction_source": next_direction_source,
         "latest_diagnostic": diagnostic,
         "checks": {
             "skill_reading_matrix": has_skill_matrix,
@@ -197,6 +212,7 @@ def audit(root: Path) -> dict[str, Any]:
             "boundary_crystallization": crystallized_boundary,
             "latest_diagnostic_kind": diagnostic.get("kind") if isinstance(diagnostic, dict) else None,
             "latest_diagnostic_path": diagnostic.get("path") if isinstance(diagnostic, dict) else None,
+            "next_direction_source": next_direction_source,
             "mml_skill_count": mml_state["skill_count"],
             "mml_support_only": mml_state["support_only"],
             "mml_missing_read_depth": mml_state["missing_read_depth"],
@@ -207,8 +223,10 @@ def audit(root: Path) -> dict[str, Any]:
             "present. If the promotion boundary is crystallized and a follow-up "
             "branch is selected, the next work follows that branch while preserving "
             "the gate as provisional, keeping below-gate survivors visible, and "
-            "blocking trading-signal language. Otherwise the lab must discover or "
-            "test the precondition before more adaptive lag-map tuning."
+            "blocking trading-signal language. next_direction_source distinguishes "
+            "a pending trajectory from an already applied seed direction so a future "
+            "cycle does not relaunch stale continuation. Otherwise the lab must "
+            "discover or test the precondition before more adaptive lag-map tuning."
         ),
     }
 
