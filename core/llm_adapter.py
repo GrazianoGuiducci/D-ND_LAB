@@ -353,13 +353,20 @@ def run_agent(
     has_cli_in_chain = any(p in cli_providers for p in chain)
 
     if has_cli_in_chain:
+        fallback_on_side_effect_miss = os.environ.get(
+            "LLM_FALLBACK_ON_CLI_SIDE_EFFECT_MISS",
+            "",
+        ).lower() in {"1", "true", "yes", "on"}
         for provider in chain:
             if provider == "claude-cli":
                 try:
                     logger.info("provider chain: trying claude-cli")
                     result = _run_via_claude_cli(system_prompt, user_message, config)
                     if early_stop and not early_stop():
-                        raise RuntimeError("claude CLI completed without required side effect")
+                        message = "claude CLI completed without required side effect"
+                        if fallback_on_side_effect_miss:
+                            raise RuntimeError(message)
+                        logger.warning("%s — not falling back by default", message)
                     return result
                 except (RuntimeError, TimeoutError) as e:
                     logger.warning(f"claude-cli failed: {e} — falling back")
@@ -370,7 +377,10 @@ def run_agent(
                     logger.info("provider chain: trying codex-cli")
                     result = _run_via_codex_cli(system_prompt, user_message, config)
                     if early_stop and not early_stop():
-                        raise RuntimeError("codex CLI completed without required side effect")
+                        message = "codex CLI completed without required side effect"
+                        if fallback_on_side_effect_miss:
+                            raise RuntimeError(message)
+                        logger.warning("%s — not falling back by default", message)
                     return result
                 except (RuntimeError, TimeoutError) as e:
                     logger.warning(f"codex-cli failed: {e} — falling back")
