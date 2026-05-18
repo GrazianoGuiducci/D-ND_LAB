@@ -1475,6 +1475,44 @@
               </section>
             </template>
 
+            <template x-if="bitcoinTimeframeArtifact()">
+              <section class="mt-4 border border-cyan-900/60 rounded-md p-4 bg-slate-950/40">
+                <div class="flex items-start justify-between gap-3 flex-wrap mb-3">
+                  <div>
+                    <h3 class="text-sm font-medium text-cyan-200">Matrice timeframe BTC</h3>
+                    <p class="text-xs text-slate-400 mt-1">Risponde alla domanda sul timeframe come ammissibilita' del prossimo test, non come segnale operativo.</p>
+                  </div>
+                  <button @click="selectBitcoinTimeframeLens()"
+                          class="text-[11px] font-mono px-2 py-1 rounded border border-cyan-800 text-cyan-200 hover:border-cyan-400 cursor-pointer">
+                    apri matrice
+                  </button>
+                </div>
+                <div class="grid md:grid-cols-4 gap-3 mb-3">
+                  <template x-for="row in bitcoinTimeframeStatRows()" :key="row.label">
+                    <button @click="selectBitcoinTimeframeLens()"
+                            class="text-left bg-slate-950/50 border border-cyan-900/70 hover:border-cyan-400 rounded p-3 transition cursor-pointer min-h-[82px]">
+                      <div class="text-[10px] uppercase tracking-wider text-slate-400" x-text="row.label"></div>
+                      <div class="text-lg font-mono mt-1" :class="row.tone" x-text="row.value"></div>
+                    </button>
+                  </template>
+                </div>
+                <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-2">
+                  <template x-for="row in bitcoinTimeframeRows()" :key="row.timeframe">
+                    <button @click="selectBitcoinTimeframeLens(row)"
+                            class="text-left rounded border p-3 bg-slate-950/50 hover:border-cyan-400 transition cursor-pointer"
+                            :class="bitcoinTimeframeStatusClass(row.status)">
+                      <div class="flex items-center justify-between gap-2">
+                        <div class="text-sm font-mono text-slate-100" x-text="row.timeframe"></div>
+                        <span class="text-[10px] uppercase tracking-wider" x-text="row.status"></span>
+                      </div>
+                      <div class="text-xs text-cyan-200 mt-2" x-text="row.label + ' · ' + row.role"></div>
+                      <div class="text-xs text-slate-400 mt-2 line-clamp-3" x-text="row.reason"></div>
+                    </button>
+                  </template>
+                </div>
+              </section>
+            </template>
+
             <template x-if="bitcoinOhlcvArtifact()">
               <section class="mt-4 border border-cyan-900/60 rounded-md p-4 bg-slate-950/40">
                 <div class="flex items-start justify-between gap-3 flex-wrap mb-3">
@@ -4651,6 +4689,63 @@
         if (Array.isArray(this.latestValueArtifacts?.artifacts)) all.push(...this.latestValueArtifacts.artifacts);
         return all.find(a => a?.schema === 'dndlab.bitcoin.exchange_ohlcv.v1'
           || a?.payload?.schema === 'dndlab.bitcoin.exchange_ohlcv.v1') || null;
+      },
+
+      bitcoinTimeframeArtifact() {
+        const all = [];
+        if (this.latestValueArtifacts?.latest) all.push(this.latestValueArtifacts.latest);
+        if (Array.isArray(this.latestValueArtifacts?.artifacts)) all.push(...this.latestValueArtifacts.artifacts);
+        return all.find(a => a?.schema === 'dndlab.bitcoin.timeframe_matrix.v1'
+          || a?.payload?.schema === 'dndlab.bitcoin.timeframe_matrix.v1') || null;
+      },
+
+      bitcoinTimeframeRows() {
+        const rows = this.bitcoinTimeframeArtifact()?.payload?.timeframe_rows;
+        return Array.isArray(rows) ? rows : [];
+      },
+
+      bitcoinTimeframeStatRows() {
+        const metrics = this.bitcoinTimeframeArtifact()?.payload?.metrics || {};
+        return [
+          { label: 'prossimo test', value: metrics.recommended_next_test_timeframe || 'n/a', tone: 'text-cyan-300' },
+          { label: 'testabili', value: String(metrics.timeframes_testable ?? 0), tone: 'text-green-300' },
+          { label: 'watch', value: String(metrics.timeframes_watch ?? 0), tone: 'text-purple-300' },
+          { label: 'bloccati', value: String(metrics.timeframes_blocked ?? 0), tone: 'text-amber-300' },
+        ];
+      },
+
+      bitcoinTimeframeStatusClass(status) {
+        const s = String(status || '').toLowerCase();
+        if (s === 'testable') return 'border-emerald-500/80';
+        if (s === 'watch') return 'border-purple-500/70';
+        return 'border-amber-500/70';
+      },
+
+      selectBitcoinTimeframeLens(row = null) {
+        const artifact = this.bitcoinTimeframeArtifact();
+        if (!artifact) return;
+        const payload = artifact.payload || {};
+        const selected = row || this.bitcoinTimeframeRows().find(r => r.status === 'testable') || this.bitcoinTimeframeRows()[0] || {};
+        const card = Array.isArray(payload.cards) ? payload.cards[0] || {} : {};
+        this.selectedNode = null;
+        this.selectedScopertaSsp = null;
+        this.selectedProdottoSsp = null;
+        this.selectedCampoLens = {
+          type: 'campo',
+          category: 'timeframe',
+          title: selected.timeframe ? `${selected.timeframe} · ${selected.label}` : (card.title || 'Matrice timeframe BTC'),
+          subtitle: selected.status || card.decision || 'timeframe matrix',
+          schema: payload.schema || artifact.schema || 'dndlab.bitcoin.timeframe_matrix.v1',
+          date: payload.generated_at || artifact.generated_at || artifact.mtime,
+          evidence: selected.reason || card.evidence || 'Matrice non sintetizzata.',
+          boundary: card.boundary || 'No trading signal: seleziona il prossimo test, non una direzione operativa.',
+          meta: [
+            `role: ${selected.role || 'n/a'}`,
+            `native_feed: ${selected.native_feed || 'n/a'}`,
+            `available_days: ${selected.available_days ?? 'n/a'} / required ${selected.required_days ?? 'n/a'}`,
+          ].join(' · '),
+        };
+        this.activeTab = 'campo';
       },
 
       btcSeriesOptions() {

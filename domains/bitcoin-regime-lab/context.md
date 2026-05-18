@@ -220,3 +220,25 @@ Se passa, il campo diventa `FIELD_ADMISSIBLE_FOR_NEXT_HYPOTHESIS`: il prossimo
 ciclo puo' definire un solo osservabile meccanico POC/FVG/timeframe con null
 matched. Se fallisce, il Lab deve riparare feed/sorgenti prima di interpretare.
 In entrambi i casi `trading_signal=false`.
+
+La domanda di Alipio sul "time free/timeframe ottimale" entra come matrice di
+ammissibilita', non come risposta opinabile:
+
+```bash
+python3 domains/bitcoin-regime-lab/tools/btc_timeframe_matrix.py --write --json
+```
+
+Output atteso: JSON `dndlab.bitcoin.timeframe_matrix.v1` scritto in
+`data/bitcoin-regime-lab/value/`. Consuma `btc_exchange_ohlcv_latest.json` e
+`btc_first_hypothesis_latest.json`, poi classifica mensile, settimanale, daily,
+4h, 1h, 45m, 30m, 15m, 10m, 5m e 1m come:
+
+- `testable`: il campo dati e il denominatore sono sufficienti per il prossimo
+  test meccanico;
+- `watch`: osservabile, ma non ancora abbastanza robusto per test;
+- `blocked`: mancano dati nativi o il field gate non regge.
+
+Il primo risultato utile atteso e' conservativo: con soli feed daily, il Lab
+puo' ammettere il daily come primo test e bloccare intraday finche' non
+esistono OHLCV native con baseline/null. Questo e' valore per l'utente: sapere
+cosa puo' essere guardato ora, cosa resta in watch e cosa non va interpretato.

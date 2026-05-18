@@ -83,6 +83,11 @@
       "name": "btc_first_hypothesis",
       "path": "tools/btc_first_hypothesis.py",
       "boundary": "consumes exchange OHLCV artifact and writes first falsifiable BTC hypothesis card; field admissibility only; public_claim=false; trading_signal=false; operational=false"
+    },
+    {
+      "name": "btc_timeframe_matrix",
+      "path": "tools/btc_timeframe_matrix.py",
+      "boundary": "consumes BTC field artifacts and classifies requested timeframes as testable, watch-only or blocked; public_claim=false; trading_signal=false; operational=false"
     }
   ]
 }
