@@ -35,11 +35,11 @@
       --site-elev-3: 50 50 58;
       --site-text-primary: 240 240 245;
       --site-text-body: 220 222 230;
-      --site-text-muted: 172 175 192;
-      --site-text-subtle: 148 151 168;
-      --site-border-1: 255 255 255 / 0.07;
-      --site-border-2: 255 255 255 / 0.14;
-      --site-border-3: 255 255 255 / 0.22;
+      --site-text-muted: 205 208 222;
+      --site-text-subtle: 184 188 204;
+      --site-border-1: 255 255 255 / 0.10;
+      --site-border-2: 34 211 238 / 0.20;
+      --site-border-3: 167 139 250 / 0.30;
       --neon-cyan: 34 211 238;
       --neon-emerald: 52 211 153;
       --neon-purple: 167 139 250;
@@ -83,30 +83,40 @@
     .rounded-md.border,
     .rounded-lg.border,
     .rounded-xl.border {
-      border-color: rgb(var(--neon-cyan) / 0.22) !important;
+      border-color: rgb(var(--neon-cyan) / 0.34) !important;
       box-shadow:
-        inset 0 1px 0 rgb(255 255 255 / 0.035),
-        0 0 0 1px rgb(var(--neon-cyan) / 0.045),
-        0 12px 28px rgb(0 0 0 / 0.18);
+        inset 0 1px 0 rgb(255 255 255 / 0.05),
+        0 0 0 1px rgb(var(--neon-cyan) / 0.08),
+        0 12px 28px rgb(0 0 0 / 0.24);
+    }
+    .bg-slate-950.border,
+    .bg-slate-900.border,
+    .bg-slate-800.border,
+    [class*="bg-slate-950/"].border,
+    [class*="bg-slate-900/"].border,
+    [class*="bg-slate-800/"].border {
+      background-image:
+        linear-gradient(180deg, rgb(255 255 255 / 0.025), rgb(255 255 255 / 0));
     }
     button.border,
     select,
     input,
     textarea {
-      border-color: rgb(var(--neon-purple) / 0.28) !important;
+      border-color: rgb(var(--neon-purple) / 0.36) !important;
     }
     button.border:hover,
     .rounded.border:hover,
     .rounded-md.border:hover {
-      border-color: rgb(var(--neon-cyan) / 0.55) !important;
+      border-color: rgb(var(--neon-cyan) / 0.68) !important;
     }
     /* Text contrast boost: piu' brillante del default Tailwind */
     .text-slate-100 { color: rgb(250 250 252) !important; }   /* headings extra bright */
     .text-slate-200 { color: rgb(240 240 245) !important; }   /* primary text */
     .text-slate-300 { color: rgb(220 222 230) !important; }   /* body */
     .text-slate-400 { color: rgb(200 202 215) !important; }   /* MUTED ora 200 (era 172) */
-    .text-slate-300 { color: rgb(172 175 192) !important; }   /* SUBTLE ora 172 (era 148) */
-    .text-slate-400 { color: rgb(148 151 168) !important; }
+    .text-slate-500 { color: rgb(184 188 204) !important; }   /* subtle */
+    .text-slate-600 { color: rgb(154 160 178) !important; }
+    .text-slate-700 { color: rgb(120 128 148) !important; }
     /* Neon accents piu' vivi */
     .text-cyan-400 { color: rgb(var(--neon-cyan)) !important; }
     .text-purple-400 { color: rgb(var(--neon-purple)) !important; }
@@ -159,10 +169,10 @@
 
     /* Themed scrollbars (operatore: "scrollbar dovrebbe essere del colore
        del tema"). Pattern dark slate per tutto il documento. */
-    * { scrollbar-color: rgba(148,163,184,.25) rgba(15,23,42,.4); scrollbar-width: thin; }
+    * { scrollbar-color: rgba(184,188,204,.25) rgba(15,23,42,.4); scrollbar-width: thin; }
     *::-webkit-scrollbar { width: 8px; height: 8px; }
     *::-webkit-scrollbar-track { background: rgba(15,23,42,.4); }
-    *::-webkit-scrollbar-thumb { background: rgba(148,163,184,.25); border-radius: 4px; }
+    *::-webkit-scrollbar-thumb { background: rgba(184,188,204,.25); border-radius: 4px; }
     *::-webkit-scrollbar-thumb:hover { background: rgba(167,139,250,.45); }
     *::-webkit-scrollbar-corner { background: transparent; }
     .markdown h1 { @apply text-2xl font-light mt-4 mb-2; }
@@ -223,7 +233,7 @@
     @keyframes pulse-cycle { 0%,100% { opacity: 1 } 50% { opacity: 0.4 } }
     .running { animation: pulse-cycle 1.5s ease-in-out infinite; }
     /* Graph viz hero — moved into tab GRAFO in v3 */
-    .graph-legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 11px; color: #94a3b8; padding: 8px 0; }
+    .graph-legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 11px; color: rgb(var(--site-text-muted)); padding: 8px 0; }
     .graph-legend span { display: inline-flex; align-items: center; gap: 6px; }
     .graph-legend i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
     .selected-node-badge { display: inline-flex; align-items: center; gap: 6px; padding: 2px 8px; background: rgba(167,139,250,.18); color: #c4b5fd; border-radius: 999px; font-size: 11px; font-family: ui-monospace, monospace; }
@@ -232,27 +242,27 @@
     /* Bicono dinamico — SVG dipolo singolare-duale, ogni report compila i propri 4 poli.
        Niente fallback statici (es. 'vuoto/pieno'): se il campo manca, il polo resta vuoto
        e segnalato come incompleto — la dashboard non inventa terminologia. */
-    .bicono-card { background: linear-gradient(180deg, rgba(167,139,250,.06) 0%, rgba(34,211,238,.04) 100%); border: 1px solid rgba(167,139,250,.18); border-radius: 0.5rem; padding: 14px; overflow: hidden; }
+    .bicono-card { background: linear-gradient(180deg, rgba(167,139,250,.10) 0%, rgba(34,211,238,.055) 100%); border: 1px solid rgba(167,139,250,.36); border-radius: 0.5rem; padding: 14px; overflow: hidden; box-shadow: inset 0 1px 0 rgba(255,255,255,.045), 0 12px 26px rgba(0,0,0,.2); }
     .bicono-card, .bicono-card *, .bicono-card > .grid { min-width: 0; overflow-wrap: break-word; }
     .bicono-card svg.bicono-svg { word-break: normal; }                                /* SVG non deve break */
     .bicono-card h4 { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: #c4b5fd; margin: 0 0 8px; font-weight: 600; }
     .bicono-svg { width: 100%; height: auto; max-height: 180px; }
-    .bicono-svg .axis { stroke: rgba(148,163,184,.25); stroke-width: 1; }
+    .bicono-svg .axis { stroke: rgba(184,188,204,.25); stroke-width: 1; }
     .bicono-svg .root-circle { fill: rgba(255,255,255,.04); stroke: rgba(167,139,250,.45); stroke-width: 1.5; }
     .bicono-svg .singular-circle { fill: rgba(167,139,250,.16); stroke: #a78bfa; stroke-width: 1.5; }
     .bicono-svg .invariant-arc { fill: none; stroke: #22d3ee; stroke-width: 1.2; stroke-dasharray: 3,3; opacity: .8; }
     .bicono-svg .label-text { fill: #d8dbe7; font: 10px ui-monospace, monospace; }
-    .bicono-svg .label-tag { fill: #94a3b8; font: 9px ui-sans-serif, system-ui; text-transform: uppercase; letter-spacing: .04em; }
+    .bicono-svg .label-tag { fill: rgb(var(--site-text-muted)); font: 9px ui-sans-serif, system-ui; text-transform: uppercase; letter-spacing: .04em; }
     .bicono-svg .pole-empty { stroke-dasharray: 4,3; opacity: .35; }
     /* Detail card values must wrap — selectedNode.label/verdict possono essere lunghi */
     .detail-card, .detail-card * { min-width: 0; overflow-wrap: break-word; }
     .selected-node-badge span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 200px; }
     .bicono-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(200px,100%),1fr)); gap: 8px; margin-top: 10px; font-size: 12px; min-width: 0; }
-    .bicono-field { padding: 6px 8px; background: rgba(0,0,0,.2); border-left: 2px solid rgba(167,139,250,.4); border-radius: 4px; }
+    .bicono-field { padding: 6px 8px; background: rgba(8,8,12,.56); border-left: 2px solid rgba(167,139,250,.62); border-radius: 4px; }
     .bicono-field .label { color: #c4b5fd; font-size: 10px; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 2px; }
     .bicono-field .value { color: #d8dbe7; }
-    .bicono-field.empty { opacity: .4; border-left-color: rgba(148,163,184,.3); }
-    .bicono-field.empty .value::after { content: '— assente nel report'; color: #64748b; font-style: italic; }
+    .bicono-field.empty { opacity: .4; border-left-color: rgba(184,188,204,.3); }
+    .bicono-field.empty .value::after { content: '— assente nel report'; color: rgb(154 160 178); font-style: italic; }
 
     /* Info cycle diagram — first-viewport explanation of how a lab cycles.
        Built as HTML/SVG, not a bitmap, so domain counts can stay live and the
@@ -273,8 +283,8 @@
       position: absolute;
       inset: 0;
       background-image:
-        linear-gradient(rgba(148,163,184,.05) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(148,163,184,.05) 1px, transparent 1px);
+        linear-gradient(rgba(184,188,204,.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(184,188,204,.05) 1px, transparent 1px);
       background-size: 32px 32px;
       mask-image: linear-gradient(to bottom, black, transparent 92%);
       pointer-events: none;
@@ -283,24 +293,24 @@
     .cycle-column { display: grid; gap: 10px; align-content: center; }
     .cycle-node {
       position: relative;
-      border: 1px solid rgba(148,163,184,.18);
+      border: 1px solid rgba(34,211,238,.26);
       border-radius: 8px;
-      background: rgba(8,8,12,.54);
+      background: linear-gradient(180deg, rgba(22,24,32,.82), rgba(8,8,12,.64));
       padding: 12px;
-      box-shadow: 0 10px 28px rgba(0,0,0,.25);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 10px 28px rgba(0,0,0,.26);
     }
-    .cycle-node .eyebrow { font: 10px ui-monospace, monospace; letter-spacing: .12em; text-transform: uppercase; color: rgb(148 151 168); }
+    .cycle-node .eyebrow { font: 10px ui-monospace, monospace; letter-spacing: .12em; text-transform: uppercase; color: rgb(var(--site-text-subtle)); }
     .cycle-node .title { margin-top: 4px; font-size: 14px; font-weight: 600; color: rgb(240 240 245); }
     .cycle-node .body { margin-top: 5px; font-size: 12px; line-height: 1.45; color: rgb(200 202 215); }
-    .cycle-node.cyan { border-color: rgba(34,211,238,.34); }
-    .cycle-node.purple { border-color: rgba(167,139,250,.34); }
-    .cycle-node.amber { border-color: rgba(251,191,36,.34); }
-    .cycle-node.green { border-color: rgba(52,211,153,.34); }
-    .cycle-node.rose { border-color: rgba(251,113,133,.34); }
+    .cycle-node.cyan { border-color: rgba(34,211,238,.56); box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 0 0 1px rgba(34,211,238,.08), 0 10px 28px rgba(0,0,0,.26); }
+    .cycle-node.purple { border-color: rgba(167,139,250,.56); box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 0 0 1px rgba(167,139,250,.08), 0 10px 28px rgba(0,0,0,.26); }
+    .cycle-node.amber { border-color: rgba(251,191,36,.56); box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 0 0 1px rgba(251,191,36,.08), 0 10px 28px rgba(0,0,0,.26); }
+    .cycle-node.green { border-color: rgba(52,211,153,.56); box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 0 0 1px rgba(52,211,153,.08), 0 10px 28px rgba(0,0,0,.26); }
+    .cycle-node.rose { border-color: rgba(251,113,133,.56); box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 0 0 1px rgba(251,113,133,.08), 0 10px 28px rgba(0,0,0,.26); }
     .cycle-core {
       position: relative;
       min-height: 312px;
-      border: 1px solid rgba(148,163,184,.14);
+      border: 1px solid rgba(184,188,204,.14);
       border-radius: 10px;
       background: rgba(0,0,0,.22);
       display: grid;
@@ -310,12 +320,12 @@
     .cycle-core svg { width: 100%; height: 100%; min-height: 312px; display: block; }
     .cycle-metric-row { position: relative; display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 8px; margin-top: 14px; }
     .cycle-metric {
-      border: 1px solid rgba(148,163,184,.16);
+      border: 1px solid rgba(34,211,238,.24);
       border-radius: 6px;
-      background: rgba(8,8,12,.48);
+      background: rgba(18,20,28,.72);
       padding: 9px 10px;
     }
-    .cycle-metric .k { font: 10px ui-monospace, monospace; letter-spacing: .1em; text-transform: uppercase; color: rgb(148 151 168); }
+    .cycle-metric .k { font: 10px ui-monospace, monospace; letter-spacing: .1em; text-transform: uppercase; color: rgb(var(--site-text-subtle)); }
     .cycle-metric .v { margin-top: 3px; font: 18px ui-monospace, monospace; color: rgb(34 211 238); }
     .domain-intent-grid { position: relative; display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; margin: 16px 0; }
     .domain-intent-grid .domain-intent-card:not(:last-child)::after {
@@ -329,21 +339,22 @@
       opacity: .75;
     }
     .domain-intent-card {
-      border: 1px solid rgba(148,163,184,.18);
+      border: 1px solid rgba(34,211,238,.28);
       border-radius: 8px;
-      background: rgba(8,8,12,.56);
+      background: linear-gradient(180deg, rgba(22,24,32,.84), rgba(8,8,12,.66));
       padding: 14px;
       min-height: 150px;
       position: relative;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.045), 0 12px 26px rgba(0,0,0,.24);
     }
-    .domain-intent-card .label { font: 10px ui-monospace, monospace; letter-spacing: .12em; text-transform: uppercase; color: rgb(148 151 168); }
+    .domain-intent-card .label { font: 10px ui-monospace, monospace; letter-spacing: .12em; text-transform: uppercase; color: rgb(var(--site-text-subtle)); }
     .domain-intent-card .headline { margin-top: 5px; font-size: 17px; line-height: 1.25; font-weight: 650; color: rgb(240 240 245); }
     .domain-intent-card .copy { margin-top: 8px; font-size: 13px; line-height: 1.5; color: rgb(220 222 230); }
     .domain-intent-card .meta { margin-top: 10px; font: 11px ui-monospace, monospace; color: rgb(34 211 238); }
     .cycle-architecture-details {
       position: relative;
       margin-top: 12px;
-      border-top: 1px solid rgba(148,163,184,.16);
+      border-top: 1px solid rgba(184,188,204,.16);
       padding-top: 10px;
     }
     .cycle-architecture-details summary {
@@ -402,7 +413,7 @@
     .sidebar-tip h5 {
       font-family: 'JetBrains Mono', ui-monospace, monospace;
       font-size: 0.7rem; letter-spacing: 0.14em; text-transform: uppercase;
-      color: rgb(170 175 190);
+      color: rgb(var(--site-text-subtle));
       margin: 0 0 0.5rem;
     }
     .sidebar-tip .stat-row {
@@ -419,7 +430,7 @@
     .node-tooltip.visible { opacity: 1; visibility: visible; }
     .node-tooltip .nt-type { display: inline-block; padding: 1px 6px; font-size: 10px; font-family: ui-monospace, monospace; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 6px; }
     .node-tooltip .nt-title { color: #d8dbe7; font-weight: 500; line-height: 1.3; margin-bottom: 4px; }
-    .node-tooltip .nt-meta { color: #94a3b8; font-size: 11px; line-height: 1.4; margin-bottom: 6px; }
+    .node-tooltip .nt-meta { color: rgb(var(--site-text-muted)); font-size: 11px; line-height: 1.4; margin-bottom: 6px; }
     .node-tooltip .nt-verdict { color: #cbd5e1; font-size: 11px; font-style: italic; line-height: 1.35; padding: 4px 0; border-top: 1px solid rgb(30 41 59); border-bottom: 1px solid rgb(30 41 59); margin: 6px 0; max-height: 50px; overflow: hidden; }
     .node-tooltip .nt-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
     .node-tooltip .nt-action { font-size: 10px; padding: 3px 8px; border-radius: 4px; background: rgb(30 41 59); color: #cbd5e1; border: 0; cursor: pointer; transition: background 0.12s; }
@@ -431,7 +442,7 @@
     .falsifier-card { border: 1px solid rgba(251,113,133,.25); background: linear-gradient(180deg, rgba(251,113,133,.06) 0%, rgba(15,23,42,1) 100%); border-radius: 0.5rem; padding: 14px; margin-bottom: 14px; overflow: hidden; }
     .falsifier-card, .falsifier-card * { min-width: 0; overflow-wrap: break-word; }
     .falsifier-card.coherent { border-color: rgba(52,211,153,.3); background: linear-gradient(180deg, rgba(52,211,153,.06) 0%, rgba(15,23,42,1) 100%); }
-    .falsifier-card.unverifiable { border-color: rgba(148,163,184,.3); background: linear-gradient(180deg, rgba(148,163,184,.06) 0%, rgba(15,23,42,1) 100%); }
+    .falsifier-card.unverifiable { border-color: rgba(184,188,204,.3); background: linear-gradient(180deg, rgba(184,188,204,.06) 0%, rgba(15,23,42,1) 100%); }
     .falsifier-card h4 { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; margin: 0 0 6px; font-weight: 600; }
     .falsifier-card.coherent h4 { color: #6ee7b7; }
     .falsifier-card.unverifiable h4 { color: #cbd5e1; }
@@ -439,13 +450,13 @@
     .falsifier-flag { padding: 8px 10px; background: rgba(0,0,0,.22); border-left: 2px solid; border-radius: 4px; margin-top: 8px; font-size: 12px; }
     .falsifier-flag.high   { border-left-color: #fb7185; }
     .falsifier-flag.medium { border-left-color: #fbbf24; }
-    .falsifier-flag.low    { border-left-color: #94a3b8; }
+    .falsifier-flag.low    { border-left-color: rgb(var(--site-text-muted)); }
     .falsifier-flag .lens-label { display: inline-block; padding: 1px 6px; font-size: 10px; font-family: ui-monospace, monospace; background: rgba(255,255,255,.06); color: #cbd5e1; border-radius: 3px; margin-right: 6px; }
     .falsifier-flag .severity-label { display: inline-block; padding: 1px 6px; font-size: 10px; font-family: ui-monospace, monospace; border-radius: 3px; }
     .falsifier-flag.high   .severity-label { background: rgba(251,113,133,.2); color: #fda4af; }
     .falsifier-flag.medium .severity-label { background: rgba(251,191,36,.18); color: #fcd34d; }
-    .falsifier-flag.low    .severity-label { background: rgba(148,163,184,.18); color: #cbd5e1; }
-    .falsifier-flag .field-label { color: #94a3b8; font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; margin-top: 4px; }
+    .falsifier-flag.low    .severity-label { background: rgba(184,188,204,.18); color: #cbd5e1; }
+    .falsifier-flag .field-label { color: rgb(var(--site-text-muted)); font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; margin-top: 4px; }
     .falsifier-flag .field-value { color: #d8dbe7; font-size: 12px; }
 
     /* v3 — Shell 3-col layout (CAMPO sx · content · DETTAGLIO dx).
@@ -521,7 +532,7 @@
     .resize-handle .rz-grip::before,
     .resize-handle .rz-grip::after {
       content: ''; width: 2px; height: 16px;
-      background: rgb(170 175 190); border-radius: 1px;
+      background: rgb(var(--site-text-subtle)); border-radius: 1px;
     }
     .lab-sidebar-left  .resize-handle { right: -6px; }
     .lab-sidebar-right .resize-handle { left: -6px; }
@@ -612,8 +623,8 @@
     }
     /* Scrollbar styling più discreto */
     .lab-sidebar::-webkit-scrollbar, .agente-col::-webkit-scrollbar { width: 6px; height: 6px; }
-    .lab-sidebar::-webkit-scrollbar-thumb, .agente-col::-webkit-scrollbar-thumb { background: rgba(148,163,184,.18); border-radius: 3px; }
-    .lab-sidebar::-webkit-scrollbar-thumb:hover, .agente-col::-webkit-scrollbar-thumb:hover { background: rgba(148,163,184,.35); }
+    .lab-sidebar::-webkit-scrollbar-thumb, .agente-col::-webkit-scrollbar-thumb { background: rgba(184,188,204,.18); border-radius: 3px; }
+    .lab-sidebar::-webkit-scrollbar-thumb:hover, .agente-col::-webkit-scrollbar-thumb:hover { background: rgba(184,188,204,.35); }
     .lab-sidebar::-webkit-scrollbar-track, .agente-col::-webkit-scrollbar-track { background: transparent; }
     /* UI fix #8 — titoli verticali su sidebar collassate (vertical-rl writing) */
     .lab-sidebar.collapsed .sb-title-vertical {
@@ -631,7 +642,7 @@
       user-select: none;
     }
     .lab-sidebar:not(.collapsed) .sb-title-vertical { display: none; }
-    .sidebar-toggle { position: absolute; top: 8px; background: none; border: 0; color: rgb(100 116 139); cursor: pointer; font-size: 12px; padding: 2px 6px; line-height: 1; }
+    .sidebar-toggle { position: absolute; top: 8px; background: none; border: 0; color: rgb(154 160 178); cursor: pointer; font-size: 12px; padding: 2px 6px; line-height: 1; }
     .lab-sidebar-left .sidebar-toggle { right: 6px; }
     .lab-sidebar-right .sidebar-toggle { left: 6px; }
     .sidebar-toggle:hover { color: #cbd5e1; }
@@ -660,7 +671,7 @@
     .stat-tip .st-title {
       font-family: 'JetBrains Mono', ui-monospace, monospace;
       font-size: 0.7rem; letter-spacing: 0.14em; text-transform: uppercase;
-      color: rgb(170 175 190);
+      color: rgb(var(--site-text-subtle));
       margin: 0 0 0.4rem;
     }
     .stat-tip .st-body {
@@ -686,7 +697,7 @@
     .dashboard-topnav { min-width: 0; }
     .domain-breadcrumb { min-width: 0; max-width: 190px; }
     .domain-pill { max-width: 155px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .lab-tab { padding: 0.6rem 1.2rem; font-size: 0.875rem; font-weight: 500; border-bottom: 2px solid transparent; transition: all 0.15s; white-space: nowrap; color: #94a3b8; background: none; border-left: 0; border-right: 0; border-top: 0; cursor: pointer; }
+    .lab-tab { padding: 0.6rem 1.2rem; font-size: 0.875rem; font-weight: 500; border-bottom: 2px solid transparent; transition: all 0.15s; white-space: nowrap; color: rgb(var(--site-text-muted)); background: none; border-left: 0; border-right: 0; border-top: 0; cursor: pointer; }
     .lab-tab:hover { color: #cbd5e1; }
     .lab-tab.active { color: #c4b5fd; border-bottom-color: #a78bfa; }
     .lab-tab .tab-icon { display: inline-block; margin-right: 6px; opacity: .7; }
@@ -726,8 +737,8 @@
     .chip-type-ghost { background: rgba(251,191,36,.18); color: #fcd34d; }
     .chip-type-scoperta { background: rgba(244,114,182,.18); color: #f9a8d4; }
     .chip-maturity { background: rgba(34,211,238,.18); color: #67e8f9; }
-    .chip-date { background: rgba(148,163,184,.18); color: #cbd5e1; text-transform: none; letter-spacing: 0; }
-    .detail-card { padding: 10px; background: rgba(0,0,0,.22); border-radius: 6px; border: 1px solid rgba(148,163,184,.12); }
+    .chip-date { background: rgba(184,188,204,.18); color: #cbd5e1; text-transform: none; letter-spacing: 0; }
+    .detail-card { padding: 10px; background: rgba(0,0,0,.22); border-radius: 6px; border: 1px solid rgba(184,188,204,.12); }
     .detail-action { display: block; width: 100%; text-align: left; font-size: 12px; padding: 6px 10px; border-radius: 4px; background: rgb(30 41 59); transition: background 0.15s; cursor: pointer; border: 0; }
     .detail-action:hover { background: rgb(51 65 85); }
 
@@ -825,7 +836,7 @@
       transition: background .12s, color .12s, border-color .12s;
     }
     .graph-fs-controls button:hover { background: rgb(30 41 59); color: #22d3ee; border-color: rgba(34,211,238,.3); }
-    .graph-fs-controls .label { font-size: 11px; color: #94a3b8; padding: 0 4px; }
+    .graph-fs-controls .label { font-size: 11px; color: rgb(var(--site-text-muted)); padding: 0 4px; }
 
     /* v3.8 — Chat floating bottom-right (THIA-style, vedi /opt/d-nd_com).
        Stato chiuso: bolla circolare 56px. Stato aperto: pannello 380x540 con
@@ -1434,9 +1445,9 @@
                       <g x-html="btcVolumeBarsSvg()"></g>
                       <g x-html="btcChartCandlesSvg()"></g>
                       <polyline :points="btcClosePolyline()" fill="none" stroke="#22d3ee" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round" opacity="0.72"></polyline>
-                      <text x="44" y="24" fill="#94a3b8" font-size="11" font-family="monospace" x-text="btcChartStats().highLabel"></text>
-                      <text x="44" y="236" fill="#94a3b8" font-size="11" font-family="monospace" x-text="btcChartStats().lowLabel"></text>
-                      <text x="44" y="285" fill="#94a3b8" font-size="11" font-family="monospace" x-text="btcChartStats().windowLabel"></text>
+                      <text x="44" y="24" fill="#cdd0de" font-size="11" font-family="monospace" x-text="btcChartStats().highLabel"></text>
+                      <text x="44" y="236" fill="#cdd0de" font-size="11" font-family="monospace" x-text="btcChartStats().lowLabel"></text>
+                      <text x="44" y="285" fill="#cdd0de" font-size="11" font-family="monospace" x-text="btcChartStats().windowLabel"></text>
                     </svg>
                   </div>
                   <div class="grid gap-2 content-start">
@@ -1855,7 +1866,7 @@
                     <div class="flex items-center gap-1.5"><i class="legend-dot" style="background:#22d3ee"></i><span class="text-slate-300">CONSTRAINT</span></div>
                     <div class="flex items-center gap-1.5"><i class="legend-dot" style="background:#34d399"></i><span class="text-slate-300">DISCOVERY</span></div>
                     <div class="flex items-center gap-1.5"><i class="legend-dot" style="background:#fbbf24"></i><span class="text-slate-300">PARTIAL / REFUTE</span></div>
-                    <div class="flex items-center gap-1.5"><i class="legend-dot" style="background:#94a3b8"></i><span class="text-slate-300">NULL / OTHER</span></div>
+                    <div class="flex items-center gap-1.5"><i class="legend-dot" style="background:#cdd0de"></i><span class="text-slate-300">NULL / OTHER</span></div>
                     <span class="text-slate-300 ml-auto italic">⚠N = flag dal falsifier</span>
                   </div>
 
@@ -2168,11 +2179,11 @@
                           </feMerge>
                         </filter>
                       </defs>
-                      <rect x="20" y="26" width="480" height="308" rx="16" fill="rgba(8,8,12,0.28)" stroke="rgba(148,163,184,0.16)"></rect>
+                      <rect x="20" y="26" width="480" height="308" rx="16" fill="rgba(8,8,12,0.28)" stroke="rgba(184,188,204,0.16)"></rect>
                       <path d="M260 68 C365 68 438 126 438 180 C438 236 365 292 260 292 C155 292 82 236 82 180 C82 126 155 68 260 68"
                             fill="none" stroke="#22d3ee" stroke-width="2.2" stroke-dasharray="7 7" opacity="0.78" marker-end="url(#cycleArrow)"></path>
-                      <path d="M142 180 L378 180" stroke="rgba(148,163,184,0.42)" stroke-width="1.6"></path>
-                      <path d="M260 94 L260 266" stroke="rgba(148,163,184,0.34)" stroke-width="1.2"></path>
+                      <path d="M142 180 L378 180" stroke="rgba(184,188,204,0.42)" stroke-width="1.6"></path>
+                      <path d="M260 94 L260 266" stroke="rgba(184,188,204,0.34)" stroke-width="1.2"></path>
                       <circle cx="260" cy="180" r="58" fill="rgba(167,139,250,0.16)" stroke="#a78bfa" stroke-width="2" filter="url(#softGlow)"></circle>
                       <circle cx="260" cy="180" r="28" fill="rgba(34,211,238,0.24)" stroke="#22d3ee" stroke-width="2"></circle>
                       <text x="260" y="174" text-anchor="middle" fill="#f0f0f5" font-size="15" font-weight="700">D-ND</text>
@@ -2181,22 +2192,22 @@
                       <g>
                         <circle cx="102" cy="180" r="30" fill="rgba(34,211,238,0.22)" stroke="#22d3ee" stroke-width="2"></circle>
                         <text x="102" y="176" text-anchor="middle" fill="#f0f0f5" font-size="12" font-weight="700">Campo</text>
-                        <text x="102" y="193" text-anchor="middle" fill="#94a3b8" font-size="9">osserva</text>
+                        <text x="102" y="193" text-anchor="middle" fill="#cdd0de" font-size="9">osserva</text>
                       </g>
                       <g>
                         <circle cx="260" cy="68" r="30" fill="rgba(251,191,36,0.18)" stroke="#fbbf24" stroke-width="2"></circle>
                         <text x="260" y="64" text-anchor="middle" fill="#f0f0f5" font-size="12" font-weight="700">Agente</text>
-                        <text x="260" y="81" text-anchor="middle" fill="#94a3b8" font-size="9">propone</text>
+                        <text x="260" y="81" text-anchor="middle" fill="#cdd0de" font-size="9">propone</text>
                       </g>
                       <g>
                         <circle cx="418" cy="180" r="30" fill="rgba(251,113,133,0.16)" stroke="#fb7185" stroke-width="2"></circle>
                         <text x="418" y="176" text-anchor="middle" fill="#f0f0f5" font-size="12" font-weight="700">Falsifier</text>
-                        <text x="418" y="193" text-anchor="middle" fill="#94a3b8" font-size="9">attacca</text>
+                        <text x="418" y="193" text-anchor="middle" fill="#cdd0de" font-size="9">attacca</text>
                       </g>
                       <g>
                         <circle cx="260" cy="292" r="30" fill="rgba(52,211,153,0.18)" stroke="#34d399" stroke-width="2"></circle>
                         <text x="260" y="288" text-anchor="middle" fill="#f0f0f5" font-size="12" font-weight="700">Deposito</text>
-                        <text x="260" y="305" text-anchor="middle" fill="#94a3b8" font-size="9">conserva</text>
+                        <text x="260" y="305" text-anchor="middle" fill="#cdd0de" font-size="9">conserva</text>
                       </g>
 
                       <path d="M128 164 C170 116 202 86 232 72" fill="none" stroke="#a78bfa" stroke-width="1.8" marker-end="url(#cycleArrow)" opacity="0.85"></path>
@@ -2976,7 +2987,7 @@
     ghost: '#fbbf24', scoperta: '#f472b6', ponte: '#818cf8',
     vuoto: '#fb7185',
   };
-  const NODE_TYPE_DEFAULT = '#94a3b8';
+  const NODE_TYPE_DEFAULT = '#cdd0de';
 
   // Stat tips rich — pattern dal sito (LabGraph.tsx statTipsRich).
   // Adattato al contesto D-ND_LAB (lab portatile, dominio-agnostico).
@@ -3856,8 +3867,8 @@
               selector: 'edge',
               style: {
                 'width': 1.5,
-                'line-color': 'rgba(148,163,184,.45)',
-                'target-arrow-color': 'rgba(148,163,184,.6)',
+                'line-color': 'rgba(184,188,204,.45)',
+                'target-arrow-color': 'rgba(184,188,204,.6)',
                 'target-arrow-shape': 'triangle',
                 'arrow-scale': 0.75,
                 'curve-style': 'bezier',
@@ -3868,8 +3879,8 @@
             {
               selector: 'edge[?isPonte]',
               style: {
-                'line-color': (ele) => ele.data('pairColor') || '#64748b',
-                'target-arrow-color': (ele) => ele.data('pairColor') || '#64748b',
+                'line-color': (ele) => ele.data('pairColor') || 'rgb(154 160 178)',
+                'target-arrow-color': (ele) => ele.data('pairColor') || 'rgb(154 160 178)',
                 'width': 2.5,
                 'opacity': 0.9,
               },
@@ -5017,8 +5028,8 @@
           if (v.includes('CONSTRAINT')) return { cat: 'CONSTRAINT', color: '#22d3ee' };
           if (v.includes('DISCOVERY')) return { cat: 'DISCOVERY', color: '#34d399' };
           if (v.includes('REFUTE') || v.includes('PARTIAL') || v.includes('FALSIFIE')) return { cat: 'PARTIAL', color: '#fbbf24' };
-          if (v.includes('NULL') || v.includes('NEGATIVE')) return { cat: 'NULL', color: '#94a3b8' };
-          return { cat: 'OTHER', color: '#94a3b8' };
+          if (v.includes('NULL') || v.includes('NEGATIVE')) return { cat: 'NULL', color: '#cdd0de' };
+          return { cat: 'OTHER', color: '#cdd0de' };
         };
         // Max n_flags for height scaling
         const maxFlags = Math.max(1, ...sorted.map(r => r.n_flags || 0));
@@ -5085,9 +5096,9 @@
         return `<svg viewBox="0 0 ${vb.w} ${vb.h}" preserveAspectRatio="xMidYMid meet" style="width:100%;min-width:760px;height:320px">
           <defs>
             <linearGradient id="traj-axis-grad" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stop-color="rgba(148,163,184,0.05)"/>
-              <stop offset="50%" stop-color="rgba(148,163,184,0.4)"/>
-              <stop offset="100%" stop-color="rgba(148,163,184,0.05)"/>
+              <stop offset="0%" stop-color="rgba(184,188,204,0.05)"/>
+              <stop offset="50%" stop-color="rgba(184,188,204,0.4)"/>
+              <stop offset="100%" stop-color="rgba(184,188,204,0.05)"/>
             </linearGradient>
           </defs>
           <line x1="40" y1="${yAxis}" x2="${vb.w - 20}" y2="${yAxis}"
@@ -5111,7 +5122,7 @@
         const edges = this.taxonomyData.edges || [];
 
         if (groups.length === 0) {
-          container.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#64748b;font-size:14px">Tassonomia vuota — esegui un ciclo per popolare il grafo.</div>';
+          container.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:rgb(154 160 178);font-size:14px">Tassonomia vuota — esegui un ciclo per popolare il grafo.</div>';
           return;
         }
 
@@ -5210,8 +5221,8 @@
               selector: 'edge',
               style: {
                 'width': 1.5,
-                'line-color': 'rgba(148,163,184,.4)',
-                'target-arrow-color': 'rgba(148,163,184,.55)',
+                'line-color': 'rgba(184,188,204,.4)',
+                'target-arrow-color': 'rgba(184,188,204,.55)',
                 'target-arrow-shape': 'triangle',
                 'arrow-scale': 0.7,
                 'curve-style': 'bezier',
