@@ -1397,23 +1397,26 @@
                   </div>
                 </div>
                 <div class="grid lg:grid-cols-[minmax(0,1fr)_240px] gap-4 items-stretch">
-                  <div class="rounded-md border border-slate-800 bg-slate-950/60 p-3 min-h-[260px] overflow-hidden">
-                    <svg viewBox="0 0 720 260" preserveAspectRatio="none" class="w-full h-[260px] block">
-                      <line x1="40" y1="30" x2="40" y2="220" stroke="#334155" stroke-width="1"></line>
-                      <line x1="40" y1="220" x2="700" y2="220" stroke="#334155" stroke-width="1"></line>
-                      <line x1="40" y1="78" x2="700" y2="78" stroke="#1f2937" stroke-width="1"></line>
-                      <line x1="40" y1="126" x2="700" y2="126" stroke="#1f2937" stroke-width="1"></line>
-                      <line x1="40" y1="174" x2="700" y2="174" stroke="#1f2937" stroke-width="1"></line>
-                      <polyline :points="btcClosePolyline()" fill="none" stroke="#22d3ee" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"></polyline>
+                  <div class="rounded-md border border-slate-800 bg-slate-950/60 p-3 min-h-[300px] overflow-hidden">
+                    <svg viewBox="0 0 720 300" preserveAspectRatio="none" class="w-full h-[300px] block">
+                      <line x1="48" y1="30" x2="48" y2="218" stroke="#334155" stroke-width="1"></line>
+                      <line x1="48" y1="218" x2="696" y2="218" stroke="#334155" stroke-width="1"></line>
+                      <line x1="48" y1="77" x2="696" y2="77" stroke="#1f2937" stroke-width="1"></line>
+                      <line x1="48" y1="124" x2="696" y2="124" stroke="#1f2937" stroke-width="1"></line>
+                      <line x1="48" y1="171" x2="696" y2="171" stroke="#1f2937" stroke-width="1"></line>
+                      <template x-for="v in btcVolumeBars()" :key="v.key">
+                        <rect :x="v.x - v.w / 2" :y="v.y" :width="v.w" :height="v.h" fill="#334155" opacity="0.55" rx="1"></rect>
+                      </template>
                       <template x-for="c in btcChartCandles()" :key="c.key">
                         <g>
-                          <line :x1="c.x" :x2="c.x" :y1="c.yHigh" :y2="c.yLow" :stroke="c.color" stroke-width="1.5"></line>
-                          <rect :x="c.x - c.w / 2" :y="c.yBody" :width="c.w" :height="c.hBody" :fill="c.color" opacity="0.78" rx="1"></rect>
+                          <line :x1="c.x" :x2="c.x" :y1="c.yHigh" :y2="c.yLow" :stroke="c.color" stroke-width="2.2" opacity="0.9"></line>
+                          <rect :x="c.x - c.w / 2" :y="c.yBody" :width="c.w" :height="c.hBody" :fill="c.color" opacity="0.9" rx="1"></rect>
                         </g>
                       </template>
+                      <polyline :points="btcClosePolyline()" fill="none" stroke="#22d3ee" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round" opacity="0.72"></polyline>
                       <text x="44" y="24" fill="#94a3b8" font-size="11" font-family="monospace" x-text="btcChartStats().highLabel"></text>
-                      <text x="44" y="240" fill="#94a3b8" font-size="11" font-family="monospace" x-text="btcChartStats().lowLabel"></text>
-                      <text x="560" y="240" fill="#94a3b8" font-size="11" font-family="monospace" x-text="btcChartStats().windowLabel"></text>
+                      <text x="44" y="236" fill="#94a3b8" font-size="11" font-family="monospace" x-text="btcChartStats().lowLabel"></text>
+                      <text x="44" y="285" fill="#94a3b8" font-size="11" font-family="monospace" x-text="btcChartStats().windowLabel"></text>
                     </svg>
                   </div>
                   <div class="grid gap-2 content-start">
@@ -4612,7 +4615,7 @@
           latest,
           highLabel: `high ${this.btcPriceLabel(high)}`,
           lowLabel: `low ${this.btcPriceLabel(low)}`,
-          windowLabel: `${series?.provider || 'feed'} · ${candles[0]?.date || '?'} → ${latest?.date || '?'}`,
+          windowLabel: `${series?.provider || 'feed'} · ${candles[0]?.date || '?'} -> ${latest?.date || '?'}`,
         };
       },
 
@@ -4623,15 +4626,15 @@
         const high = Number(stats.high);
         const low = Number(stats.low);
         const range = high > low ? high - low : 1;
-        const left = 50, right = 690, top = 30, bottom = 220;
+        const left = 58, right = 688, top = 30, bottom = 218;
         const step = candles.length > 1 ? (right - left) / (candles.length - 1) : 0;
-        const w = Math.max(3, Math.min(10, (right - left) / Math.max(candles.length, 1) * 0.45));
+        const w = Math.max(7, Math.min(16, (right - left) / Math.max(candles.length, 1) * 0.62));
         const y = (value) => bottom - ((Number(value) - low) / range) * (bottom - top);
         return candles.map((c, i) => {
           const open = Number(c.open), close = Number(c.close);
           const yOpen = y(open), yClose = y(close);
           const bodyTop = Math.min(yOpen, yClose);
-          const bodyHeight = Math.max(2, Math.abs(yOpen - yClose));
+          const bodyHeight = Math.max(4, Math.abs(yOpen - yClose));
           return {
             key: `${c.date || i}-${i}`,
             x: left + i * step,
@@ -4645,6 +4648,27 @@
         });
       },
 
+      btcVolumeBars() {
+        const candles = this.btcSelectedCandles();
+        const volumes = candles.map(c => Number(c.volume)).filter(v => Number.isFinite(v) && v >= 0);
+        if (!candles.length || !volumes.length) return [];
+        const maxVol = Math.max(...volumes) || 1;
+        const left = 58, right = 688, top = 248, bottom = 286;
+        const step = candles.length > 1 ? (right - left) / (candles.length - 1) : 0;
+        const w = Math.max(6, Math.min(15, (right - left) / Math.max(candles.length, 1) * 0.56));
+        return candles.map((c, i) => {
+          const vol = Number(c.volume);
+          const h = Number.isFinite(vol) ? Math.max(2, (vol / maxVol) * (bottom - top)) : 2;
+          return {
+            key: `v-${c.date || i}-${i}`,
+            x: left + i * step,
+            w,
+            y: bottom - h,
+            h,
+          };
+        });
+      },
+
       btcClosePolyline() {
         const candles = this.btcSelectedCandles();
         if (!candles.length) return '';
@@ -4652,7 +4676,7 @@
         const high = Number(stats.high);
         const low = Number(stats.low);
         const range = high > low ? high - low : 1;
-        const left = 50, right = 690, top = 30, bottom = 220;
+        const left = 58, right = 688, top = 30, bottom = 218;
         const step = candles.length > 1 ? (right - left) / (candles.length - 1) : 0;
         return candles.map((c, i) => {
           const x = left + i * step;
