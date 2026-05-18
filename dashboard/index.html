@@ -1404,15 +1404,8 @@
                       <line x1="48" y1="77" x2="696" y2="77" stroke="#1f2937" stroke-width="1"></line>
                       <line x1="48" y1="124" x2="696" y2="124" stroke="#1f2937" stroke-width="1"></line>
                       <line x1="48" y1="171" x2="696" y2="171" stroke="#1f2937" stroke-width="1"></line>
-                      <template x-for="v in btcVolumeBars()" :key="v.key">
-                        <rect :x="v.x - v.w / 2" :y="v.y" :width="v.w" :height="v.h" fill="#334155" opacity="0.55" rx="1"></rect>
-                      </template>
-                      <template x-for="c in btcChartCandles()" :key="c.key">
-                        <g>
-                          <line :x1="c.x" :x2="c.x" :y1="c.yHigh" :y2="c.yLow" :stroke="c.color" stroke-width="2.2" opacity="0.9"></line>
-                          <rect :x="c.x - c.w / 2" :y="c.yBody" :width="c.w" :height="c.hBody" :fill="c.color" opacity="0.9" rx="1"></rect>
-                        </g>
-                      </template>
+                      <g x-html="btcVolumeBarsSvg()"></g>
+                      <g x-html="btcChartCandlesSvg()"></g>
                       <polyline :points="btcClosePolyline()" fill="none" stroke="#22d3ee" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round" opacity="0.72"></polyline>
                       <text x="44" y="24" fill="#94a3b8" font-size="11" font-family="monospace" x-text="btcChartStats().highLabel"></text>
                       <text x="44" y="236" fill="#94a3b8" font-size="11" font-family="monospace" x-text="btcChartStats().lowLabel"></text>
@@ -4667,6 +4660,19 @@
             h,
           };
         });
+      },
+
+      btcChartCandlesSvg() {
+        return this.btcChartCandles().map(c => (
+          `<line x1="${c.x}" x2="${c.x}" y1="${c.yHigh}" y2="${c.yLow}" stroke="${c.color}" stroke-width="2.2" opacity="0.9"></line>` +
+          `<rect x="${c.x - c.w / 2}" y="${c.yBody}" width="${c.w}" height="${c.hBody}" fill="${c.color}" opacity="0.9" rx="1"></rect>`
+        )).join('');
+      },
+
+      btcVolumeBarsSvg() {
+        return this.btcVolumeBars().map(v => (
+          `<rect x="${v.x - v.w / 2}" y="${v.y}" width="${v.w}" height="${v.h}" fill="#334155" opacity="0.55" rx="1"></rect>`
+        )).join('');
       },
 
       btcClosePolyline() {
