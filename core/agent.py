@@ -21,7 +21,9 @@ Phase 2 implementation will:
 
 from __future__ import annotations
 
+import os
 import logging
+from contextlib import contextmanager
 from typing import Any
 
 from core import config as cfg
@@ -29,6 +31,21 @@ from core import llm_adapter, paths, skill_loader, tools
 from core.lab_agent import CycleContext, register_movement
 
 logger = logging.getLogger(__name__)
+
+
+@contextmanager
+def _temporary_env(updates: dict[str, str]):
+    old = {key: os.environ.get(key) for key in updates}
+    try:
+        for key, value in updates.items():
+            os.environ[key] = value
+        yield
+    finally:
+        for key, value in old.items():
+            if value is None:
+                os.environ.pop(key, None)
+            else:
+                os.environ[key] = value
 
 
 def _build_mml_section(domain: str) -> str:
@@ -93,6 +110,140 @@ def _build_mml_section(domain: str) -> str:
         lines.append("")
 
     return "\n".join(lines).rstrip()
+
+
+def _cli_provider_from_stop_reason(stop_reason: str) -> str | None:
+    if stop_reason == "codex-cli-complete":
+        return "codex-cli"
+    if stop_reason == "claude-cli-complete":
+        return "claude-cli"
+    return None
+
+
+def _write_repair_report(
+    ctx: CycleContext,
+    expected_report,
+    result: llm_adapter.AgentResult,
+    reason: str,
+) -> None:
+    """Write a deterministic no-claim report when the agent misses its contract.
+
+    This keeps the cycle observable without pretending that a domain experiment
+    succeeded. Downstream falsifier/seed movements can then absorb the runtime
+    failure as a constraint instead of losing the cycle entirely.
+    """
+    expected_report.parent.mkdir(parents=True, exist_ok=True)
+    text = f"""# Agent Runtime Repair Report — {ctx.domain} {ctx.timestamp}
+
+**verdict**: CYCLE_REPAIR_NO_CLAIM
+
+## Runtime Contract
+
+The agent movement must produce this report file:
+
+```text
+{expected_report}
+```
+
+The provider completed or returned control, but the expected report artifact
+was not present after the autonomous step.
+
+## Repair Applied
+
+The cycle wrote this deterministic repair report locally so the rest of the Lab
+can observe, falsify and integrate the failure. This report is not a scientific
+finding, not a domain result, not a promotion candidate and not evidence for any
+claim in the domain.
+
+## Provider Outcome
+
+- stop_reason: `{result.stop_reason}`
+- turns: `{result.turns}`
+- tool_calls: `{len(result.tool_calls)}`
+- duration_s: `{round(result.duration_s, 2)}`
+- repair_reason: `{reason}`
+
+## Constraint For Next Cycle
+
+The next cycle should treat this as a runtime contract failure:
+
+- the provider can complete without satisfying the side-effect contract;
+- the field/prompt/tooling must make the report-write step non-optional;
+- paid HTTP fallback must not be used automatically to compensate for a missing
+  report side effect;
+- if a domain experiment is needed, rerun from the same seed after the report
+  contract is made observable.
+
+## Bicono Section
+
+- Root A: provider completed.
+- Root B: report artifact missing.
+- Singular: cycle observability, not domain knowledge.
+- Invariant of passage: no claim is admitted without the expected artifact.
+- Field of possibility: repair the movement contract before interpreting the
+  domain.
+
+## Seed Update Proposal
+
+```json
+{{
+  "tipo": "vincolo",
+  "id": "AGENT_REPORT_SIDE_EFFECT_CONTRACT",
+  "claim": "The agent movement is not complete until agent_<timestamp>.md exists and is non-trivial; provider completion alone is not authority.",
+  "intensita": 0.9,
+  "porta": "runtime",
+  "condensato_ref": "A8,A15"
+}}
+```
+"""
+    expected_report.write_text(text, encoding="utf-8")
+
+
+def _attempt_same_cli_report_repair(
+    *,
+    ctx: CycleContext,
+    result: llm_adapter.AgentResult,
+    system_prompt: str,
+    expected_report,
+    report_written,
+    adapter_config: llm_adapter.AdapterConfig,
+) -> llm_adapter.AgentResult | None:
+    provider = _cli_provider_from_stop_reason(result.stop_reason)
+    if not provider:
+        return None
+
+    repair_config = llm_adapter.AdapterConfig(
+        base_url=adapter_config.base_url,
+        api_key=adapter_config.api_key,
+        model=adapter_config.model,
+        max_turns=3,
+        timeout_seconds=min(adapter_config.timeout_seconds, 240),
+        max_cost_usd=adapter_config.max_cost_usd,
+    )
+    repair_message = (
+        f"Runtime repair for cycle {ctx.timestamp}. "
+        f"You completed the previous agent step without writing the required report. "
+        f"Do not run a new experiment. Write a concise report now to "
+        f"{expected_report}. The report must state what was attempted, what is "
+        f"verifiable from the current field, what is not a claim, and include a "
+        f"Bicono section. This is a same-provider repair, not a fallback."
+    )
+    logger.warning(
+        "agent: expected report missing after %s; attempting same-provider repair",
+        provider,
+    )
+    with _temporary_env({
+        "LLM_PROVIDER_CHAIN": provider,
+        "LLM_FALLBACK_ON_CLI_SIDE_EFFECT_MISS": "",
+    }):
+        repaired = llm_adapter.run_agent(
+            system_prompt=system_prompt,
+            user_message=repair_message,
+            tools=None,
+            config=repair_config,
+            early_stop=report_written,
+        )
+    return repaired
 
 
 def agent(ctx: CycleContext) -> None:
@@ -196,6 +347,31 @@ def agent(ctx: CycleContext) -> None:
 
     # Verify the agent wrote the expected report file
     expected_report = paths.reports_dir(ctx.domain) / f"agent_{ctx.timestamp}.md"
+    repair_applied = False
+    repair_stop_reason = ""
+    if not report_written():
+        repaired = _attempt_same_cli_report_repair(
+            ctx=ctx,
+            result=result,
+            system_prompt=system_prompt,
+            expected_report=expected_report,
+            report_written=report_written,
+            adapter_config=adapter_config,
+        )
+        if repaired and report_written():
+            repair_applied = True
+            repair_stop_reason = repaired.stop_reason
+            result = repaired
+        else:
+            _write_repair_report(
+                ctx,
+                expected_report,
+                result,
+                reason="same-provider repair did not produce report" if repaired else "no same-provider repair available",
+            )
+            repair_applied = True
+            repair_stop_reason = "deterministic-no-claim-report"
+
     if not expected_report.exists():
         raise RuntimeError(
             f"agent did not write report file at {expected_report} "
@@ -206,6 +382,8 @@ def agent(ctx: CycleContext) -> None:
     ctx.metrics.setdefault("agent", {}).update(
         turns=result.turns,
         stop_reason=result.stop_reason,
+        repair_applied=repair_applied,
+        repair_stop_reason=repair_stop_reason,
         tool_calls=len(result.tool_calls),
         usage=result.usage,
         cost_usd=result.cost_usd,
