@@ -46,6 +46,54 @@
       }
     ]
   },
+  "terminology": {
+    "it": {
+      "teorie": "ipotesi",
+      "ponti": "baseline/null",
+      "vuoti": "gap dati",
+      "scoperte": "risultati",
+      "applicazioni": "vincoli",
+      "prodotti": "verifiche",
+      "cicli": "cicli",
+      "ghost": "rischi aperti",
+      "cimitero": "scartati",
+      "legend_tensione": "ipotesi",
+      "legend_teoria": "modello",
+      "legend_scoperta": "risultato"
+    },
+    "en": {
+      "teorie": "hypotheses",
+      "ponti": "baselines/nulls",
+      "vuoti": "data gaps",
+      "scoperte": "findings",
+      "applicazioni": "constraints",
+      "prodotti": "checks",
+      "cicli": "cycles",
+      "ghost": "open risks",
+      "cimitero": "rejected",
+      "legend_tensione": "hypothesis",
+      "legend_teoria": "model",
+      "legend_scoperta": "finding"
+    }
+  },
+  "nav": {
+    "it": {
+      "campo": "Regime, evidenza recente e decisione non-operativa.",
+      "grafo": "Relazioni tra ipotesi, baseline, null e vincoli.",
+      "bicono": "Poli delle ipotesi estratti dai report.",
+      "agente": "Evidenza, verdict, veto e trace.",
+      "tassonomia": "Traiettoria dei cicli e ricorrenze.",
+      "prodotti": "Scoperte, candidate e verifiche mature."
+    },
+    "en": {
+      "campo": "Regime, recent evidence and non-operational decision.",
+      "grafo": "Relations across hypotheses, baselines, nulls and constraints.",
+      "bicono": "Hypothesis poles extracted from reports.",
+      "agente": "Evidence, verdicts, vetoes and traces.",
+      "tassonomia": "Cycle trajectory and recurrences.",
+      "prodotti": "Findings, candidates and mature checks."
+    }
+  },
   "common_modules": [
     {
       "module": "SeedStatus",

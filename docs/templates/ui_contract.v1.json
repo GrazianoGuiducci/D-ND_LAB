@@ -30,6 +30,44 @@
       }
     ]
   },
+  "terminology": {
+    "it": {
+      "teorie": "<domain word for methods/sources/hypotheses>",
+      "ponti": "<domain word for bridges/confluences/evidence>",
+      "vuoti": "<domain word for gaps/open claims>",
+      "scoperte": "<domain word for findings/claim-cards>",
+      "applicazioni": "<domain word for candidate applications/watchlist>",
+      "prodotti": "<domain word for products/checks>",
+      "cicli": "<domain word for cycles/readings>",
+      "ghost": "<domain word for open/urgent hypotheses>",
+      "cimitero": "<domain word for rejected/discarded outputs>",
+      "legend_tensione": "<domain word for tension>",
+      "legend_teoria": "<domain word for theory/source/model>",
+      "legend_scoperta": "<domain word for discovery/finding/claim>"
+    },
+    "en": {}
+  },
+  "nav": {
+    "it": {
+      "campo": "Domain-native one-line explanation of Campo.",
+      "grafo": "Domain-native one-line explanation of Grafo.",
+      "bicono": "Domain-native one-line explanation of Bicono.",
+      "agente": "Domain-native one-line explanation of Agente.",
+      "tassonomia": "Domain-native one-line explanation of Tassonomia.",
+      "prodotti": "Domain-native one-line explanation of Prodotti."
+    },
+    "en": {}
+  },
+  "tooltips": {
+    "it": {
+      "<sidebar-key>": {
+        "title": "Domain-native tooltip title",
+        "body": "What this UI count means in the domain.",
+        "logic": "How the operator should interpret it without contaminating the domain."
+      }
+    },
+    "en": {}
+  },
   "common_modules": [
     {
       "module": "SeedStatus",

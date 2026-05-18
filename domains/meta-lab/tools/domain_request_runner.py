@@ -138,6 +138,175 @@ def _boundary_summary(boundary: dict[str, Any] | None) -> str:
     )
 
 
+def _ui_language_contract(kind: str) -> dict[str, Any]:
+    """Domain-native UI wording for generated dashboards.
+
+    These labels are hints for the dashboard only. They do not change graph or
+    storage keys, but prevent new Labs from inheriting physics wording when the
+    domain needs claims, sources, regimes or data-cards.
+    """
+    if kind == "bitcoin-regime":
+        return {
+            "terminology": {
+                "it": {
+                    "teorie": "metodi",
+                    "ponti": "confluenze",
+                    "vuoti": "gap",
+                    "scoperte": "claim-card",
+                    "applicazioni": "watchlist",
+                    "prodotti": "verifiche",
+                    "cicli": "letture",
+                    "ghost": "ipotesi aperte",
+                    "cimitero": "scartati",
+                    "legend_tensione": "ipotesi",
+                    "legend_teoria": "metodo",
+                    "legend_scoperta": "claim",
+                    "nav_tassonomia_label": "Traiettoria",
+                },
+                "en": {
+                    "teorie": "methods",
+                    "ponti": "confluences",
+                    "vuoti": "gaps",
+                    "scoperte": "claim-cards",
+                    "applicazioni": "watchlist",
+                    "prodotti": "checks",
+                    "cicli": "readings",
+                    "ghost": "open hypotheses",
+                    "cimitero": "rejected",
+                    "legend_tensione": "hypothesis",
+                    "legend_teoria": "method",
+                    "legend_scoperta": "claim",
+                    "nav_tassonomia_label": "Trajectory",
+                },
+            },
+            "nav": {
+                "it": {
+                    "campo": "Stato BTC, dati disponibili e decisione corrente.",
+                    "grafo": "Relazioni tra claim, timeframe, baseline e falsifier.",
+                    "bicono": "Poli delle ipotesi estratti dalle letture.",
+                    "agente": "Report, evidenza, veto e runtime.",
+                    "tassonomia": "Sequenza dei cicli e movimento del regime lab.",
+                    "prodotti": "Claim-card, watchlist, reject reason e verifiche.",
+                },
+                "en": {
+                    "campo": "BTC state, available data and current decision.",
+                    "grafo": "Relations across claims, timeframes, baselines and falsifier.",
+                    "bicono": "Hypothesis poles extracted from readings.",
+                    "agente": "Reports, evidence, vetoes and runtime.",
+                    "tassonomia": "Cycle sequence and regime-lab movement.",
+                    "prodotti": "Claim-cards, watchlist, reject reasons and checks.",
+                },
+            },
+            "tooltips": {
+                "it": {
+                    "teorie": {
+                        "title": "Metodi",
+                        "body": "Famiglie operative tradotte in osservabili: volume profile, POC/LVN/HVN, FVG, CME gap, trendline, feed robustness.",
+                        "logic": "Nessun metodo vale come autorita': entra solo se ha definizione meccanica, data-card e null coerente.",
+                    },
+                    "ponti": {
+                        "title": "Confluenze",
+                        "body": "Punti in cui piu' letture BTC si incontrano sullo stesso livello, timeframe o confine osservabile.",
+                        "logic": "Una confluenza non e' un segnale: deve sopravvivere a feed, timeframe, baseline e controllo anti-lookahead.",
+                    },
+                    "vuoti": {
+                        "title": "Gap",
+                        "body": "Inefficienze candidate: FVG, low-volume node, CME gap o area non ancora definita da dati robusti.",
+                        "logic": "Un gap resta ipotesi finche' non e' localizzato, datato, versionato e falsificato contro un null appropriato.",
+                    },
+                    "prodotti": {
+                        "title": "Verifiche",
+                        "body": "Output maturi solo dopo data-card, baseline/null, feed robustness e revisione del confine no-signal.",
+                        "logic": "Il Bitcoin Lab puo' produrre monitoraggio e falsificazione, non consulenza finanziaria.",
+                    },
+                }
+            },
+        }
+    if kind == "finance":
+        return {
+            "terminology": {
+                "it": {
+                    "teorie": "ipotesi",
+                    "ponti": "baseline/null",
+                    "vuoti": "gap dati",
+                    "scoperte": "risultati",
+                    "applicazioni": "vincoli",
+                    "prodotti": "verifiche",
+                    "ghost": "rischi aperti",
+                    "cimitero": "scartati",
+                    "legend_tensione": "ipotesi",
+                    "legend_teoria": "modello",
+                    "legend_scoperta": "risultato",
+                },
+                "en": {
+                    "teorie": "hypotheses",
+                    "ponti": "baselines/nulls",
+                    "vuoti": "data gaps",
+                    "scoperte": "findings",
+                    "applicazioni": "constraints",
+                    "prodotti": "checks",
+                    "ghost": "open risks",
+                    "cimitero": "rejected",
+                    "legend_tensione": "hypothesis",
+                    "legend_teoria": "model",
+                    "legend_scoperta": "finding",
+                },
+            },
+            "nav": {
+                "it": {
+                    "campo": "Regime, evidenza recente e decisione non-operativa.",
+                    "grafo": "Relazioni tra ipotesi, baseline, null e vincoli.",
+                    "bicono": "Poli delle ipotesi estratti dai report.",
+                    "agente": "Evidenza, verdict, veto e trace.",
+                    "tassonomia": "Traiettoria dei cicli e ricorrenze.",
+                    "prodotti": "Scoperte, candidate e verifiche mature.",
+                }
+            },
+        }
+    if kind in {"research", "research-radar"}:
+        return {
+            "terminology": {
+                "it": {
+                    "teorie": "fonti",
+                    "ponti": "evidenze",
+                    "vuoti": "claim aperti",
+                    "scoperte": "claim-card",
+                    "applicazioni": "roadmap",
+                    "prodotti": "verifiche",
+                    "ghost": "da chiarire",
+                    "cimitero": "scartati",
+                    "legend_tensione": "claim",
+                    "legend_teoria": "fonte",
+                    "legend_scoperta": "claim-card",
+                },
+                "en": {
+                    "teorie": "sources",
+                    "ponti": "evidence",
+                    "vuoti": "open claims",
+                    "scoperte": "claim-cards",
+                    "applicazioni": "roadmap",
+                    "prodotti": "checks",
+                    "ghost": "to clarify",
+                    "cimitero": "rejected",
+                    "legend_tensione": "claim",
+                    "legend_teoria": "source",
+                    "legend_scoperta": "claim-card",
+                },
+            },
+            "nav": {
+                "it": {
+                    "campo": "Claim, fonti, decisione corrente e ultimi segnali.",
+                    "grafo": "Relazioni tra claim, fonte, baseline e roadmap.",
+                    "bicono": "Poli concettuali estratti dalle claim-card.",
+                    "agente": "Report, evidenza, verdict e falsifier.",
+                    "tassonomia": "Traiettoria dei cicli e pattern ricorrenti.",
+                    "prodotti": "Claim-card, roadmap candidate e verifiche.",
+                }
+            },
+        }
+    return {}
+
+
 def _preset_summary_md(preset: dict[str, Any] | None) -> str:
     if not preset:
         return ""
@@ -798,6 +967,7 @@ baseline/null and UI lens.
             {"check": "runtime_awareness_visible", "expectation": "Trace and falsifier visible before promotion."},
         ],
     }
+    ui_contract.update(_ui_language_contract(kind))
 
     onboarding_contract = {
         "schema": "dndlab.onboarding_contract.v1",

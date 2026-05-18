@@ -1169,6 +1169,26 @@ async def get_context_intro(domain: str, request: Request, lang: str = "it") -> 
     return {"title": title, "intro": intro}
 
 
+@app.get("/api/domains/{domain}/ui_contract")
+async def get_ui_contract(domain: str, request: Request) -> dict[str, Any]:
+    """Return the optional domain UI contract.
+
+    The dashboard uses this to replace generic/physics wording with
+    domain-native terminology without hardcoding every generated Lab.
+    """
+    await _check_auth(request)
+    _validate_domain(domain)
+    p = paths.domain_dir(domain) / "ui_contract.json"
+    if not p.exists():
+        return {"available": False, "domain": domain}
+    data = _read_json_safe(p, {})
+    if not isinstance(data, dict):
+        return {"available": False, "domain": domain, "error": "invalid ui_contract"}
+    data.setdefault("available", True)
+    data.setdefault("domain", domain)
+    return data
+
+
 @app.get("/api/domains/{domain}/biconi")
 async def list_biconi(domain: str, request: Request, limit: int = 50) -> list[dict[str, Any]]:
     """Return parsed bicono summary for every report. Used by the BICONO

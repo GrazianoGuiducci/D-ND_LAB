@@ -66,6 +66,54 @@
       ]
     }
   },
+  "terminology": {
+    "it": {
+      "teorie": "fonti",
+      "ponti": "evidenze",
+      "vuoti": "claim aperti",
+      "scoperte": "claim-card",
+      "applicazioni": "roadmap",
+      "prodotti": "verifiche",
+      "cicli": "cicli",
+      "ghost": "da chiarire",
+      "cimitero": "scartati",
+      "legend_tensione": "claim",
+      "legend_teoria": "fonte",
+      "legend_scoperta": "claim-card"
+    },
+    "en": {
+      "teorie": "sources",
+      "ponti": "evidence",
+      "vuoti": "open claims",
+      "scoperte": "claim-cards",
+      "applicazioni": "roadmap",
+      "prodotti": "checks",
+      "cicli": "cycles",
+      "ghost": "to clarify",
+      "cimitero": "rejected",
+      "legend_tensione": "claim",
+      "legend_teoria": "source",
+      "legend_scoperta": "claim-card"
+    }
+  },
+  "nav": {
+    "it": {
+      "campo": "Claim, fonti, decisione corrente e ultimi segnali.",
+      "grafo": "Relazioni tra claim, fonte, baseline e roadmap.",
+      "bicono": "Poli concettuali estratti dalle claim-card.",
+      "agente": "Report, evidenza, verdict e falsifier.",
+      "tassonomia": "Traiettoria dei cicli e pattern ricorrenti.",
+      "prodotti": "Claim-card, roadmap candidate e verifiche."
+    },
+    "en": {
+      "campo": "Claims, sources, current decision and latest signals.",
+      "grafo": "Relations across claims, sources, baselines and roadmap.",
+      "bicono": "Conceptual poles extracted from claim-cards.",
+      "agente": "Reports, evidence, verdicts and falsifier.",
+      "tassonomia": "Cycle trajectory and recurring patterns.",
+      "prodotti": "Claim-cards, roadmap candidates and checks."
+    }
+  },
   "domain_native_modules": [
     "ClaimCard",
     "SourceCard",

@@ -34,6 +34,113 @@
       }
     ]
   },
+  "terminology": {
+    "it": {
+      "teorie": "metodi",
+      "ponti": "confluenze",
+      "vuoti": "gap",
+      "scoperte": "claim-card",
+      "applicazioni": "watchlist",
+      "prodotti": "verifiche",
+      "cicli": "letture",
+      "oggi": "oggi",
+      "fresche": "recenti (7d)",
+      "ghost": "ipotesi aperte",
+      "cimitero": "scartati",
+      "legend_tensione": "ipotesi",
+      "legend_report": "lettura",
+      "legend_teoria": "metodo",
+      "legend_ghost": "aperto",
+      "legend_scoperta": "claim",
+      "nav_campo_label": "Campo",
+      "nav_grafo_label": "Grafo",
+      "nav_bicono_label": "Bicono",
+      "nav_agente_label": "Agente",
+      "nav_tassonomia_label": "Traiettoria",
+      "nav_prodotti_label": "Prodotti"
+    },
+    "en": {
+      "teorie": "methods",
+      "ponti": "confluences",
+      "vuoti": "gaps",
+      "scoperte": "claim-cards",
+      "applicazioni": "watchlist",
+      "prodotti": "checks",
+      "cicli": "readings",
+      "oggi": "today",
+      "fresche": "recent (7d)",
+      "ghost": "open hypotheses",
+      "cimitero": "rejected",
+      "legend_tensione": "hypothesis",
+      "legend_report": "reading",
+      "legend_teoria": "method",
+      "legend_ghost": "open",
+      "legend_scoperta": "claim",
+      "nav_campo_label": "Field",
+      "nav_grafo_label": "Graph",
+      "nav_bicono_label": "Bicone",
+      "nav_agente_label": "Agent",
+      "nav_tassonomia_label": "Trajectory",
+      "nav_prodotti_label": "Products"
+    }
+  },
+  "nav": {
+    "it": {
+      "campo": "Stato BTC, dati disponibili e decisione corrente.",
+      "grafo": "Relazioni tra claim, timeframe, baseline e falsifier.",
+      "bicono": "Poli delle ipotesi estratti dalle letture.",
+      "agente": "Report, evidenza, veto e runtime.",
+      "tassonomia": "Sequenza dei cicli e movimento del regime lab.",
+      "prodotti": "Claim-card, watchlist, reject reason e verifiche."
+    },
+    "en": {
+      "campo": "BTC state, available data and current decision.",
+      "grafo": "Relations across claims, timeframes, baselines and falsifier.",
+      "bicono": "Hypothesis poles extracted from readings.",
+      "agente": "Reports, evidence, vetoes and runtime.",
+      "tassonomia": "Cycle sequence and regime-lab movement.",
+      "prodotti": "Claim-cards, watchlist, reject reasons and checks."
+    }
+  },
+  "tooltips": {
+    "it": {
+      "teorie": {
+        "title": "Metodi",
+        "body": "Famiglie operative tradotte in osservabili: volume profile, POC/LVN/HVN, FVG, CME gap, trendline, feed robustness.",
+        "logic": "Nessun metodo vale come autorita': entra solo se ha definizione meccanica, data-card e null coerente."
+      },
+      "ponti": {
+        "title": "Confluenze",
+        "body": "Punti in cui piu' letture BTC si incontrano sullo stesso livello, timeframe o confine osservabile.",
+        "logic": "Una confluenza non e' un segnale: deve sopravvivere a feed, timeframe, baseline e controllo anti-lookahead."
+      },
+      "vuoti": {
+        "title": "Gap",
+        "body": "Inefficienze candidate: FVG, low-volume node, CME gap o area non ancora definita da dati robusti.",
+        "logic": "Un gap resta ipotesi finche' non e' localizzato, datato, versionato e falsificato contro un null appropriato."
+      },
+      "scoperte": {
+        "title": "Claim-card",
+        "body": "Schede leggibili che dichiarano claim, fonte, timeframe, data-card, evidenza e motivo della decisione.",
+        "logic": "Output utile: watch, test, reject o roadmap; mai buy/sell/target."
+      },
+      "applicazioni": {
+        "title": "Watchlist",
+        "body": "Claim non promossi che meritano osservazione o un prossimo test dichiarato.",
+        "logic": "La watchlist conserva possibilita' senza trasformarle in segnali operativi."
+      },
+      "prodotti": {
+        "title": "Verifiche",
+        "body": "Output maturi solo dopo data-card, baseline/null, feed robustness e revisione del confine no-signal.",
+        "logic": "Il Bitcoin Lab puo' produrre monitoraggio e falsificazione, non consulenza finanziaria."
+      },
+      "cicli": {
+        "title": "Letture",
+        "body": "Cicli cognitivi del Lab: raccolgono dati, generano una claim-card, attaccano l'ipotesi e aggiornano il seme.",
+        "logic": "Ogni lettura deve lasciare runtime trace e memoria di cosa non puo' essere promosso."
+      }
+    }
+  },
   "common_modules": [
     {
       "module": "SeedStatus",

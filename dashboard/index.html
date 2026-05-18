@@ -1082,23 +1082,23 @@
 
           <!-- Stats -->
           <div class="space-y-0">
-            <div class="stat-row" @mouseenter="showStatTip('teorie', $event)" @mouseleave="hideStatTip()"><span class="text-slate-400" data-i18n="dash.stats.teorie">teorie</span><span class="stat-num" x-text="campoStats().teorie"></span></div>
-            <div class="stat-row" @mouseenter="showStatTip('ponti', $event)" @mouseleave="hideStatTip()"><span class="text-slate-400" data-i18n="dash.stats.ponti">ponti</span><span class="stat-num" x-text="campoStats().ponti"></span></div>
-            <div class="stat-row" @mouseenter="showStatTip('vuoti', $event)" @mouseleave="hideStatTip()"><span class="text-slate-400" data-i18n="dash.stats.vuoti">vuoti</span><span class="stat-num" x-text="campoStats().vuoti"></span></div>
-            <div class="stat-row" @mouseenter="showStatTip('scoperte', $event)" @mouseleave="hideStatTip()"><span class="text-slate-400" data-i18n="dash.stats.scoperte">scoperte</span><span class="stat-num" x-text="campoStats().scoperte"></span></div>
-            <div class="stat-row" @mouseenter="showStatTip('applicazioni', $event)" @mouseleave="hideStatTip()"><span class="text-slate-400" data-i18n="dash.stats.applicazioni">applicazioni</span><span class="stat-num" x-text="campoStats().applicazioni"></span></div>
-            <div class="stat-row" @mouseenter="showStatTip('prodotti', $event)" @mouseleave="hideStatTip()"><span class="text-slate-400" data-i18n="dash.stats.prodotti">prodotti</span><span class="stat-num" x-text="campoStats().prodotti"></span></div>
-            <div class="stat-row" @mouseenter="showStatTip('cicli', $event)" @mouseleave="hideStatTip()"><span class="text-slate-400" data-i18n="dash.stats.cicli">cicli</span><span class="stat-num" x-text="campoStats().cicli"></span></div>
+            <div class="stat-row" @mouseenter="showStatTip('teorie', $event)" @mouseleave="hideStatTip()"><span class="text-slate-400" x-text="uiTerm('teorie', t('dash.stats.teorie', 'teorie'))"></span><span class="stat-num" x-text="campoStats().teorie"></span></div>
+            <div class="stat-row" @mouseenter="showStatTip('ponti', $event)" @mouseleave="hideStatTip()"><span class="text-slate-400" x-text="uiTerm('ponti', t('dash.stats.ponti', 'ponti'))"></span><span class="stat-num" x-text="campoStats().ponti"></span></div>
+            <div class="stat-row" @mouseenter="showStatTip('vuoti', $event)" @mouseleave="hideStatTip()"><span class="text-slate-400" x-text="uiTerm('vuoti', t('dash.stats.vuoti', 'vuoti'))"></span><span class="stat-num" x-text="campoStats().vuoti"></span></div>
+            <div class="stat-row" @mouseenter="showStatTip('scoperte', $event)" @mouseleave="hideStatTip()"><span class="text-slate-400" x-text="uiTerm('scoperte', t('dash.stats.scoperte', 'scoperte'))"></span><span class="stat-num" x-text="campoStats().scoperte"></span></div>
+            <div class="stat-row" @mouseenter="showStatTip('applicazioni', $event)" @mouseleave="hideStatTip()"><span class="text-slate-400" x-text="uiTerm('applicazioni', t('dash.stats.applicazioni', 'applicazioni'))"></span><span class="stat-num" x-text="campoStats().applicazioni"></span></div>
+            <div class="stat-row" @mouseenter="showStatTip('prodotti', $event)" @mouseleave="hideStatTip()"><span class="text-slate-400" x-text="uiTerm('prodotti', t('dash.stats.prodotti', 'prodotti'))"></span><span class="stat-num" x-text="campoStats().prodotti"></span></div>
+            <div class="stat-row" @mouseenter="showStatTip('cicli', $event)" @mouseleave="hideStatTip()"><span class="text-slate-400" x-text="uiTerm('cicli', t('dash.stats.cicli', 'cicli'))"></span><span class="stat-num" x-text="campoStats().cicli"></span></div>
           </div>
 
           <!-- Freschezza -->
           <h4 class="text-xs uppercase tracking-wider text-slate-300 mt-5 mb-2" data-i18n="dash.sb.freschezza">Freschezza</h4>
           <div class="space-y-0">
-            <div class="stat-row" @mouseenter="showStatTip('oggi', $event)" @mouseleave="hideStatTip()"><span class="text-slate-400" data-i18n="dash.stats.oggi">oggi</span><span class="stat-num text-green-400" x-text="freshnessStats().today"></span></div>
-            <div class="stat-row" @mouseenter="showStatTip('fresche', $event)" @mouseleave="hideStatTip()"><span class="text-slate-400" data-i18n="dash.stats.fresche">fresche (7d)</span><span class="stat-num text-cyan-400" x-text="freshnessStats().fresh"></span></div>
-            <div class="stat-row" @mouseenter="showStatTip('ghost', $event)" @mouseleave="hideStatTip()"><span class="text-slate-400" data-i18n="dash.stats.ghost">ghost urgenti</span><span class="stat-num text-amber-400" x-text="freshnessStats().ghosts"></span></div>
+            <div class="stat-row" @mouseenter="showStatTip('oggi', $event)" @mouseleave="hideStatTip()"><span class="text-slate-400" x-text="uiTerm('oggi', t('dash.stats.oggi', 'oggi'))"></span><span class="stat-num text-green-400" x-text="freshnessStats().today"></span></div>
+            <div class="stat-row" @mouseenter="showStatTip('fresche', $event)" @mouseleave="hideStatTip()"><span class="text-slate-400" x-text="uiTerm('fresche', t('dash.stats.fresche', 'fresche (7d)'))"></span><span class="stat-num text-cyan-400" x-text="freshnessStats().fresh"></span></div>
+            <div class="stat-row" @mouseenter="showStatTip('ghost', $event)" @mouseleave="hideStatTip()"><span class="text-slate-400" x-text="uiTerm('ghost', t('dash.stats.ghost', 'ghost urgenti'))"></span><span class="stat-num text-amber-400" x-text="freshnessStats().ghosts"></span></div>
             <div class="stat-row cursor-pointer hover:bg-slate-800/40 -mx-1 px-1 rounded" @click="activeTab = 'agente'; reportsFilter = 'cimitero'" @mouseenter="showStatTip('cimitero', $event)" @mouseleave="hideStatTip()">
-              <span class="text-slate-400">🪦 <span data-i18n="dash.stats.cimitero">cimitero</span></span>
+              <span class="text-slate-400">🪦 <span x-text="uiTerm('cimitero', t('dash.stats.cimitero', 'cimitero'))"></span></span>
               <span class="stat-num text-slate-300" x-text="cimiteroCount()"></span>
             </div>
           </div>
@@ -1146,11 +1146,11 @@
           <!-- Legenda -->
           <h4 class="text-xs uppercase tracking-wider text-slate-300 mt-5 mb-2" data-i18n="dash.sb.legenda">Legenda</h4>
           <div class="space-y-1.5 text-xs text-slate-400">
-            <div class="flex items-center gap-2" @mouseenter="showStatTip('legend_tensione', $event)" @mouseleave="hideStatTip()"><i class="legend-dot" style="background:#22d3ee"></i> <span data-i18n="dash.sb.legend.tensione">tensione</span></div>
-            <div class="flex items-center gap-2" @mouseenter="showStatTip('legend_report', $event)" @mouseleave="hideStatTip()"><i class="legend-dot" style="background:#a78bfa"></i> <span data-i18n="dash.sb.legend.report">report</span></div>
-            <div class="flex items-center gap-2" @mouseenter="showStatTip('legend_teoria', $event)" @mouseleave="hideStatTip()"><i class="legend-dot" style="background:#34d399"></i> <span data-i18n="dash.sb.legend.teoria">teoria</span></div>
-            <div class="flex items-center gap-2" @mouseenter="showStatTip('legend_ghost', $event)" @mouseleave="hideStatTip()"><i class="legend-dot" style="background:#fbbf24"></i> <span data-i18n="dash.sb.legend.ghost">ghost</span></div>
-            <div class="flex items-center gap-2" @mouseenter="showStatTip('legend_scoperta', $event)" @mouseleave="hideStatTip()"><i class="legend-dot" style="background:#f472b6"></i> <span data-i18n="dash.sb.legend.scoperta">scoperta</span></div>
+            <div class="flex items-center gap-2" @mouseenter="showStatTip('legend_tensione', $event)" @mouseleave="hideStatTip()"><i class="legend-dot" style="background:#22d3ee"></i> <span x-text="uiTerm('legend_tensione', t('dash.sb.legend.tensione', 'tensione'))"></span></div>
+            <div class="flex items-center gap-2" @mouseenter="showStatTip('legend_report', $event)" @mouseleave="hideStatTip()"><i class="legend-dot" style="background:#a78bfa"></i> <span x-text="uiTerm('legend_report', t('dash.sb.legend.report', 'report'))"></span></div>
+            <div class="flex items-center gap-2" @mouseenter="showStatTip('legend_teoria', $event)" @mouseleave="hideStatTip()"><i class="legend-dot" style="background:#34d399"></i> <span x-text="uiTerm('legend_teoria', t('dash.sb.legend.teoria', 'teoria'))"></span></div>
+            <div class="flex items-center gap-2" @mouseenter="showStatTip('legend_ghost', $event)" @mouseleave="hideStatTip()"><i class="legend-dot" style="background:#fbbf24"></i> <span x-text="uiTerm('legend_ghost', t('dash.sb.legend.ghost', 'ghost'))"></span></div>
+            <div class="flex items-center gap-2" @mouseenter="showStatTip('legend_scoperta', $event)" @mouseleave="hideStatTip()"><i class="legend-dot" style="background:#f472b6"></i> <span x-text="uiTerm('legend_scoperta', t('dash.sb.legend.scoperta', 'scoperta'))"></span></div>
           </div>
 
           <!-- Label toggle -->
@@ -2303,39 +2303,39 @@
               <div class="space-y-1.5">
                 <button @click="setActiveTab('campo')" @mouseenter="showStatTip('nav_campo', $event)" @mouseleave="hideStatTip()"
                         class="detail-action text-cyan-300">
-                  <span class="font-medium">Campo</span>
+                  <span class="font-medium" x-text="uiTerm('nav_campo_label', 'Campo')"></span>
                   <span class="block text-[11px] text-slate-400"
-                        x-text="lang === 'en' ? 'Current resultant and recent signals.' : 'Risultante e segnali recenti.'"></span>
+                        x-text="uiNavCopy('campo', lang === 'en' ? 'Current resultant and recent signals.' : 'Risultante e segnali recenti.')"></span>
                 </button>
                 <button @click="setActiveTab('grafo')" @mouseenter="showStatTip('nav_grafo', $event)" @mouseleave="hideStatTip()"
                         class="detail-action text-cyan-300">
-                  <span class="font-medium">Grafo</span>
+                  <span class="font-medium" x-text="uiTerm('nav_grafo_label', 'Grafo')"></span>
                   <span class="block text-[11px] text-slate-400"
-                        x-text="lang === 'en' ? 'Relations, nodes and bridges.' : 'Relazioni, nodi e ponti.'"></span>
+                        x-text="uiNavCopy('grafo', lang === 'en' ? 'Relations, nodes and bridges.' : 'Relazioni, nodi e ponti.')"></span>
                 </button>
                 <button @click="setActiveTab('bicono')" @mouseenter="showStatTip('nav_bicono', $event)" @mouseleave="hideStatTip()"
                         class="detail-action text-purple-300">
-                  <span class="font-medium">Bicono</span>
+                  <span class="font-medium" x-text="uiTerm('nav_bicono_label', 'Bicono')"></span>
                   <span class="block text-[11px] text-slate-400"
-                        x-text="lang === 'en' ? 'Discovery poles extracted from reports.' : 'Poli delle scoperte estratti dai report.'"></span>
+                        x-text="uiNavCopy('bicono', lang === 'en' ? 'Discovery poles extracted from reports.' : 'Poli delle scoperte estratti dai report.')"></span>
                 </button>
                 <button @click="setActiveTab('agente')" @mouseenter="showStatTip('nav_agente', $event)" @mouseleave="hideStatTip()"
                         class="detail-action text-purple-300">
-                  <span class="font-medium">Agente</span>
+                  <span class="font-medium" x-text="uiTerm('nav_agente_label', 'Agente')"></span>
                   <span class="block text-[11px] text-slate-400"
-                        x-text="lang === 'en' ? 'Evidence, verdicts and falsifier flags.' : 'Evidenza, verdict e flag del falsifier.'"></span>
+                        x-text="uiNavCopy('agente', lang === 'en' ? 'Evidence, verdicts and falsifier flags.' : 'Evidenza, verdict e flag del falsifier.')"></span>
                 </button>
                 <button @click="setActiveTab('incrocio')" @mouseenter="showStatTip('nav_tassonomia', $event)" @mouseleave="hideStatTip()"
                         class="detail-action text-purple-300">
-                  <span class="font-medium">Tassonomia</span>
+                  <span class="font-medium" x-text="uiTerm('nav_tassonomia_label', 'Tassonomia')"></span>
                   <span class="block text-[11px] text-slate-400"
-                        x-text="lang === 'en' ? 'Aggregate map and cycle trajectory.' : 'Mappa aggregata e traiettoria dei cicli.'"></span>
+                        x-text="uiNavCopy('tassonomia', lang === 'en' ? 'Aggregate map and cycle trajectory.' : 'Mappa aggregata e traiettoria dei cicli.')"></span>
                 </button>
                 <button @click="setActiveTab('prodotti')" @mouseenter="showStatTip('nav_prodotti', $event)" @mouseleave="hideStatTip()"
                         class="detail-action text-green-300">
-                  <span class="font-medium">Prodotti</span>
+                  <span class="font-medium" x-text="uiTerm('nav_prodotti_label', 'Prodotti')"></span>
                   <span class="block text-[11px] text-slate-400"
-                        x-text="lang === 'en' ? 'Discoveries, candidates and verified outputs.' : 'Scoperte, candidati e output verificati.'"></span>
+                        x-text="uiNavCopy('prodotti', lang === 'en' ? 'Discoveries, candidates and verified outputs.' : 'Scoperte, candidati e output verificati.')"></span>
                 </button>
               </div>
               <div class="border-t border-slate-800 pt-3 text-xs text-slate-300 space-y-1">
@@ -3066,6 +3066,7 @@
       latestDiagnostic: { available: false },
       latestValueArtifacts: { available: false, artifacts: [] },
       financePrecondition: { available: false },
+      uiContract: { available: false },
 
       // Graph
       cy: null,                 // Cytoscape instance
@@ -3497,12 +3498,14 @@
         this.taxonomyData = { groups: [], bridges: [], nodes: [], edges: [] };  // v4.11 — reset
         this.taxonomyMeta = {};
         this.latestValueArtifacts = { available: false, artifacts: [] };
+        this.uiContract = { available: false };
         this.contextIntro = { title: '', intro: '' };          // v3.9 — reset
         this.contextExpanded = false;
         await Promise.all([
           this.reloadSeed(),
           this.reloadReports(),
           this.reloadGraph(),
+          this.reloadUiContract(),                             // domain-native UI terminology/tooltips
           this.reloadContextIntro(),                           // v3.9 — fetch identity section
           this.reloadFalsifierSummary(),                       // v4.8 — counter-pole stats
           this.reloadCorrectorSummary(),                       // v4.9 — bias_corrector stats
@@ -3547,6 +3550,38 @@
           console.error('context intro load failed', e);
           this.contextIntro = { title: '', intro: '' };
         }
+      },
+
+      async reloadUiContract() {
+        if (!this.activeDomain) return;
+        try {
+          const data = await fetch(`/api/domains/${this.activeDomain}/ui_contract`).then(r => r.json());
+          this.uiContract = data && typeof data === 'object' ? data : { available: false };
+        } catch (e) {
+          console.error('ui contract load failed', e);
+          this.uiContract = { available: false };
+        }
+      },
+
+      uiLocaleMap(section) {
+        const src = this.uiContract?.[section];
+        if (!src || typeof src !== 'object') return {};
+        const lang = this.lang || 'it';
+        if (src[lang] && typeof src[lang] === 'object') return src[lang];
+        if (src.it && typeof src.it === 'object') return src.it;
+        return src;
+      },
+
+      uiTerm(key, fallback = '') {
+        const terms = this.uiLocaleMap('terminology');
+        const value = terms?.[key];
+        return typeof value === 'string' && value.trim() ? value : fallback;
+      },
+
+      uiNavCopy(key, fallback = '') {
+        const nav = this.uiLocaleMap('nav');
+        const value = nav?.[key];
+        return typeof value === 'string' && value.trim() ? value : fallback;
       },
 
       async reloadGraph() {
@@ -3990,7 +4025,9 @@
       showStatTip(key, ev) {
         if (window.matchMedia('(max-width: 1024px)').matches) return;
         if (this._statTipHideTimer) { clearTimeout(this._statTipHideTimer); this._statTipHideTimer = null; }
-        const def = STAT_TIPS[key];
+        const tips = this.uiLocaleMap('tooltips');
+        const domainDef = tips?.[key];
+        const def = domainDef && typeof domainDef === 'object' ? domainDef : STAT_TIPS[key];
         if (!def) return;
         const logic = typeof def.logic === 'function' ? def.logic(this) : def.logic;
         this.statTipContent = { title: def.title, body: def.body, logic };
