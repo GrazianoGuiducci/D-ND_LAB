@@ -19,8 +19,13 @@ The lab ships several domains:
   technology claims. Turns claims into source cards, baseline/null checks,
   falsifier status and evidence roadmaps.
 
-Other generated domains, such as finance, bio-rhythms and ops-decisions,
-live under `domains/` and may still be in active demo/prototype hardening.
+- **[Bitcoin Regime Lab](bitcoin-regime-lab.md)** — monitors BTC regime
+  hypotheses as no-signal, no-advice observables. Translates POC/FVG/LVN/CME
+  gap and timeframe language into data-card, baseline/null and falsifier
+  contracts before any operational claim.
+
+Other generated domains, such as finance, bio-rhythms and ops-decisions, live
+under `domains/` and may still be in active demo/prototype hardening.
 
 To write your own, see [Extending](extending.md).
 

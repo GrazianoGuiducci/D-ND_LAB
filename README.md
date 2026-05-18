@@ -165,6 +165,11 @@ domain result exists.
 | `physics` | mathematical physics through D-ND: primes, zeta, GUE, theory crossing TQGE+R |
 | `editorial` | the operator's archive — discriminates source from echo, drafts publishable copy through the bicono filter and non-dual-copy gate |
 | `meta-lab` | the lab that designs labs: turns domain/intention requests into validated domain templates |
+| `finance` | regime/decision-boundary reference Lab; no trading signal, tests hypotheses against baselines and nulls |
+| `research-radar` | emerging research/technology claim radar; turns claims into source cards, watch/test/reject/promote boundaries |
+| `bitcoin-regime-lab` | BTC regime monitoring reference Lab; no advice or signals, translates POC/FVG/LVN/CME/timeframe language into observable tests |
+| `bio-rhythms` | demo domain for biosignal/regime rhythm hypotheses |
+| `ops-decisions` | demo domain for operational decision constraints |
 
 After install, these domains are available out-of-box. Default is
 `physics` — change `LAB_DOMAIN` in `.env` to switch.

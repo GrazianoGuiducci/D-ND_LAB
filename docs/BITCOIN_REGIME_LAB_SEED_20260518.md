@@ -1,7 +1,19 @@
 # Bitcoin Regime Lab Seed — 2026-05-18
 
-Status: continuity note, not an installed Lab.
-Candidate slug: `bitcoin-regime-lab`.
+Status: installed reference Lab after isolated meta-lab candidate validation.
+Domain slug: `bitcoin-regime-lab`.
+
+Installed on 2026-05-18 after:
+
+- isolated candidate generation through `domain_request_runner.py`;
+- strict template generator dry-run;
+- `core.cli inspect --domain bitcoin-regime-lab`;
+- `core.cli dry-run --domain bitcoin-regime-lab` with LLM movements disabled;
+- public API check through `https://lab.d-nd.com/api/domains`.
+
+The installed surface is still a reference boundary, not an operational
+trading system. Its smoke tool returns `public_claim=false`,
+`trading_signal=false` and `operational=false`.
 
 ## Intent
 
@@ -298,16 +310,29 @@ When ready, create a domain request with:
   trendline retest and momentum change as candidate methods only;
 - human_review: Alipio as possible observer after first working cycle.
 
+## Current Operational State
+
+The Lab is installed under `domains/bitcoin-regime-lab/` and visible to the
+dashboard. Runtime bootstrap has one dry-run trace in `data/bitcoin-regime-lab/`
+on the VPS, but runtime data is not part of the public install artifact.
+
+Useful checks:
+
+```bash
+python3 -m core.cli inspect --domain bitcoin-regime-lab
+python3 -m core.cli dry-run --domain bitcoin-regime-lab
+python3 domains/bitcoin-regime-lab/tools/exp_request_smoke.py --json
+```
+
 ## Next Step
 
-Do not install this Lab yet.
+Before a real cycle, replace the smoke boundary with the first reviewed
+domain-native experiment:
 
-After the provider/install boundaries are stable:
-
-1. finish the meta-lab E2E on an isolated candidate;
-2. decide whether Bitcoin is generated from the meta-lab or from a predeclared
-   request file;
-3. generate candidate only;
-4. validate M1-M8 plus finance/crypto boundary;
-5. run one supervised first cycle;
-6. show Alipio a working dashboard and ask for concrete critique.
+1. choose one data source and timeframe policy;
+2. create a data-card schema for BTC OHLCV/source provenance;
+3. implement one small observable, preferably timeframe matrix or POC first
+   touch, with matched baseline/null;
+4. run one supervised cycle;
+5. show Alipio a working dashboard and ask for critique on usefulness, not for
+   trading direction.

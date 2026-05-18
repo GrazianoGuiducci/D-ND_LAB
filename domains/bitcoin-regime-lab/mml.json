@@ -1,0 +1,73 @@
+{
+  "lab": "bitcoin-regime-lab",
+  "version": "0.1.0-alpha",
+  "identity": {
+    "role": "generated_candidate_lab",
+    "domain_kind": "bitcoin-regime",
+    "movement_class": "regime_monitoring_with_falsification"
+  },
+  "kernel_refs": {
+    "condensato_axioms_used": [
+      "A2",
+      "A8",
+      "A14",
+      "A15"
+    ],
+    "request_path": "/opt/D-ND_LAB/data/meta-lab/domain_requests/bitcoin-regime-lab_request.json",
+    "domain_contract": ""
+  },
+  "domain_contracts": {},
+  "skills_attive": {
+    "kernel_layer": [
+      {
+        "name": "cascata",
+        "use": "propagate request through seed/field/report"
+      },
+      {
+        "name": "cec",
+        "use": "preserve coherence under cycle"
+      },
+      {
+        "name": "consapevolezza-condensato",
+        "use": "keep axioms explicit"
+      }
+    ],
+    "logic_layer": [
+      {
+        "name": "autologica-operativa",
+        "use": "observe how the lab moves"
+      },
+      {
+        "name": "eval",
+        "use": "evaluate pass/block evidence"
+      }
+    ],
+    "domain_layer": [
+      {
+        "name": "baseline-null",
+        "use": "require baseline and null/control"
+      },
+      {
+        "name": "falsifier",
+        "use": "block premature promotion"
+      }
+    ],
+    "interface_layer": [
+      {
+        "name": "runtime-awareness",
+        "use": "show cycle trace in UI"
+      }
+    ]
+  },
+  "modus_invocation": {
+    "first_cycle": "request -> field -> smoke -> falsifier -> seed_integrator",
+    "promotion": "only after baseline/null and runtime trace"
+  },
+  "tools_custom": [
+    {
+      "name": "request_smoke",
+      "path": "tools/exp_request_smoke.py",
+      "boundary": null
+    }
+  ]
+}

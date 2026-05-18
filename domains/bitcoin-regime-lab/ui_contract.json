@@ -1,0 +1,105 @@
+{
+  "schema": "ui_contract.v1",
+  "domain": "bitcoin-regime-lab",
+  "intent_movement": "Monitor BTC regime hypotheses and falsify weak operational interpretations before they become operational claims, starting from Alipio's timeframe question and derived POC/Kumo/feed-robustness method candidates.",
+  "frame": {
+    "left": [
+      {
+        "module": "SeedStatus",
+        "purpose": "Current plane, direction and request status."
+      },
+      {
+        "module": "ActiveTensions",
+        "purpose": "Request-derived tensions and filters."
+      }
+    ],
+    "center": [
+      {
+        "module": "RequestField",
+        "purpose": "Intent, observables, baseline/null and first smoke."
+      }
+    ],
+    "right": [
+      {
+        "module": "RuntimeDynamics",
+        "purpose": "Cycle trace, skipped movements and accepted surface."
+      },
+      {
+        "module": "FalsifierPanel",
+        "purpose": "What cannot be promoted."
+      },
+      {
+        "module": "THIAContextAssistant",
+        "purpose": "Answer from domain state and runtime context."
+      }
+    ]
+  },
+  "common_modules": [
+    {
+      "module": "SeedStatus",
+      "required": true,
+      "data_sources": [
+        "data/bitcoin-regime-lab/lab_data.json"
+      ],
+      "reason": "Field awareness."
+    },
+    {
+      "module": "FalsifierPanel",
+      "required": true,
+      "data_sources": [
+        "data/bitcoin-regime-lab/falsifier/"
+      ],
+      "reason": "Show what does not hold."
+    },
+    {
+      "module": "RuntimeDynamics",
+      "required": true,
+      "data_sources": [
+        "data/bitcoin-regime-lab/cycle_trace_*.json"
+      ],
+      "reason": "Show how the cycle moved."
+    }
+  ],
+  "domain_modules": [
+    {
+      "module": "RequestField",
+      "placement": "center",
+      "observables": [
+        "request",
+        "baseline",
+        "null",
+        "falsifier"
+      ],
+      "baseline_or_null": [
+        "shuffle_or_control_null"
+      ],
+      "shows": "Whether the request is admissible to first cycle.",
+      "blocks": "Premature claim or copied reference result."
+    }
+  ],
+  "domain_boundary": null,
+  "admin_actions": [
+    {
+      "action": "run_cycle",
+      "allowed": true,
+      "boundary": "Run from current seed; no direction override without review."
+    }
+  ],
+  "forbidden_labels": [
+    "buy/sell/entry/exit/price-target/profit/alpha/trading-signal language",
+    "manual chart annotations treated as evidence without mechanical definitions",
+    "Massimo Rea or Alipio methods treated as authority before observable/null/falsifier translation",
+    "current/open candle backtests unless explicitly declared as live-only observation",
+    "single-exchange wick or volume-profile result promoted without feed robustness"
+  ],
+  "e2e": [
+    {
+      "check": "cycle_to_ui",
+      "expectation": "Completed cycle updates left, center and right surfaces."
+    },
+    {
+      "check": "runtime_awareness_visible",
+      "expectation": "Trace and falsifier visible before promotion."
+    }
+  ]
+}

@@ -5,7 +5,7 @@ Status: request captured, candidate only.
 ## Intent
 
 Monitor BTC regime hypotheses and falsify weak operational interpretations
-before they become signals. The first useful public question is Alipio's
+before they become operational claims. The first useful public question is Alipio's
 timeframe question:
 
 ```text

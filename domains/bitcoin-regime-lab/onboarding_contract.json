@@ -1,0 +1,71 @@
+{
+  "schema": "dndlab.onboarding_contract.v1",
+  "domain": "bitcoin-regime-lab",
+  "channels": {
+    "domain_request": {
+      "status": "present",
+      "authority": "planning",
+      "notes": "Request starts transduction, not direct seed authority."
+    },
+    "human_clarification": {
+      "status": "allowed",
+      "authority": "constraints",
+      "notes": "Clarifies exclusions and success condition."
+    },
+    "operator_corpus": {
+      "status": "optional",
+      "authority": "source",
+      "notes": "Private/source material stays out of Git unless public."
+    },
+    "public_contribution": {
+      "status": "quarantine",
+      "authority": "preport_only",
+      "notes": "Requires pre-report and review."
+    },
+    "dataset_api": {
+      "status": "optional",
+      "authority": "evidence_after_baseline",
+      "notes": "Requires data-card and leakage guard."
+    },
+    "cognitive_archives": {
+      "status": "capsule_first",
+      "authority": "by_read_depth",
+      "notes": "Capsules orient planning only."
+    },
+    "runtime_self_observation": {
+      "status": "required",
+      "authority": "cycle_trace",
+      "notes": "Runtime explains how the cycle moved."
+    }
+  },
+  "promotion_gates": [
+    "source_provenance",
+    "privacy_secret_scan",
+    "baseline_null",
+    "falsification_test",
+    "operator_review_when_public_or_sensitive",
+    "runtime_trace"
+  ],
+  "never_direct_to_seed": [
+    "public contributions",
+    "private corpus",
+    "capsule-only archive patterns",
+    "human preference without falsification"
+  ],
+  "ui_surfaces": {
+    "left": [
+      "source_status",
+      "contribution_counts",
+      "warnings"
+    ],
+    "center": [
+      "domain_movement_view"
+    ],
+    "right": [
+      "source_detail",
+      "preport",
+      "cycle_trace",
+      "assistant_context"
+    ]
+  }
+}

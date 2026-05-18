@@ -4,7 +4,7 @@
   "slug": "bitcoin-regime-lab",
   "title": "AI-Lab D-ND Bitcoin Regime Lab",
   "kind": "bitcoin-regime",
-  "intent": "Monitor BTC regime hypotheses and falsify weak operational interpretations before they become signals, starting from Alipio's timeframe question and derived POC/Kumo/feed-robustness method candidates.",
+  "intent": "Monitor BTC regime hypotheses and falsify weak operational interpretations before they become operational claims, starting from Alipio's timeframe question and derived POC/Kumo/feed-robustness method candidates.",
   "movement_class": "regime_monitoring_with_falsification",
   "use_dynamics": [
     "turn trader language into observable event schemas, data-cards, baseline/nulls and falsifiers",

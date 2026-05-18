@@ -1,0 +1,31 @@
+{
+  "domain": "bitcoin-regime-lab",
+  "piano": 1,
+  "direzione": "Transduce request `bitcoin-regime-lab` into a first falsifiable cycle without prescribing result.",
+  "tensioni": [
+    {
+      "tipo": "task",
+      "id": "BITCOIN_REGIME_LAB_REQUEST_TO_FIELD",
+      "claim": "The request must become an observable field before any report: Monitor BTC regime hypotheses and falsify weak operational interpretations before they become operational claims, starting from Alipio's timeframe question and derived POC/Kumo/feed-robustness method candidates.",
+      "intensita": 1.0,
+      "porta": "domain_request",
+      "condensato_ref": "A2,A8,A14,A15"
+    },
+    {
+      "tipo": "vincolo",
+      "id": "BITCOIN_REGIME_LAB_BASELINE_NULL_FIRST",
+      "claim": "No generated result is admissible without baseline, null/control and falsifier.",
+      "intensita": 0.9,
+      "porta": "falsifier",
+      "condensato_ref": "A2,A14"
+    },
+    {
+      "tipo": "vincolo",
+      "id": "BITCOIN_REGIME_LAB_RUNTIME_AWARENESS",
+      "claim": "The lab must report how the cycle moved: tools, skipped steps, trace and accepted surface.",
+      "intensita": 0.85,
+      "porta": "runtime",
+      "condensato_ref": "A8,A15"
+    }
+  ]
+}
