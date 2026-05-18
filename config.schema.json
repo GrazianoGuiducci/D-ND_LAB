@@ -76,6 +76,7 @@
       "properties": {
         "autopsy":               { "$ref": "#/$defs/movement" },
         "build_field":           { "$ref": "#/$defs/movement" },
+        "domain_request_runner":  { "$ref": "#/$defs/movement" },
         "agent":                 { "$ref": "#/$defs/movement" },
         "validate_seed":         { "$ref": "#/$defs/movement" },
         "verify_assertions":     { "$ref": "#/$defs/movement" },

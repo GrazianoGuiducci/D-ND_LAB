@@ -94,6 +94,12 @@ def is_movement_enabled(config: dict[str, Any], movement: str) -> bool:
     A movement is enabled by default if not mentioned in config.
     To disable, the domain must explicitly set enabled=false.
     """
+    # Meta-lab-only movement. Keep default off so adding it to MOVEMENT_ORDER
+    # does not silently change every existing domain cycle.
+    if movement == "domain_request_runner":
+        movements = config.get("movements", {})
+        spec = movements.get(movement, {})
+        return spec.get("enabled", False)
     movements = config.get("movements", {})
     spec = movements.get(movement, {})
     return spec.get("enabled", True)

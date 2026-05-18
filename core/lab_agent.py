@@ -98,6 +98,7 @@ MOVEMENT_ORDER: list[str] = [
     "autopsy",
     "trajectory_apply",   # NEW (05/05) — chiude loop A8+A15: legge ultima trajectory_evaluator decision e applica al seed prima di build_field
     "build_field",
+    "domain_request_runner",  # meta-lab only — request -> isolated candidate -> strict validator
     "agent",
     "bias_corrector",     # NEW (29/04) — A8 autologica interna: rewrite biased claims pre-falsifier
     "report_falsifier",   # asymmetric counter-pole, checks report internal coherence
@@ -273,6 +274,7 @@ def _build_cycle_trace(ctx: CycleContext, total_elapsed: float) -> dict:
 
 from core import autopsy as _autopsy  # noqa: E402, F401
 from core import build_field as _build_field  # noqa: E402, F401
+from core import domain_request_runner as _domain_request_runner  # noqa: E402, F401
 from core import structural_check as _structural_check  # noqa: E402, F401
 from core import refiner as _refiner  # noqa: E402, F401
 from core import semantic_bridge as _semantic_bridge  # noqa: E402, F401

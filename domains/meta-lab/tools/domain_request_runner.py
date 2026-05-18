@@ -50,15 +50,95 @@ def _safe_slug(slug: str) -> str:
     return cleaned
 
 
-def _build_assertions_py(slug: str) -> str:
+def _load_domain_contract(kind: str) -> dict[str, Any] | None:
+    """Load a reviewed source-domain contract when the requested kind has one.
+
+    The contract is planning/installation substrate. It must not become a
+    public result or a domain claim for the generated candidate.
+    """
+    contract_path = _repo_root() / "domains" / kind / "precondition_contract.json"
+    if not contract_path.exists():
+        return None
+    data = json.loads(contract_path.read_text(encoding="utf-8"))
+    if data.get("schema") != f"dndlab.{kind}_precondition_contract.v1":
+        return None
+    return data
+
+
+def _boundary_from_contract(kind: str, contract: dict[str, Any] | None) -> dict[str, Any] | None:
+    if kind != "finance" or not isinstance(contract, dict):
+        return None
+    selected = contract.get("selected_precondition") or {}
+    summary = contract.get("calibration_summary") or {}
+    followup = contract.get("selected_followup_branch") or {}
+    nulls = [str(x) for x in summary.get("nulls") or [] if str(x)]
+    score_min = selected.get("score_min")
+    if score_min is None or not nulls:
+        return None
+    return {
+        "schema": "dndlab.finance_reference_boundary.v1",
+        "source_contract": "domains/finance/precondition_contract.json",
+        "metric": selected.get("metric", "matched_filter_score_at_candidate_split"),
+        "score_min": score_min,
+        "selected_positives": summary.get("selected_positives"),
+        "positive_cases": summary.get("positive_cases"),
+        "selected_controls": summary.get("selected_controls"),
+        "control_cases": summary.get("control_cases"),
+        "nulls": nulls,
+        "public_claim": False,
+        "trading_signal": False,
+        "operational": False,
+        "status": followup.get("result", "reference boundary only; no public or trading claim"),
+        "next_gate": followup.get("next_gate", "require executable baseline/null before promotion"),
+    }
+
+
+def _boundary_summary(boundary: dict[str, Any] | None) -> str:
+    if not boundary:
+        return ""
+    selected = f"{boundary.get('selected_positives')}/{boundary.get('positive_cases')}"
+    controls = f"{boundary.get('selected_controls')}/{boundary.get('control_cases')}"
+    nulls = ", ".join(boundary.get("nulls") or [])
+    return (
+        f"`{boundary.get('metric')}` >= `{boundary.get('score_min')}`; "
+        f"selected positives `{selected}`; selected controls `{controls}`; "
+        f"null families `{nulls}`; `public_claim=false`; `trading_signal=false`."
+    )
+
+
+def _build_assertions_py(slug: str, boundary: dict[str, Any] | None = None) -> str:
+    boundary_literal = repr(boundary or {})
+    boundary_check = ""
+    if boundary:
+        boundary_check = '''
+    required_nulls = {"iid_shuffle", "circular_block_5", "circular_block_21"}
+    nulls = set(BOUNDARY.get("nulls") or [])
+    results.append({
+        "id": "REQ_05_FINANCE_BOUNDARY_EXECUTABLE",
+        "status": "PASS" if (
+            BOUNDARY.get("score_min") == 0.55
+            and BOUNDARY.get("selected_positives") == 19
+            and BOUNDARY.get("positive_cases") == 36
+            and BOUNDARY.get("selected_controls") == 0
+            and BOUNDARY.get("control_cases") == 108
+            and required_nulls.issubset(nulls)
+            and BOUNDARY.get("trading_signal") is False
+            and BOUNDARY.get("public_claim") is False
+        ) else "FAIL",
+        "detail": "finance reference candidate carries score_min=0.55, 19/36, 0/108, iid/block5/block21 nulls and no trading signal",
+        "metric": BOUNDARY.get("score_min"),
+    })
+'''
     return f'''"""Assertions for generated candidate lab `{slug}`.
 
 These checks validate the install seed, not a public domain claim.
 """
 
+BOUNDARY = {boundary_literal}
+
 
 def verifica_asserzioni():
-    return [
+    results = [
         {{
             "id": "REQ_01_REQUEST_PRESENT",
             "status": "PASS",
@@ -84,10 +164,14 @@ def verifica_asserzioni():
             "metric": 1,
         }},
     ]
+{boundary_check}
+    return results
 '''
 
 
-def _build_smoke_tool(slug: str, kind: str) -> str:
+def _build_smoke_tool(slug: str, kind: str, boundary: dict[str, Any] | None = None) -> str:
+    boundary_literal = repr(boundary or {})
+    null_literal = repr((boundary or {}).get("nulls") or ["shuffle_or_permutation_null", "domain_native_control_null"])
     return f'''#!/usr/bin/env python3
 """Smoke experiment for `{slug}`.
 
@@ -98,6 +182,8 @@ lab has an executable domain-native tool with baseline/null language.
 import argparse
 import json
 from datetime import datetime, timezone
+
+BOUNDARY = {boundary_literal}
 
 
 def main():
@@ -110,7 +196,8 @@ def main():
         "domain_kind": "{kind}",
         "verdict": "REFERENCE_BOUNDARY_ONLY",
         "baseline": "naive/request-preserving baseline required before interpretation",
-        "null": ["shuffle_or_permutation_null", "domain_native_control_null"],
+        "null": {null_literal},
+        "boundary": BOUNDARY,
         "public_claim": False,
         "trading_signal": False,
         "next": "replace smoke with domain-native experiment after first reviewed cycle",
@@ -130,6 +217,8 @@ def _build_spec(request: dict[str, Any]) -> dict[str, Any]:
     kind = str(request.get("kind") or "research").strip().lower()
     intent = str(request.get("intent") or "").strip()
     movement_class = str(request.get("movement_class") or "discovery").strip().lower()
+    boundary = _boundary_from_contract(kind, _load_domain_contract(kind))
+    boundary_text = _boundary_summary(boundary)
     use_dynamics = [str(x).strip() for x in request.get("use_dynamics") or [] if str(x).strip()]
     exclusions = [str(x).strip() for x in request.get("exclusions") or [] if str(x).strip()]
     success = str(request.get("success_condition") or "").strip()
@@ -167,6 +256,21 @@ def _build_spec(request: dict[str, Any]) -> dict[str, Any]:
             },
         ],
     }
+    if boundary:
+        seed_tensions["tensioni"].append(
+            {
+                "tipo": "vincolo",
+                "id": f"{sid}_FINANCE_REFERENCE_BOUNDARY_055",
+                "claim": (
+                    "Finance reference install requires matched_filter_score_at_candidate_split >= 0.55, "
+                    "19/36 positives selected, 0/108 controls selected, exact nulls iid_shuffle, "
+                    "circular_block_5, circular_block_21, and trading_signal=false."
+                ),
+                "intensita": 0.95,
+                "porta": "falsifier",
+                "condensato_ref": "A2,A8,A14,A15",
+            }
+        )
 
     context_md = f"""# {title} — Context
 
@@ -204,6 +308,21 @@ is promoted only after the falsifier and baseline/null contract survive.
 The first experiment is a reference smoke only. A domain-native baseline,
 shuffle/permutation or control null, and explicit stop condition are required
 before interpretation.
+"""
+    if boundary_text:
+        context_md += f"""
+
+## Finance reference boundary
+
+The generated finance reference candidate inherits the reviewed boundary from
+`domains/finance/precondition_contract.json` as an install gate, not as a market
+claim: {boundary_text}
+
+If any of these exact constants or null families are missing, the candidate is
+not installable. A later domain cycle may retire or narrow the rule only through
+runtime evidence and falsifier trace.
+"""
+    context_md += """
 
 ## Skill retrieval
 
@@ -254,6 +373,19 @@ declared use dynamics. Until then this candidate remains reference-only.
 
 Every experiment needs baseline, null/control, and stop condition before
 promotion. The smoke tool only verifies executable structure.
+"""
+    if boundary_text:
+        transduction_md += f"""
+
+### Finance reference boundary
+
+This candidate must preserve the exact reviewed finance boundary before it can
+be installed: {boundary_text}
+
+The boundary blocks premature transfer. It is not a trading signal, not a
+market forecast and not public evidence.
+"""
+    transduction_md += """
 
 ## Adaptive rules
 
@@ -333,11 +465,12 @@ the generator when needed.
                 "module": "RequestField",
                 "placement": "center",
                 "observables": ["request", "baseline", "null", "falsifier"],
-                "baseline_or_null": ["shuffle_or_control_null"],
+                "baseline_or_null": (boundary or {}).get("nulls") or ["shuffle_or_control_null"],
                 "shows": "Whether the request is admissible to first cycle.",
                 "blocks": "Premature claim or copied reference result.",
             }
         ],
+        "domain_boundary": boundary,
         "admin_actions": [
             {"action": "run_cycle", "allowed": True, "boundary": "Run from current seed; no direction override without review."}
         ],
@@ -392,7 +525,9 @@ the generator when needed.
         "kernel_refs": {
             "condensato_axioms_used": ["A2", "A8", "A14", "A15"],
             "request_path": request.get("_request_path", ""),
+            "domain_contract": (boundary or {}).get("source_contract", ""),
         },
+        "domain_contracts": {"reference_boundary": boundary} if boundary else {},
         "skills_attive": {
             "kernel_layer": [
                 {"name": "cascata", "use": "propagate request through seed/field/report"},
@@ -415,7 +550,13 @@ the generator when needed.
             "first_cycle": "request -> field -> smoke -> falsifier -> seed_integrator",
             "promotion": "only after baseline/null and runtime trace",
         },
-        "tools_custom": [{"name": "request_smoke", "path": "tools/exp_request_smoke.py"}],
+        "tools_custom": [
+            {
+                "name": "request_smoke",
+                "path": "tools/exp_request_smoke.py",
+                "boundary": boundary,
+            }
+        ],
     }
 
     archive_retrieval = {
@@ -445,6 +586,14 @@ Intent:
 {intent}
 ```
 """
+    if boundary_text:
+        readme += f"""
+Finance reference boundary:
+
+```text
+{boundary_text}
+```
+"""
 
     return {
         "domain_slug": slug,
@@ -461,7 +610,7 @@ Intent:
             "falsifier": "vincolo",
             "runtime": "vincolo",
         },
-        "assertions_py": _build_assertions_py(slug),
+        "assertions_py": _build_assertions_py(slug, boundary),
         "mml_json": mml,
         "transduction_md": transduction_md,
         "ui_contract_json": ui_contract,
@@ -469,7 +618,7 @@ Intent:
         "archive_retrieval_json": archive_retrieval,
         "onboarding_contract_json": onboarding_contract,
         "tools_exp_files": [
-            {"name": "exp_request_smoke.py", "content": _build_smoke_tool(slug, kind)}
+            {"name": "exp_request_smoke.py", "content": _build_smoke_tool(slug, kind, boundary)}
         ],
         "readme_md": readme,
     }

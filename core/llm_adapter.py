@@ -62,10 +62,16 @@ class AdapterConfig:
 
     @classmethod
     def from_env(cls) -> AdapterConfig:
+        base_url = os.environ.get("LLM_BASE_URL", "https://openrouter.ai/api/v1")
+        model = os.environ.get("LLM_MODEL", "")
+        api_key = os.environ.get("LLM_API_KEY", "")
+        if "openrouter.ai" in base_url:
+            api_key = api_key or os.environ.get("OPENROUTER_API_KEY", "")
+            model = model or os.environ.get("OPENROUTER_MODEL", "")
         return cls(
-            base_url=os.environ.get("LLM_BASE_URL", "https://openrouter.ai/api/v1"),
-            api_key=os.environ.get("LLM_API_KEY", ""),
-            model=os.environ.get("LLM_MODEL", ""),
+            base_url=base_url,
+            api_key=api_key,
+            model=model,
             max_turns=int(os.environ.get("LLM_MAX_TURNS", "25")),
             timeout_seconds=int(os.environ.get("LLM_TIMEOUT_SECONDS", "1200")),
             max_cost_usd=_parse_optional_float(os.environ.get("LLM_MAX_COST_USD")),
@@ -351,7 +357,10 @@ def run_agent(
             if provider == "claude-cli":
                 try:
                     logger.info("provider chain: trying claude-cli")
-                    return _run_via_claude_cli(system_prompt, user_message, config)
+                    result = _run_via_claude_cli(system_prompt, user_message, config)
+                    if early_stop and not early_stop():
+                        raise RuntimeError("claude CLI completed without required side effect")
+                    return result
                 except (RuntimeError, TimeoutError) as e:
                     logger.warning(f"claude-cli failed: {e} — falling back")
                     last_err = e
@@ -359,7 +368,10 @@ def run_agent(
             if provider == "codex-cli":
                 try:
                     logger.info("provider chain: trying codex-cli")
-                    return _run_via_codex_cli(system_prompt, user_message, config)
+                    result = _run_via_codex_cli(system_prompt, user_message, config)
+                    if early_stop and not early_stop():
+                        raise RuntimeError("codex CLI completed without required side effect")
+                    return result
                 except (RuntimeError, TimeoutError) as e:
                     logger.warning(f"codex-cli failed: {e} — falling back")
                     last_err = e
