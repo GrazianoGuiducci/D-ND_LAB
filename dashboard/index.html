@@ -1434,42 +1434,44 @@
                           class="text-[11px] font-mono text-cyan-200 hover:text-cyan-100 cursor-pointer"
                           x-text="latestValueArtifact()?.filename || 'artifact'"></button>
                 </div>
-                <div class="grid md:grid-cols-4 gap-3">
-                  <button @click="selectValueArtifactLens()"
-                          class="text-left bg-slate-950/50 border border-slate-800 hover:border-cyan-700 rounded p-3 transition cursor-pointer">
-                    <div class="text-[10px] uppercase tracking-wider text-slate-400">Schema</div>
-                    <div class="text-sm font-mono text-cyan-300 mt-1 line-clamp-2" x-text="latestValueArtifact()?.schema || 'n/a'"></div>
-                  </button>
-                  <button @click="selectValueArtifactLens()"
-                          class="text-left bg-slate-950/50 border border-slate-800 hover:border-cyan-700 rounded p-3 transition cursor-pointer">
-                    <div class="text-[10px] uppercase tracking-wider text-slate-400">Card</div>
-                    <div class="text-lg font-mono text-purple-300 mt-1" x-text="latestValueArtifact()?.n_cards ?? 0"></div>
-                  </button>
-                  <template x-for="row in latestValueArtifactSummaryRows()" :key="row.label">
+                <div class="grid xl:grid-cols-[minmax(0,1.05fr)_minmax(300px,.95fr)] gap-3 items-stretch">
+                  <div class="grid sm:grid-cols-2 xl:grid-cols-3 gap-3 content-start">
                     <button @click="selectValueArtifactLens()"
-                            class="text-left bg-slate-950/50 border border-slate-800 hover:border-cyan-700 rounded p-3 transition cursor-pointer">
-                      <div class="text-[10px] uppercase tracking-wider text-slate-400" x-text="row.label"></div>
-                      <div class="text-sm font-mono mt-1 line-clamp-2" :class="row.tone" x-text="row.value"></div>
+                            class="text-left bg-slate-950/50 border border-slate-800 hover:border-cyan-700 rounded p-3 transition cursor-pointer min-h-[92px]">
+                      <div class="text-[10px] uppercase tracking-wider text-slate-400">Schema</div>
+                      <div class="text-sm font-mono text-cyan-300 mt-1 line-clamp-2" x-text="latestValueArtifact()?.schema || 'n/a'"></div>
                     </button>
-                  </template>
-                </div>
-                <template x-if="latestValueArtifactCards().length">
-                  <div class="mt-3 grid lg:grid-cols-3 gap-3">
-                    <template x-for="card in latestValueArtifactCards()" :key="card.claim_id || card.title || JSON.stringify(card).slice(0,40)">
-                      <button @click="selectValueArtifactLens(card)"
-                              class="text-left border border-slate-800 hover:border-cyan-700 rounded-md p-3 bg-slate-950/40 transition cursor-pointer">
-                        <div class="flex items-center justify-between gap-2">
-                          <span class="text-[10px] font-mono text-cyan-300 truncate" x-text="card.claim_id || card.id || 'claim'"></span>
-                          <span class="text-[10px] uppercase tracking-wider"
-                                :class="valueArtifactDecisionTone(card)"
-                                x-text="card.decision || card.status || 'watch'"></span>
-                        </div>
-                        <div class="text-sm text-slate-200 mt-2 line-clamp-2" x-text="card.title || card.claim || card.question || 'Claim card'"></div>
-                        <div class="text-xs text-slate-400 mt-2 line-clamp-2" x-text="card.reason || card.boundary || card.evidence || ''"></div>
+                    <button @click="selectValueArtifactLens()"
+                            class="text-left bg-slate-950/50 border border-slate-800 hover:border-cyan-700 rounded p-3 transition cursor-pointer min-h-[92px]">
+                      <div class="text-[10px] uppercase tracking-wider text-slate-400">Card</div>
+                      <div class="text-lg font-mono text-purple-300 mt-1" x-text="latestValueArtifact()?.n_cards ?? 0"></div>
+                    </button>
+                    <template x-for="row in latestValueArtifactSummaryRows()" :key="row.label">
+                      <button @click="selectValueArtifactLens()"
+                              class="text-left bg-slate-950/50 border border-slate-800 hover:border-cyan-700 rounded p-3 transition cursor-pointer min-h-[92px]">
+                        <div class="text-[10px] uppercase tracking-wider text-slate-400" x-text="row.label"></div>
+                        <div class="text-sm font-mono mt-1 line-clamp-2" :class="row.tone" x-text="row.value"></div>
                       </button>
                     </template>
                   </div>
-                </template>
+                  <template x-if="latestValueArtifactCards().length">
+                    <div class="grid gap-3 content-start">
+                      <template x-for="card in latestValueArtifactCards()" :key="card.claim_id || card.title || JSON.stringify(card).slice(0,40)">
+                        <button @click="selectValueArtifactLens(card)"
+                                class="text-left border border-slate-800 hover:border-cyan-700 rounded-md p-3 bg-slate-950/40 transition cursor-pointer min-h-[128px]">
+                          <div class="flex items-center justify-between gap-2">
+                            <span class="text-[10px] font-mono text-cyan-300 truncate" x-text="card.claim_id || card.id || 'claim'"></span>
+                            <span class="text-[10px] uppercase tracking-wider"
+                                  :class="valueArtifactDecisionTone(card)"
+                                  x-text="card.decision || card.status || 'watch'"></span>
+                          </div>
+                          <div class="text-sm text-slate-200 mt-2 line-clamp-2" x-text="card.title || card.claim || card.question || 'Claim card'"></div>
+                          <div class="text-xs text-slate-400 mt-2 line-clamp-3" x-text="card.reason || card.boundary || card.evidence || ''"></div>
+                        </button>
+                      </template>
+                    </div>
+                  </template>
+                </div>
               </section>
             </template>
 
