@@ -60,6 +60,11 @@ These inputs are valuable as domain language and candidate method family. They
 are not yet evidence and not yet rules. The Lab must translate them into
 observables, data requirements and falsifiers before using them.
 
+Derived visual-method intake from the first Alipio screenshots is preserved in
+`docs/BITCOIN_ALIPIO_METHOD_INTAKE_20260518.md`. That document is the
+THIA/Lab bridge for questions, method cards and tool design; it is not seed
+authority and contains no raw private screenshots.
+
 Operator also mentioned Massimo Rea as a possible source of methods discussed
 by Alipio. TM7-local recovered derived method material from two transcripts and
 metadata from four other videos; raw transcripts are not stored in the public
@@ -336,3 +341,9 @@ domain-native experiment:
 4. run one supervised cycle;
 5. show Alipio a working dashboard and ask for critique on usefulness, not for
    trading direction.
+
+After the first field and timeframe gates, the next reviewed experiment should
+start from the Alipio intake contract: define one daily method card or one
+daily-computable FVG/inefficiency candidate with matched null. Do not jump
+directly to a Volume Profile POC target unless the profile window, binning,
+source and tolerance have been declared.

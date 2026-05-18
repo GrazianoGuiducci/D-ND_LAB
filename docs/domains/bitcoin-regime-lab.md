@@ -43,6 +43,16 @@ The seed contains method families only as hypotheses:
 None of these is authority before it becomes an observable with data source,
 baseline, null and falsifier.
 
+Detailed public-safe intake from Alipio's first annotated screenshots and
+Massimo Rea-derived method notes is in:
+
+```text
+docs/BITCOIN_ALIPIO_METHOD_INTAKE_20260518.md
+```
+
+Use it as a question and method-card bridge for THIA and the Lab. It is not a
+trading rule and does not include private raw images.
+
 ## Validation
 
 Use:

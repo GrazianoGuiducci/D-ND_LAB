@@ -120,6 +120,20 @@ Adaptation questions:
 - `How is an inefficiency considered filled, partially filled or invalidated?`
 - `Which Alipio/Massimo Rea method should be translated first into observable, null and falsifier?`
 
+Human method intake:
+
+- Use `docs/BITCOIN_ALIPIO_METHOD_INTAKE_20260518.md` before accepting
+  Alipio/Rea-derived methods into a cycle.
+- Treat screenshots and video-derived notes as method cards, not evidence.
+- Ask for exact profile window, binning, tolerance, fill rule, trendline
+  construction, MM52 definition and invalidation rule.
+- Current value path: daily field gate passed, daily timeframe is the first
+  testable surface, weekly/monthly are watch surfaces, intraday is blocked
+  until native intraday OHLCV/feed robustness exists.
+- Next movement should expose one daily method specification or daily-computable
+  FVG/inefficiency candidate with matched null. Do not promote POC/FVG/MM52
+  language to target, entry, exit or signal.
+
 
 ## Skill retrieval
 
