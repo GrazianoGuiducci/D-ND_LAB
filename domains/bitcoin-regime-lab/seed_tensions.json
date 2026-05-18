@@ -26,6 +26,14 @@
       "intensita": 0.85,
       "porta": "runtime",
       "condensato_ref": "A8,A15"
+    },
+    {
+      "tipo": "ipotesi",
+      "id": "BTC_DAILY_FEED_ROBUSTNESS_GATE",
+      "claim": "Before testing POC/FVG/timeframe claims, the daily BTC field must pass a cross-feed robustness gate: at least 3 providers, 30 common daily candles, latest close dispersion <= 0.5%, max window close dispersion <= 0.75%, and no-signal boundary intact.",
+      "intensita": 0.88,
+      "porta": "feed_robustness",
+      "condensato_ref": "A2,A8,A14"
     }
   ]
 }

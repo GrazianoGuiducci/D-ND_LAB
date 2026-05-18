@@ -183,3 +183,26 @@ bash tools/bitcoin-refresh-value.sh
 Questo comando non invoca LLM, non scrive report agente e non autorizza target
 o segnali. Serve a tenere fresca la superficie `latest_value_artifacts` per UI,
 THIA e futuri cicli del Bitcoin Lab.
+
+La prima ipotesi falsificabile del Lab non riguarda il prezzo: riguarda
+l'ammissibilita' del campo dati daily prima di qualunque POC/FVG/timeframe.
+
+```bash
+python3 domains/bitcoin-regime-lab/tools/btc_first_hypothesis.py --write --json
+```
+
+Output atteso: JSON `dndlab.bitcoin.first_hypothesis.v1` scritto in
+`data/bitcoin-regime-lab/value/`. Consuma
+`btc_exchange_ohlcv_latest.json` e verifica:
+
+- provider daily ok >= 3;
+- provider errors = 0;
+- common_days_compared >= 30;
+- latest_close_dispersion_pct <= 0.5;
+- max_close_dispersion_pct <= 0.75;
+- boundary no-signal conservato.
+
+Se passa, il campo diventa `FIELD_ADMISSIBLE_FOR_NEXT_HYPOTHESIS`: il prossimo
+ciclo puo' definire un solo osservabile meccanico POC/FVG/timeframe con null
+matched. Se fallisce, il Lab deve riparare feed/sorgenti prima di interpretare.
+In entrambi i casi `trading_signal=false`.

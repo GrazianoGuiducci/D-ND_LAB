@@ -78,6 +78,11 @@
       "name": "btc_exchange_ohlcv",
       "path": "tools/btc_exchange_ohlcv.py",
       "boundary": "writes exchange-native OHLCV robustness data-card across Bitstamp/Coinbase/Binance; public_claim=false; trading_signal=false; operational=false"
+    },
+    {
+      "name": "btc_first_hypothesis",
+      "path": "tools/btc_first_hypothesis.py",
+      "boundary": "consumes exchange OHLCV artifact and writes first falsifiable BTC hypothesis card; field admissibility only; public_claim=false; trading_signal=false; operational=false"
     }
   ]
 }

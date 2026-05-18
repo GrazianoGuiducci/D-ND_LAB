@@ -31,8 +31,9 @@ bash tools/bitcoin-refresh-value.sh
 ```
 
 This wrapper runs the market context card and the exchange-native OHLCV
-robustness card. It is safe for cron because it uses only public no-key APIs
-and writes only `data/bitcoin-regime-lab/value/*`.
+robustness card, then builds the first falsifiable hypothesis card. It is safe
+for cron because it uses only public no-key APIs and writes only
+`data/bitcoin-regime-lab/value/*`.
 
 Generate the exchange-native feed robustness card directly:
 
@@ -44,3 +45,15 @@ The artifact compares daily OHLCV from Bitstamp BTC/USD, Coinbase BTC/USD and
 Binance BTC/USDT. It measures provider availability and close dispersion before
 any POC/FVG/timeframe hypothesis is allowed to become testable. It is not a
 signal and does not aggregate venue volume into a trading conclusion.
+
+Build the first falsifiable BTC hypothesis directly:
+
+```bash
+python3 domains/bitcoin-regime-lab/tools/btc_first_hypothesis.py --write --json
+```
+
+This consumes `btc_exchange_ohlcv_latest.json` and decides only whether the
+daily BTC field is admissible for the next hypothesis test. Default thresholds:
+3 providers, 30 common daily candles, latest close dispersion <= 0.5%, max
+window dispersion <= 0.75%. Passing this gate does not create a signal; it only
+allows the Lab to define one mechanical POC/FVG/timeframe observable next.
