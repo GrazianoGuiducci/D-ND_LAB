@@ -167,6 +167,7 @@ def validate_specs(specs: dict[str, Any]) -> list[str]:
             errors.append("context_md deve esporre ciclo vivo/auto-incremento informativo (M5)")
     else:
         errors.append("context_md deve essere markdown non vuoto")
+    errors.extend(_tools_custom_surface_errors(specs))
     transduction = specs.get("transduction_md", "")
     if not isinstance(transduction, str) or not transduction.strip():
         errors.append("transduction_md deve essere markdown non vuoto")
@@ -286,6 +287,45 @@ def validate_specs(specs: dict[str, Any]) -> list[str]:
             never_direct = onboarding_contract.get("never_direct_to_seed")
             if not isinstance(never_direct, list) or not never_direct:
                 errors.append("onboarding_contract_json.never_direct_to_seed deve essere lista non vuota")
+    return errors
+
+
+def _tools_custom_surface_errors(specs: dict[str, Any]) -> list[str]:
+    """Ensure custom tools are visible to the future agent as an invocation
+    contract. MML/filesystem presence alone is not enough for autonomous use.
+    """
+    mml = specs.get("mml_json", {})
+    context_md = specs.get("context_md", "")
+    if not isinstance(mml, dict) or not isinstance(context_md, str):
+        return []
+    tools_custom = mml.get("tools_custom") or []
+    if not isinstance(tools_custom, list) or not tools_custom:
+        return []
+
+    errors: list[str] = []
+    context_lower = context_md.lower()
+    for tool in tools_custom:
+        if not isinstance(tool, dict):
+            continue
+        name = str(tool.get("name") or "").strip()
+        rel_path = str(tool.get("path") or "").strip()
+        basename = Path(rel_path).name if rel_path else ""
+        missing: list[str] = []
+        if name and name.lower() not in context_lower:
+            missing.append("tool_name")
+        if rel_path and rel_path.lower() not in context_lower and basename.lower() not in context_lower:
+            missing.append("tool_path")
+        if "python" not in context_lower and "bash" not in context_lower and "./" not in context_lower:
+            missing.append("shell_command")
+        if "--json" not in context_lower and "json" not in context_lower:
+            missing.append("json_output_contract")
+        if "output" not in context_lower and "schema" not in context_lower and "stdout" not in context_lower:
+            missing.append("output_contract")
+        if missing:
+            label = name or rel_path or "<unnamed>"
+            errors.append(
+                f"context_md non espone tools_custom '{label}' come contratto agent-facing: mancanti {missing}"
+            )
     return errors
 
 

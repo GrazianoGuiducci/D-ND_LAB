@@ -227,7 +227,10 @@ def report_falsifier(ctx: CycleContext) -> None:
 
 
 _DATA_FILE_REF_RE = re.compile(
-    r"`?(?:data/[^`\s)]+|domains/[^`\s)]+/(?:data|corpus|reports)/[^`\s)]+|[A-Za-z0-9_]+\.(?:json|csv|jsonl))`?",
+    r"`?((?:/opt/D-ND_LAB|/data)/[^`\s)]+?\.(?:json|csv|jsonl|md|py)"
+    r"|data/[^`\s)]+?\.(?:json|csv|jsonl|md|py)"
+    r"|domains/[^`\s)]+?/(?:data|corpus|reports|tools)/[^`\s)]+?\.(?:json|csv|jsonl|md|py)"
+    r"|[A-Za-z0-9_][A-Za-z0-9_.-]*\.(?:json|csv|jsonl))`?",
 )
 
 
@@ -247,16 +250,34 @@ def _collect_data_excerpts(
     domain_data = paths.domain_data_dir(ctx.domain)
 
     for m in _DATA_FILE_REF_RE.finditer(report_text):
-        ref = m.group(0).strip("`")
+        ref = m.group(1).strip("`")
         # Resolve to actual file under domain data dir
         for base in (Path(ref), domain_data / Path(ref).name, domain_data / ref):
             try:
                 p = base if base.is_absolute() else (Path("/opt/D-ND_LAB") / base)
-                if p.exists() and p.is_file():
+                if p.exists() and p.is_file() and _is_safe_context_file(p):
                     candidates.add(p.resolve())
                     break
             except Exception:
                 pass
+
+    # Meta-lab cycles produce isolated candidates before installing them in
+    # domains/. Those files are decisive evidence for template reports but may
+    # not be cited by exact path in the report body, so include the runner's own
+    # candidate/report paths when present in cycle metrics.
+    runner_metrics = ctx.metrics.get("domain_request_runner", {}) or {}
+    for ref in (
+        runner_metrics.get("report_path"),
+        Path(str(runner_metrics.get("candidate_dir") or "")) / "context.md",
+    ):
+        if not ref:
+            continue
+        try:
+            p = Path(str(ref))
+            if p.exists() and p.is_file() and _is_safe_context_file(p):
+                candidates.add(p.resolve())
+        except Exception:
+            pass
 
     # Canonical files always considered (small data files for context)
     for canonical in ("lab_data.json", "lab_graph.json", "seed.json"):
@@ -295,6 +316,21 @@ def _collect_data_excerpts(
             text = text[:per_file] + f"\n…[truncated, file is {len(text)} bytes]"
         out.append({"path": str(p), "excerpt": text})
     return out
+
+
+def _is_safe_context_file(path: Path) -> bool:
+    """Allow only repository/runtime lab files, never arbitrary filesystem reads."""
+    try:
+        resolved = path.resolve()
+    except Exception:
+        return False
+    configured_data_root = paths.domain_data_dir("meta-lab").parent.resolve()
+    safe_roots = [
+        Path("/opt/D-ND_LAB").resolve(),
+        configured_data_root,
+        Path("/data").resolve(),
+    ]
+    return any(resolved == root or root in resolved.parents for root in safe_roots)
 
 
 def _build_context(report_text: str, data_excerpts: list[dict[str, str]]) -> str:

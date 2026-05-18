@@ -350,12 +350,23 @@ def _check_m6_mml_coherence(template_dir: Path) -> dict[str, Any]:
         pass  # tollerato per lab esistenti
     elif missing_core:
         issues.append(f"core invariante mancante: {sorted(missing_core)}")
-    # tools_custom path verification
+    context_text = ""
+    context_file = template_dir / "context.md"
+    if context_file.exists():
+        context_text = context_file.read_text(errors="replace").lower()
+
+    # tools_custom path verification + agent-facing invocation surface
     for tc in mml.get("tools_custom", []) or []:
         if isinstance(tc, dict) and "path" in tc:
             tp = template_dir / tc["path"]
             if not tp.exists():
                 issues.append(f"tools_custom path non esiste: {tc['path']}")
+            surface_missing = _tools_custom_surface_missing(tc, context_text)
+            if surface_missing:
+                label = tc.get("name") or tc.get("path") or "<unnamed>"
+                issues.append(
+                    f"tools_custom non esposto in context.md: {label} manca {surface_missing}"
+                )
 
     if not issues:
         return {"id": "M6", "status": "PASS",
@@ -363,6 +374,29 @@ def _check_m6_mml_coherence(template_dir: Path) -> dict[str, Any]:
                 "metric": len(skills)}
     return {"id": "M6", "status": "FAIL",
             "detail": "; ".join(issues), "metric": 0}
+
+
+def _tools_custom_surface_missing(tool: dict[str, Any], context_text: str) -> list[str]:
+    """A custom tool must be invocable from the cognitive surface, not only
+    present in mml.json/tools/.
+    """
+    if not context_text:
+        return ["context_md"]
+    missing: list[str] = []
+    name = str(tool.get("name") or "").strip().lower()
+    rel_path = str(tool.get("path") or "").strip().lower()
+    basename = Path(rel_path).name if rel_path else ""
+    if name and name not in context_text:
+        missing.append("tool_name")
+    if rel_path and rel_path not in context_text and basename not in context_text:
+        missing.append("tool_path")
+    if "python" not in context_text and "bash" not in context_text and "./" not in context_text:
+        missing.append("shell_command")
+    if "--json" not in context_text and "json" not in context_text:
+        missing.append("json_output_contract")
+    if "output" not in context_text and "schema" not in context_text and "stdout" not in context_text:
+        missing.append("output_contract")
+    return missing
 
 
 # ─── M7: Integrita' di transduzione ──────────────────────────────

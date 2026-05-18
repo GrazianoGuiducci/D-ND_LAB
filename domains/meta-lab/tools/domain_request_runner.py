@@ -331,6 +331,28 @@ Use `skill_retrieval` before operational work. Start from portable capsules in
 request needs operational authority. Map intent -> movement_class ->
 use_dynamics -> skills through `skill_intent_map`.
 """
+    context_md += f"""
+
+## Tools custom del lab — come invocarli
+
+Il primo tool custom e' uno smoke test strutturale. Non usa rete, non legge
+segreti e non produce claim pubblici:
+
+```bash
+python3 /opt/D-ND_LAB/domains/{slug}/tools/exp_request_smoke.py --json
+```
+
+Durante la fase isolata del meta-lab, prima dell'installazione in `domains/`,
+il tool puo' essere invocato dalla candidate dir generata:
+
+```bash
+python3 <candidate_dir>/tools/exp_request_smoke.py --json
+```
+
+Output atteso: JSON con `schema`, `verdict`, `baseline`, `null`, `boundary`,
+`public_claim=false` e `trading_signal=false`. Se il tool non e' eseguibile o
+non espone baseline/null, il candidato resta non installabile.
+"""
 
     about_it = f"""# {title}
 
