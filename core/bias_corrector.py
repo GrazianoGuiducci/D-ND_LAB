@@ -177,6 +177,10 @@ def bias_corrector(ctx: CycleContext) -> None:
         _mark_pending(ctx, ts, reason=f"report unreadable: {e}")
         return
 
+    if _is_runtime_repair_report(report_text):
+        _record_runtime_repair_skip(ctx, ts, report_path)
+        return
+
     # Apply size guard: if the report is huge, sample it (rare case)
     max_input = int(params.get("max_input_bytes", 30_000))
     if len(report_text) > max_input:
@@ -326,6 +330,52 @@ def _mark_pending(ctx: CycleContext, ts: str, *, reason: str) -> None:
     ctx.metrics.setdefault("bias_corrector", {}).update(
         status="pending",
         reason=reason,
+    )
+
+
+def _is_runtime_repair_report(report_text: str) -> bool:
+    """Runtime repair reports are control artifacts, not domain claims.
+
+    The downstream falsifier should still read them, but this movement must
+    not rewrite them as if they were agent-produced scientific reports.
+    """
+    markers = (
+        "CYCLE_REPAIR_NO_CLAIM",
+        "Agent Runtime Repair Report",
+        "not a scientific finding",
+        "not a domain result",
+    )
+    return any(marker in report_text for marker in markers[:2]) and all(
+        marker in report_text for marker in markers[2:]
+    )
+
+
+def _record_runtime_repair_skip(
+    ctx: CycleContext, ts: str, report_path: Path
+) -> None:
+    reason = "runtime repair report is a control artifact"
+    ctx.record_skipped("bias_corrector", reason)
+    ctx.metrics.setdefault("bias_corrector", {}).update(
+        status="skipped_runtime_repair_report",
+        reason=reason,
+        report_file=report_path.name,
+    )
+
+    out_dir = paths.domain_data_dir(ctx.domain) / "corrector"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    record = {
+        "domain": ctx.domain,
+        "timestamp": ts,
+        "report_file": report_path.name,
+        "rewrites_proposed": 0,
+        "rewrites_applied": 0,
+        "rewrites_skipped": 0,
+        "status": "skipped_runtime_repair_report",
+        "reason": reason,
+        "marked_at": datetime.now(timezone.utc).isoformat(),
+    }
+    (out_dir / f"corrector_{ts}.json").write_text(
+        json.dumps(record, indent=2, ensure_ascii=False)
     )
 
 
