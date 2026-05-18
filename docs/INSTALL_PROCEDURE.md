@@ -154,6 +154,10 @@ Le sezioni sono ordinate per dipendenza causale.
 - **Modello agent**: deepseek/sonnet/opus/...
 - **Modelli bare** (corrector, falsifier, refiner, evaluator): bridge
   chain (codex→claude→openrouter) sì/no
+- **Runtime artifact contract**: il ciclo è valido solo quando esiste
+  `agent_<timestamp>.md`; provider API/locali possono restituire il report
+  markdown come final answer e il Lab lo materializza nel path atteso. Codex è
+  un runtime comodo per questo VPS, non un requisito dell'installer.
 - **Cost cap**: max per cycle in USD (None = no cap)
 - **Timeout per movement**: default 1200s
 
@@ -184,7 +188,8 @@ chiede conferma. Validazioni automatiche:
 - [ ] `skill_retrieval` documentato: skill/enzimi usati, esclusi e mancanti
 - [ ] `skill_reading_matrix` presente per ogni skill che diventa operativa
 - [ ] `mml.json` usa `skills_attive` per layer, non solo lista piatta
-- [ ] LLM_API_KEY o subscription disponibile per il provider scelto
+- [ ] Credenziale/runtime disponibile per il provider scelto
+      (`OPENROUTER_API_KEY`, `LLM_API_KEY`, subscription CLI o LLM locale)
 - [ ] Cron schedule sintatticamente valido
 - [ ] URL non collide con nginx esistente
 - [ ] `skill_intent_map` collega intento, movimento, skill/meta-prompt,

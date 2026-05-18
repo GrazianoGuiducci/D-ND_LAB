@@ -199,6 +199,48 @@ The next cycle should treat this as a runtime contract failure:
     expected_report.write_text(text, encoding="utf-8")
 
 
+def _final_text_looks_like_report(final_text: str, min_report_bytes: int) -> bool:
+    text = (final_text or "").strip()
+    if len(text.encode("utf-8")) < min(512, max(128, min_report_bytes // 2)):
+        return False
+    lower = text.lower()
+    report_markers = (
+        "# ",
+        "verdict",
+        "bicono",
+        "claim",
+        "experiment",
+        "risult",
+        "report",
+    )
+    return sum(1 for marker in report_markers if marker in lower) >= 2
+
+
+def _materialize_final_text_report(
+    *,
+    ctx: CycleContext,
+    expected_report,
+    result: llm_adapter.AgentResult,
+    min_report_bytes: int,
+) -> bool:
+    """Persist a provider's final answer when it is a report but not a file.
+
+    This is the provider-agnostic bridge for API/local LLM installs: tools may
+    be unavailable or the model may answer with the report body instead of
+    writing the expected side-effect file. The Lab still requires the artifact,
+    so it materializes only sufficiently report-shaped text and lets the
+    downstream falsifier judge content quality.
+    """
+    if not _final_text_looks_like_report(result.final_text, min_report_bytes):
+        return False
+    expected_report.parent.mkdir(parents=True, exist_ok=True)
+    text = result.final_text.strip()
+    if not text.startswith("#"):
+        text = f"# Agent Report — {ctx.domain} {ctx.timestamp}\n\n{text}"
+    expected_report.write_text(text + "\n", encoding="utf-8")
+    return True
+
+
 def _attempt_same_cli_report_repair(
     *,
     ctx: CycleContext,
@@ -268,15 +310,6 @@ def agent(ctx: CycleContext) -> None:
     system_prompt_parts.append(field_path.read_text())
     system_prompt = "\n\n---\n\n".join(system_prompt_parts)
 
-    user_message = (
-        f"Run one experiment for cycle {ctx.timestamp}. "
-        f"Pick ONE tension with high discriminating power. Formulate ONE question. "
-        f"Run the experiment. Write the report to "
-        f"{paths.reports_dir(ctx.domain)}/agent_{ctx.timestamp}.md. "
-        f"Update {paths.seed_path(ctx.domain)} with what you found. "
-        f"Include the bicono section in the report."
-    )
-
     adapter_config = llm_adapter.AdapterConfig.from_env()
 
     # Default tool set: filesystem ops + python_exec + bash_exec, sandboxed
@@ -334,6 +367,18 @@ def agent(ctx: CycleContext) -> None:
     expected_report = paths.reports_dir(ctx.domain) / f"agent_{ctx.timestamp}.md"
     min_report_bytes = int(params.get("min_report_bytes", 1024))
 
+    user_message = (
+        f"Run one experiment for cycle {ctx.timestamp}. "
+        f"Pick ONE tension with high discriminating power. Formulate ONE question. "
+        f"Run the experiment. Required artifact contract: write the report to "
+        f"{expected_report}. The report file is the cycle output; provider "
+        f"completion alone is not success. If your runtime cannot write files, "
+        f"return the complete markdown report as your final answer and the Lab "
+        f"will persist it to that path. Update {paths.seed_path(ctx.domain)} "
+        f"with what you found only when you have evidence. Include the bicono "
+        f"section in the report."
+    )
+
     def report_written() -> bool:
         return expected_report.exists() and expected_report.stat().st_size >= min_report_bytes
 
@@ -349,28 +394,47 @@ def agent(ctx: CycleContext) -> None:
     expected_report = paths.reports_dir(ctx.domain) / f"agent_{ctx.timestamp}.md"
     repair_applied = False
     repair_stop_reason = ""
+    report_materialized_from_final_text = False
     if not report_written():
-        repaired = _attempt_same_cli_report_repair(
+        if _materialize_final_text_report(
             ctx=ctx,
-            result=result,
-            system_prompt=system_prompt,
             expected_report=expected_report,
-            report_written=report_written,
-            adapter_config=adapter_config,
-        )
-        if repaired and report_written():
-            repair_applied = True
-            repair_stop_reason = repaired.stop_reason
-            result = repaired
+            result=result,
+            min_report_bytes=min_report_bytes,
+        ):
+            report_materialized_from_final_text = True
         else:
-            _write_repair_report(
-                ctx,
-                expected_report,
-                result,
-                reason="same-provider repair did not produce report" if repaired else "no same-provider repair available",
+            repaired = _attempt_same_cli_report_repair(
+                ctx=ctx,
+                result=result,
+                system_prompt=system_prompt,
+                expected_report=expected_report,
+                report_written=report_written,
+                adapter_config=adapter_config,
             )
-            repair_applied = True
-            repair_stop_reason = "deterministic-no-claim-report"
+            if repaired and report_written():
+                repair_applied = True
+                repair_stop_reason = repaired.stop_reason
+                result = repaired
+            elif repaired and _materialize_final_text_report(
+                ctx=ctx,
+                expected_report=expected_report,
+                result=repaired,
+                min_report_bytes=min_report_bytes,
+            ):
+                repair_applied = True
+                repair_stop_reason = "same-provider-final-text-materialized"
+                report_materialized_from_final_text = True
+                result = repaired
+            else:
+                _write_repair_report(
+                    ctx,
+                    expected_report,
+                    result,
+                    reason="same-provider repair did not produce report" if repaired else "no same-provider repair available",
+                )
+                repair_applied = True
+                repair_stop_reason = "deterministic-no-claim-report"
 
     if not expected_report.exists():
         raise RuntimeError(
@@ -384,6 +448,7 @@ def agent(ctx: CycleContext) -> None:
         stop_reason=result.stop_reason,
         repair_applied=repair_applied,
         repair_stop_reason=repair_stop_reason,
+        report_materialized_from_final_text=report_materialized_from_final_text,
         tool_calls=len(result.tool_calls),
         usage=result.usage,
         cost_usd=result.cost_usd,

@@ -17,8 +17,8 @@ you with interactive prompts.
 | var | required | default | what it does |
 |---|---|---|---|
 | `LLM_BASE_URL` | yes | `https://openrouter.ai/api/v1` | OpenAI-compatible endpoint |
-| `LLM_API_KEY` | yes | — | Your provider's API key |
-| `LLM_MODEL` | yes | — | Model id (e.g. `deepseek/deepseek-v4-pro`) |
+| `LLM_API_KEY` | provider-dependent | — | Generic OpenAI-compatible API key. For OpenRouter, `OPENROUTER_API_KEY` is also accepted. CLI/local providers may not need it. |
+| `LLM_MODEL` | provider-dependent | — | Model id (e.g. `deepseek/deepseek-v4-pro`). For OpenRouter, `OPENROUTER_MODEL` is also accepted. |
 | `LLM_PROVIDER` | no | `openrouter` | Label only, doesn't affect the call |
 | `LLM_PROVIDER_CHAIN` | no | `codex-cli,claude-cli,openrouter` | Provider dispatcher order. Use `openrouter` for HTTP-only or local OpenAI-compatible endpoints. |
 | `LLM_MAX_TURNS` | no | `25` | Hard cap per cycle |
@@ -34,6 +34,21 @@ codex-cli -> claude-cli -> openrouter
 Installations may use any OpenAI-compatible endpoint, including local LLMs via
 `LLM_BASE_URL=http://localhost:11434/v1`, but movements that require tool use
 need a CLI/runtime able to read, write, and execute in the Lab sandbox.
+
+The agent movement is provider-agnostic at the artifact boundary:
+
+- preferred path: the provider writes
+  `data/<domain>/reports/agent_<timestamp>.md`;
+- portable API/local path: if the provider returns a complete markdown report
+  as final text, the Lab persists that text to the expected report path;
+- failure path: if neither a file nor report-shaped final text exists, the Lab
+  writes `CYCLE_REPAIR_NO_CLAIM` as a runtime control artifact.
+
+Codex/Claude CLI are convenience runtimes for local subscription accounts, not
+requirements for third-party installs. HTTP-only installs should set
+`LLM_PROVIDER_CHAIN=openrouter` or `LLM_PROVIDER_CHAIN=openai` to reach the
+OpenAI-compatible path directly. Local OpenAI-compatible servers can use the
+same path with their own `LLM_BASE_URL`.
 
 ### Lab
 

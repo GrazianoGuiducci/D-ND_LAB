@@ -7,7 +7,7 @@
 # What it does:
 #   1. Verifies docker + docker compose are installed
 #   2. Clones the repo to ~/.d-nd-lab (or $LAB_HOME if set)
-#   3. Interactive prompts for: LLM_API_KEY, LLM_MODEL, LAB_DOMAIN
+#   3. Interactive prompts for: provider credential/runtime, LLM_MODEL, LAB_DOMAIN
 #   4. Generates .env from .env.example with answers filled in
 #   5. Builds the image + starts services with docker compose
 #   6. Prints status URLs
@@ -88,14 +88,17 @@ else
 
     # Prompt for required values
     say ""
-    say "${C_BOLD}LLM API key${C_RESET}"
-    say "${C_DIM}Get one at: https://openrouter.ai/keys (or your chosen provider)${C_RESET}"
-    read -r -s -p "  Paste key (input hidden): " api_key
+    say "${C_BOLD}LLM provider${C_RESET}"
+    say "${C_DIM}Default chain uses local CLI if available, then OpenRouter.${C_RESET}"
+    say "${C_DIM}For API-only installs use OpenRouter/OpenAI-compatible endpoint; for local Ollama, leave the key empty and edit LLM_BASE_URL if needed.${C_RESET}"
+    read -r -p "  LLM_PROVIDER_CHAIN [codex-cli,claude-cli,openrouter]: " provider_chain
+    provider_chain="${provider_chain:-codex-cli,claude-cli,openrouter}"
+
     say ""
-    if [ -z "$api_key" ]; then
-        err "API key is required."
-        exit 1
-    fi
+    say "${C_BOLD}API key / local runtime${C_RESET}"
+    say "${C_DIM}OpenRouter key: https://openrouter.ai/keys. Leave empty for CLI subscription or local providers that do not need a key.${C_RESET}"
+    read -r -s -p "  Paste key if needed (input hidden, optional): " api_key
+    say ""
 
     say ""
     say "${C_BOLD}Model${C_RESET}"
@@ -111,14 +114,18 @@ else
 
     # Write values into .env (in-place edit, preserving comments)
     # Use Python for safe escaping rather than sed (handles special chars in keys)
-    python3 - "$api_key" "$model" "$domain" .env <<'PY'
+    python3 - "$api_key" "$model" "$domain" "$provider_chain" .env <<'PY'
 import sys
 from pathlib import Path
-api_key, model, domain, env_path = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
+api_key, model, domain, provider_chain, env_path = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5]
 lines = Path(env_path).read_text().splitlines()
 out = []
 for line in lines:
-    if line.startswith("LLM_API_KEY="):
+    if line.startswith("LLM_PROVIDER_CHAIN="):
+        out.append(f"LLM_PROVIDER_CHAIN={provider_chain}")
+    elif line.startswith("OPENROUTER_API_KEY="):
+        out.append(f"OPENROUTER_API_KEY={api_key}")
+    elif line.startswith("LLM_API_KEY="):
         out.append(f"LLM_API_KEY={api_key}")
     elif line.startswith("LLM_MODEL=") and model:
         out.append(f"LLM_MODEL={model}")

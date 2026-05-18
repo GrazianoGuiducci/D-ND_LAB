@@ -79,9 +79,15 @@ class AdapterConfig:
 
     def validate(self) -> None:
         """Raise ValueError if config is incomplete."""
-        if not self.api_key:
+        local_no_key_ok = any(
+            marker in self.base_url
+            for marker in ("localhost", "127.0.0.1", "0.0.0.0", "::1")
+        )
+        if not self.api_key and not local_no_key_ok:
             raise ValueError(
-                "LLM_API_KEY is empty. Set it in .env (see .env.example)."
+                "LLM_API_KEY is empty. Set LLM_API_KEY or provider-specific "
+                "credentials such as OPENROUTER_API_KEY in .env. Local "
+                "OpenAI-compatible endpoints on localhost may leave it empty."
             )
         if not self.model:
             raise ValueError(
@@ -92,11 +98,11 @@ class AdapterConfig:
 
 
 # ---------------------------------------------------------------------------
-# CLI provider chain (refactor 01/05): replicare in D-ND_LAB il pattern di
-# MM_D-ND lab_agent.sh — claude CLI subprocess primary, codex CLI fallback,
-# OpenRouter HTTP fallback. Per uso personale interno (subscription OAuth =
-# gratis, tool use nativo). Per chi installa D-ND_LAB altrove: configurabile
-# tramite LLM_PROVIDER_CHAIN env var. Default = "claude-cli,codex-cli,openrouter".
+# CLI provider chain (refactor 01/05): lineage da MM_D-ND lab_agent.sh con
+# CLI locali + OpenRouter HTTP fallback. Per uso personale interno
+# (subscription OAuth = gratis, tool use nativo). Per chi installa D-ND_LAB
+# altrove: configurabile tramite LLM_PROVIDER_CHAIN env var. Current default =
+# "codex-cli,claude-cli,openrouter".
 # ---------------------------------------------------------------------------
 
 
@@ -338,7 +344,7 @@ def run_agent(
     config = config or AdapterConfig.from_env()
 
     # Provider chain (refactor 01/05): se LLM_PROVIDER_CHAIN configurata,
-    # prova in ordine ogni provider. Default chain: claude-cli → codex-cli
+    # prova in ordine ogni provider. Default chain: codex-cli → claude-cli
     # → openrouter (= comportamento legacy se i CLI non sono disponibili).
     # Per disabilitare: LLM_PROVIDER_CHAIN=openrouter (solo HTTP).
     chain_str = os.environ.get("LLM_PROVIDER_CHAIN", "codex-cli,claude-cli,openrouter")
