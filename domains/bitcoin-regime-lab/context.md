@@ -148,3 +148,15 @@ python3 <candidate_dir>/tools/exp_request_smoke.py --json
 Output atteso: JSON con `schema`, `verdict`, `baseline`, `null`, `boundary`,
 `public_claim=false` e `trading_signal=false`. Se il tool non e' eseguibile o
 non espone baseline/null, il candidato resta non installabile.
+
+Il primo tool value-facing usa rete pubblica e crea una data-card BTC per la
+dashboard. Non produce segnali, target o consigli operativi:
+
+```bash
+python3 /opt/D-ND_LAB/domains/bitcoin-regime-lab/tools/btc_market_card.py --write --json
+```
+
+Output atteso: JSON `dndlab.bitcoin.market_context.v1` scritto in
+`data/bitcoin-regime-lab/value/` con provider, source_url, retrieval_ts,
+finestra dati, prezzo BTC/USD di riferimento, variazioni 1d/7d/30d,
+volatilita realizzata proxy e boundary `trading_signal=false`.

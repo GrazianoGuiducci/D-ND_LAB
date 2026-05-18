@@ -68,6 +68,11 @@
       "name": "request_smoke",
       "path": "tools/exp_request_smoke.py",
       "boundary": null
+    },
+    {
+      "name": "btc_market_card",
+      "path": "tools/btc_market_card.py",
+      "boundary": "writes observe-only BTC data-card; public_claim=false; trading_signal=false; operational=false"
     }
   ]
 }
