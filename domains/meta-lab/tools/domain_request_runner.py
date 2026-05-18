@@ -65,6 +65,38 @@ def _load_domain_contract(kind: str) -> dict[str, Any] | None:
     return data
 
 
+def _load_domain_preset(kind: str, request: dict[str, Any]) -> dict[str, Any] | None:
+    """Load a matching domain preset when available.
+
+    Presets are accelerators, not authority. They provide domain-native
+    possibilities that still need adaptation to the request intent.
+    """
+    explicit = request.get("preset_path") or request.get("preset")
+    candidates: list[Path] = []
+    if explicit:
+        path = Path(str(explicit))
+        if not path.is_absolute():
+            path = _repo_root() / path
+        candidates.append(path)
+    preset_dir = _repo_root() / "docs" / "templates" / "domain_presets"
+    if preset_dir.exists():
+        candidates.extend(sorted(preset_dir.glob("*.json")))
+
+    for path in candidates:
+        if not path.exists() or not path.is_file():
+            continue
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            continue
+        if data.get("schema") != "domain_preset.v1":
+            continue
+        if explicit or str(data.get("domain_family") or "").strip().lower() == kind:
+            data["_source_path"] = str(path.relative_to(_repo_root()) if path.is_relative_to(_repo_root()) else path)
+            return data
+    return None
+
+
 def _boundary_from_contract(kind: str, contract: dict[str, Any] | None) -> dict[str, Any] | None:
     if kind != "finance" or not isinstance(contract, dict):
         return None
@@ -104,6 +136,53 @@ def _boundary_summary(boundary: dict[str, Any] | None) -> str:
         f"selected positives `{selected}`; selected controls `{controls}`; "
         f"null families `{nulls}`; `public_claim=false`; `trading_signal=false`."
     )
+
+
+def _preset_summary_md(preset: dict[str, Any] | None) -> str:
+    if not preset:
+        return ""
+    observables = [str(x.get("name")) for x in preset.get("starter_observables") or [] if isinstance(x, dict) and x.get("name")]
+    baselines = [str(x.get("name")) for x in preset.get("starter_baselines") or [] if isinstance(x, dict) and x.get("name")]
+    falsifiers = [str(x.get("lens")) for x in preset.get("starter_falsifiers") or [] if isinstance(x, dict) and x.get("lens")]
+    ui_native = []
+    modules = preset.get("starter_ui_modules") or {}
+    if isinstance(modules, dict):
+        ui_native = [str(x) for x in modules.get("domain_native") or [] if str(x)]
+    questions = [str(x) for x in preset.get("adaptation_questions") or [] if str(x)]
+
+    def bullets(values: list[str], limit: int = 14) -> str:
+        if not values:
+            return "- none declared"
+        shown = values[:limit]
+        suffix = [f"- ... +{len(values) - limit}"] if len(values) > limit else []
+        return "\n".join(f"- `{value}`" for value in shown) + ("\n" + "\n".join(suffix) if suffix else "")
+
+    return f"""
+## Domain preset possibilities
+
+Preset `{preset.get('preset_id')}` (`{preset.get('_source_path')}`) is loaded
+as possibility field, not as final domain truth.
+
+Starter observables:
+
+{bullets(observables)}
+
+Starter baselines:
+
+{bullets(baselines)}
+
+Starter falsifiers:
+
+{bullets(falsifiers)}
+
+Domain-native UI modules:
+
+{bullets(ui_native)}
+
+Adaptation questions:
+
+{bullets(questions, limit=10)}
+"""
 
 
 def _build_assertions_py(slug: str, boundary: dict[str, Any] | None = None) -> str:
@@ -218,6 +297,7 @@ def _build_spec(request: dict[str, Any]) -> dict[str, Any]:
     kind = str(request.get("kind") or "research").strip().lower()
     intent = str(request.get("intent") or "").strip()
     movement_class = str(request.get("movement_class") or "discovery").strip().lower()
+    preset = _load_domain_preset(kind, request)
     boundary = _boundary_from_contract(kind, _load_domain_contract(kind))
     boundary_text = _boundary_summary(boundary)
     use_dynamics = [str(x).strip() for x in request.get("use_dynamics") or [] if str(x).strip()]
@@ -310,6 +390,7 @@ The first experiment is a reference smoke only. A domain-native baseline,
 shuffle/permutation or control null, and explicit stop condition are required
 before interpretation.
 """
+    context_md += _preset_summary_md(preset)
     if boundary_text:
         context_md += f"""
 
@@ -522,6 +603,44 @@ baseline/null and UI lens.
             "status": "support_only",
         },
     ]
+    if preset:
+        preset_observables = [
+            str(item.get("name"))
+            for item in preset.get("starter_observables") or []
+            if isinstance(item, dict) and item.get("name")
+        ]
+        preset_baselines = [
+            str(item.get("name"))
+            for item in preset.get("starter_baselines") or []
+            if isinstance(item, dict) and item.get("name")
+        ]
+        preset_falsifiers = [
+            str(item.get("lens"))
+            for item in preset.get("starter_falsifiers") or []
+            if isinstance(item, dict) and item.get("lens")
+        ]
+        preset_modules = preset.get("starter_ui_modules") if isinstance(preset.get("starter_ui_modules"), dict) else {}
+        possibility_inventory.append(
+            {
+                "source_id": f"domain_preset:{preset.get('preset_id')}",
+                "source_path": preset.get("_source_path", "docs/templates/domain_presets"),
+                "source_kind": "preset",
+                "available_possibility": "Domain-native starter observables, baselines, falsifiers, UI modules and adaptation questions.",
+                "movement_link": "adapt known domain-family patterns to this request before inventing new tools",
+                "read_depth_required": "L1 plus adaptation questions; E2E before promotion",
+                "candidate_artifact": "seed_tensions|context|tool|null|baseline|ui_contract",
+                "activation_trigger": "when the request kind matches the preset domain_family",
+                "test_or_evidence": "strict validator, smoke tool and first cycle with domain-native data-card",
+                "contamination_risk": "using the preset as final domain truth or skipping intent-specific adaptation",
+                "status": "available",
+                "preset_id": preset.get("preset_id"),
+                "starter_observables": preset_observables,
+                "starter_baselines": preset_baselines,
+                "starter_falsifiers": preset_falsifiers,
+                "domain_native_ui_modules": [str(x) for x in preset_modules.get("domain_native") or [] if str(x)],
+                "adaptation_questions": [str(x) for x in preset.get("adaptation_questions") or [] if str(x)],
+            }
+        )
 
     question_field = {
         "primary_question": f"Can `{slug}` turn the requested intent into an observable cycle without promoting an untested result?",
