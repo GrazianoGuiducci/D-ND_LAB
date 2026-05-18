@@ -269,6 +269,7 @@ def _collect_data_excerpts(
     for ref in (
         runner_metrics.get("report_path"),
         Path(str(runner_metrics.get("candidate_dir") or "")) / "context.md",
+        Path(str(runner_metrics.get("candidate_dir") or "")) / "mml.json",
     ):
         if not ref:
             continue

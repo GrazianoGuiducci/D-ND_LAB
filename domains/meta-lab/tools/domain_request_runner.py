@@ -200,6 +200,7 @@ def main():
         "boundary": BOUNDARY,
         "public_claim": False,
         "trading_signal": False,
+        "operational": False,
         "next": "replace smoke with domain-native experiment after first reviewed cycle",
     }}
     print(json.dumps(payload, indent=2 if args.json else None, ensure_ascii=False))
