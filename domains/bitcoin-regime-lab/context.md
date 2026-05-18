@@ -160,3 +160,26 @@ Output atteso: JSON `dndlab.bitcoin.market_context.v1` scritto in
 `data/bitcoin-regime-lab/value/` con provider, source_url, retrieval_ts,
 finestra dati, prezzo BTC/USD di riferimento, variazioni 1d/7d/30d,
 volatilita realizzata proxy e boundary `trading_signal=false`.
+
+Il tool feed-robustness usa API pubbliche exchange-native e confronta candele
+daily prima che il lab legga POC/FVG/timeframe come ipotesi testabile:
+
+```bash
+python3 domains/bitcoin-regime-lab/tools/btc_exchange_ohlcv.py --write --json
+```
+
+Output atteso: JSON `dndlab.bitcoin.exchange_ohlcv.v1` scritto in
+`data/bitcoin-regime-lab/value/` con Bitstamp BTC/USD, Coinbase BTC/USD,
+Binance BTC/USDT, provider ok/error, latest_common_date,
+latest_close_dispersion_pct e boundary `trading_signal=false`. Binance e'
+BTC/USDT: usarlo come robustezza cross-feed, non come prezzo USD puro.
+
+Refresh schedulabile senza ciclo cognitivo:
+
+```bash
+bash tools/bitcoin-refresh-value.sh
+```
+
+Questo comando non invoca LLM, non scrive report agente e non autorizza target
+o segnali. Serve a tenere fresca la superficie `latest_value_artifacts` per UI,
+THIA e futuri cicli del Bitcoin Lab.

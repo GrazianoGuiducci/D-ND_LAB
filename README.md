@@ -179,6 +179,16 @@ legacy folders may say `meta-prototyper`; treat that as a historical alias
 unless you are explicitly comparing against the legacy `_meta-prototyper`
 snapshot.
 
+Bitcoin value data can be refreshed without running an LLM cycle:
+
+```bash
+bash tools/bitcoin-refresh-value.sh
+```
+
+The command writes observe-only market context and exchange OHLCV robustness
+cards under `data/bitcoin-regime-lab/value/`. It uses public no-key APIs and
+does not produce trading signals, targets or advice.
+
 Each domain is a directory with `config.json`, `context.md`,
 `tension_to_category.json`, `seed_tensions.json`, `tools/`, and
 optionally `corpus/` (gitignored). See

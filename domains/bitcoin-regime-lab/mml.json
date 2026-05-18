@@ -73,6 +73,11 @@
       "name": "btc_market_card",
       "path": "tools/btc_market_card.py",
       "boundary": "writes observe-only BTC data-card; public_claim=false; trading_signal=false; operational=false"
+    },
+    {
+      "name": "btc_exchange_ohlcv",
+      "path": "tools/btc_exchange_ohlcv.py",
+      "boundary": "writes exchange-native OHLCV robustness data-card across Bitstamp/Coinbase/Binance; public_claim=false; trading_signal=false; operational=false"
     }
   ]
 }

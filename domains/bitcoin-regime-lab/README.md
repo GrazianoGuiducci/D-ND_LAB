@@ -23,3 +23,24 @@ Campo through `latest_value_artifacts`. It is an observe-only context card:
 price, 1d/7d/30d changes, realized-volatility proxy, source and retrieval
 timestamp. It is not a trading signal and does not authorize buy/sell/target
 language.
+
+Refresh all value-facing Bitcoin artifacts without running a cognitive cycle:
+
+```bash
+bash tools/bitcoin-refresh-value.sh
+```
+
+This wrapper runs the market context card and the exchange-native OHLCV
+robustness card. It is safe for cron because it uses only public no-key APIs
+and writes only `data/bitcoin-regime-lab/value/*`.
+
+Generate the exchange-native feed robustness card directly:
+
+```bash
+python3 domains/bitcoin-regime-lab/tools/btc_exchange_ohlcv.py --write --json
+```
+
+The artifact compares daily OHLCV from Bitstamp BTC/USD, Coinbase BTC/USD and
+Binance BTC/USDT. It measures provider availability and close dispersion before
+any POC/FVG/timeframe hypothesis is allowed to become testable. It is not a
+signal and does not aggregate venue volume into a trading conclusion.
