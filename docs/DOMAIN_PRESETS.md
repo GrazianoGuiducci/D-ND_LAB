@@ -60,6 +60,7 @@ Minimum fields:
 | preset | use |
 |---|---|
 | `finance_regime.v1` | regime shift, risk constraints, baseline-vs-null |
+| `bitcoin_regime.v1` | BTC regime monitoring, watch/reject/test, no trading signal |
 | `physics_bridge.v1` | theory crossings, bridge audits, observable contracts |
 | `bio_signal.v1` | biosignal regimes, artifact filtering, subject state |
 | `ops_decision.v1` | complex decisions, failure modes, action constraints |
