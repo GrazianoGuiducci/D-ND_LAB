@@ -61,6 +61,26 @@
       "name": "trendline_retest_event",
       "role": "Captures retest of a predeclared trendline with tolerance and invalidation rule.",
       "risk": "Trendlines are easy to redraw after the fact."
+    },
+    {
+      "name": "naked_poc_lifecycle_state",
+      "role": "Tracks completed-period POC levels as active until first future touch, then retired or invalidated.",
+      "risk": "Lifecycle labels become circular if the active level is declared after the touch."
+    },
+    {
+      "name": "timeframe_matrix_status",
+      "role": "Classifies each method/timeframe pair as usable, fragile, too_sparse, too_noisy, feed_sensitive or overfit_risk.",
+      "risk": "An opinion about the best timeframe can replace denominator/event-count evidence."
+    },
+    {
+      "name": "kumo_regime_state",
+      "role": "Encodes outside, boundary_test, close_inside, hold, rejection and opposite_boundary_target states.",
+      "risk": "Kumo can relabel an already visible move unless it adds value after ablation."
+    },
+    {
+      "name": "exchange_event_agreement",
+      "role": "Measures whether event labels survive Bitstamp, Binance, Coinbase and optional Kraken feeds.",
+      "risk": "A single exchange wick or volume artifact can look like a universal BTC event."
     }
   ],
   "starter_baselines": [
@@ -99,6 +119,22 @@
     {
       "name": "predeclared_forward_window",
       "role": "Blocks after-the-fact inefficiency closure claims by fixing the test horizon before outcome."
+    },
+    {
+      "name": "timeframe_denominator_control",
+      "role": "Requires event counts, active windows and open-candle policy before comparing timeframes."
+    },
+    {
+      "name": "poc_confluence_ablation",
+      "role": "Tests POC-only, trendline-only, FVG-only, Kumo-only and pairwise/full confluences separately."
+    },
+    {
+      "name": "feed_robustness_null",
+      "role": "Downgrades events whose labels change across exchange feeds instead of promoting them."
+    },
+    {
+      "name": "open_candle_exclusion",
+      "role": "Excludes current/open candles from backtests unless the cycle explicitly declares live-only observation."
     }
   ],
   "starter_falsifiers": [
@@ -153,7 +189,12 @@
       "VolumeProfileMap",
       "InefficiencyMap",
       "HypothesisCard",
-      "InvalidationRules"
+      "InvalidationRules",
+      "TimeframeMatrix",
+      "NakedPOCQueue",
+      "KumoRegimeMap",
+      "FeedRobustness",
+      "SourceMethodCards"
     ]
   },
   "admin_boundaries": [

@@ -49,7 +49,9 @@ are not yet evidence and not yet rules. The Lab must translate them into
 observables, data requirements and falsifiers before using them.
 
 Operator also mentioned Massimo Rea as a possible source of methods discussed
-by Alipio. This is currently unverified context, not a Lab source. Before any
+by Alipio. TM7-local recovered derived method material from two transcripts and
+metadata from four other videos; raw transcripts are not stored in the public
+repo. Treat this as method-intake substrate, not as authority. Before any
 method enters the seed, the Lab must ask:
 
 - what is the method exactly?
@@ -57,6 +59,19 @@ method enters the seed, the Lab must ask:
 - what observable does it claim to expose?
 - what null/baseline attacks it?
 - what failure mode would falsify it?
+
+Derived Massimo Rea / Alipio method candidates now in scope:
+
+- Naked POC lifecycle: a completed-period POC remains active until first future
+  touch, then retires.
+- Timeframe hierarchy: daily/weekly/monthly POCs appear more central; 4h/12h
+  are candidate extensions, not default authority.
+- Kumo confirmation/failure: close inside cloud, hold/reject boundary and
+  opposite-boundary target can become mechanical regime gates.
+- Feed disagreement: a BTC swing/touch can differ between Bitstamp, Binance,
+  Coinbase or Kraken; event labels need feed robustness before promotion.
+- Timeframe matrix: Alipio's question ("monthly, weekly, day, 4h, 1h, 45m,
+  30m, 15m, 10m, 5m, 1m?") becomes a validation matrix, not an opinion answer.
 
 ## Boundary
 
@@ -104,6 +119,12 @@ The Lab should initially answer questions like:
   after accounting for selected-window bias?
 - Does a POC retest have different behavior from random adjacent price levels
   with similar volatility and volume context?
+- Which timeframe makes a method observable, stable and falsifiable without
+  becoming too sparse, too noisy, feed-sensitive or overfit?
+- Does a Naked POC first-touch lifecycle survive matched random levels and
+  adjacent-window controls?
+- Does Kumo add confirmation value after ablation, or only re-label the same
+  visible move?
 
 ## Initial Observables
 
@@ -135,6 +156,13 @@ Alipio-derived candidate observables:
 - trendline/retest: line construction rule plus retest tolerance;
 - momentum change: predeclared metric such as moving-average slope, return
   acceleration, breakout failure or volatility-adjusted impulse.
+- naked POC lifecycle state: active, first_touch, retired, invalidated;
+- timeframe matrix status: usable, fragile, too_sparse, too_noisy,
+  feed_sensitive, overfit_risk;
+- Kumo regime state: outside, boundary_test, close_inside, hold, rejection,
+  opposite_boundary_target;
+- exchange agreement score: whether an event label is stable across Bitstamp,
+  Binance, Coinbase and Kraken.
 
 Every data artifact needs a data-card:
 
@@ -179,6 +207,14 @@ Specific countertests for POC/inefficiency methods:
 - block-preserving return null around FVG/LVN zones;
 - fill-rate comparison versus arbitrary equal-width price zones;
 - out-of-sample forward window after the zone is declared.
+- timeframe denominator control: reject timeframe comparisons without event
+  counts, active windows and open-candle policy;
+- POC-only vs confluence ablation: POC, trendline, VAH/VAL, Fibonacci, FVG and
+  Kumo must each prove added value, not only appear together on a chart;
+- feed robustness null: if the event label changes by exchange feed, downgrade
+  to feed-sensitive instead of promoting;
+- open-candle exclusion: default tests must exclude current/open candles unless
+  explicitly marked live and non-backtest.
 
 No public claim is allowed unless it beats claim-appropriate baselines and the
 falsifier confirms the exact data-card.
@@ -219,6 +255,25 @@ Core modules:
 - Volume Profile Map: POC/LVN/HVN zones with computed window and tolerance.
 - Inefficiency Map: FVG/LVN/CME gap candidates with fill/invalidation status.
 - Hypothesis Card: "if price reaches X, hypothesis expects Y; invalidated by Z".
+- Timeframe Matrix: rows are method/event families; columns are timeframes and
+  statuses (`usable`, `fragile`, `too_sparse`, `too_noisy`, `feed_sensitive`,
+  `overfit_risk`).
+- POC / Naked POC Queue: open levels, first touch, retired levels and forward
+  outcomes.
+- Feed Robustness: Bitstamp/Binance/Coinbase/Kraken event agreement.
+- Sources: Alipio inputs, Massimo Rea derived method cards, extraction status
+  and rights boundary.
+
+Suggested first technical stack:
+
+- UI: React/TypeScript, current D-ND Lab dashboard shell, TanStack Table,
+  Lightweight Charts for candlesticks, ECharts/Plotly for matrices and
+  forward-window distributions.
+- Backend/data: Python, FastAPI, CCXT after source-specific adapters are
+  explicit, pandas or polars, DuckDB/Parquet, pydantic schemas.
+- Feeds: Bitstamp first for Alipio screenshot replay; Binance/Coinbase as
+  cross-feed checks; Kraken as additional OHLC feed; Coin Metrics as normalized
+  reference, not replacement for exchange-specific volume.
 
 The default card should speak human language:
 

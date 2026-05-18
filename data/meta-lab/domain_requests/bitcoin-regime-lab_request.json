@@ -1,0 +1,33 @@
+{
+  "schema": "dndlab.domain_request.v1",
+  "created_at": "2026-05-18T13:37:10+00:00",
+  "slug": "bitcoin-regime-lab",
+  "title": "AI-Lab D-ND Bitcoin Regime Lab",
+  "kind": "bitcoin-regime",
+  "intent": "Monitor BTC regime hypotheses and falsify weak operational interpretations before they become signals, starting from Alipio's timeframe question and derived POC/Kumo/feed-robustness method candidates.",
+  "movement_class": "regime_monitoring_with_falsification",
+  "use_dynamics": [
+    "turn trader language into observable event schemas, data-cards, baseline/nulls and falsifiers",
+    "answer the optimal-timeframe question through a validation matrix instead of opinion",
+    "test POC/Naked POC, inefficiency/FVG/LVN/CME gap, trendline retest and Kumo gates against matched nulls",
+    "classify outputs as observe, watch, test or reject before any decision-support or signal-candidate promotion",
+    "require feed robustness across Bitstamp, Binance, Coinbase and optional Kraken before accepting event labels"
+  ],
+  "exclusions": [
+    "buy/sell/entry/exit/price-target/profit/alpha/trading-signal language",
+    "manual chart annotations treated as evidence without mechanical definitions",
+    "Massimo Rea or Alipio methods treated as authority before observable/null/falsifier translation",
+    "current/open candle backtests unless explicitly declared as live-only observation",
+    "single-exchange wick or volume-profile result promoted without feed robustness"
+  ],
+  "success_condition": "A generated candidate passes generator preflight and strict M1-M8, exposes custom tools in context.md, and defines a first cycle that produces a data-card plus one timeframe/POC/Kumo/feed hypothesis classified as watch, test or reject with baseline/null evidence.",
+  "status": "REQUEST_CAPTURED",
+  "next_step": "Run the meta-lab/template generator in isolated candidate mode; do not install live until the candidate passes strict validator and one supervised first-cycle plan.",
+  "operator_notes": [
+    "Intent lives in movement, not in a prescribed BTC direction.",
+    "Primary initial intent is optimal_timeframe_discovery from Alipio.",
+    "Use docs/templates/domain_presets/bitcoin_regime.v1.json as preset substrate.",
+    "Raw transcripts, private screenshots and copyrighted material must stay outside the public repo; only derived method cards enter the Lab.",
+    "The Lab may later produce signal candidates only after staged promotion: observe -> watch -> test -> reject/decision_support -> signal_candidate."
+  ]
+}
