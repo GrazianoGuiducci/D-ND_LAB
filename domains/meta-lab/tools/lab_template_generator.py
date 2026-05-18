@@ -211,6 +211,9 @@ def validate_specs(specs: dict[str, Any]) -> list[str]:
             "generated_artifacts",
             "null_baseline_requirements",
             "ui_lens",
+            "question_field",
+            "capability_cascade",
+            "propagation_candidates",
             "exclusions",
         ):
             if fld not in skill_intent_map:

@@ -435,7 +435,92 @@ enzimi are planning substrate until the required read depth is satisfied.
 
 The machine-readable map is stored in `skill_intent_map_json` and appended by
 the generator when needed.
+
+## question_field
+
+The first cycle must expose the question that moves the Lab, the possible paths
+still open, the missing nodes that prevent observation, and what would falsify
+each path before promotion.
+
+## capability_cascade
+
+Any reusable capability must be written as a propagation candidate, not as an
+automatic rule. Transfer to another Lab requires domain-native observables,
+baseline/null and UI lens.
 """
+
+    question_field = {
+        "primary_question": f"Can `{slug}` turn the requested intent into an observable cycle without promoting an untested result?",
+        "possibility_field": [
+            "installable reference candidate",
+            "blocked domain with useful missing nodes",
+            "domain-specific tool or data requirement before first real cycle",
+        ],
+        "missing_nodes": [
+            "domain-native observables from first real cycle",
+            "claim-appropriate baseline/null",
+            "cycle-to-UI evidence before public use",
+        ],
+        "falsification_paths": [
+            "no observable can be defined without copying another domain",
+            "baseline/null cannot be built out-of-box",
+            "cycle output cannot update seed, report and UI surfaces",
+        ],
+        "observable_requirements": [
+            "source/data card where external data is used",
+            "runtime trace",
+            "falsifier verdict",
+            "seed or cimitero update",
+        ],
+        "non_admissible": exclusions or ["premature public claim", "operator preference as evidence"],
+        "next_question": "What is the smallest real cycle that can make the domain-specific movement observable?",
+    }
+
+    capability_cascade = [
+        {
+            "capability_id": "domain_request_to_installable_candidate",
+            "source_domain": "meta-lab",
+            "source_cycle": "domain_request_runner",
+            "new_affordance": "Convert a domain request into an isolated install-or-block candidate with M1-M8 evidence.",
+            "immediate_domain": slug,
+            "transferable_domains": ["future generated labs"],
+            "affected_surfaces": [
+                "context",
+                "mml",
+                "tools",
+                "assertions",
+                "ui_contract",
+                "onboarding",
+                "docs",
+                "tests",
+            ],
+            "required_checks": [
+                "strict M1-M8 validator",
+                "smoke tool output",
+                "cycle-to-UI check before public use",
+            ],
+            "non_admissible_transfer": [
+                "copying domain content as evidence",
+                "treating a reference candidate as a live Lab",
+            ],
+            "next_question": "Which candidate capability should become a reusable preset only after another domain needs it?",
+        }
+    ]
+
+    transduction_md += (
+        "\n\n## question_field_json\n\n"
+        "Auto-generated from the domain request so the candidate preserves the "
+        "question that moves the first cycle.\n\n"
+        "```json\n"
+        + json.dumps(question_field, indent=2, ensure_ascii=False)
+        + "\n```\n\n"
+        "## capability_cascade_json\n\n"
+        "Auto-generated propagation card. It is a candidate, not an automatic "
+        "promotion rule.\n\n"
+        "```json\n"
+        + json.dumps(capability_cascade, indent=2, ensure_ascii=False)
+        + "\n```\n"
+    )
 
     skill_intent_map = {
         "intent": intent,
@@ -457,6 +542,16 @@ the generator when needed.
         ],
         "null_baseline_requirements": ["naive baseline", "domain-native null/control", "stop condition"],
         "ui_lens": ["field", "falsifier", "runtime", "not-admissible"],
+        "question_field": question_field,
+        "capability_cascade": capability_cascade,
+        "propagation_candidates": [
+            {
+                "capability_id": item["capability_id"],
+                "candidate_surfaces": item["affected_surfaces"],
+                "promotion_rule": "candidate only until another domain passes domain-native checks",
+            }
+            for item in capability_cascade
+        ],
         "exclusions": exclusions,
     }
 

@@ -26,6 +26,12 @@ KPhi1, e `/opt/d-nd_cockpit/docs/system/kernel` come archivio storico MMSp.
 Queste fonti non vanno copiate in blocco: forniscono pattern da transdurre in
 contratti verificabili.
 
+Quando un ciclo produce o recupera una capacita' trasferibile, il meta-lab
+deve applicare anche `docs/LAB_THOUGHT_AND_CAPABILITY_CASCADE.md`. Il punto
+e' non ridurre il Lab a falsifier: il ciclo deve esporre la domanda che apre,
+le possibilita' ancora vive, i nodi mancanti e le superfici che potrebbero
+essere toccate a cascata.
+
 La catena corretta e':
 
 ```text
@@ -74,6 +80,26 @@ meta-lab, un blocco `skill_intent_map` con questa struttura logica:
   "generated_artifacts": ["file o moduli che devono nascere"],
   "null_baseline_requirements": ["controlli minimi prima di interpretare"],
   "ui_lens": ["moduli o viste che rendono visibile il movimento"],
+  "question_field": {
+    "primary_question": "domanda che muove il ciclo",
+    "possibility_field": ["vie aperte"],
+    "missing_nodes": ["dati, tool, baseline, null, UI o skill mancanti"],
+    "falsification_paths": ["cosa renderebbe falsa o non utile ogni via"],
+    "next_question": "domanda consegnata al ciclo successivo"
+  },
+  "capability_cascade": [
+    {
+      "capability_id": "slug",
+      "new_affordance": "capacita' resa possibile",
+      "affected_surfaces": ["context", "mml", "tools", "ui_contract"],
+      "transferable_domains": ["domini candidati"],
+      "required_checks": ["controlli prima della promozione"],
+      "non_admissible_transfer": ["cosa sarebbe contaminazione"]
+    }
+  ],
+  "propagation_candidates": [
+    "dove la capacita' potrebbe essere utile, senza promozione automatica"
+  ],
   "exclusions": ["skill, metafore o pattern esclusi per contaminazione"]
 }
 ```
@@ -406,6 +432,19 @@ Questo passaggio e' autologica regressiva in forma operativa: non aggiunge una
 nuova meta-lente, ma obbliga ogni superficie prodotta a esporre la propria
 origine nel movimento.
 
+### lab_thought_pass
+
+```text
+Leggi il ciclo come pensiero del Lab. Quale domanda ha aperto? Quali vie del
+possibile sono rimaste vive? Quale nodo manca per rendere una via osservabile?
+Quale capacita' nuova e' emersa e quali superfici potrebbe toccare senza
+essere promossa automaticamente? Produci question_field e capability_cascade.
+```
+
+Questo passaggio recupera il domandatore come organo operativo: prima del
+collapse in tool, report o UI, il Lab espone le possibilita' che sta
+considerando e il prezzo di verificarle.
+
 ## Esempio: finance corrente
 
 Il finance lab attuale non e' piu' in puro discovery. Dopo i cicli recenti,
@@ -470,6 +509,9 @@ Stato operativo attuale:
 - `docs/LAB_INFORMATION_ONBOARDING.md` definisce come un Lab nuovo acquisisce
   informazione dopo l'installazione tramite umano, corpus, contributi,
   dataset/API, archivi cognitivi e runtime self-observation.
+- `docs/LAB_THOUGHT_AND_CAPABILITY_CASCADE.md` definisce come un ciclo espone
+  domanda, possibilita', nodi mancanti e propagazioni candidate invece di
+  lasciare la capacita' emersa solo in chat.
 - `tools/lab_template_generator.py` accetta `onboarding_contract_json` e lo
   scrive come `onboarding_contract.json` nel Lab figlio.
 - `dndlab plan-domain` puo' raccogliere `movement_class`, `use_dynamics`,

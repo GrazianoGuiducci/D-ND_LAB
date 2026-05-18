@@ -13,6 +13,11 @@ verificabile:
 possibilita' cognitiva -> trigger -> contratto -> artefatto -> test -> UI lens
 ```
 
+Quando una capacita' emerge da un ciclo vivo, applicare anche
+`docs/LAB_THOUGHT_AND_CAPABILITY_CASCADE.md`: la capacita' deve dichiarare
+quale domanda apre, quali nodi mancanti rende visibili, dove potrebbe
+propagarsi e cosa non puo' essere trasferito senza contaminazione.
+
 Questo documento persiste la decisione operativa nata dall'intake del
 pacchetto GPT PRO in `/opt/tm7/inbox/operator_inputs/2026-05-17/metaprompt_gpt`.
 Il pacchetto e' utile come mappa di possibilita', non come autorita'. Prima di
@@ -45,6 +50,7 @@ Questo e' lo stack raccomandato quando l'intento non e' ancora strutturato:
 
 ```text
 domain_request
+  -> lab-thought-pass
   -> semantic-transduction
   -> cognitive-router
   -> blueprint-genesis, se l'architettura resta ambigua
@@ -75,6 +81,21 @@ Contratto:
 Artefatti tipici: `transduction.md`, `skill_intent_map`,
 `ui_contract.json`, seed tensions con claim falsificabili e tool esplorativo
 piccolo.
+
+### `lab-thought-pass`
+
+Funzione: trattare il ciclo come pensiero, non solo come report o gate.
+
+Contratto:
+
+- input: intento, ciclo sorgente, report o capacita' candidata;
+- output: `question_field`, `missing_nodes`, `capability_cascade`,
+  `propagation_candidates`;
+- test: il passaggio deve dire quale domanda apre e cosa serve per renderla
+  osservabile; se produce solo "fare un altro test", non passa.
+
+Artefatti tipici: sezione in `transduction.md`, report meta-lab, packet di
+continuita' o card di capacita' per il preset/generatore.
 
 ### `cognitive-router`
 

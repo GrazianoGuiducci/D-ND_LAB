@@ -60,6 +60,9 @@ campo skill/enzimi:
 - `docs/META_LAB_CAPABILITY_STACK.md`: stack di capacita' per ridurre
   metaprompt storici e input esterni revisionati a trigger, contratti,
   artefatti, test e UI lens senza installare tutto come Lab figlio;
+- `docs/LAB_THOUGHT_AND_CAPABILITY_CASCADE.md`: contratto per trattare i
+  cicli come pensiero del Lab, recuperare il domandatore e registrare le
+  capacita' trasferibili senza promuoverle automaticamente;
 - `docs/COGNITIVE_ARCHIVE_INTEGRATION.md`: mappa degli archivi cognitivi
   esterni (`/opt/skill`, `/opt/KPhi1`, cockpit storico MMSp) e regole per
   usarli come lineage/transduzione, non come prompt library;
@@ -176,7 +179,9 @@ Il lab figlio acquisisce anche:
    anche `docs/META_LAB_CAPABILITY_STACK.md`: se un input esterno o un
    archivio storico propone molte possibilita', non installarle tutte.
    Riducile prima a capacita' con trigger, contratto, artefatto, test e UI
-   lens. Output
+   lens. Applica anche `docs/LAB_THOUGHT_AND_CAPABILITY_CASCADE.md`: ogni
+   capacita' o direzione nuova deve esporre la domanda che apre, i nodi
+   mancanti e le superfici che potrebbe toccare. Output
    obbligatorio di questa fase:
    - `skill_retrieval`: skill candidate per layer (`validation`,
      `processing`, `output`, `observation`, `generation`, `domain`,
@@ -202,6 +207,12 @@ Il lab figlio acquisisce anche:
      -> skill_layers -> meta_prompts -> artefatti -> UI/test.
    - `onboarding_contract`: canali informativi ammessi, autorita', gate di
      promozione e input che non possono entrare direttamente nel seme.
+   - `question_field`: domanda primaria, campo delle possibilita', nodi
+     mancanti, percorsi di falsificazione e prossima domanda.
+   - `capability_cascade`: capacita' nuove o recuperate, domini candidati,
+     superfici toccate, controlli richiesti e trasferimenti non ammissibili.
+   - `propagation_candidates`: propagazioni possibili, non promozioni
+     automatiche.
 
    Regola: il meta-lab usa l'archivio come **campo di progettazione**, non
    come prompt library. Una skill puo' diventare:
@@ -382,6 +393,10 @@ Il lab figlio acquisisce anche:
     - Skill/enzimi recuperati + esclusioni motivate
     - `skill_intent_map`: intento -> movement_class -> use_dynamics ->
       skill_layers -> meta_prompts -> artefatti -> null/baseline -> UI/e2e
+    - `question_field`: domanda primaria, possibilita' aperte, nodi mancanti,
+      falsification paths e prossima domanda
+    - `capability_cascade`: capacita' emerse, superfici toccate, domini
+      candidati, controlli necessari e non-admissible transfer
     - Assiomi proiettati + come
     - Naive baseline proposto
     - Skill subset attivate + rationale

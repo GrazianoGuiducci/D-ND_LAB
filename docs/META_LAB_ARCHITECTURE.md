@@ -174,6 +174,31 @@ Il template puo' produrre `onboarding_contract.json` usando
 `transduction.md` deve dichiarare come le informazioni future entreranno nel
 Lab e quali input non possono mai passare direttamente al seme.
 
+### 2.0.4 Lab Thought And Capability Cascade
+
+Prima di chiudere una generazione, un affinamento sostanziale o una nuova
+capacita' trasferibile, il meta-lab deve applicare
+`docs/LAB_THOUGHT_AND_CAPABILITY_CASCADE.md`.
+
+Un ciclo e' il pensiero osservabile del Lab: domanda, apre possibilita',
+costruisce strumenti, falsifica, deposita e prepara il prossimo seme. Il
+falsifier resta autorita' di blocco, ma non esaurisce il Lab. Il domandatore
+deve dichiarare quali vie del possibile sono state aperte, quali nodi
+mancano, cosa renderebbe falso ogni percorso e quali superfici possono essere
+toccate a cascata.
+
+Ogni Lab figlio o report meta-lab sostanziale deve quindi produrre, almeno in
+forma markdown ispezionabile:
+
+- `question_field`;
+- `capability_cascade`;
+- `missing_nodes`;
+- `propagation_candidates`.
+
+La cascata non autorizza propagazione automatica. Produce candidati da
+transdurre e falsificare nel dominio ricevente, evitando sia perdita di
+capacita' sia contaminazione cross-domain.
+
 ### 2.1 KTHIA
 Kernel attivo del sistema THIA. Contiene identità (chi è THIA), nucleo
 assiomatico (modello D-ND), MMSp sorgente, KSAR, skill kernel, memorie
