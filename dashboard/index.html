@@ -1475,6 +1475,67 @@
               </section>
             </template>
 
+            <template x-if="bitcoinMethodIntakeArtifact()">
+              <section class="mt-4 border border-cyan-500/80 rounded-md p-4 bg-slate-950/40 shadow-[0_0_16px_rgba(34,211,238,.16)]">
+                <div class="flex items-start justify-between gap-3 flex-wrap mb-3">
+                  <div>
+                    <h3 class="text-sm font-medium text-cyan-200">Schede metodo BTC</h3>
+                    <p class="text-xs text-slate-300 mt-1">POC, inefficienze, trendline e MM52 diventano domande, dati richiesti e null prima di qualunque test.</p>
+                  </div>
+                  <button @click="selectBitcoinMethodLens()"
+                          class="text-[11px] font-mono px-2 py-1 rounded border border-cyan-500/90 text-cyan-100 hover:border-cyan-200 cursor-pointer">
+                    apri intake
+                  </button>
+                </div>
+                <div class="grid lg:grid-cols-[minmax(0,1fr)_minmax(280px,.45fr)] gap-3">
+                  <div>
+                    <div class="grid sm:grid-cols-4 gap-2 mb-3">
+                      <template x-for="row in bitcoinMethodStatRows()" :key="row.label">
+                        <button @click="selectBitcoinMethodLens()"
+                                class="text-left rounded border border-cyan-500/70 bg-slate-950/60 p-3 hover:border-cyan-200 transition cursor-pointer">
+                          <div class="text-[10px] uppercase tracking-wider text-slate-300" x-text="row.label"></div>
+                          <div class="text-lg font-mono mt-1" :class="row.tone" x-text="row.value"></div>
+                        </button>
+                      </template>
+                    </div>
+                    <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-2">
+                      <template x-for="card in bitcoinMethodCards()" :key="card.method_id || card.claim_id">
+                        <button @click="selectBitcoinMethodLens(card)"
+                                class="text-left rounded border bg-slate-950/60 p-3 hover:border-cyan-200 transition cursor-pointer min-h-[150px]"
+                                :class="bitcoinMethodCardClass(card)">
+                          <div class="flex items-center justify-between gap-2">
+                            <span class="text-[10px] font-mono text-cyan-300 truncate" x-text="card.method_id || 'method'"></span>
+                            <span class="text-[10px] uppercase tracking-wider" :class="valueArtifactDecisionTone(card)" x-text="card.status || card.decision || 'watch'"></span>
+                          </div>
+                          <div class="text-sm text-slate-100 mt-2 font-medium line-clamp-2" x-text="card.title || card.claim"></div>
+                          <div class="text-xs text-slate-300 mt-2 line-clamp-3" x-text="card.evidence || card.data_requirement || ''"></div>
+                          <div class="text-[11px] text-amber-200 mt-2 line-clamp-2" x-text="card.boundary || ''"></div>
+                        </button>
+                      </template>
+                    </div>
+                  </div>
+                  <div class="rounded border border-purple-500/70 bg-purple-950/10 p-3">
+                    <div class="text-[10px] uppercase tracking-wider text-purple-200">THIA chiede ad Alipio</div>
+                    <div class="mt-2 space-y-2">
+                      <template x-for="q in bitcoinMethodQuestions().slice(0, 6)" :key="q">
+                        <button @click="selectBitcoinMethodQuestion(q)"
+                                class="w-full text-left text-xs text-slate-200 border border-purple-500/50 rounded p-2 bg-slate-950/50 hover:border-purple-200 transition cursor-pointer"
+                                x-text="q"></button>
+                      </template>
+                    </div>
+                    <template x-if="bitcoinMethodRecommendedNext()">
+                      <button @click="selectBitcoinMethodLens()"
+                              class="mt-3 w-full text-left border border-amber-400/80 rounded p-3 bg-amber-950/10 hover:border-amber-200 transition cursor-pointer">
+                        <div class="text-[10px] uppercase tracking-wider text-amber-200">Prossimo test suggerito</div>
+                        <div class="text-sm text-slate-100 mt-1" x-text="bitcoinMethodRecommendedNext()?.title || bitcoinMethodRecommendedNext()?.method_id"></div>
+                        <div class="text-xs text-slate-300 mt-2 line-clamp-3" x-text="bitcoinMethodRecommendedNext()?.precondition || bitcoinMethodRecommendedNext()?.why"></div>
+                      </button>
+                    </template>
+                  </div>
+                </div>
+              </section>
+            </template>
+
             <template x-if="bitcoinTimeframeArtifact()">
               <section class="mt-4 border border-cyan-900/60 rounded-md p-4 bg-slate-950/40">
                 <div class="flex items-start justify-between gap-3 flex-wrap mb-3">
@@ -4697,6 +4758,90 @@
         if (Array.isArray(this.latestValueArtifacts?.artifacts)) all.push(...this.latestValueArtifacts.artifacts);
         return all.find(a => a?.schema === 'dndlab.bitcoin.timeframe_matrix.v1'
           || a?.payload?.schema === 'dndlab.bitcoin.timeframe_matrix.v1') || null;
+      },
+
+      bitcoinMethodIntakeArtifact() {
+        const all = [];
+        if (this.latestValueArtifacts?.latest) all.push(this.latestValueArtifacts.latest);
+        if (Array.isArray(this.latestValueArtifacts?.artifacts)) all.push(...this.latestValueArtifacts.artifacts);
+        return all.find(a => a?.schema === 'dndlab.bitcoin.method_intake.v1'
+          || a?.payload?.schema === 'dndlab.bitcoin.method_intake.v1') || null;
+      },
+
+      bitcoinMethodCards() {
+        const cards = this.bitcoinMethodIntakeArtifact()?.payload?.cards;
+        return Array.isArray(cards) ? cards : [];
+      },
+
+      bitcoinMethodQuestions() {
+        const questions = this.bitcoinMethodIntakeArtifact()?.payload?.thia_questions_for_alipio;
+        return Array.isArray(questions) ? questions : [];
+      },
+
+      bitcoinMethodRecommendedNext() {
+        return this.bitcoinMethodIntakeArtifact()?.payload?.recommended_next || null;
+      },
+
+      bitcoinMethodStatRows() {
+        const metrics = this.bitcoinMethodIntakeArtifact()?.payload?.metrics || {};
+        return [
+          { label: 'metodi', value: String(metrics.methods_total ?? 0), tone: 'text-cyan-300' },
+          { label: 'watch', value: String(metrics.methods_watch ?? 0), tone: 'text-purple-300' },
+          { label: 'test', value: String(metrics.methods_test_candidate ?? 0), tone: 'text-green-300' },
+          { label: 'definizioni', value: String(metrics.unresolved_definitions ?? 0), tone: 'text-amber-300' },
+        ];
+      },
+
+      bitcoinMethodCardClass(card) {
+        const status = String(card?.status || card?.decision || '').toLowerCase();
+        if (status.includes('test')) return 'border-emerald-500/80';
+        if (status.includes('implemented') || status.includes('observe')) return 'border-cyan-500/80';
+        return 'border-purple-500/70';
+      },
+
+      selectBitcoinMethodQuestion(question) {
+        this.selectedNode = null;
+        this.selectedScopertaSsp = null;
+        this.selectedProdottoSsp = null;
+        this.selectedCampoLens = {
+          type: 'campo',
+          category: 'method-question',
+          title: 'Domanda per Alipio',
+          subtitle: 'THIA method intake',
+          schema: 'dndlab.bitcoin.method_intake.v1',
+          date: this.bitcoinMethodIntakeArtifact()?.payload?.generated_at || this.bitcoinMethodIntakeArtifact()?.mtime,
+          evidence: question,
+          boundary: 'La risposta diventa scheda metodo o definizione mancante; non entra come segnale.',
+          meta: 'BTC method-intake',
+        };
+        this.activeTab = 'campo';
+      },
+
+      selectBitcoinMethodLens(card = null) {
+        const artifact = this.bitcoinMethodIntakeArtifact();
+        if (!artifact) return;
+        const payload = artifact.payload || {};
+        const selected = card || this.bitcoinMethodCards().find(c => c.status === 'test_candidate') || this.bitcoinMethodCards()[0] || {};
+        const next = payload.recommended_next || {};
+        this.selectedNode = null;
+        this.selectedScopertaSsp = null;
+        this.selectedProdottoSsp = null;
+        this.selectedCampoLens = {
+          type: 'campo',
+          category: 'method-intake',
+          title: selected.title || next.title || 'Schede metodo BTC',
+          subtitle: selected.status || selected.decision || next.method_id || 'method intake',
+          schema: payload.schema || artifact.schema || 'dndlab.bitcoin.method_intake.v1',
+          date: payload.generated_at || artifact.generated_at || artifact.mtime,
+          evidence: selected.evidence || selected.data_requirement || next.why || 'Scheda metodo non sintetizzata.',
+          boundary: selected.boundary || 'No trading signal: l intake crea contratti di test, non target.',
+          meta: [
+            selected.method_id ? `method: ${selected.method_id}` : null,
+            selected.falsifier ? `falsifier: ${selected.falsifier}` : null,
+            next.tool_candidate ? `next: ${next.tool_candidate}` : null,
+          ].filter(Boolean).join(' · '),
+        };
+        this.activeTab = 'campo';
       },
 
       bitcoinTimeframeRows() {

@@ -88,6 +88,11 @@
       "name": "btc_timeframe_matrix",
       "path": "tools/btc_timeframe_matrix.py",
       "boundary": "consumes BTC field artifacts and classifies requested timeframes as testable, watch-only or blocked; public_claim=false; trading_signal=false; operational=false"
+    },
+    {
+      "name": "btc_method_intake_card",
+      "path": "tools/btc_method_intake_card.py",
+      "boundary": "turns Alipio/Rea BTC method language into method cards, missing definitions, THIA questions and next-test contracts; public_claim=false; trading_signal=false; operational=false"
     }
   ]
 }

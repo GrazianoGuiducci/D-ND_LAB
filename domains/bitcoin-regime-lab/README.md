@@ -68,3 +68,13 @@ This translates the "best timeframe" question into a matrix: monthly, weekly,
 daily, 4h, 1h, 45m, 30m, 15m, 10m, 5m and 1m are classified as `testable`,
 `watch` or `blocked` from current artifacts. It does not emit a trading signal;
 it selects the next admissible test surface.
+
+Build the Alipio/Rea method-intake cards directly:
+
+```bash
+python3 domains/bitcoin-regime-lab/tools/btc_method_intake_card.py --write --json
+```
+
+This turns POC, inefficiency, trendline, MM52 and timeframe language into
+missing definitions, THIA questions, data requirements and null/falsifier
+contracts. It is not a signal tool.
