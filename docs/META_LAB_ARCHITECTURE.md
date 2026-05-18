@@ -180,16 +180,22 @@ Prima di chiudere una generazione, un affinamento sostanziale o una nuova
 capacita' trasferibile, il meta-lab deve applicare
 `docs/LAB_THOUGHT_AND_CAPABILITY_CASCADE.md`.
 
-Un ciclo e' il pensiero osservabile del Lab: domanda, apre possibilita',
-costruisce strumenti, falsifica, deposita e prepara il prossimo seme. Il
-falsifier resta autorita' di blocco, ma non esaurisce il Lab. Il domandatore
-deve dichiarare quali vie del possibile sono state aperte, quali nodi
-mancano, cosa renderebbe falso ogni percorso e quali superfici possono essere
-toccate a cascata.
+Prima del domandatore, il meta-lab deve applicare anche
+`docs/POSSIBILITY_FIELD_REGISTRY.md`: skill, archivi MMSp, capsule, preset,
+Lab sorgenti e superfici pubbliche devono essere offerti al ciclo come
+`possibility_inventory`, non ricordati a mano.
+
+Un ciclo e' il pensiero osservabile del Lab: vede le possibilita' disponibili,
+domanda, apre possibilita', costruisce strumenti, falsifica, deposita e
+prepara il prossimo seme. Il falsifier resta autorita' di blocco, ma non
+esaurisce il Lab. Il domandatore deve dichiarare quali vie del possibile sono
+state aperte, quali nodi mancano, cosa renderebbe falso ogni percorso e quali
+superfici possono essere toccate a cascata.
 
 Ogni Lab figlio o report meta-lab sostanziale deve quindi produrre, almeno in
 forma markdown ispezionabile:
 
+- `possibility_inventory`;
 - `question_field`;
 - `capability_cascade`;
 - `missing_nodes`;

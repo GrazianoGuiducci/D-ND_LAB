@@ -26,17 +26,21 @@ KPhi1, e `/opt/d-nd_cockpit/docs/system/kernel` come archivio storico MMSp.
 Queste fonti non vanno copiate in blocco: forniscono pattern da transdurre in
 contratti verificabili.
 
-Quando un ciclo produce o recupera una capacita' trasferibile, il meta-lab
-deve applicare anche `docs/LAB_THOUGHT_AND_CAPABILITY_CASCADE.md`. Il punto
-e' non ridurre il Lab a falsifier: il ciclo deve esporre la domanda che apre,
-le possibilita' ancora vive, i nodi mancanti e le superfici che potrebbero
-essere toccate a cascata.
+Prima di scegliere, il meta-lab deve applicare
+`docs/POSSIBILITY_FIELD_REGISTRY.md`: il sistema deve fornire al ciclo le
+possibilita' disponibili da skill, MMSp, capsule, Lab sorgenti, preset e
+superfici pubbliche. Quando un ciclo produce o recupera una capacita'
+trasferibile, il meta-lab deve applicare anche
+`docs/LAB_THOUGHT_AND_CAPABILITY_CASCADE.md`. Il punto e' non ridurre il Lab a
+falsifier: il ciclo deve esporre la domanda che apre, le possibilita' ancora
+vive, i nodi mancanti e le superfici che potrebbero essere toccate a cascata.
 
 La catena corretta e':
 
 ```text
 intent -> movement_class -> use_dynamics -> skill_layers -> meta_prompts
--> generated_artifacts -> null/baseline/assertions -> ui_contract -> e2e
+-> possibility_inventory -> generated_artifacts -> null/baseline/assertions
+-> ui_contract -> e2e
 ```
 
 Se un passaggio manca, il Lab puo' sembrare installato ma non sa muoversi.
@@ -76,6 +80,16 @@ meta-lab, un blocco `skill_intent_map` con questa struttura logica:
     "runtime_patterns": []
   },
   "skill_reading_matrix": ["skill lette con source, read_depth, trigger, output e rischio"],
+  "possibility_inventory": [
+    {
+      "source_id": "fonte",
+      "available_possibility": "cosa rende possibile",
+      "movement_link": "quale movimento serve",
+      "read_depth_required": "L0|L1|L2|L3|CAPSULE|BODY|BODY_PLUS_REFS|E2E",
+      "candidate_artifact": "context|mml|tool|assertion|null|baseline|ui|preset|copy|skill",
+      "status": "available|needs_body_read|support_only|deferred|blocked"
+    }
+  ],
   "meta_prompts": ["prompt operativi da iniettare nel context.md"],
   "generated_artifacts": ["file o moduli che devono nascere"],
   "null_baseline_requirements": ["controlli minimi prima di interpretare"],
@@ -445,6 +459,21 @@ Questo passaggio recupera il domandatore come organo operativo: prima del
 collapse in tool, report o UI, il Lab espone le possibilita' che sta
 considerando e il prezzo di verificarle.
 
+### possibility_inventory_pass
+
+```text
+Prima di scegliere skill o strumenti, costruisci il campo delle possibilita'
+disponibili. Considera skill catalog, skill field map, diagnostica, capsule
+cognitive, MMSp/cockpit, KPhi1, /opt/skill, Lab fisico, Lab figli, preset e
+superfici pubbliche utili. Per ogni possibilita' dichiara read_depth richiesto,
+artefatto candidato, test e rischio di contaminazione. Non attivare cio' che
+non e' stato letto abbastanza.
+```
+
+Questo passaggio evita che il meta-lab dimentichi capacita' gia' presenti o
+le usi come lista piatta. Le possibilita' entrano prima come campo, poi solo
+alcune diventano skill, tool, preset, UI lens o esclusioni.
+
 ## Esempio: finance corrente
 
 Il finance lab attuale non e' piu' in puro discovery. Dopo i cicli recenti,
@@ -512,6 +541,9 @@ Stato operativo attuale:
 - `docs/LAB_THOUGHT_AND_CAPABILITY_CASCADE.md` definisce come un ciclo espone
   domanda, possibilita', nodi mancanti e propagazioni candidate invece di
   lasciare la capacita' emersa solo in chat.
+- `docs/POSSIBILITY_FIELD_REGISTRY.md` definisce come fornire al ciclo le
+  possibilita' disponibili prima della scelta: skill, MMSp, capsule, Lab
+  sorgenti, preset e superfici pubbliche.
 - `tools/lab_template_generator.py` accetta `onboarding_contract_json` e lo
   scrive come `onboarding_contract.json` nel Lab figlio.
 - `dndlab plan-domain` puo' raccogliere `movement_class`, `use_dynamics`,

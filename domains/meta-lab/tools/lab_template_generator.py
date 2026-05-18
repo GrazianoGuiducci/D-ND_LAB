@@ -207,6 +207,7 @@ def validate_specs(specs: dict[str, Any]) -> list[str]:
             "movement_class",
             "use_dynamics",
             "skill_layers",
+            "possibility_inventory",
             "meta_prompts",
             "generated_artifacts",
             "null_baseline_requirements",

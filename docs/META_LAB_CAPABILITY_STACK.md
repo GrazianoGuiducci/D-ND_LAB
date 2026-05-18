@@ -13,7 +13,10 @@ verificabile:
 possibilita' cognitiva -> trigger -> contratto -> artefatto -> test -> UI lens
 ```
 
-Quando una capacita' emerge da un ciclo vivo, applicare anche
+Prima di scegliere quale capacita' metabolizzare, applicare
+`docs/POSSIBILITY_FIELD_REGISTRY.md`: il ciclo deve ricevere il campo delle
+possibilita' disponibili da skill, MMSp, capsule, Lab sorgenti, preset e
+superfici pubbliche. Quando una capacita' emerge da un ciclo vivo, applicare anche
 `docs/LAB_THOUGHT_AND_CAPABILITY_CASCADE.md`: la capacita' deve dichiarare
 quale domanda apre, quali nodi mancanti rende visibili, dove potrebbe
 propagarsi e cosa non puo' essere trasferito senza contaminazione.
@@ -50,6 +53,7 @@ Questo e' lo stack raccomandato quando l'intento non e' ancora strutturato:
 
 ```text
 domain_request
+  -> possibility-inventory
   -> lab-thought-pass
   -> semantic-transduction
   -> cognitive-router
@@ -96,6 +100,22 @@ Contratto:
 
 Artefatti tipici: sezione in `transduction.md`, report meta-lab, packet di
 continuita' o card di capacita' per il preset/generatore.
+
+### `possibility-inventory`
+
+Funzione: esporre cio' che il sistema puo' gia' offrire prima della scelta.
+
+Contratto:
+
+- input: intento, dominio, preset, Lab sorgenti, capsule e archivi disponibili;
+- output: `possibility_inventory` con source, possibilita', read_depth,
+  artefatto candidato, trigger, test, rischio e status;
+- test: il passaggio deve distinguere `available`, `needs_body_read`,
+  `support_only`, `deferred` e `blocked`; se restituisce solo una lista di
+  nomi skill, non passa.
+
+Artefatti tipici: sezione in `transduction.md`, `skill_intent_map_json`,
+`archive_retrieval_json`, `skill_reading_matrix` o preset aggiornato.
 
 ### `cognitive-router`
 

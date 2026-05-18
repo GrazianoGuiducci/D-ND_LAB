@@ -12,6 +12,11 @@ pensiero osservabile del Lab: apre domande, genera possibilita', costruisce
 strumenti, attacca le proprie ipotesi, conserva cio' che resta utile e
 prepara il ciclo successivo.
 
+Prima del domandatore serve il campo delle possibilita' disponibili: skill,
+MMSp, capsule, Lab sorgenti, preset, tool e superfici pubbliche candidate.
+Questo campo e' definito in `docs/POSSIBILITY_FIELD_REGISTRY.md` e produce
+`possibility_inventory`.
+
 Il falsifier resta autorita' di blocco, ma non e' l'intero Lab. Il Lab valido
 ha almeno questi organi:
 
@@ -29,7 +34,7 @@ ha almeno questi organi:
 Ogni ciclo deve poter essere letto con questa sequenza:
 
 ```text
-osserva -> domanda -> possibilita' -> esperimento/tool -> falsificazione
+possibility inventory -> osserva -> domanda -> possibilita' -> esperimento/tool -> falsificazione
 -> deposito -> cascade -> prossimo seme
 ```
 
@@ -148,6 +153,7 @@ solo se almeno due domini la richiedono e superano controlli domain-native.
 Ogni generazione o affinamento sostanziale deve riportare:
 
 - `question_field`: domanda, possibilita', nodi mancanti e falsificazioni;
+- `possibility_inventory`: fonti/capacita' disponibili prima del collapse;
 - `capability_cascade`: nuove capacita' e superfici toccate;
 - `missing_nodes`: cosa manca per far pensare meglio il Lab al ciclo
   successivo;

@@ -60,6 +60,9 @@ campo skill/enzimi:
 - `docs/META_LAB_CAPABILITY_STACK.md`: stack di capacita' per ridurre
   metaprompt storici e input esterni revisionati a trigger, contratti,
   artefatti, test e UI lens senza installare tutto come Lab figlio;
+- `docs/POSSIBILITY_FIELD_REGISTRY.md`: registry operativo delle fonti e
+  possibilita' disponibili (skill, MMSp, capsule, Lab sorgenti, preset,
+  sito fisico pubblico) da offrire al domandatore prima del collapse;
 - `docs/LAB_THOUGHT_AND_CAPABILITY_CASCADE.md`: contratto per trattare i
   cicli come pensiero del Lab, recuperare il domandatore e registrare le
   capacita' trasferibili senza promuoverle automaticamente;
@@ -179,10 +182,17 @@ Il lab figlio acquisisce anche:
    anche `docs/META_LAB_CAPABILITY_STACK.md`: se un input esterno o un
    archivio storico propone molte possibilita', non installarle tutte.
    Riducile prima a capacita' con trigger, contratto, artefatto, test e UI
-   lens. Applica anche `docs/LAB_THOUGHT_AND_CAPABILITY_CASCADE.md`: ogni
+   lens. Prima del domandatore applica `docs/POSSIBILITY_FIELD_REGISTRY.md`:
+   costruisci il campo delle possibilita' disponibili da skill, MMSp,
+   capsule, Lab sorgenti, preset e superfici pubbliche. Applica anche
+   `docs/LAB_THOUGHT_AND_CAPABILITY_CASCADE.md`: ogni
    capacita' o direzione nuova deve esporre la domanda che apre, i nodi
    mancanti e le superfici che potrebbe toccare. Output
    obbligatorio di questa fase:
+   - `possibility_inventory`: fonti disponibili, possibilita' candidate,
+     read_depth richiesto, artefatto possibile, trigger, test, rischio e
+     status (`available`, `needs_body_read`, `support_only`, `deferred`,
+     `blocked`);
    - `skill_retrieval`: skill candidate per layer (`validation`,
      `processing`, `output`, `observation`, `generation`, `domain`,
      `identity`, `runtime_patterns`);
@@ -390,6 +400,8 @@ Il lab figlio acquisisce anche:
 12. **Output finale**: file system tree completo + report markdown del
     cycle che spiega:
     - Tensioni identificate + giustificazione (perché dipolari?)
+    - `possibility_inventory`: fonti e capacita' disponibili prima del
+      collapse, inclusi Lab sorgenti utili e archivi MMSp/capsule
     - Skill/enzimi recuperati + esclusioni motivate
     - `skill_intent_map`: intento -> movement_class -> use_dynamics ->
       skill_layers -> meta_prompts -> artefatti -> null/baseline -> UI/e2e

@@ -431,6 +431,12 @@ M1-M8 validator, and then a later cycle-to-UI check before public use.
 Archive retrieval starts capsule-first. Skill archive, skill catalog and
 enzimi are planning substrate until the required read depth is satisfied.
 
+## possibility_inventory
+
+Before choosing skills or tools, expose the available possibility field:
+current docs, cognitive capsules, MMSp lineage, source Labs, presets and public
+surfaces that can orient the first cycle without becoming automatic authority.
+
 ## skill_intent_map
 
 The machine-readable map is stored in `skill_intent_map_json` and appended by
@@ -448,6 +454,74 @@ Any reusable capability must be written as a propagation candidate, not as an
 automatic rule. Transfer to another Lab requires domain-native observables,
 baseline/null and UI lens.
 """
+
+    possibility_inventory = [
+        {
+            "source_id": "skill_docs",
+            "source_path": "docs/SKILL_CATALOG.md + docs/SKILL_FIELD_MAP.md + docs/SKILL_DIAGNOSTIC.md",
+            "source_kind": "catalog",
+            "available_possibility": "Route the request through validation, processing, observation, interface and runtime layers.",
+            "movement_link": "choose minimal coordinated skills for the requested movement",
+            "read_depth_required": "L0 for routing; L1-L2 before active MML authority",
+            "candidate_artifact": "skill_reading_matrix|mml|context",
+            "activation_trigger": "before generated Lab context or MML is finalized",
+            "test_or_evidence": "M8 skill_intent_map and validator coherence",
+            "contamination_risk": "declaring skills by name without reading their body",
+            "status": "available",
+        },
+        {
+            "source_id": "cognitive_archives",
+            "source_path": "docs/cognitive_archives/*.json",
+            "source_kind": "capsule",
+            "available_possibility": "Use KPhi1, THIA skill snapshot and cockpit/MMSp lineage as planning context without loading full archives.",
+            "movement_link": "recover existing cognitive patterns before inventing new ones",
+            "read_depth_required": "CAPSULE; BODY when changing context, MML, tool, assertion or UI",
+            "candidate_artifact": "archive_retrieval|transduction|skill_intent_map",
+            "activation_trigger": "when the request needs autonomous cognition, lineage or missing capability recovery",
+            "test_or_evidence": "archive_retrieval_json with body_required when capsule is insufficient",
+            "contamination_risk": "treating capsule or historical language as active authority",
+            "status": "available",
+        },
+        {
+            "source_id": "physics_lab_source",
+            "source_path": "domains/physics + docs/templates/domain_presets/physics_bridge.v1.json",
+            "source_kind": "lab_source",
+            "available_possibility": "Reuse bridge audits, null discipline, observable contracts and tool-surface patterns as movement templates.",
+            "movement_link": "transfer scientific cycle discipline without copying physics content",
+            "read_depth_required": "L1 for docs/preset; E2E before shared generator rule",
+            "candidate_artifact": "null|baseline|tool|ui|preset",
+            "activation_trigger": "when a new domain needs bridge, scale, null or observable-contract logic",
+            "test_or_evidence": "domain-native observables and nulls in the receiving Lab",
+            "contamination_risk": "copying TQGE/physics labels or numerical results into another domain",
+            "status": "available",
+        },
+        {
+            "source_id": "domain_presets",
+            "source_path": "docs/templates/domain_presets",
+            "source_kind": "preset",
+            "available_possibility": "Accelerate known domain families while preserving intent-specific adaptation.",
+            "movement_link": "seed observables, baseline, falsifiers and UI modules for matching families",
+            "read_depth_required": "L1 plus adaptation questions",
+            "candidate_artifact": "ui_contract|seed_tensions|baseline|null",
+            "activation_trigger": "when domain kind matches an existing preset family",
+            "test_or_evidence": "strict validator plus first cycle smoke",
+            "contamination_risk": "preset copied without adapting to the actual intent",
+            "status": "available",
+        },
+        {
+            "source_id": "public_physics_surface",
+            "source_path": "d-nd.com/ai-lab + docs/LAB_SURFACE_TOPOLOGY.md",
+            "source_kind": "public_surface",
+            "available_possibility": "Learn which UI/THIA surfaces help humans read the physics Lab and transfer only the interaction pattern.",
+            "movement_link": "improve dashboard explanation and assistant context without treating public UI as runtime evidence",
+            "read_depth_required": "support_only unless paired with repo/runtime evidence",
+            "candidate_artifact": "ui|copy|assistant_context",
+            "activation_trigger": "when generated Lab needs public-facing comprehension or THIA framing",
+            "test_or_evidence": "cycle-to-UI check and explicit surface boundary",
+            "contamination_risk": "confusing main-site physics Lab with installable D-ND_LAB runtime",
+            "status": "support_only",
+        },
+    ]
 
     question_field = {
         "primary_question": f"Can `{slug}` turn the requested intent into an observable cycle without promoting an untested result?",
@@ -508,6 +582,12 @@ baseline/null and UI lens.
     ]
 
     transduction_md += (
+        "\n\n## possibility_inventory_json\n\n"
+        "Auto-generated availability map. These sources are possibilities, not "
+        "automatic authority.\n\n"
+        "```json\n"
+        + json.dumps(possibility_inventory, indent=2, ensure_ascii=False)
+        + "\n```\n\n"
         "\n\n## question_field_json\n\n"
         "Auto-generated from the domain request so the candidate preserves the "
         "question that moves the first cycle.\n\n"
@@ -531,6 +611,7 @@ baseline/null and UI lens.
             "operator": ["autologica-operativa", "eval"],
             "domain": ["baseline-null", "falsifier", "runtime-awareness"],
         },
+        "possibility_inventory": possibility_inventory,
         "meta_prompts": ["intent-in-movement", "install-or-block", "no-premature-promotion"],
         "generated_artifacts": [
             "context.md",
