@@ -37,6 +37,17 @@ Role suggestion for Alipio:
 - reviews whether reports are useful to a human following BTC;
 - may contribute methods or references after the Lab has an intake path.
 
+First concrete input from Alipio:
+
+- TradingView screenshots with annotated BTC weekly structure;
+- red horizontal lines described as POC of the volume profile;
+- terms used: `chiusura inefficienza`, POC, volume profile, FVG/imbalance,
+  LVN/HVN, CME gap, retest trendline, momentum change.
+
+These inputs are valuable as domain language and candidate method family. They
+are not yet evidence and not yet rules. The Lab must translate them into
+observables, data requirements and falsifiers before using them.
+
 Operator also mentioned Massimo Rea as a possible source of methods discussed
 by Alipio. This is currently unverified context, not a Lab source. Before any
 method enters the seed, the Lab must ask:
@@ -87,6 +98,12 @@ The Lab should initially answer questions like:
 - Does it disappear under cost, spread or latency assumptions?
 - Is the current observation a repeatable regime or a local artifact?
 - What should not be inferred from this cycle?
+- When a chart marks a POC/FVG/LVN/CME gap, what exact data condition makes it
+  active, filled, invalidated or irrelevant?
+- Does a claimed "inefficiency closure" happen more often than a naive baseline
+  after accounting for selected-window bias?
+- Does a POC retest have different behavior from random adjacent price levels
+  with similar volatility and volume context?
 
 ## Initial Observables
 
@@ -101,6 +118,24 @@ Starter observables:
 - correlation to broad risk proxy, if data source is auditable;
 - event/date card when a window is chosen.
 
+Alipio-derived candidate observables:
+
+- volume profile POC: price level with maximum traded volume in a declared
+  profile window;
+- POC position relative to current price: above, below, crossed, retested;
+- POC drift: whether successive profile windows move upward, downward or
+  compress;
+- LVN/HVN zones: low/high volume nodes computed from a declared binning
+  method;
+- FVG/imbalance zone: candle pattern with an explicit mechanical definition,
+  not manual drawing only;
+- gap fill / inefficiency closure: distance-to-zone and whether price traded
+  through a defined percentage of the zone;
+- CME gap: futures close/open gap with timestamp, size and fill status;
+- trendline/retest: line construction rule plus retest tolerance;
+- momentum change: predeclared metric such as moving-average slope, return
+  acceleration, breakout failure or volatility-adjusted impulse.
+
 Every data artifact needs a data-card:
 
 - source;
@@ -114,6 +149,16 @@ Every data artifact needs a data-card:
 - whether prices are adjusted or raw;
 - known limitations.
 
+For any volume-profile claim, the data-card must also specify:
+
+- exchange/source;
+- whether real traded volume, tick volume or proxy volume is used;
+- profile window start/end;
+- bin size or binning rule;
+- session/timezone rule;
+- whether POC/LVN/HVN are computed or manually annotated;
+- tolerance used to decide retest/fill.
+
 ## Baselines And Nulls
 
 Minimum starter baseline family:
@@ -126,8 +171,38 @@ Minimum starter baseline family:
 - transaction-cost/friction baseline;
 - no-lookahead split.
 
+Specific countertests for POC/inefficiency methods:
+
+- matched random levels with same distance from current price;
+- adjacent-window POC computed before the event, not after;
+- shuffled-volume baseline that preserves price path but breaks volume profile;
+- block-preserving return null around FVG/LVN zones;
+- fill-rate comparison versus arbitrary equal-width price zones;
+- out-of-sample forward window after the zone is declared.
+
 No public claim is allowed unless it beats claim-appropriate baselines and the
 falsifier confirms the exact data-card.
+
+## Signal Ladder
+
+The Lab can eventually support signal-like workflows, but only through staged
+promotion:
+
+1. `observe`: a method marks a level/zone.
+2. `watch`: the level has a valid data-card and active condition.
+3. `test`: a forward condition is declared before outcome.
+4. `reject`: the hypothesis fails baseline/null/falsifier.
+5. `decision_support`: surviving classes become alerts or constraints.
+6. `signal_candidate`: only after walk-forward, costs/slippage, drawdown,
+   recurrence and disclaimer gates.
+
+Before stage 6, the UI must avoid buy/sell language. The useful output is:
+
+- active zone;
+- invalidation;
+- confidence/status;
+- next test;
+- what not to infer.
 
 ## UI Contract
 
@@ -141,6 +216,9 @@ Core modules:
 - Data Card: source and window.
 - Non-Admissible: what the Lab refuses to infer.
 - Runtime Dynamics: how the last cycle moved.
+- Volume Profile Map: POC/LVN/HVN zones with computed window and tolerance.
+- Inefficiency Map: FVG/LVN/CME gap candidates with fill/invalidation status.
+- Hypothesis Card: "if price reaches X, hypothesis expects Y; invalidated by Z".
 
 The default card should speak human language:
 
@@ -161,6 +239,8 @@ When ready, create a domain request with:
 - exclusions: trading advice, buy/sell signal, price forecast, profit claim;
 - success_condition: first cycle produces a data-card, one rejected or watched
   hypothesis, baseline comparison and clear next test;
+- method_family: volume profile POC, inefficiency closure, FVG/LVN/CME gap,
+  trendline retest and momentum change as candidate methods only;
 - human_review: Alipio as possible observer after first working cycle.
 
 ## Next Step

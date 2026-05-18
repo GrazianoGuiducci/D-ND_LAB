@@ -36,6 +36,31 @@
       "name": "volume_or_liquidity_proxy",
       "role": "Warns about data quality and execution friction when available.",
       "risk": "Public proxies can be exchange-specific or incomplete."
+    },
+    {
+      "name": "volume_profile_poc",
+      "role": "Declares the price level with maximum traded volume inside an explicit profile window.",
+      "risk": "Manual or post-hoc window choice can manufacture support/resistance after the outcome."
+    },
+    {
+      "name": "low_volume_node_lvn",
+      "role": "Marks a low-volume passage zone that may behave as an inefficiency corridor.",
+      "risk": "Fill narratives can match arbitrary equal-width zones unless attacked by matched nulls."
+    },
+    {
+      "name": "fvg_or_imbalance_zone",
+      "role": "Candidate zone where candles moved aggressively and left a mechanical gap/imbalance definition.",
+      "risk": "Visual FVGs become subjective unless the candle rule, threshold and fill criterion are fixed before testing."
+    },
+    {
+      "name": "cme_gap_status",
+      "role": "Tracks BTC futures weekend gaps with close/open timestamps and fill status.",
+      "risk": "Historical fill rate can be overstated if time horizon and failed gaps are not included."
+    },
+    {
+      "name": "trendline_retest_event",
+      "role": "Captures retest of a predeclared trendline with tolerance and invalidation rule.",
+      "risk": "Trendlines are easy to redraw after the fact."
     }
   ],
   "starter_baselines": [
@@ -58,6 +83,22 @@
     {
       "name": "friction_baseline",
       "role": "Attacks interpretations that disappear under spread, fee or latency assumptions."
+    },
+    {
+      "name": "matched_random_level",
+      "role": "Attacks POC/retest claims by comparing against random levels at similar distance and volatility context."
+    },
+    {
+      "name": "shuffled_volume_profile",
+      "role": "Preserves price path while breaking volume-profile structure to test whether POC/LVN adds information."
+    },
+    {
+      "name": "equal_width_zone_fill_rate",
+      "role": "Attacks FVG/LVN fill claims by comparing against arbitrary zones of equal width."
+    },
+    {
+      "name": "predeclared_forward_window",
+      "role": "Blocks after-the-fact inefficiency closure claims by fixing the test horizon before outcome."
     }
   ],
   "starter_falsifiers": [
@@ -76,6 +117,22 @@
     {
       "lens": "method_without_observable",
       "blocks": "Importing an expert method before defining what it measures and how it fails."
+    },
+    {
+      "lens": "manual_annotation_drift",
+      "blocks": "Moving POC, trendline, FVG or LVN boundaries after price has moved."
+    },
+    {
+      "lens": "fill_rate_without_denominator",
+      "blocks": "Claiming gaps tend to close without counting all declared unfilled gaps and time horizons."
+    },
+    {
+      "lens": "volume_proxy_confusion",
+      "blocks": "Mixing real traded volume, tick volume and exchange-specific proxy volume as if equivalent."
+    },
+    {
+      "lens": "signal_language_before_promotion",
+      "blocks": "Turning watch/test zones into buy/sell signals before walk-forward and friction gates."
     }
   ],
   "starter_ui_modules": {
@@ -92,7 +149,11 @@
       "EvidenceVsBaseline",
       "WatchRejectTest",
       "DataCard",
-      "NonAdmissibleInference"
+      "NonAdmissibleInference",
+      "VolumeProfileMap",
+      "InefficiencyMap",
+      "HypothesisCard",
+      "InvalidationRules"
     ]
   },
   "admin_boundaries": [
@@ -119,7 +180,12 @@
     "guaranteed profit",
     "alpha",
     "trading signal",
-    "financial advice"
+    "financial advice",
+    "entry signal",
+    "long",
+    "short",
+    "take profit",
+    "stop loss as advice"
   ],
   "e2e_checks": [
     {
@@ -133,6 +199,14 @@
     {
       "check": "no_signal_language",
       "expectation": "No report or UI card uses buy/sell/price-target/trading-signal labels before a separate regulated product gate."
+    },
+    {
+      "check": "volume_profile_contract_visible",
+      "expectation": "Any POC/LVN/HVN card exposes source, profile window, binning rule, tolerance and computed/manual status."
+    },
+    {
+      "check": "inefficiency_candidate_to_falsifier",
+      "expectation": "At least one FVG/LVN/CME-gap hypothesis has active/fill/invalidation status and a matched baseline comparison."
     }
   ],
   "adaptation_questions": [
@@ -140,6 +214,9 @@
     "Which timeframe and granularity should be monitored first?",
     "Which human question should the Lab constrain rather than predict?",
     "Which expert method, if any, is documented enough to be translated into observable, null and falsifier?",
-    "What should a human observer see in the dashboard after one useful cycle?"
+    "What should a human observer see in the dashboard after one useful cycle?",
+    "Which volume-profile source and binning rule are acceptable for a first POC/LVN cycle?",
+    "How is an inefficiency considered filled, partially filled or invalidated?",
+    "Which Alipio/Massimo Rea method should be translated first into observable, null and falsifier?"
   ]
 }
