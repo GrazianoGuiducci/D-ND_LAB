@@ -184,6 +184,20 @@ Questo comando non invoca LLM, non scrive report agente e non autorizza target
 o segnali. Serve a tenere fresca la superficie `latest_value_artifacts` per UI,
 THIA e futuri cicli del Bitcoin Lab.
 
+Quando il ciclo viene lanciato da `tools/dnd-cycle.sh`, la raccolta dati BTC
+deve avvenire nel pre-ciclo host-side tramite:
+
+```bash
+domains/bitcoin-regime-lab/tools/pre_cycle_value_refresh.sh
+```
+
+L'agente del ciclo **non deve rifare fetch di rete** come autorita' primaria:
+deve leggere gli artifact `*_latest.json` gia' scritti nel `LAB_DATA_DIR` del
+ciclo e, se servono controlli aggiuntivi, dichiararli come prossima ipotesi.
+Motivo: il network dentro la shell dell'agente puo' differire dal network host;
+il campo dati deve essere deterministico, tracciabile e visibile alla dashboard
+prima del pensiero cognitivo.
+
 La prima ipotesi falsificabile del Lab non riguarda il prezzo: riguarda
 l'ammissibilita' del campo dati daily prima di qualunque POC/FVG/timeframe.
 

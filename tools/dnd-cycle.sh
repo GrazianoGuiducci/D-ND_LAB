@@ -28,6 +28,7 @@ fi
 REQUESTED_LLM_PROVIDER_CHAIN="${LLM_PROVIDER_CHAIN:-}"
 REQUESTED_LLM_MODEL="${LLM_MODEL:-}"
 REQUESTED_OPENROUTER_MODEL="${OPENROUTER_MODEL:-}"
+REQUESTED_LAB_DATA_DIR="${LAB_DATA_DIR:-}"
 
 # Load env canonico THIA, poi env locale del Lab.
 # Il fallback HTTP usa OpenRouter tramite OPENROUTER_API_KEY/OPENROUTER_MODEL;
@@ -66,6 +67,11 @@ if [ -n "$REQUESTED_LLM_MODEL" ]; then
     export LLM_MODEL="$REQUESTED_LLM_MODEL"
 fi
 
+# The production dashboard runs on the host and reads /opt/D-ND_LAB/data.
+# /opt/D-ND_LAB/.env may contain LAB_DATA_DIR=/data for container installs;
+# keep that only when the caller explicitly requested it for this invocation.
+export LAB_DATA_DIR="${REQUESTED_LAB_DATA_DIR:-/opt/D-ND_LAB/data}"
+
 cd /opt/D-ND_LAB
 PYTHON_BIN="${PYTHON_BIN:-/opt/D-ND_LAB/.venv/bin/python3}"
 if [ ! -x "$PYTHON_BIN" ]; then
@@ -74,6 +80,7 @@ fi
 LOG_DIR="data/$DOMAIN"
 mkdir -p "$LOG_DIR/reports"
 LOG_FILE="$LOG_DIR/cycle_$(date +%Y%m%d_%H%M%S).log"
+PRE_CYCLE_HOOK="domains/$DOMAIN/tools/pre_cycle_value_refresh.sh"
 
 echo "=== D-ND_LAB cycle wrapper ===" | tee "$LOG_FILE"
 echo "Domain: $DOMAIN" | tee -a "$LOG_FILE"
@@ -84,5 +91,11 @@ echo "Python: $PYTHON_BIN" | tee -a "$LOG_FILE"
 echo "Started: $(date -Iseconds)" | tee -a "$LOG_FILE"
 echo "Log: $LOG_FILE" | tee -a "$LOG_FILE"
 echo "===" | tee -a "$LOG_FILE"
+
+if [ -x "$PRE_CYCLE_HOOK" ]; then
+    echo "[pre-cycle] running $PRE_CYCLE_HOOK" | tee -a "$LOG_FILE"
+    "$PRE_CYCLE_HOOK" 2>&1 | tee -a "$LOG_FILE"
+    echo "[pre-cycle] completed" | tee -a "$LOG_FILE"
+fi
 
 "$PYTHON_BIN" -m core.cli run --domain "$DOMAIN" 2>&1 | tee -a "$LOG_FILE"

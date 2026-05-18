@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import os
 import statistics
 import time
 from datetime import datetime, timezone
@@ -23,7 +24,8 @@ import httpx
 VERSION = "0.1.0"
 DOMAIN_DIR = Path(__file__).resolve().parents[1]
 REPO_ROOT = DOMAIN_DIR.parents[1]
-DATA_DIR = REPO_ROOT / "data" / "bitcoin-regime-lab"
+DATA_ROOT = Path(os.environ.get("LAB_DATA_DIR", REPO_ROOT / "data")).resolve()
+DATA_DIR = DATA_ROOT / "bitcoin-regime-lab"
 VALUE_DIR = DATA_DIR / "value"
 CACHE_DIR = DATA_DIR / "market_cache"
 COINGECKO_BASE = "https://api.coingecko.com/api/v3"

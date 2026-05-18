@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import os
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -21,7 +22,8 @@ import httpx
 VERSION = "0.1.0"
 DOMAIN_DIR = Path(__file__).resolve().parents[1]
 REPO_ROOT = DOMAIN_DIR.parents[1]
-DATA_DIR = REPO_ROOT / "data" / "bitcoin-regime-lab"
+DATA_ROOT = Path(os.environ.get("LAB_DATA_DIR", REPO_ROOT / "data")).resolve()
+DATA_DIR = DATA_ROOT / "bitcoin-regime-lab"
 VALUE_DIR = DATA_DIR / "value"
 UA = "D-ND-Lab/1.0 (research; +https://lab.d-nd.com)"
 

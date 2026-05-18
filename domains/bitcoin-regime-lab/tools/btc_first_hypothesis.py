@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -17,7 +18,8 @@ from typing import Any
 VERSION = "0.1.0"
 DOMAIN_DIR = Path(__file__).resolve().parents[1]
 REPO_ROOT = DOMAIN_DIR.parents[1]
-DATA_DIR = REPO_ROOT / "data" / "bitcoin-regime-lab"
+DATA_ROOT = Path(os.environ.get("LAB_DATA_DIR", REPO_ROOT / "data")).resolve()
+DATA_DIR = DATA_ROOT / "bitcoin-regime-lab"
 VALUE_DIR = DATA_DIR / "value"
 EXCHANGE_LATEST = VALUE_DIR / "btc_exchange_ohlcv_latest.json"
 
