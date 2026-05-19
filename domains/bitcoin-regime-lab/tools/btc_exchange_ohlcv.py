@@ -20,6 +20,7 @@ import httpx
 
 
 VERSION = "0.1.0"
+DEFAULT_DAILY_LIMIT = 180
 DOMAIN_DIR = Path(__file__).resolve().parents[1]
 REPO_ROOT = DOMAIN_DIR.parents[1]
 DATA_ROOT = Path(os.environ.get("LAB_DATA_DIR", REPO_ROOT / "data")).resolve()
@@ -149,7 +150,7 @@ FETCHERS = {
 }
 
 
-def build_feed_card(limit: int = 31, providers: list[str] | None = None) -> dict[str, Any]:
+def build_feed_card(limit: int = DEFAULT_DAILY_LIMIT, providers: list[str] | None = None) -> dict[str, Any]:
     selected = providers or list(FETCHERS)
     feeds: list[dict[str, Any]] = []
     errors: list[dict[str, str]] = []
@@ -304,7 +305,7 @@ def write_artifact(payload: dict[str, Any]) -> dict[str, str]:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Build BTC exchange OHLCV value artifact.")
-    parser.add_argument("--limit", type=int, default=31)
+    parser.add_argument("--limit", type=int, default=DEFAULT_DAILY_LIMIT)
     parser.add_argument("--providers", default="bitstamp,coinbase,binance")
     parser.add_argument("--write", action="store_true", help="Write under data/bitcoin-regime-lab/value/")
     parser.add_argument("--json", action="store_true", help="Print JSON payload.")
