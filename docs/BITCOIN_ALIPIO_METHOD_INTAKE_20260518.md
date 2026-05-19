@@ -68,6 +68,57 @@ and monthly are watch-only until the denominator becomes strong enough;
 intraday frames are blocked until native intraday data and feed robustness
 exist.
 
+## Follow-up Material From Alipio - 2026-05-19
+
+The operator provided two additional TradingView BTCUSD Bitstamp weekly
+screenshots plus a text explanation of "chiudere l'inefficienza". This material
+is still method-intake substrate only. It must not be copied as price target,
+direction, signal or evidence.
+
+Derived meaning of "inefficiency" from the text:
+
+- **FVG / imbalance**: a fast directional candle move leaves a price zone with
+  sparse exchange. Closure means price later trades back into or through that
+  zone.
+- **LVN / Volume Profile void**: a low-volume node or volume valley. Closure
+  means price revisits a low-volume area and may traverse toward HVN/POC.
+- **CME gap**: a futures close/open weekend gap. Closure means price revisits
+  the gap range.
+
+Important implication: Alipio's phrase is polysemic. The Lab must ask which
+type is meant before testing. A single daily three-candle FVG proxy is only one
+subtype and cannot represent the whole method.
+
+Derived visual cues from the screenshots:
+
+- source surface appears to be BTCUSD weekly on Bitstamp in TradingView;
+- Volume Profile / POC levels are visually central;
+- red horizontal levels are used as POC or important volume/structure levels;
+- "POC sotto" is treated as warning/risk language, not directly as a trade;
+- "ripartenza quando il POC discendente si allinea al POC ascendente" suggests
+  a POC-drift/alignment hypothesis across profile windows;
+- "retest del POC e della trend line ascendente" suggests confluence, not POC
+  alone;
+- "chiusura inefficienza 88.000" and "area di inefficienza cioe' con pochi
+  volumi" suggest the current useful next object may be LVN/Volume Profile
+  inefficiency, not only candle FVG;
+- "1 obiettivo cambio momentum" and "2 obiettivo chiusura inefficienza" are
+  human scenario labels. The Lab must translate them into watch/test/reject
+  contracts, not targets;
+- "re test MM52" appears as a gate/confluence condition requiring exact MA
+  definition;
+- "aspettare test della trend line dei max" suggests a trendline construction
+  and retest rule still missing.
+
+Effect on the current Lab:
+
+- the daily FVG proxy has now failed a stricter dual-adjacent null, so it should
+  remain `watch`;
+- this does not invalidate Alipio's broader "inefficiency closure" language;
+  it shows that the current proxy is too weak/general;
+- the next useful intake is to split "inefficiency" into typed contracts:
+  FVG, LVN/Volume Profile void, or CME gap.
+
 ## Method Cards To Build
 
 | Human phrase | Candidate observable | Data needed | Null/falsifier | Current status |
@@ -76,7 +127,7 @@ exist.
 | POC sotto | POC relation to current price and recent range | computed POC, current/closed candle, tolerance | random level below price; selected-window artifact | method card first |
 | Ripartenza quando POC discendente si allinea al POC ascendente | POC drift/alignment event across successive windows | repeated profile windows, drift rule, alignment tolerance | shuffled windows; adjacent-window control; no-lookahead split | future tool |
 | Retest trendline + POC | confluence event with declared trendline rule | trendline endpoints, POC, retest tolerance, forward window | POC-only vs trendline-only ablation; random slope line | future tool |
-| Chiusura inefficienza | FVG/LVN/gap-fill event | candle series, volume profile or FVG definition, fill threshold | arbitrary equal-width zones; block-preserving returns | candidate next spec |
+| Chiusura inefficienza | typed FVG/LVN/CME-gap closure event | inefficiency type, candle series, volume profile window/binning or CME gap source, fill threshold | strict dual-adjacent control; arbitrary equal-width zones; block-preserving returns; shuffled-volume profile for LVN | watch after strict-null FVG proxy failed |
 | MM52 retest | moving-average touch/rejection event | exact MA length/type/source, close/high/low rule, tolerance | MA-only baseline; shifted MA; random moving level | future tool |
 | Cambio momentum | momentum state change before/after declared event | chosen metric, window, threshold, forward horizon | naive drift/random walk; threshold sweep correction | future tool |
 | Timeframe ottimale | timeframe admissibility matrix | data per timeframe, event counts, open-candle policy | denominator control; overfit and feed-sensitivity checks | implemented first pass |
@@ -93,15 +144,19 @@ method into a contract:
 4. What bin size or profile resolution is used?
 5. What tolerance counts as a POC touch or retest?
 6. When is a Naked POC considered active, touched, retired or invalidated?
-7. What exactly makes an inefficiency "closed": wick touch, close inside,
-   full traversal, percentage fill or volume fill?
-8. Which MM52 is intended: simple/exponential, close-based, weekly/daily, and
+7. When you say "inefficiency", which subtype do you mean here: FVG/imbalance,
+   LVN/Volume Profile void, or CME gap?
+8. What exactly makes that inefficiency "closed": wick touch, close inside,
+   full traversal, percentage fill, volume fill or touch of HVN/POC?
+9. If the marked zone is an LVN/Volume Profile void, what is the profile
+   window, binning/resolution and volume threshold that defines "low volume"?
+10. Which MM52 is intended: simple/exponential, close-based, weekly/daily, and
    must the candle close above/below it?
-9. How are trendlines drawn: which pivots, which timeframe, what tolerance?
-10. Which timeframe is used to define the object, and which timeframe is used
+11. How are trendlines drawn: which pivots, which timeframe, what tolerance?
+12. Which timeframe is used to define the object, and which timeframe is used
     to confirm it?
-11. What would make the method fail?
-12. What output would be useful if the Lab cannot produce a signal: watchlist,
+13. What would make the method fail?
+14. What output would be useful if the Lab cannot produce a signal: watchlist,
     invalidation, rejected hypothesis, next test or source/data warning?
 
 These answers should become method cards or contribution artifacts. They must
@@ -143,13 +198,15 @@ daily_method_spec_card -> one mechanical daily FVG or POC-proxy observable
 -> matched null -> falsifier -> dashboard watch/test/reject
 ```
 
-Candidate first spec:
+Candidate first spec, after the 2026-05-19 strict-null result:
 
 - `btc_method_intake_card.py`: writes a structured method card for one Alipio
   object with required data, unresolved definitions and no-signal boundary.
-- then `btc_daily_inefficiency_candidate.py`: tests a simple daily FVG/gap-fill
-  definition because it can be computed from OHLCV without tick-level volume.
-- only after that, `btc_volume_profile_poc_proxy.py`: computed POC proxy with a
+- `btc_daily_inefficiency_candidate.py`: already tested a simple daily
+  FVG/gap-fill proxy and downgraded it to `watch` because the strict
+  dual-adjacent null filled more than the proxy.
+- next, `btc_volume_profile_lvn_proxy.py` or `btc_volume_profile_poc_proxy.py`:
+  computed LVN/POC proxy with a
   declared binning/window rule, labelled as proxy unless real volume-profile
   data is available.
 

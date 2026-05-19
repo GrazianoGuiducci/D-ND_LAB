@@ -64,20 +64,24 @@ METHODS: list[dict[str, Any]] = [
     {
         "method_id": "inefficiency_closure",
         "title": "Chiusura inefficienza",
-        "human_phrase": "chiudere l'inefficienza / FVG / area con pochi volumi",
-        "candidate_observable": "daily FVG/LVN/gap-fill event with declared fill rule",
+        "human_phrase": "chiudere l'inefficienza / FVG / LVN / CME gap / area con pochi volumi",
+        "candidate_observable": "typed FVG, LVN/Volume Profile void, or CME-gap closure event with declared fill rule",
         "required_definitions": [
+            "inefficiency_type_fvg_lvn_or_cme_gap",
             "zone_definition",
             "fill_threshold",
             "wick_or_close_rule",
             "forward_window",
             "invalidation_rule",
+            "volume_profile_window_if_lvn",
+            "binning_or_low_volume_threshold_if_lvn",
+            "cme_gap_source_if_cme",
         ],
-        "data_requirement": "daily OHLCV is enough for first FVG-style proxy; LVN needs volume-profile rule",
-        "baseline_null": "equal_width_zone_fill_rate + block_preserving_return_null",
-        "falsifier": "fill_rate_without_denominator or lookahead_bias",
-        "status": "test_candidate",
-        "current_blocker": "fill rule and zone definition must be declared",
+        "data_requirement": "daily OHLCV is enough only for a first FVG-style proxy; LVN needs a declared volume-profile window/binning rule; CME gap needs futures close/open data",
+        "baseline_null": "strict_dual_adjacent_equal_width_control + block_preserving_return_null + shuffled_volume_profile_for_lvn",
+        "falsifier": "strict_null_not_beaten, fill_rate_without_denominator, lookahead_bias or volume_proxy_confusion",
+        "status": "watch",
+        "current_blocker": "the simple daily FVG proxy failed strict dual-adjacent null; choose FVG/LVN/CME subtype and define closure before retesting",
     },
     {
         "method_id": "trendline_poc_retest",
@@ -211,9 +215,11 @@ def build_method_intake(*, focus: str = "inefficiency_closure") -> dict[str, Any
         for item in method["required_definitions"]
     })
     thia_questions = [
+        "Quando dici inefficienza qui intendi FVG/imbalance, LVN/Volume Profile o CME gap?",
         "Quale exchange/sorgente e' il riferimento: Bitstamp soltanto o evento robusto su Binance/Coinbase?",
         "Per ogni POC: qual e' la finestra Volume Profile esatta e quale binning/tolleranza usi?",
-        "Quando una inefficienza e' chiusa: wick, close, attraversamento completo, percentuale o volume?",
+        "Quando una inefficienza e' chiusa: wick, close, attraversamento completo, percentuale, volume o arrivo a HVN/POC?",
+        "Se e' LVN: quale soglia definisce 'pochi volumi' e quale finestra profilo va usata?",
         "MM52 significa SMA/EMA, su quale timeframe, e quale regola invalida il test?",
         "Come costruisci le trendline: quali pivot, tolleranza e timeframe?",
         "Che output ti serve se non possiamo dare un segnale: watchlist, invalidazione, reject reason o prossimo test?",
@@ -253,11 +259,12 @@ def build_method_intake(*, focus: str = "inefficiency_closure") -> dict[str, Any
             "method_id": focus_method["method_id"],
             "title": focus_method["title"],
             "why": (
-                "It can become a daily-computable test before precise Volume "
-                "Profile POC data exists, while preserving the no-signal boundary."
+                "The simple daily FVG proxy failed a stricter null. The next "
+                "useful step is to split the human phrase into FVG, LVN or "
+                "CME-gap closure before another test."
             ),
-            "tool_candidate": "btc_daily_inefficiency_candidate.py",
-            "precondition": "define zone/fill/invalidation rule and matched null",
+            "tool_candidate": "btc_volume_profile_lvn_proxy.py or refined btc_daily_inefficiency_candidate.py",
+            "precondition": "define inefficiency subtype, zone/fill/invalidation rule and strict null",
         },
         "boundary": {
             "public_claim": False,
