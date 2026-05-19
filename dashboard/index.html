@@ -1480,7 +1480,7 @@
                 <div class="flex items-start justify-between gap-3 flex-wrap mb-3">
                   <div>
                     <h3 class="text-sm font-medium text-amber-100">Inefficienza daily BTC</h3>
-                    <p class="text-xs text-slate-300 mt-1">Zone FVG daily e controlli adiacenti restano oggetti di test, non target.</p>
+                    <p class="text-xs text-slate-300 mt-1">Watch-only: il controllo riempie quanto le zone e il denominatore e' basso.</p>
                   </div>
                   <button @click="selectBitcoinDailyInefficiencyLens()"
                           class="text-[11px] font-mono px-2 py-1 rounded border border-amber-400/80 text-amber-100 hover:border-amber-100 cursor-pointer">
@@ -1498,6 +1498,8 @@
                         </button>
                       </template>
                     </div>
+                    <div class="mb-3 rounded border border-amber-400/60 bg-amber-950/10 px-3 py-2 text-xs text-amber-100"
+                         x-text="bitcoinDailyInefficiencyValueMessage()"></div>
                     <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-2">
                       <template x-for="zone in bitcoinDailyInefficiencyZones()" :key="zone.zone_id">
                         <button @click="selectBitcoinDailyInefficiencyLens(zone)"
@@ -1518,7 +1520,7 @@
                   <button @click="selectBitcoinDailyInefficiencyLens()"
                           class="text-left rounded border border-purple-500/60 bg-purple-950/10 p-3 hover:border-purple-200 transition cursor-pointer">
                     <div class="text-[10px] uppercase tracking-wider text-purple-200">Verdetto corrente</div>
-                    <div class="text-sm text-slate-100 mt-2" x-text="bitcoinDailyInefficiencyCard()?.verdict || 'watch'"></div>
+                    <div class="text-sm text-slate-100 mt-2 break-words" x-text="bitcoinDailyInefficiencyVerdictLabel()"></div>
                     <div class="text-xs text-slate-300 mt-3" x-text="bitcoinDailyInefficiencyCard()?.evidence || ''"></div>
                     <div class="text-[11px] text-amber-200 mt-3" x-text="bitcoinDailyInefficiencyCard()?.boundary || ''"></div>
                   </button>
@@ -4850,10 +4852,32 @@
         const metrics = this.bitcoinDailyInefficiencyPayload()?.metrics || {};
         return [
           { label: 'zone', value: String(metrics.zones_total ?? 0), tone: 'text-amber-200' },
-          { label: 'evaluable', value: String(metrics.zones_evaluable ?? 0), tone: 'text-cyan-300' },
+          { label: 'valide', value: String(metrics.zones_evaluable ?? 0), tone: 'text-cyan-300' },
           { label: 'fill', value: `${metrics.zone_fill_rate ?? 'n/a'}`, tone: 'text-green-300' },
           { label: 'controllo', value: `${metrics.control_fill_rate ?? 'n/a'}`, tone: 'text-purple-300' },
         ];
+      },
+
+      bitcoinDailyInefficiencyValueMessage() {
+        const metrics = this.bitcoinDailyInefficiencyPayload()?.metrics || {};
+        const zoneRate = metrics.zone_fill_rate;
+        const controlRate = metrics.control_fill_rate;
+        const denomReady = metrics.denominator_ready === true;
+        if (zoneRate !== undefined && controlRate !== undefined && zoneRate === controlRate) {
+          return `Watch-only: fill ${zoneRate} uguale al controllo ${controlRate}; non c'e' vantaggio sul null. Denominatore ${denomReady ? 'pronto' : 'basso'}.`;
+        }
+        if (denomReady === false) {
+          return 'Watch-only: denominatore basso; accumulare piu casi prima di interpretare.';
+        }
+        return 'Oggetto di test: leggere sempre contro controllo matched e boundary no-signal.';
+      },
+
+      bitcoinDailyInefficiencyVerdictLabel() {
+        const verdict = this.bitcoinDailyInefficiencyCard()?.verdict || 'watch';
+        if (verdict === 'DAILY_INEFFICIENCY_PROXY_DENOMINATOR_LOW') {
+          return 'WATCH ONLY - DENOMINATORE BASSO';
+        }
+        return verdict;
       },
 
       bitcoinDailyInefficiencyZoneTitle(zone) {
