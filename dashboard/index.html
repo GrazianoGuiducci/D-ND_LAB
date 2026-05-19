@@ -1681,6 +1681,10 @@
                               :class="btcChartProvider === opt.provider ? 'border-cyan-500 bg-cyan-950/40 text-cyan-100' : 'border-slate-700 bg-slate-900 text-slate-300 hover:border-cyan-700'"
                               x-text="opt.provider"></button>
                     </template>
+                    <button @click="setBtcChartFullscreen(true)"
+                            class="px-2 py-1 rounded text-[11px] font-mono border border-cyan-700 bg-slate-900 text-cyan-100 hover:border-cyan-300 cursor-pointer">
+                      full-page
+                    </button>
                   </div>
                 </div>
                 <div class="grid lg:grid-cols-[minmax(0,1fr)_240px] gap-4 items-stretch">
@@ -1707,6 +1711,60 @@
                         <div class="text-sm font-mono mt-1" :class="row.tone" x-text="row.value"></div>
                       </button>
                     </template>
+                  </div>
+                </div>
+                <div x-show="btcChartFullscreen"
+                     x-cloak
+                     @click.self="setBtcChartFullscreen(false)"
+                     class="fixed inset-0 z-[70] bg-slate-950/96 p-4 sm:p-6">
+                  <div class="h-full rounded-md border border-cyan-500/70 bg-slate-950 shadow-[0_0_32px_rgba(34,211,238,.18)] flex flex-col overflow-hidden">
+                    <div class="flex items-start justify-between gap-3 border-b border-cyan-900/70 px-4 py-3">
+                      <div>
+                        <h3 class="text-sm font-medium text-cyan-100">Grafico BTC - feed verificabili</h3>
+                        <p class="text-xs text-slate-400 mt-1" x-text="btcChartStats().windowLabel"></p>
+                      </div>
+                      <div class="flex items-center gap-2 flex-wrap justify-end">
+                        <template x-for="opt in btcSeriesOptions()" :key="'fs-' + opt.provider">
+                          <button @click="btcChartProvider = opt.provider"
+                                  class="px-2 py-1 rounded text-[11px] font-mono border transition cursor-pointer"
+                                  :class="btcChartProvider === opt.provider ? 'border-cyan-500 bg-cyan-950/40 text-cyan-100' : 'border-slate-700 bg-slate-900 text-slate-300 hover:border-cyan-700'"
+                                  x-text="opt.provider"></button>
+                        </template>
+                        <button @click="setBtcChartFullscreen(false)"
+                                class="px-2 py-1 rounded text-[11px] font-mono border border-slate-700 text-slate-200 hover:border-cyan-300 cursor-pointer">
+                          chiudi
+                        </button>
+                      </div>
+                    </div>
+                    <div class="grid xl:grid-cols-[minmax(0,1fr)_260px] gap-4 p-4 min-h-0 flex-1">
+                      <div class="rounded-md border border-slate-800 bg-slate-950/80 p-3 min-h-0 overflow-hidden">
+                        <svg viewBox="0 0 720 300" preserveAspectRatio="none" class="w-full h-full min-h-[420px] block">
+                          <line x1="48" y1="30" x2="48" y2="218" stroke="#334155" stroke-width="1"></line>
+                          <line x1="48" y1="218" x2="696" y2="218" stroke="#334155" stroke-width="1"></line>
+                          <line x1="48" y1="77" x2="696" y2="77" stroke="#1f2937" stroke-width="1"></line>
+                          <line x1="48" y1="124" x2="696" y2="124" stroke="#1f2937" stroke-width="1"></line>
+                          <line x1="48" y1="171" x2="696" y2="171" stroke="#1f2937" stroke-width="1"></line>
+                          <g x-html="btcVolumeBarsSvg()"></g>
+                          <g x-html="btcChartCandlesSvg()"></g>
+                          <polyline :points="btcClosePolyline()" fill="none" stroke="#22d3ee" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round" opacity="0.72"></polyline>
+                          <text x="44" y="24" fill="#cdd0de" font-size="11" font-family="monospace" x-text="btcChartStats().highLabel"></text>
+                          <text x="44" y="236" fill="#cdd0de" font-size="11" font-family="monospace" x-text="btcChartStats().lowLabel"></text>
+                          <text x="44" y="285" fill="#cdd0de" font-size="11" font-family="monospace" x-text="btcChartStats().windowLabel"></text>
+                        </svg>
+                      </div>
+                      <div class="grid gap-2 content-start">
+                        <template x-for="row in btcChartStatRows()" :key="'fs-stat-' + row.label">
+                          <button @click="selectValueArtifactLens()"
+                                  class="text-left border border-slate-800 hover:border-cyan-700 rounded p-3 bg-slate-950/60 transition cursor-pointer">
+                            <div class="text-[10px] uppercase tracking-wider text-slate-400" x-text="row.label"></div>
+                            <div class="text-sm font-mono mt-1" :class="row.tone" x-text="row.value"></div>
+                          </button>
+                        </template>
+                        <div class="rounded border border-amber-500/40 bg-amber-950/10 p-3 text-[11px] text-amber-100">
+                          Feed di contesto: non produce livelli operativi, target, entry o exit.
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </section>
@@ -3409,6 +3467,7 @@
       latestDiagnostic: { available: false },
       latestValueArtifacts: { available: false, artifacts: [] },
       btcChartProvider: 'bitstamp',
+      btcChartFullscreen: false,
       financePrecondition: { available: false },
       uiContract: { available: false },
       labThought: { available: false },
@@ -3557,6 +3616,7 @@
         document.addEventListener('keydown', (e) => {
           if (e.key === 'Escape') {
             if (this.resizing) { this._onResizeEnd(); return; }
+            if (this.btcChartFullscreen) { this.setBtcChartFullscreen(false); return; }
             if (this.graphFullscreen) { this.setGraphFullscreen(false); return; }
             if (this.mobileDrawer) { this.closeMobileDrawer(); return; }
           }
@@ -5416,6 +5476,11 @@
           { label: 'feed ok', value: `${metrics.providers_ok ?? 0} / ${Number(metrics.providers_ok || 0) + Number(metrics.providers_error || 0)}`, tone: 'text-green-300' },
           { label: 'boundary', value: artifact.boundary?.trading_signal === false ? 'no signal' : 'unknown', tone: 'text-amber-200' },
         ];
+      },
+
+      setBtcChartFullscreen(on) {
+        this.btcChartFullscreen = !!on;
+        document.body.style.overflow = on ? 'hidden' : '';
       },
 
       valueArtifactDecisionTone(card) {
