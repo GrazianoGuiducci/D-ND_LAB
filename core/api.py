@@ -2259,6 +2259,54 @@ async def get_trajectory(domain: str, request: Request, limit: int = 20) -> list
     return out
 
 
+@app.get("/api/domains/{domain}/cycle_quality")
+async def get_cycle_quality(domain: str, request: Request) -> dict[str, Any]:
+    """Latest cycle-level quality gates for Campo detail.
+
+    Read-only synthesis across Veritas, Aeternitas, falsifier and trajectory.
+    It does not create a new verdict; it exposes the latest runtime gates so
+    the UI can explain why a value artifact is watch/test/reject.
+    """
+    await _check_auth(request)
+    _validate_domain(domain)
+    domain_dir = paths.domain_data_dir(domain)
+
+    def latest_json(subdir: str, pattern: str) -> dict[str, Any] | None:
+        folder = domain_dir / subdir
+        if not folder.exists():
+            return None
+        files = sorted(folder.glob(pattern), key=lambda p: p.stat().st_mtime, reverse=True)
+        if not files:
+            return None
+        payload = _read_json_safe(files[0], {})
+        if isinstance(payload, dict):
+            payload["_filename"] = files[0].name
+            payload["_mtime"] = datetime.fromtimestamp(files[0].stat().st_mtime, tz=timezone.utc).isoformat()
+            return payload
+        return None
+
+    trajectory_state = None
+    trajectory_path = domain_dir / "trajectory_state.json"
+    if trajectory_path.exists():
+        trajectory_state = _read_json_safe(trajectory_path, {})
+        if isinstance(trajectory_state, dict):
+            trajectory_state["_filename"] = trajectory_path.name
+            trajectory_state["_mtime"] = datetime.fromtimestamp(trajectory_path.stat().st_mtime, tz=timezone.utc).isoformat()
+
+    veritas = latest_json("veritas", "veritas_*.json")
+    aeternitas = latest_json("aeternitas", "aeternitas_*.json")
+    falsifier = latest_json("falsifier", "falsifier_*.json")
+
+    return {
+        "available": any([veritas, aeternitas, falsifier, trajectory_state]),
+        "domain": domain,
+        "veritas": veritas,
+        "aeternitas": aeternitas,
+        "falsifier": falsifier,
+        "trajectory": trajectory_state,
+    }
+
+
 @app.get("/api/domains/{domain}/cost")
 async def get_cost(domain: str, request: Request) -> dict[str, Any]:
     await _check_auth(request)
