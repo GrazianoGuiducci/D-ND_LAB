@@ -1535,10 +1535,16 @@
                          x-text="bitcoinDailyInefficiencyValueMessage()"></div>
                     <div class="flex items-center justify-between gap-3 mb-2 text-[11px] text-slate-400">
                       <span x-text="bitcoinDailyInefficiencyZoneSummary()"></span>
-                      <button @click="selectBitcoinDailyInefficiencyLens()"
-                              class="font-mono text-amber-200 hover:text-amber-100 cursor-pointer">
-                        dettaglio completo
-                      </button>
+                      <div class="flex items-center gap-3">
+                        <button @click="askThiaAboutBtcPoint('strict-null')"
+                                class="font-mono text-green-200 hover:text-green-100 cursor-pointer">
+                          chiedi THIA
+                        </button>
+                        <button @click="selectBitcoinDailyInefficiencyLens()"
+                                class="font-mono text-amber-200 hover:text-amber-100 cursor-pointer">
+                          dettaglio completo
+                        </button>
+                      </div>
                     </div>
                     <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-2">
                       <template x-for="zone in bitcoinDailyInefficiencyVisibleZones()" :key="zone.zone_id">
@@ -1575,10 +1581,16 @@
                     <h3 class="text-sm font-medium text-cyan-200">Schede metodo BTC</h3>
                     <p class="text-xs text-slate-300 mt-1">POC, inefficienze, trendline e MM52 diventano domande, dati richiesti e null prima di qualunque test.</p>
                   </div>
-                  <button @click="selectBitcoinMethodLens()"
-                          class="text-[11px] font-mono px-2 py-1 rounded border border-cyan-500/90 text-cyan-100 hover:border-cyan-200 cursor-pointer">
-                    apri intake
-                  </button>
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <button @click="askThiaAboutBtcPoint('method-intake')"
+                            class="text-[11px] font-mono px-2 py-1 rounded border border-green-500/80 text-green-100 hover:border-green-200 cursor-pointer">
+                      chiedi THIA
+                    </button>
+                    <button @click="selectBitcoinMethodLens()"
+                            class="text-[11px] font-mono px-2 py-1 rounded border border-cyan-500/90 text-cyan-100 hover:border-cyan-200 cursor-pointer">
+                      apri intake
+                    </button>
+                  </div>
                 </div>
                 <div class="grid lg:grid-cols-[minmax(0,1fr)_minmax(280px,.45fr)] gap-3">
                   <div>
@@ -1684,6 +1696,10 @@
                     <button @click="setBtcChartFullscreen(true)"
                             class="px-2 py-1 rounded text-[11px] font-mono border border-cyan-700 bg-slate-900 text-cyan-100 hover:border-cyan-300 cursor-pointer">
                       full-page
+                    </button>
+                    <button @click="askThiaAboutBtcPoint('chart')"
+                            class="px-2 py-1 rounded text-[11px] font-mono border border-green-500/70 bg-green-950/20 text-green-100 hover:border-green-300 cursor-pointer">
+                      chiedi THIA
                     </button>
                   </div>
                 </div>
@@ -5481,6 +5497,64 @@
       setBtcChartFullscreen(on) {
         this.btcChartFullscreen = !!on;
         document.body.style.overflow = on ? 'hidden' : '';
+      },
+
+      askThiaAboutBtcPoint(point) {
+        const payload = this.bitcoinDailyInefficiencyPayload() || {};
+        const card = this.bitcoinDailyInefficiencyCard() || {};
+        const metrics = payload.metrics || {};
+        const next = this.bitcoinMethodIntakeArtifact()?.payload?.recommended_next || {};
+        const selected = {
+          'strict-null': {
+            element: 'BTC daily inefficiency - null severo',
+            value: `proxy ${metrics.zone_fill_rate ?? 'n/a'}, matched ${metrics.control_fill_rate ?? 'n/a'}, strict ${metrics.strict_control_fill_rate ?? 'n/a'}`,
+            interpretation: 'Il proxy daily FVG/inefficiency resta watch perche il null severo e piu forte o non e battuto.',
+            dynamics: 'Il Lab confronta una zona candidata con controlli/null prima di promuoverla a test piu forte.',
+            result: `${card.decision || 'n/a'} / ${card.verdict || 'n/a'}; ${card.evidence || ''}`,
+            prompt: 'Spiegami il null severo BTC che vedo qui: cosa confronta, perche pesa sul verdetto e quale feedback esperto servirebbe.',
+            canonicalQuestions: [
+              'Perche il proxy non basta se il null severo e piu forte?',
+              'Quale definizione di inefficienza cambierebbe davvero il test?',
+              'Che cosa dovrebbe portare un esperto per rendere il controllo piu pulito?',
+            ],
+          },
+          'method-intake': {
+            element: 'BTC method intake - FVG, LVN, CME, POC, trendline, MM52',
+            value: `recommended_next ${next.method_id || 'n/a'}; ${next.why || next.precondition || 'n/a'}`,
+            interpretation: 'Le schede metodo trasformano linguaggio esperto in definizioni, dati richiesti, null e falsificatori.',
+            dynamics: 'Prima di un nuovo cycle il Lab deve sapere se inefficienza significa FVG/imbalance, LVN/Volume Profile o CME gap.',
+            result: 'Metodo in raccolta/qualifica: non e ancora un test operativo maturo.',
+            prompt: 'Aiutami a leggere queste schede metodo BTC e a preparare le domande giuste per un esperto.',
+            canonicalQuestions: [
+              'Inefficienza qui significa FVG, LVN/Volume Profile o CME gap?',
+              'Quale fonte, timeframe e finestra Volume Profile servono?',
+              'Quale regola chiude o invalida il metodo?',
+            ],
+          },
+          chart: {
+            element: 'Grafico BTC - feed verificabili',
+            value: this.btcChartStats().windowLabel,
+            interpretation: 'Il grafico mostra feed daily verificabili usati come contesto per osservare POC/FVG/timeframe.',
+            dynamics: 'Il grafico non decide da solo: alimenta osservazione e domande prima dei test.',
+            result: this.btcChartStatRows().map((row) => `${row.label}: ${row.value}`).join(' | '),
+            prompt: 'Spiegami il grafico BTC verificabile aperto qui e come usarlo per formulare una domanda migliore al Lab.',
+            canonicalQuestions: [
+              'Che cosa mostra il feed rispetto al risultato daily inefficiency?',
+              'Quale informazione manca per parlare di POC/LVN in modo testabile?',
+              'Quando il grafico e solo contesto e quando diventa input di metodo?',
+            ],
+          },
+        }[point] || {};
+        const detail = {
+          domain: this.activeDomain || 'bitcoin-regime-lab',
+          tab: this.activeTab || 'campo',
+          ...selected,
+        };
+        if (window.DOMUS?.ask) {
+          window.DOMUS.ask(detail);
+        } else {
+          window.dispatchEvent(new CustomEvent('dnd:thia:ask', { detail }));
+        }
       },
 
       valueArtifactDecisionTone(card) {
