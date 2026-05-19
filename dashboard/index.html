@@ -1475,6 +1475,39 @@
               </section>
             </template>
 
+            <template x-if="activeDomain === 'bitcoin-regime-lab' && labThought?.available">
+              <section class="mt-4 border border-emerald-400/70 rounded-md p-4 bg-emerald-950/10 shadow-[0_0_16px_rgba(16,185,129,.14)]">
+                <div class="flex items-start justify-between gap-3 flex-wrap mb-3">
+                  <div>
+                    <h3 class="text-sm font-medium text-emerald-100">Domanda e cascata del Lab</h3>
+                    <p class="text-xs text-slate-300 mt-1">Mostra cosa muove il ciclo e cosa puo' propagarsi ad altri Lab senza diventare regola automatica.</p>
+                  </div>
+                  <button @click="selectLabThoughtLens()"
+                          class="text-[11px] font-mono px-2 py-1 rounded border border-emerald-300/80 text-emerald-100 hover:border-emerald-100 cursor-pointer">
+                    apri campo
+                  </button>
+                </div>
+                <div class="grid lg:grid-cols-[minmax(0,1fr)_minmax(280px,.45fr)] gap-3">
+                  <button @click="selectLabThoughtLens()"
+                          class="text-left rounded border border-emerald-400/50 bg-slate-950/50 p-3 hover:border-emerald-200 transition cursor-pointer">
+                    <div class="text-[10px] uppercase tracking-wider text-emerald-200">Domanda corrente</div>
+                    <div class="text-sm text-slate-100 mt-2" x-text="labThought.question_field?.primary_question || 'Domanda non disponibile'"></div>
+                    <div class="text-xs text-amber-200 mt-3" x-text="labThought.question_field?.next_question || ''"></div>
+                  </button>
+                  <div class="grid gap-2">
+                    <template x-for="item in (labThought.capability_cascade || []).slice(0, 3)" :key="item.capability_id || item.new_affordance">
+                      <button @click="selectLabThoughtLens(item)"
+                              class="text-left rounded border border-cyan-500/50 bg-slate-950/50 p-3 hover:border-cyan-200 transition cursor-pointer">
+                        <div class="text-[10px] uppercase tracking-wider text-cyan-200" x-text="item.capability_id || 'capability'"></div>
+                        <div class="text-xs text-slate-200 mt-2" x-text="item.new_affordance || ''"></div>
+                        <div class="text-[11px] text-purple-200 mt-2" x-text="(item.transferable_domains || []).join(', ')"></div>
+                      </button>
+                    </template>
+                  </div>
+                </div>
+              </section>
+            </template>
+
             <template x-if="bitcoinDailyInefficiencyArtifact()">
               <section class="mt-4 border border-amber-500/70 rounded-md p-4 bg-slate-950/40 shadow-[0_0_16px_rgba(245,158,11,.10)]">
                 <div class="flex items-start justify-between gap-3 flex-wrap mb-3">
@@ -3371,6 +3404,7 @@
       btcChartProvider: 'bitstamp',
       financePrecondition: { available: false },
       uiContract: { available: false },
+      labThought: { available: false },
 
       // Graph
       cy: null,                 // Cytoscape instance
@@ -3804,6 +3838,7 @@
         this.taxonomyMeta = {};
         this.latestValueArtifacts = { available: false, artifacts: [] };
         this.uiContract = { available: false };
+        this.labThought = { available: false };
         this.contextIntro = { title: '', intro: '' };          // v3.9 — reset
         this.contextExpanded = false;
         await Promise.all([
@@ -3811,6 +3846,7 @@
           this.reloadReports(),
           this.reloadGraph(),
           this.reloadUiContract(),                             // domain-native UI terminology/tooltips
+          this.reloadLabThought(),                              // question_field + capability_cascade visibility
           this.reloadContextIntro(),                           // v3.9 — fetch identity section
           this.reloadFalsifierSummary(),                       // v4.8 — counter-pole stats
           this.reloadCorrectorSummary(),                       // v4.9 — bias_corrector stats
@@ -3877,6 +3913,17 @@
         } catch (e) {
           console.error('ui contract load failed', e);
           this.uiContract = { available: false };
+        }
+      },
+
+      async reloadLabThought() {
+        if (!this.activeDomain) return;
+        try {
+          const data = await fetch(`/api/domains/${this.activeDomain}/lab_thought`).then(r => r.json());
+          this.labThought = data && typeof data === 'object' ? data : { available: false };
+        } catch (e) {
+          console.error('lab thought load failed', e);
+          this.labThought = { available: false };
         }
       },
 
@@ -4870,6 +4917,54 @@
       bitcoinDailyInefficiencyControls() {
         const controls = this.bitcoinDailyInefficiencyPayload()?.matched_controls;
         return Array.isArray(controls) ? controls : [];
+      },
+
+      selectLabThoughtLens(item = null) {
+        const q = this.labThought?.question_field || {};
+        const cascade = Array.isArray(this.labThought?.capability_cascade) ? this.labThought.capability_cascade : [];
+        const selected = item || cascade[0] || {};
+        this.selectedNode = null;
+        this.selectedScopertaSsp = null;
+        this.selectedProdottoSsp = null;
+        this.selectedCampoLens = {
+          type: 'campo',
+          kind: 'lab-thought',
+          category: 'lab-thought',
+          title: q.primary_question || 'Domanda del Lab',
+          subtitle: selected.capability_id || 'question_field',
+          schema: 'dndlab.lab_thought.v1',
+          date: this.labThought?.source || '',
+          evidence: q.next_question || 'La domanda e la cascata arrivano dal contratto di transduzione del dominio.',
+          boundary: 'La cascata e una candidata di propagazione: non trasferisce contenuti o regole senza osservabili, baseline/null e UI lens del dominio ricevente.',
+          meta: [
+            selected.capability_id ? `capability: ${selected.capability_id}` : null,
+            selected.source_domain ? `source: ${selected.source_domain}` : null,
+            selected.immediate_domain ? `domain: ${selected.immediate_domain}` : null,
+          ].filter(Boolean).join(' · '),
+          diagnostics: [
+            {
+              label: 'Possibilita',
+              value: Array.isArray(q.possibility_field) ? q.possibility_field.join(' · ') : 'n/a',
+              note: 'Vie aperte prima del collapse operativo.',
+            },
+            {
+              label: 'Nodi mancanti',
+              value: Array.isArray(q.missing_nodes) ? q.missing_nodes.join(' · ') : 'n/a',
+              note: 'Cosa impedisce promozione o interpretazione.',
+            },
+            {
+              label: 'Falsificazione',
+              value: Array.isArray(q.falsification_paths) ? q.falsification_paths.join(' · ') : 'n/a',
+              note: 'Cosa renderebbe falsa o non utile la via.',
+            },
+            {
+              label: 'Cascata',
+              value: selected.new_affordance || 'n/a',
+              note: selected.next_question || '',
+            },
+          ],
+        };
+        this.activeTab = 'campo';
       },
 
       bitcoinDailyInefficiencyStatRows() {
@@ -6398,8 +6493,8 @@
           set(
             'risultante pubblica e stato corrente del campo',
             ['seed', 'latest_diagnostic', 'latest_value_artifacts', 'lab_graph', 'freshness'],
-            'Leggere il segnale attuale, distinguere dati osservati da inferenze, usare artifact verificabili quando presenti e proporre controlli per il ciclo successivo.',
-            'Chiedere quale segnale, vuoto o controllo l’utente vuole approfondire.'
+            'Leggere il risultato attuale, distinguere dati osservati da inferenze, usare artifact verificabili quando presenti e proporre controlli per il ciclo successivo.',
+            'Chiedere quale risultato, vuoto o controllo l’utente vuole approfondire.'
           );
         } else if (tab === 'grafo') {
           set(
@@ -6483,6 +6578,33 @@
         const marker = this.currentPerceptionMarker();
         for (const action of this.markerStarterActions(marker)) push(action);
 
+        if (this.activeDomain === 'bitcoin-regime-lab') {
+          if (this.activeTab === 'campo') {
+            push("Leggi il risultato BTC corrente");
+            push("Perché resta watch e non segnale?");
+            push("Quale null o controllo decide?");
+            push("Cosa serve al prossimo ciclo?");
+          } else if (this.activeTab === 'agente') {
+            push("Riassumi l'ultimo report BTC");
+            push("Cosa ha falsificato il report?");
+            push("Quale domanda fare a un esperto BTC?");
+            push("Cosa non è verificato?");
+          } else if (this.activeTab === 'prodotti') {
+            push("Spiega il Cycle trace BTC");
+            push("Quali output sono solo watch?");
+            push("Cosa manca per una verifica utile?");
+            push("Come invio feedback BTC utile?");
+          } else if (this.activeTab === 'incrocio' || this.activeTab === 'bicono') {
+            push("Che traiettoria segue il Lab BTC?");
+            push("Quale invariante regge?");
+            push("Quale capacità può propagarsi ad altri Lab?");
+          } else if (this.activeTab === 'info') {
+            push("Come si legge il Lab BTC?");
+            push("Cosa può e non può dire?");
+            push("Come posso contribuire?");
+          }
+        }
+
         if (this.activeTab === 'info') {
           push("Dove sono e come si legge questo Lab?");
           push("Come posso contribuire in modo utile?");
@@ -6554,7 +6676,7 @@
           actions.push(this.selectedNode ? "Spiega il nodo che sto guardando" : "Quale relazione conviene leggere?");
           actions.push("Quale vuoto o ponte merita verifica?");
         } else if (focus.includes('campo') || refs.includes('latest_diagnostic')) {
-          actions.push("Che segnale sto vedendo adesso?");
+          actions.push(this.activeDomain === 'bitcoin-regime-lab' ? "Che risultato BTC sto vedendo adesso?" : "Che risultato sto vedendo adesso?");
           actions.push("Quale controllo serve al prossimo ciclo?");
         }
         return actions;
@@ -6567,10 +6689,10 @@
           if (`${marker.focus}`.toLowerCase().includes('pipeline')) return "Vuoi capire cosa può diventare prodotto?";
           if (`${marker.focus}`.toLowerCase().includes('cimitero')) return "Vuoi capire cosa è stato falsificato?";
           if (`${marker.focus}`.toLowerCase().includes('grafo')) return this.selectedNode ? "Vuoi spiegare questo nodo?" : "Vuoi leggere relazioni e vuoti?";
-          if (`${marker.focus}`.toLowerCase().includes('campo')) return "Vuoi capire il segnale che stai vedendo?";
+          if (`${marker.focus}`.toLowerCase().includes('campo')) return this.activeDomain === 'bitcoin-regime-lab' ? "Vuoi capire il risultato BTC che stai vedendo?" : "Vuoi capire il risultato che stai vedendo?";
         }
         if (this.activeTab === 'info') return "Vuoi orientarti o proporre un miglioramento?";
-        if (this.activeTab === 'campo') return "Vuoi capire il segnale che stai vedendo?";
+        if (this.activeTab === 'campo') return this.activeDomain === 'bitcoin-regime-lab' ? "Vuoi capire il risultato BTC che stai vedendo?" : "Vuoi capire il risultato che stai vedendo?";
         if (this.activeTab === 'grafo') return this.selectedNode ? "Vuoi spiegare questo nodo?" : "Vuoi leggere relazioni e vuoti del grafo?";
         if (this.activeTab === 'prodotti') return "Vuoi capire quali scoperte diventano prodotti?";
         if (this.activeTab === 'agente') return "Vuoi leggere report, falsificazioni e prossimo passo?";

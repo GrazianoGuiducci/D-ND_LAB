@@ -2,7 +2,8 @@
 
 Single-file FastAPI service exposing the lab as REST + WebSocket.
 The filesystem stays the source of truth — this layer reads from
-data/<domain>/* and shells out to `python -m core.cli` for cycles.
+data/<domain>/* and starts cycles through the same wrapper used by cron/manual
+runs when available, so pre-cycle hooks and per-domain locks stay coherent.
 
 Endpoints:
   GET  /api/health
@@ -95,7 +96,7 @@ _CONTRIBUTION_RATE: dict[str, list[float]] = {}
 
 
 def _start_cycle(domain: str, direction_override: str | None = None) -> str:
-    """Spawn a `dndlab run --domain X` subprocess. Returns cycle_id."""
+    """Spawn a domain cycle subprocess. Returns cycle_id."""
     cycle_id = uuid.uuid4().hex[:12]
     log_path = paths.domain_data_dir(domain) / "cycle_logs" / f"{cycle_id}.log"
     log_path.parent.mkdir(parents=True, exist_ok=True)
@@ -105,7 +106,11 @@ def _start_cycle(domain: str, direction_override: str | None = None) -> str:
         env["LAB_DIRECTION_OVERRIDE"] = direction_override
 
     repo_root = paths._repo_root()
-    cmd = [settings.cycle_python, "-m", "core.cli", "run", "--domain", domain]
+    wrapper = repo_root / "tools" / "dnd-cycle.sh"
+    if wrapper.exists():
+        cmd = ["bash", str(wrapper), domain]
+    else:
+        cmd = [settings.cycle_python, "-m", "core.cli", "run", "--domain", domain]
 
     started_at = datetime.now(timezone.utc).isoformat()
     log_file = open(log_path, "w")
@@ -1187,6 +1192,44 @@ async def get_ui_contract(domain: str, request: Request) -> dict[str, Any]:
     data.setdefault("available", True)
     data.setdefault("domain", domain)
     return data
+
+
+def _extract_named_fenced_json(text: str, heading: str) -> Any | None:
+    pattern = (
+        rf"^##\s+{re.escape(heading)}\s*\n+"
+        r"[\s\S]*?```json\s*\n([\s\S]*?)\n```"
+    )
+    match = re.search(pattern, text, re.MULTILINE)
+    if not match:
+        return None
+    try:
+        return json.loads(match.group(1))
+    except json.JSONDecodeError:
+        return None
+
+
+@app.get("/api/domains/{domain}/lab_thought")
+async def get_lab_thought(domain: str, request: Request) -> dict[str, Any]:
+    """Return the domain's explicit question field and capability cascade.
+
+    This is read-only contract visibility. It lets the UI show how the Lab
+    thinks before/after a cycle without promoting the content as a result.
+    """
+    await _check_auth(request)
+    _validate_domain(domain)
+    p = paths.domain_dir(domain) / "transduction.md"
+    if not p.exists():
+        return {"available": False, "domain": domain}
+    text = p.read_text(errors="replace")
+    question = _extract_named_fenced_json(text, "question_field_json")
+    cascade = _extract_named_fenced_json(text, "capability_cascade_json")
+    return {
+        "available": bool(question or cascade),
+        "domain": domain,
+        "source": str(p.relative_to(paths._repo_root())),
+        "question_field": question,
+        "capability_cascade": cascade if isinstance(cascade, list) else [],
+    }
 
 
 @app.get("/api/domains/{domain}/biconi")

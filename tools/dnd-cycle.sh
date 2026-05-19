@@ -81,6 +81,15 @@ LOG_DIR="data/$DOMAIN"
 mkdir -p "$LOG_DIR/reports"
 LOG_FILE="$LOG_DIR/cycle_$(date +%Y%m%d_%H%M%S).log"
 PRE_CYCLE_HOOK="domains/$DOMAIN/tools/pre_cycle_value_refresh.sh"
+LOCK_DIR="$LAB_DATA_DIR/$DOMAIN/locks"
+LOCK_FILE="$LOCK_DIR/cycle.lock"
+mkdir -p "$LOCK_DIR"
+exec 9>"$LOCK_FILE"
+if ! flock -n 9; then
+    echo "[ERROR] cycle already running for domain=$DOMAIN (lock: $LOCK_FILE)" | tee "$LOG_FILE"
+    exit 75
+fi
+echo "$$ $(date -Iseconds)" 1>&9
 
 echo "=== D-ND_LAB cycle wrapper ===" | tee "$LOG_FILE"
 echo "Domain: $DOMAIN" | tee -a "$LOG_FILE"
