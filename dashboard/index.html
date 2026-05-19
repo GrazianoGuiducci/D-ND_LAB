@@ -1533,19 +1533,26 @@
                     </div>
                     <div class="mb-3 rounded border border-amber-400/60 bg-amber-950/10 px-3 py-2 text-xs text-amber-100"
                          x-text="bitcoinDailyInefficiencyValueMessage()"></div>
+                    <div class="flex items-center justify-between gap-3 mb-2 text-[11px] text-slate-400">
+                      <span x-text="bitcoinDailyInefficiencyZoneSummary()"></span>
+                      <button @click="selectBitcoinDailyInefficiencyLens()"
+                              class="font-mono text-amber-200 hover:text-amber-100 cursor-pointer">
+                        dettaglio completo
+                      </button>
+                    </div>
                     <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-2">
-                      <template x-for="zone in bitcoinDailyInefficiencyZones()" :key="zone.zone_id">
+                      <template x-for="zone in bitcoinDailyInefficiencyVisibleZones()" :key="zone.zone_id">
                         <button @click="selectBitcoinDailyInefficiencyLens(zone)"
-                                class="text-left rounded border border-amber-500/50 bg-slate-950/60 p-3 hover:border-amber-200 transition cursor-pointer min-h-[142px]">
+                                class="text-left rounded border border-amber-500/50 bg-slate-950/60 p-3 hover:border-amber-200 transition cursor-pointer min-h-[112px]">
                           <div class="flex items-center justify-between gap-2">
                             <span class="text-[10px] font-mono text-amber-200 truncate" x-text="zone.event_date || 'date'"></span>
                             <span class="text-[10px] uppercase tracking-wider"
                                   :class="zone.fill?.filled ? 'text-green-300' : 'text-slate-300'"
                                   x-text="zone.fill?.status || 'watch'"></span>
                           </div>
-                          <div class="text-sm text-slate-100 mt-2 font-medium" x-text="bitcoinDailyInefficiencyZoneTitle(zone)"></div>
-                          <div class="text-xs text-slate-300 mt-2" x-text="bitcoinDailyInefficiencyZoneRange(zone)"></div>
-                          <div class="text-[11px] text-amber-200 mt-2" x-text="bitcoinDailyInefficiencyControlSummary(zone)"></div>
+                          <div class="text-sm text-slate-100 mt-2 font-medium line-clamp-1" x-text="bitcoinDailyInefficiencyZoneTitle(zone)"></div>
+                          <div class="text-xs text-slate-300 mt-2 line-clamp-2" x-text="bitcoinDailyInefficiencyZoneRange(zone)"></div>
+                          <div class="text-[11px] text-amber-200 mt-2 line-clamp-1" x-text="bitcoinDailyInefficiencyControlSummary(zone)"></div>
                         </button>
                       </template>
                     </div>
@@ -4914,6 +4921,18 @@
         return Array.isArray(zones) ? zones : [];
       },
 
+      bitcoinDailyInefficiencyVisibleZones() {
+        return this.bitcoinDailyInefficiencyZones().slice(0, 6);
+      },
+
+      bitcoinDailyInefficiencyZoneSummary() {
+        const metrics = this.bitcoinDailyInefficiencyPayload()?.metrics || {};
+        const total = this.bitcoinDailyInefficiencyZones().length;
+        const shown = Math.min(total, 6);
+        const strict = metrics.strict_control_fill_rate ?? 'n/a';
+        return `Mostro ${shown}/${total} zone: la decisione dipende dal null severo ${strict}, non dalle singole card.`;
+      },
+
       bitcoinDailyInefficiencyControls() {
         const controls = this.bitcoinDailyInefficiencyPayload()?.matched_controls;
         return Array.isArray(controls) ? controls : [];
@@ -6594,10 +6613,10 @@
 
         if (this.activeDomain === 'bitcoin-regime-lab') {
           if (this.activeTab === 'campo') {
-            push("Leggi il risultato BTC corrente");
-            push("Perché resta watch e non segnale?");
-            push("Quale null o controllo decide?");
-            push("Cosa serve al prossimo ciclo?");
+            push("Leggi null severo BTC");
+            push("FVG, LVN o CME gap?");
+            push("Prepara feedback esperto");
+            push("Cosa manca ad Alipio?");
           } else if (this.activeTab === 'agente') {
             push("Riassumi l'ultimo report BTC");
             push("Cosa ha falsificato il report?");
@@ -6625,7 +6644,7 @@
           push("Che specifiche servono per un nuovo dominio?");
         } else if (this.activeTab === 'campo') {
           push("Che cosa sta mostrando il Campo adesso?");
-          push("Quale segnale recente merita attenzione?");
+          push(this.activeDomain === 'bitcoin-regime-lab' ? "Quale feedback esperto serve?" : "Quale segnale recente merita attenzione?");
           push("Cosa manca per migliorare il prossimo ciclo?");
         } else if (this.activeTab === 'grafo') {
           if (this.selectedNode) push("Spiega il nodo selezionato");
