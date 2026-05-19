@@ -182,6 +182,21 @@
       ],
       "shows": "Whether the request is admissible to first cycle.",
       "blocks": "Premature claim or copied reference result."
+    },
+    {
+      "module": "InefficiencyMap",
+      "placement": "center",
+      "observables": [
+        "daily_fvg_proxy_zone",
+        "fill_status",
+        "matched_adjacent_control",
+        "denominator_ready"
+      ],
+      "baseline_or_null": [
+        "adjacent_equal_width_zone_control"
+      ],
+      "shows": "Daily-computable BTC inefficiency candidates after method intake and field admissibility.",
+      "blocks": "Treating FVG zones as target, entry, exit, advice or trading signal."
     }
   ],
   "domain_boundary": null,

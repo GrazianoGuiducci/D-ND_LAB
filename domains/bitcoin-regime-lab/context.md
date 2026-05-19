@@ -272,3 +272,17 @@ e boundary `trading_signal=false`.
 
 Questa scheda e' il modo corretto per far parlare THIA con Alipio: raccoglie
 definizioni e critica utile, ma non modifica il seed e non promuove target.
+
+Il primo tool daily-computable per la chiusura di inefficienza usa solo OHLCV
+daily e produce zone/test/null, non segnali:
+
+```bash
+python3 domains/bitcoin-regime-lab/tools/btc_daily_inefficiency_candidate.py --write --json
+```
+
+Output atteso: JSON `dndlab.bitcoin.daily_inefficiency.v1` scritto in
+`data/bitcoin-regime-lab/value/`. Consuma `btc_exchange_ohlcv_latest.json`,
+costruisce una serie daily median across feed, rileva un proxy FVG a tre
+candele, valuta fill su finestra forward dichiarata e confronta ogni zona con
+un controllo adiacente di pari ampiezza. Il boundary resta
+`trading_signal=false`, `advice=false`, `price_target=false`.

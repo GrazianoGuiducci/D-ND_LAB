@@ -93,6 +93,11 @@
       "name": "btc_method_intake_card",
       "path": "tools/btc_method_intake_card.py",
       "boundary": "turns Alipio/Rea BTC method language into method cards, missing definitions, THIA questions and next-test contracts; public_claim=false; trading_signal=false; operational=false"
+    },
+    {
+      "name": "btc_daily_inefficiency_candidate",
+      "path": "tools/btc_daily_inefficiency_candidate.py",
+      "boundary": "consumes exchange OHLCV artifact and writes daily FVG/inefficiency proxy zones with matched adjacent controls; public_claim=false; trading_signal=false; operational=false"
     }
   ]
 }

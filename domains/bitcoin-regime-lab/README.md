@@ -78,3 +78,14 @@ python3 domains/bitcoin-regime-lab/tools/btc_method_intake_card.py --write --jso
 This turns POC, inefficiency, trendline, MM52 and timeframe language into
 missing definitions, THIA questions, data requirements and null/falsifier
 contracts. It is not a signal tool.
+
+Build the first daily-computable inefficiency candidate directly:
+
+```bash
+python3 domains/bitcoin-regime-lab/tools/btc_daily_inefficiency_candidate.py --write --json
+```
+
+This consumes `btc_exchange_ohlcv_latest.json`, creates a conservative daily
+three-candle FVG/inefficiency proxy, and compares each zone with a matched
+adjacent equal-width control. It is a test object for the Lab, not a target,
+entry, exit or trading signal.

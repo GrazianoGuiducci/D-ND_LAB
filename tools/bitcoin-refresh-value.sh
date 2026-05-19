@@ -26,5 +26,6 @@ echo "Python: $PYTHON_BIN"
 "$PYTHON_BIN" domains/bitcoin-regime-lab/tools/btc_first_hypothesis.py --write
 "$PYTHON_BIN" domains/bitcoin-regime-lab/tools/btc_timeframe_matrix.py --write
 "$PYTHON_BIN" domains/bitcoin-regime-lab/tools/btc_method_intake_card.py --write
+"$PYTHON_BIN" domains/bitcoin-regime-lab/tools/btc_daily_inefficiency_candidate.py --write
 
 echo "Completed: $(date -Iseconds)"

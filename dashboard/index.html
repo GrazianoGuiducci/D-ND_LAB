@@ -1475,6 +1475,57 @@
               </section>
             </template>
 
+            <template x-if="bitcoinDailyInefficiencyArtifact()">
+              <section class="mt-4 border border-amber-500/70 rounded-md p-4 bg-slate-950/40 shadow-[0_0_16px_rgba(245,158,11,.10)]">
+                <div class="flex items-start justify-between gap-3 flex-wrap mb-3">
+                  <div>
+                    <h3 class="text-sm font-medium text-amber-100">Inefficienza daily BTC</h3>
+                    <p class="text-xs text-slate-300 mt-1">Zone FVG daily e controlli adiacenti restano oggetti di test, non target.</p>
+                  </div>
+                  <button @click="selectBitcoinDailyInefficiencyLens()"
+                          class="text-[11px] font-mono px-2 py-1 rounded border border-amber-400/80 text-amber-100 hover:border-amber-100 cursor-pointer">
+                    apri test
+                  </button>
+                </div>
+                <div class="grid lg:grid-cols-[minmax(0,1fr)_minmax(260px,.38fr)] gap-3">
+                  <div>
+                    <div class="grid sm:grid-cols-4 gap-2 mb-3">
+                      <template x-for="row in bitcoinDailyInefficiencyStatRows()" :key="row.label">
+                        <button @click="selectBitcoinDailyInefficiencyLens()"
+                                class="text-left rounded border border-amber-500/50 bg-slate-950/60 p-3 hover:border-amber-200 transition cursor-pointer">
+                          <div class="text-[10px] uppercase tracking-wider text-slate-300" x-text="row.label"></div>
+                          <div class="text-lg font-mono mt-1" :class="row.tone" x-text="row.value"></div>
+                        </button>
+                      </template>
+                    </div>
+                    <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-2">
+                      <template x-for="zone in bitcoinDailyInefficiencyZones()" :key="zone.zone_id">
+                        <button @click="selectBitcoinDailyInefficiencyLens(zone)"
+                                class="text-left rounded border border-amber-500/50 bg-slate-950/60 p-3 hover:border-amber-200 transition cursor-pointer min-h-[142px]">
+                          <div class="flex items-center justify-between gap-2">
+                            <span class="text-[10px] font-mono text-amber-200 truncate" x-text="zone.event_date || 'date'"></span>
+                            <span class="text-[10px] uppercase tracking-wider"
+                                  :class="zone.fill?.filled ? 'text-green-300' : 'text-slate-300'"
+                                  x-text="zone.fill?.status || 'watch'"></span>
+                          </div>
+                          <div class="text-sm text-slate-100 mt-2 font-medium" x-text="bitcoinDailyInefficiencyZoneTitle(zone)"></div>
+                          <div class="text-xs text-slate-300 mt-2" x-text="bitcoinDailyInefficiencyZoneRange(zone)"></div>
+                          <div class="text-[11px] text-amber-200 mt-2" x-text="bitcoinDailyInefficiencyControlSummary(zone)"></div>
+                        </button>
+                      </template>
+                    </div>
+                  </div>
+                  <button @click="selectBitcoinDailyInefficiencyLens()"
+                          class="text-left rounded border border-purple-500/60 bg-purple-950/10 p-3 hover:border-purple-200 transition cursor-pointer">
+                    <div class="text-[10px] uppercase tracking-wider text-purple-200">Verdetto corrente</div>
+                    <div class="text-sm text-slate-100 mt-2" x-text="bitcoinDailyInefficiencyCard()?.verdict || 'watch'"></div>
+                    <div class="text-xs text-slate-300 mt-3" x-text="bitcoinDailyInefficiencyCard()?.evidence || ''"></div>
+                    <div class="text-[11px] text-amber-200 mt-3" x-text="bitcoinDailyInefficiencyCard()?.boundary || ''"></div>
+                  </button>
+                </div>
+              </section>
+            </template>
+
             <template x-if="bitcoinMethodIntakeArtifact()">
               <section class="mt-4 border border-cyan-500/80 rounded-md p-4 bg-slate-950/40 shadow-[0_0_16px_rgba(34,211,238,.16)]">
                 <div class="flex items-start justify-between gap-3 flex-wrap mb-3">
@@ -4766,6 +4817,98 @@
         if (Array.isArray(this.latestValueArtifacts?.artifacts)) all.push(...this.latestValueArtifacts.artifacts);
         return all.find(a => a?.schema === 'dndlab.bitcoin.method_intake.v1'
           || a?.payload?.schema === 'dndlab.bitcoin.method_intake.v1') || null;
+      },
+
+      bitcoinDailyInefficiencyArtifact() {
+        const all = [];
+        if (this.latestValueArtifacts?.latest) all.push(this.latestValueArtifacts.latest);
+        if (Array.isArray(this.latestValueArtifacts?.artifacts)) all.push(...this.latestValueArtifacts.artifacts);
+        return all.find(a => a?.schema === 'dndlab.bitcoin.daily_inefficiency.v1'
+          || a?.payload?.schema === 'dndlab.bitcoin.daily_inefficiency.v1') || null;
+      },
+
+      bitcoinDailyInefficiencyPayload() {
+        return this.bitcoinDailyInefficiencyArtifact()?.payload || {};
+      },
+
+      bitcoinDailyInefficiencyCard() {
+        const cards = this.bitcoinDailyInefficiencyPayload()?.cards;
+        return Array.isArray(cards) ? cards[0] || null : null;
+      },
+
+      bitcoinDailyInefficiencyZones() {
+        const zones = this.bitcoinDailyInefficiencyPayload()?.zones;
+        return Array.isArray(zones) ? zones : [];
+      },
+
+      bitcoinDailyInefficiencyControls() {
+        const controls = this.bitcoinDailyInefficiencyPayload()?.matched_controls;
+        return Array.isArray(controls) ? controls : [];
+      },
+
+      bitcoinDailyInefficiencyStatRows() {
+        const metrics = this.bitcoinDailyInefficiencyPayload()?.metrics || {};
+        return [
+          { label: 'zone', value: String(metrics.zones_total ?? 0), tone: 'text-amber-200' },
+          { label: 'evaluable', value: String(metrics.zones_evaluable ?? 0), tone: 'text-cyan-300' },
+          { label: 'fill', value: `${metrics.zone_fill_rate ?? 'n/a'}`, tone: 'text-green-300' },
+          { label: 'controllo', value: `${metrics.control_fill_rate ?? 'n/a'}`, tone: 'text-purple-300' },
+        ];
+      },
+
+      bitcoinDailyInefficiencyZoneTitle(zone) {
+        const direction = zone?.direction || 'zone';
+        const pct = zone?.width_pct_of_close ?? 'n/a';
+        return `${direction} · ${pct}% close`;
+      },
+
+      bitcoinDailyInefficiencyZoneRange(zone) {
+        return `${this.btcPriceLabel(zone?.lower)} -> ${this.btcPriceLabel(zone?.upper)} · width ${this.btcPriceLabel(zone?.width)}`;
+      },
+
+      bitcoinDailyInefficiencyControlFor(zone) {
+        return this.bitcoinDailyInefficiencyControls().find(c => c.matched_zone_id === zone?.zone_id) || null;
+      },
+
+      bitcoinDailyInefficiencyControlSummary(zone) {
+        const control = this.bitcoinDailyInefficiencyControlFor(zone);
+        if (!control) return 'control n/a';
+        return `control: ${control.fill?.status || 'n/a'} · ${this.btcPriceLabel(control.lower)} -> ${this.btcPriceLabel(control.upper)}`;
+      },
+
+      selectBitcoinDailyInefficiencyLens(zone = null) {
+        const artifact = this.bitcoinDailyInefficiencyArtifact();
+        if (!artifact) return;
+        const payload = artifact.payload || {};
+        const card = this.bitcoinDailyInefficiencyCard() || {};
+        const selected = zone || this.bitcoinDailyInefficiencyZones()[0] || {};
+        const control = selected.zone_id ? this.bitcoinDailyInefficiencyControlFor(selected) : null;
+        this.selectedNode = null;
+        this.selectedScopertaSsp = null;
+        this.selectedProdottoSsp = null;
+        this.selectedCampoLens = {
+          type: 'campo',
+          category: 'daily-inefficiency',
+          title: selected.zone_id ? this.bitcoinDailyInefficiencyZoneTitle(selected) : (card.title || 'Inefficienza daily BTC'),
+          subtitle: selected.fill?.status || card.decision || 'watch',
+          schema: payload.schema || artifact.schema || 'dndlab.bitcoin.daily_inefficiency.v1',
+          date: payload.generated_at || artifact.generated_at || artifact.mtime,
+          evidence: selected.zone_id
+            ? `${selected.zone_id}: ${this.bitcoinDailyInefficiencyZoneRange(selected)} · fill ${selected.fill?.status || 'n/a'}`
+            : card.evidence || 'Artifact non sintetizzato.',
+          boundary: card.boundary || (
+            payload.boundary?.trading_signal === false
+              ? 'No trading signal: zone e controlli sono oggetti di test, non target.'
+              : 'Boundary non dichiarato.'
+          ),
+          meta: [
+            selected.event_date ? `event: ${selected.event_date}` : null,
+            selected.direction ? `direction: ${selected.direction}` : null,
+            control ? `control: ${control.fill?.status || 'n/a'}` : null,
+            payload.metrics?.denominator_ready === false ? 'denominator: low' : null,
+          ].filter(Boolean).join(' · '),
+        };
+        this.activeTab = 'campo';
       },
 
       bitcoinMethodCards() {
