@@ -123,6 +123,13 @@ def _control_zone(lower: float, upper: float, direction: str) -> tuple[float, fl
     return upper, upper + width
 
 
+def _opposite_control_zone(lower: float, upper: float, direction: str) -> tuple[float, float]:
+    width = upper - lower
+    if direction == "bullish":
+        return upper, upper + width
+    return lower - width, lower
+
+
 def build_daily_inefficiency_candidate(
     *,
     input_path: Path = EXCHANGE_LATEST,
@@ -141,6 +148,7 @@ def build_daily_inefficiency_candidate(
 
     zones: list[dict[str, Any]] = []
     controls: list[dict[str, Any]] = []
+    strict_controls: list[dict[str, Any]] = []
     for index in range(2, len(candles)):
         prev2 = candles[index - 2]
         current = candles[index]
@@ -185,6 +193,17 @@ def build_daily_inefficiency_candidate(
             fill_threshold=fill_threshold,
             rule=fill_rule,
         )
+        opposite_control_lower, opposite_control_upper = _opposite_control_zone(lower, upper, direction)
+        opposite_control_fill = _zone_fill(
+            candles=candles,
+            start_index=index,
+            lower=opposite_control_lower,
+            upper=opposite_control_upper,
+            direction=direction,
+            forward_window=forward_window,
+            fill_threshold=fill_threshold,
+            rule=fill_rule,
+        )
         zone_id = f"btc_daily_fvg_{current['date']}_{direction}"
         zones.append({
             "zone_id": zone_id,
@@ -208,24 +227,69 @@ def build_daily_inefficiency_candidate(
             "fill": control_fill,
             "null": "adjacent_equal_width_zone_control",
         })
+        strict_filled = bool(control_fill["filled"] or opposite_control_fill["filled"])
+        strict_controls.append({
+            "zone_id": f"{zone_id}_strict_control",
+            "matched_zone_id": zone_id,
+            "direction": direction,
+            "event_date": current["date"],
+            "primary_adjacent": {
+                "lower": round(control_lower, 2),
+                "upper": round(control_upper, 2),
+                "width": round(width, 2),
+                "fill": control_fill,
+            },
+            "opposite_adjacent": {
+                "lower": round(opposite_control_lower, 2),
+                "upper": round(opposite_control_upper, 2),
+                "width": round(width, 2),
+                "fill": opposite_control_fill,
+            },
+            "fill": {
+                "status": "filled" if strict_filled else (
+                    "pending"
+                    if control_fill["status"] == "pending" or opposite_control_fill["status"] == "pending"
+                    else "unfilled"
+                ),
+                "filled": strict_filled,
+                "primary_filled": bool(control_fill["filled"]),
+                "opposite_filled": bool(opposite_control_fill["filled"]),
+            },
+            "null": "strict_dual_adjacent_equal_width_control",
+        })
 
     evaluable_zones = [z for z in zones if z["fill"]["status"] != "pending"]
     evaluable_controls = [c for c in controls if c["fill"]["status"] != "pending"]
+    evaluable_strict_controls = [c for c in strict_controls if c["fill"]["status"] != "pending"]
     filled_zones = [z for z in evaluable_zones if z["fill"]["filled"]]
     filled_controls = [c for c in evaluable_controls if c["fill"]["filled"]]
+    filled_strict_controls = [c for c in evaluable_strict_controls if c["fill"]["filled"]]
     pending_zones = [z for z in zones if z["fill"]["status"] == "pending"]
 
     zone_rate = (len(filled_zones) / len(evaluable_zones)) if evaluable_zones else None
     control_rate = (len(filled_controls) / len(evaluable_controls)) if evaluable_controls else None
-    enough_denominator = len(evaluable_zones) >= 5 and len(evaluable_controls) >= 5
+    strict_control_rate = (
+        len(filled_strict_controls) / len(evaluable_strict_controls)
+    ) if evaluable_strict_controls else None
+    enough_denominator = (
+        len(evaluable_zones) >= 5
+        and len(evaluable_controls) >= 5
+        and len(evaluable_strict_controls) >= 5
+    )
     if not zones:
         decision = "watch"
         verdict = "NO_DAILY_INEFFICIENCY_CANDIDATES"
         next_test = "Refresh data or lower no threshold only after declaring why; do not infer from no event."
+    elif enough_denominator and (
+        strict_control_rate is None or zone_rate is None or zone_rate <= strict_control_rate
+    ):
+        decision = "watch"
+        verdict = "DAILY_INEFFICIENCY_PROXY_STRICT_NULL_NOT_BEATEN"
+        next_test = "Tighten the method definition or test a different null before any cycle review."
     elif enough_denominator:
         decision = "test"
         verdict = "DAILY_INEFFICIENCY_PROXY_READY_FOR_CYCLE_REVIEW"
-        next_test = "Run a cognitive cycle only to review this proxy against its matched null and falsifiers."
+        next_test = "Run a cognitive cycle only to review this proxy against matched and strict nulls."
     else:
         decision = "watch"
         verdict = "DAILY_INEFFICIENCY_PROXY_DENOMINATOR_LOW"
@@ -264,11 +328,13 @@ def build_daily_inefficiency_candidate(
                 "evidence": (
                     f"{len(zones)} zones found, {len(evaluable_zones)} evaluable, "
                     f"{len(filled_zones)} filled; matched controls filled "
-                    f"{len(filled_controls)} of {len(evaluable_controls)}."
+                    f"{len(filled_controls)} of {len(evaluable_controls)}; "
+                    f"strict dual-adjacent controls filled {len(filled_strict_controls)} "
+                    f"of {len(evaluable_strict_controls)}."
                 ),
                 "baseline": "No inefficiency rule is the baseline: do not infer direction from candles alone.",
-                "null": "adjacent_equal_width_zone_control with the same event date, width and forward window.",
-                "falsifier": "If matched controls fill at the same or higher rate, downgrade the proxy as non-informative.",
+                "null": "adjacent_equal_width_zone_control and strict dual-adjacent equal-width control with the same event date and forward window.",
+                "falsifier": "If matched or strict dual-adjacent controls fill at the same or higher rate, downgrade the proxy as non-informative.",
                 "boundary": "No trading signal: zones are test objects, not targets, entries, exits or advice.",
                 "next_test": next_test,
             }
@@ -283,12 +349,16 @@ def build_daily_inefficiency_candidate(
             "zones_filled": len(filled_zones),
             "controls_evaluable": len(evaluable_controls),
             "controls_filled": len(filled_controls),
+            "strict_controls_evaluable": len(evaluable_strict_controls),
+            "strict_controls_filled": len(filled_strict_controls),
             "zone_fill_rate": round(zone_rate, 4) if zone_rate is not None else None,
             "control_fill_rate": round(control_rate, 4) if control_rate is not None else None,
+            "strict_control_fill_rate": round(strict_control_rate, 4) if strict_control_rate is not None else None,
             "denominator_ready": enough_denominator,
         },
         "zones": zones,
         "matched_controls": controls,
+        "strict_controls": strict_controls,
         "boundary": {
             "public_claim": False,
             "trading_signal": False,

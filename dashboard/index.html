@@ -4973,7 +4973,7 @@
           { label: 'zone', value: String(metrics.zones_total ?? 0), tone: 'text-amber-200' },
           { label: 'valide', value: String(metrics.zones_evaluable ?? 0), tone: 'text-cyan-300' },
           { label: 'fill', value: `${metrics.zone_fill_rate ?? 'n/a'}`, tone: 'text-green-300' },
-          { label: 'controllo', value: `${metrics.control_fill_rate ?? 'n/a'}`, tone: 'text-purple-300' },
+          { label: 'null severo', value: `${metrics.strict_control_fill_rate ?? metrics.control_fill_rate ?? 'n/a'}`, tone: 'text-purple-300' },
         ];
       },
 
@@ -4981,7 +4981,11 @@
         const metrics = this.bitcoinDailyInefficiencyPayload()?.metrics || {};
         const zoneRate = metrics.zone_fill_rate;
         const controlRate = metrics.control_fill_rate;
+        const strictRate = metrics.strict_control_fill_rate;
         const denomReady = metrics.denominator_ready === true;
+        if (strictRate !== undefined && zoneRate !== undefined && zoneRate <= strictRate) {
+          return `Watch-only: fill ${zoneRate} non batte il null severo ${strictRate}; resta oggetto di metodo, non segnale.`;
+        }
         if (zoneRate !== undefined && controlRate !== undefined && zoneRate === controlRate) {
           return `Watch-only: fill ${zoneRate} uguale al controllo ${controlRate}; non c'e' vantaggio sul null. Denominatore ${denomReady ? 'pronto' : 'basso'}.`;
         }
@@ -4995,6 +4999,9 @@
         const verdict = this.bitcoinDailyInefficiencyCard()?.verdict || 'watch';
         if (verdict === 'DAILY_INEFFICIENCY_PROXY_DENOMINATOR_LOW') {
           return 'WATCH ONLY - DENOMINATORE BASSO';
+        }
+        if (verdict === 'DAILY_INEFFICIENCY_PROXY_STRICT_NULL_NOT_BEATEN') {
+          return 'WATCH ONLY - NULL SEVERO NON BATTUTO';
         }
         return verdict;
       },
@@ -5034,6 +5041,13 @@
           value: `${metrics.zone_fill_rate ?? 'n/a'} zone vs ${metrics.control_fill_rate ?? 'n/a'} controllo`,
           note: card.null || 'Confronto con controllo adiacente di pari ampiezza.',
         });
+        if (metrics.strict_control_fill_rate !== undefined) {
+          rows.push({
+            label: 'Null severo',
+            value: `${metrics.zone_fill_rate ?? 'n/a'} zone vs ${metrics.strict_control_fill_rate} severo`,
+            note: `${metrics.strict_controls_filled ?? 0}/${metrics.strict_controls_evaluable ?? 0} controlli dual-adjacent filled; se pareggia o supera il proxy, il metodo resta watch.`,
+          });
+        }
         rows.push({
           label: 'Denominatore',
           value: metrics.denominator_ready === true ? 'pronto' : 'basso',
