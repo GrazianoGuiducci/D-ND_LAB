@@ -246,6 +246,7 @@ async def _check_auth(request: Request) -> None:
         or request.url.path.endswith("/chat")
         or request.url.path.endswith("/contributions")
         or request.url.path.endswith("/expert_image_intake")
+        or request.url.path.endswith("/expert_file_intake")
         or request.url.path.endswith("/leads")
     ):
         return  # demo: read-only access without auth, including chat
@@ -3392,6 +3393,7 @@ async def chat_endpoint(domain: str, body: ChatRequest, request: Request) -> dic
 # ─── Contribution intake (public registry + preport) ───────────────
 
 
+@app.post("/api/domains/{domain}/expert_file_intake")
 @app.post("/api/domains/{domain}/expert_image_intake")
 async def submit_expert_image_intake(
     domain: str,
@@ -3408,11 +3410,11 @@ async def submit_expert_image_intake(
     _validate_domain(domain)
     _check_public_intake_rate(request)
     if not body.images:
-        raise HTTPException(400, "At least one image is required.")
+        raise HTTPException(400, "At least one file is required.")
     if len(body.images) > 6:
-        raise HTTPException(400, "Too many images; upload at most 6.")
+        raise HTTPException(400, "Too many files; upload at most 6.")
 
-    intake_id = f"imgintake_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}"
+    intake_id = f"fileintake_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}"
     stored = _write_expert_image_intake(domain, intake_id, body)
     return {
         "ok": True,
@@ -3420,14 +3422,16 @@ async def submit_expert_image_intake(
         "domain": domain,
         "created_at": stored["created_at"],
         "images": stored["images"],
+        "files": stored["images"],
         "manifest": stored["manifest"],
         "boundary": (
-            "Expert image intake captured only. No trading signal, seed write, "
+            "Expert file intake captured only. No trading signal, seed write, "
             "cycle run, or automatic promotion has been executed."
         ),
     }
 
 
+@app.get("/api/domains/{domain}/expert_file_intake/{intake_id}/files/{filename}")
 @app.get("/api/domains/{domain}/expert_image_intake/{intake_id}/files/{filename}")
 async def read_expert_image_intake_file(
     domain: str,
@@ -3437,14 +3441,17 @@ async def read_expert_image_intake_file(
 ) -> FileResponse:
     await _check_auth(request)
     _validate_domain(domain)
-    if not re.fullmatch(r"imgintake_\d{8}_\d{6}_[a-f0-9]{8}", intake_id):
+    if not re.fullmatch(r"(?:img|file)intake_\d{8}_\d{6}_[a-f0-9]{8}", intake_id):
         raise HTTPException(400, "Invalid intake id.")
     safe_name = _safe_image_filename(filename)
     if safe_name != filename:
         raise HTTPException(400, "Invalid filename.")
-    fp = paths.domain_data_dir(domain) / "contributions" / "expert_images" / intake_id / safe_name
+    base = paths.domain_data_dir(domain) / "contributions"
+    fp = base / "expert_files" / intake_id / safe_name
+    if not fp.exists():
+        fp = base / "expert_images" / intake_id / safe_name
     if not fp.exists() or not fp.is_file():
-        raise HTTPException(404, "Image not found.")
+        raise HTTPException(404, "File not found.")
     return FileResponse(fp)
 
 
@@ -4584,14 +4591,19 @@ def _read_jsonl(path: Path, limit: int) -> list[dict[str, Any]]:
 
 
 def _safe_image_filename(value: Any) -> str:
-    raw = Path(str(value or "image")).name
+    raw = Path(str(value or "file")).name
     raw = re.sub(r"[^A-Za-z0-9._-]+", "_", raw).strip("._")
     if not raw:
-        raw = "image"
+        raw = "file"
     stem = raw[:90]
     ext = Path(stem).suffix.lower()
-    if ext not in {".png", ".jpg", ".jpeg", ".webp", ".gif"}:
-        stem = Path(stem).stem[:80] + ".png"
+    allowed_ext = {
+        ".png", ".jpg", ".jpeg", ".webp", ".gif",
+        ".pdf", ".txt", ".md", ".csv", ".json", ".jsonl",
+        ".tsv", ".yaml", ".yml",
+    }
+    if ext not in allowed_ext:
+        stem = Path(stem).stem[:80] + ".bin"
     return stem
 
 
@@ -4604,28 +4616,37 @@ def _decode_image_payload(item: ExpertImageItem) -> tuple[bytes, str]:
         if m:
             mime = m.group(1).lower()
         data = encoded
-    allowed = {"image/png", "image/jpeg", "image/webp", "image/gif"}
+    allowed = {
+        "image/png", "image/jpeg", "image/webp", "image/gif",
+        "application/pdf", "text/plain", "text/markdown", "text/csv",
+        "application/json", "application/x-ndjson",
+        "application/yaml", "text/yaml",
+    }
     if mime not in allowed:
-        raise HTTPException(400, f"Unsupported image type: {mime or 'unknown'}")
+        raise HTTPException(400, f"Unsupported file type: {mime or 'unknown'}")
     try:
         raw = base64.b64decode(data, validate=True)
     except (binascii.Error, ValueError) as exc:
         raise HTTPException(400, "Invalid base64 image payload.") from exc
     if not raw:
-        raise HTTPException(400, "Empty image payload.")
-    if len(raw) > 8 * 1024 * 1024:
-        raise HTTPException(400, "Image too large; limit is 8 MB per file.")
+        raise HTTPException(400, "Empty file payload.")
+    if len(raw) > 24 * 1024 * 1024:
+        raise HTTPException(400, "File too large; limit is 24 MB per file.")
     return raw, mime
 
 
 def _write_expert_image_intake(domain: str, intake_id: str, body: ExpertImageIntakeRequest) -> dict[str, Any]:
     created_at = datetime.now(timezone.utc).isoformat()
-    base = paths.domain_data_dir(domain) / "contributions" / "expert_images" / intake_id
+    base = paths.domain_data_dir(domain) / "contributions" / "expert_files" / intake_id
     base.mkdir(parents=True, exist_ok=True)
     images: list[dict[str, Any]] = []
     seen: set[str] = set()
+    total_bytes = 0
     for idx, item in enumerate(body.images[:6], start=1):
         raw, mime = _decode_image_payload(item)
+        total_bytes += len(raw)
+        if total_bytes > 40 * 1024 * 1024:
+            raise HTTPException(400, "Upload too large; limit is 40 MB total.")
         safe_name = _safe_image_filename(item.filename)
         if safe_name in seen:
             p = Path(safe_name)
@@ -4636,15 +4657,16 @@ def _write_expert_image_intake(domain: str, intake_id: str, body: ExpertImageInt
         images.append({
             "filename": safe_name,
             "mime": mime,
+            "kind": "image" if mime.startswith("image/") else "document",
             "bytes": len(raw),
             "sha256": digest,
-            "url": f"/api/domains/{domain}/expert_image_intake/{intake_id}/files/{safe_name}",
+            "url": f"/api/domains/{domain}/expert_file_intake/{intake_id}/files/{safe_name}",
         })
     record = {
         "id": intake_id,
         "created_at": created_at,
         "domain": domain,
-        "source_type": "expert_image_intake",
+        "source_type": "expert_file_intake",
         "expert_name": _clean_public_text(body.expert_name or "", 160),
         "note": _clean_public_text(body.note, 2000),
         "context_tab": _clean_public_text(body.context_tab, 60),
@@ -4655,7 +4677,7 @@ def _write_expert_image_intake(domain: str, intake_id: str, body: ExpertImageInt
     manifest = base / "manifest.json"
     manifest.write_text(json.dumps(record, indent=2, ensure_ascii=False), encoding="utf-8")
     (base / "README.md").write_text(_render_expert_image_intake(record), encoding="utf-8")
-    registry = paths.domain_data_dir(domain) / "contributions" / "expert_images" / "registry.jsonl"
+    registry = paths.domain_data_dir(domain) / "contributions" / "expert_files" / "registry.jsonl"
     registry.parent.mkdir(parents=True, exist_ok=True)
     with registry.open("a", encoding="utf-8") as f:
         f.write(json.dumps(record, ensure_ascii=False) + "\n")
@@ -4665,7 +4687,7 @@ def _write_expert_image_intake(domain: str, intake_id: str, body: ExpertImageInt
 
 def _render_expert_image_intake(record: dict[str, Any]) -> str:
     lines = [
-        f"# Expert image intake {record.get('id')}",
+        f"# Expert file intake {record.get('id')}",
         "",
         f"- created_at: {record.get('created_at')}",
         f"- domain: {record.get('domain')}",
@@ -4677,7 +4699,7 @@ def _render_expert_image_intake(record: dict[str, Any]) -> str:
         "",
         record.get("note") or "n/a",
         "",
-        "## Images",
+        "## Files",
         "",
     ]
     for img in record.get("images") or []:

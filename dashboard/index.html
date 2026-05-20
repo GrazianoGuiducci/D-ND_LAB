@@ -1825,15 +1825,15 @@
                       </template>
                     </div>
                     <div class="mt-3 rounded border border-green-400/70 bg-green-950/10 p-3">
-                      <div class="text-[10px] uppercase tracking-wider text-green-200">Intake immagini esperto</div>
-                      <p class="mt-1 text-xs text-slate-300">Carica screenshot/annotazioni BTC: THIA riceve contesto, note e link ai file salvati.</p>
+                      <div class="text-[10px] uppercase tracking-wider text-green-200">Intake file esperto</div>
+                      <p class="mt-1 text-xs text-slate-300">Carica screenshot, PDF, note o dati BTC: THIA riceve contesto, nota e link ai file salvati.</p>
                       <textarea x-model="expertImageIntake.note"
                                 class="mt-2 w-full min-h-[64px] rounded border border-slate-700 bg-slate-950/70 px-2 py-2 text-xs text-slate-100 placeholder:text-slate-500 focus:border-green-400 focus:outline-none"
                                 placeholder="Nota per THIA: cosa deve guardare nelle immagini?"></textarea>
                       <div class="mt-2 flex items-center gap-2 flex-wrap">
                         <label class="thia-ask-btn cursor-pointer">
-                          scegli immagini
-                          <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple class="hidden"
+                          scegli file
+                          <input type="file" accept="image/png,image/jpeg,image/webp,image/gif,application/pdf,text/plain,text/markdown,text/csv,application/json,.md,.txt,.csv,.json,.jsonl,.pdf,.yaml,.yml" multiple class="hidden"
                                  @change="setExpertImageFiles($event)">
                         </label>
                         <button @click="submitExpertImageIntake()"
@@ -5749,17 +5749,20 @@
       },
 
       setExpertImageFiles(ev) {
-        const files = Array.from(ev?.target?.files || []).filter((f) => f && f.type?.startsWith('image/')).slice(0, 6);
+        const allowedExt = /\.(png|jpe?g|webp|gif|pdf|txt|md|csv|json|jsonl|ya?ml)$/i;
+        const files = Array.from(ev?.target?.files || [])
+          .filter((f) => f && (f.type?.startsWith('image/') || f.type === 'application/pdf' || f.type?.startsWith('text/') || f.type === 'application/json' || allowedExt.test(f.name || '')))
+          .slice(0, 6);
         this.expertImageIntake.files = files;
         this.expertImageIntake.error = false;
         this.expertImageIntake.status = files.length
-          ? `${files.length} immagine/i pronte. Aggiungi una nota e invia a THIA.`
-          : 'Nessuna immagine valida selezionata.';
+          ? `${files.length} file pronti. Aggiungi una nota e invia a THIA.`
+          : 'Nessun file valido selezionato.';
       },
 
       expertImageFileSummary() {
         const files = this.expertImageIntake.files || [];
-        if (!files.length) return 'Nessuna immagine selezionata. Formati: PNG, JPG, WEBP, GIF. Max 6 file.';
+        if (!files.length) return 'Nessun file selezionato. Formati: immagini, PDF, TXT, MD, CSV, JSON/YAML. Max 6 file.';
         return files.map((f) => `${f.name} · ${(f.size / 1024 / 1024).toFixed(2)} MB`).join(' | ');
       },
 
@@ -5774,8 +5777,8 @@
 
       async imageToUploadPayload(file) {
         const original = await this.fileToDataUrl(file);
-        if (file.type === 'image/gif' || file.size < 900 * 1024) {
-          return { filename: file.name, mime: file.type || 'image/png', data: original };
+        if (!file.type?.startsWith('image/') || file.type === 'image/gif' || file.size < 900 * 1024) {
+          return { filename: file.name, mime: file.type || this.mimeFromFilename(file.name), data: original };
         }
         return new Promise((resolve) => {
           const img = new Image();
@@ -5806,11 +5809,21 @@
         });
       },
 
+      mimeFromFilename(name) {
+        const lower = String(name || '').toLowerCase();
+        if (lower.endsWith('.pdf')) return 'application/pdf';
+        if (lower.endsWith('.md')) return 'text/markdown';
+        if (lower.endsWith('.csv')) return 'text/csv';
+        if (lower.endsWith('.json') || lower.endsWith('.jsonl')) return 'application/json';
+        if (lower.endsWith('.yaml') || lower.endsWith('.yml')) return 'application/yaml';
+        return 'text/plain';
+      },
+
       async submitExpertImageIntake() {
         if (!this.activeDomain || this.expertImageIntake.uploading) return;
         const files = this.expertImageIntake.files || [];
         if (!files.length) {
-          this.expertImageIntake.status = 'Seleziona almeno una immagine.';
+          this.expertImageIntake.status = 'Seleziona almeno un file.';
           this.expertImageIntake.error = true;
           return;
         }
@@ -5822,10 +5835,10 @@
         }
         this.expertImageIntake.uploading = true;
         this.expertImageIntake.error = false;
-        this.expertImageIntake.status = 'Ottimizzo e carico le immagini...';
+        this.expertImageIntake.status = 'Ottimizzo e carico i file...';
         try {
           const images = await Promise.all(files.map((file) => this.imageToUploadPayload(file)));
-          const resp = await fetch(`/api/domains/${this.activeDomain}/expert_image_intake`, {
+          const resp = await fetch(`/api/domains/${this.activeDomain}/expert_file_intake`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -5841,22 +5854,23 @@
             throw new Error(data.detail || resp.statusText || 'upload failed');
           }
           this.expertImageIntake.last = data;
-          this.expertImageIntake.status = `Intake ${data.id} salvato: ${data.images?.length || 0} immagini. THIA riceve il contesto.`;
+          this.expertImageIntake.status = `Intake ${data.id} salvato: ${data.files?.length || data.images?.length || 0} file. THIA riceve il contesto.`;
+          const files = data.files || data.images || [];
           this.sendThiaAsk({
             domain: this.activeDomain,
             tab: this.activeTab || 'campo',
-            element: 'Alipio BTC visual image intake',
-            value: `${data.images?.length || 0} immagini caricate · ${data.id}`,
-            interpretation: 'Le immagini sono materiale esperto da usare come contesto di discussione, non come segnale automatico.',
+            element: 'Alipio BTC expert file intake',
+            value: `${files.length} file caricati · ${data.id}`,
+            interpretation: 'I file sono materiale esperto da usare come contesto di discussione, non come segnale automatico.',
             dynamics: 'THIA deve aiutare a estrarre oggetti testabili: FVG/imbalance, LVN/Volume Profile, CME gap, POC, timeframe, regole di chiusura e falsificatori.',
-            result: (data.images || []).map((img) => `${img.filename}: ${img.url}`).join(' | '),
-            prompt: `Alipio ha caricato ${data.images?.length || 0} immagini BTC nel Lab. Usa la nota e i link per guidare il feedback esperto senza trasformarlo automaticamente in segnale. Nota: ${this.expertImageIntake.note || 'nessuna nota'}`,
+            result: files.map((item) => `${item.filename}: ${item.url}`).join(' | '),
+            prompt: `Alipio ha caricato ${files.length} file BTC nel Lab. Usa la nota e i link per guidare il feedback esperto senza trasformarlo automaticamente in segnale. Nota: ${this.expertImageIntake.note || 'nessuna nota'}`,
             canonicalQuestions: [
               'Quale oggetto tecnico mostra ogni immagine: FVG, LVN/Volume Profile, CME gap, POC, trendline o MM52?',
               'Quale fonte/timeframe/finestra rende l osservazione testabile?',
               'Quale regola di chiusura, invalidazione e null severo servono prima del prossimo cycle?',
             ],
-            attachments: data.images || [],
+            attachments: files,
             manifest: data.manifest,
           });
         } catch (err) {
