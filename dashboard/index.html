@@ -5855,22 +5855,22 @@
           }
           this.expertImageIntake.last = data;
           this.expertImageIntake.status = `Intake ${data.id} salvato: ${data.files?.length || data.images?.length || 0} file. THIA riceve il contesto.`;
-          const files = data.files || data.images || [];
+          const uploadedFiles = data.files || data.images || [];
           this.sendThiaAsk({
             domain: this.activeDomain,
             tab: this.activeTab || 'campo',
             element: 'Alipio BTC expert file intake',
-            value: `${files.length} file caricati · ${data.id}`,
+            value: `${uploadedFiles.length} file caricati · ${data.id}`,
             interpretation: 'I file sono materiale esperto da usare come contesto di discussione, non come segnale automatico.',
             dynamics: 'THIA deve aiutare a estrarre oggetti testabili: FVG/imbalance, LVN/Volume Profile, CME gap, POC, timeframe, regole di chiusura e falsificatori.',
-            result: files.map((item) => `${item.filename}: ${item.url}`).join(' | '),
-            prompt: `Alipio ha caricato ${files.length} file BTC nel Lab. Usa la nota e i link per guidare il feedback esperto senza trasformarlo automaticamente in segnale. Nota: ${this.expertImageIntake.note || 'nessuna nota'}`,
+            result: uploadedFiles.map((item) => `${item.filename}: ${item.url}`).join(' | '),
+            prompt: `Alipio ha caricato ${uploadedFiles.length} file BTC nel Lab. Usa la nota e i link per guidare il feedback esperto senza trasformarlo automaticamente in segnale. Nota: ${this.expertImageIntake.note || 'nessuna nota'}`,
             canonicalQuestions: [
               'Quale oggetto tecnico mostra ogni immagine: FVG, LVN/Volume Profile, CME gap, POC, trendline o MM52?',
               'Quale fonte/timeframe/finestra rende l osservazione testabile?',
               'Quale regola di chiusura, invalidazione e null severo servono prima del prossimo cycle?',
             ],
-            attachments: files,
+            attachments: uploadedFiles,
             manifest: data.manifest,
           });
         } catch (err) {
