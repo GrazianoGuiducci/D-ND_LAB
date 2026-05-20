@@ -837,9 +837,7 @@
       left: 0;
       top: calc(100% + 8px);
       z-index: 80;
-      width: min(720px, calc(100vw - 32px));
-      max-height: min(72vh, 620px);
-      overflow: auto;
+      width: min(980px, calc(100vw - 32px));
       background:
         linear-gradient(180deg, rgba(34,211,238,.08), rgba(167,139,250,.05)),
         rgb(15 23 42);
@@ -850,24 +848,30 @@
     }
     .tab-map-grid {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 10px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
       margin-top: 10px;
     }
     .tab-map-card {
       border: 1px solid rgb(var(--neon-cyan) / 0.26);
       background: rgb(2 6 23 / 0.45);
       border-radius: 8px;
-      padding: 10px;
-      min-height: 132px;
+      padding: 9px;
+      min-height: 108px;
       display: flex;
       flex-direction: column;
-      gap: 7px;
+      gap: 5px;
     }
     .tab-map-card.active { border-color: rgb(57 255 20 / 0.72); box-shadow: inset 0 0 0 1px rgb(57 255 20 / 0.16); }
-    .tab-map-title { color: rgb(248 250 252); font-size: 0.9rem; font-weight: 600; }
-    .tab-map-body { color: rgb(203 213 225); font-size: 0.78rem; line-height: 1.42; flex: 1; }
-    .tab-map-logic { color: rgb(148 163 184); font-size: 0.72rem; line-height: 1.35; }
+    .tab-map-title { color: rgb(248 250 252); font-size: 0.84rem; font-weight: 600; }
+    .tab-map-body { color: rgb(203 213 225); font-size: 0.73rem; line-height: 1.32; flex: 1; }
+    .tab-map-logic { color: rgb(148 163 184); font-size: 0.68rem; line-height: 1.25; }
+    .tab-map-open { padding: 4px 8px; font-size: 0.72rem; }
+    @media (max-width: 1536px) {
+      .tab-map-panel { width: min(820px, calc(100vw - 32px)); }
+      .tab-map-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .tab-map-card { min-height: 104px; }
+    }
     @media (max-width: 1280px) { .tab-map-shell { display: none !important; } }
 
     /* Dashboard top navigation.
