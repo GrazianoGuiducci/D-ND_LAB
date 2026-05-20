@@ -796,6 +796,35 @@
     .detail-card { padding: 10px; background: rgba(0,0,0,.22); border-radius: 6px; border: 1px solid rgb(var(--neon-cyan) / 0.54); box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.05), 0 0 14px rgb(var(--neon-cyan) / 0.10); }
     .detail-action { display: block; width: 100%; text-align: left; font-size: 12px; padding: 6px 10px; border-radius: 4px; background: rgb(30 41 59); transition: background 0.15s, border-color 0.15s, box-shadow 0.15s; cursor: pointer; border: 1px solid rgb(var(--neon-cyan) / 0.36); }
     .detail-action:hover { background: rgb(51 65 85); border-color: rgb(var(--neon-cyan)); box-shadow: 0 0 18px rgb(var(--neon-cyan) / 0.18); }
+    .thia-ask-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 24px;
+      padding: 4px 9px;
+      border-radius: 5px;
+      border: 1px solid rgba(57, 255, 20, .9);
+      background: rgba(57, 255, 20, .13);
+      color: rgb(190 255 178);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 11px;
+      line-height: 1;
+      white-space: nowrap;
+      cursor: pointer;
+      box-shadow: 0 0 14px rgba(57, 255, 20, .28), inset 0 0 10px rgba(57, 255, 20, .08);
+      transition: background .15s, border-color .15s, color .15s, box-shadow .15s;
+    }
+    .thia-ask-btn:hover {
+      border-color: rgb(57, 255, 20);
+      background: rgba(57, 255, 20, .22);
+      color: #ffffff;
+      box-shadow: 0 0 22px rgba(57, 255, 20, .46), inset 0 0 12px rgba(57, 255, 20, .12);
+    }
+    .thia-ask-btn.compact {
+      min-height: 20px;
+      padding: 3px 7px;
+      font-size: 10px;
+    }
 
     /* Tab GRAFO container — prima era inline nel dashboard, ora dentro tab pane.
        Resize a viewport visibile per evitare clip nei layout ristretti. */
@@ -1537,7 +1566,7 @@
                       <span x-text="bitcoinDailyInefficiencyZoneSummary()"></span>
                       <div class="flex items-center gap-3">
                         <button @click="askThiaAboutBtcPoint('strict-null')"
-                                class="font-mono text-green-200 hover:text-green-100 cursor-pointer">
+                                class="thia-ask-btn compact">
                           chiedi THIA
                         </button>
                         <button @click="selectBitcoinDailyInefficiencyLens()"
@@ -1583,7 +1612,7 @@
                   </div>
                   <div class="flex items-center gap-2 flex-wrap">
                     <button @click="askThiaAboutBtcPoint('method-intake')"
-                            class="text-[11px] font-mono px-2 py-1 rounded border border-green-500/80 text-green-100 hover:border-green-200 cursor-pointer">
+                            class="thia-ask-btn">
                       chiedi THIA
                     </button>
                     <button @click="selectBitcoinMethodLens()"
@@ -1698,7 +1727,7 @@
                       full-page
                     </button>
                     <button @click="askThiaAboutBtcPoint('chart')"
-                            class="px-2 py-1 rounded text-[11px] font-mono border border-green-500/70 bg-green-950/20 text-green-100 hover:border-green-300 cursor-pointer">
+                            class="thia-ask-btn">
                       chiedi THIA
                     </button>
                   </div>
@@ -2783,7 +2812,7 @@
                           <div class="uppercase tracking-wider text-slate-500" x-text="row.label"></div>
                           <button x-show="String(row.label || '').toLowerCase().includes('null severo')"
                                   @click.stop="askThiaAboutBtcPoint('strict-null')"
-                                  class="text-[10px] font-mono text-green-200 hover:text-green-100 cursor-pointer">
+                                  class="thia-ask-btn compact">
                             chiedi THIA
                           </button>
                         </div>
