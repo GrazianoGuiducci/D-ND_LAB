@@ -792,8 +792,7 @@
       gap: 8px;
       margin-top: 12px;
     }
-    .tab-preview-actions button,
-    .tab-map-open {
+    .tab-preview-actions button {
       border: 1px solid rgb(57 255 20 / 0.8);
       background: rgb(57 255 20 / 0.12);
       color: rgb(220 255 218);
@@ -803,8 +802,7 @@
       font-weight: 700;
       transition: border-color 120ms ease, background 120ms ease, color 120ms ease;
     }
-    .tab-preview-actions button:hover,
-    .tab-map-open:hover {
+    .tab-preview-actions button:hover {
       background: rgb(57 255 20 / 0.2);
       color: white;
     }
@@ -853,6 +851,9 @@
       margin-top: 10px;
     }
     .tab-map-card {
+      appearance: none;
+      width: 100%;
+      text-align: left;
       border: 1px solid rgb(var(--neon-cyan) / 0.26);
       background: rgb(2 6 23 / 0.45);
       border-radius: 8px;
@@ -861,12 +862,18 @@
       display: flex;
       flex-direction: column;
       gap: 5px;
+      cursor: pointer;
+      transition: border-color 120ms ease, background 120ms ease, box-shadow 120ms ease;
+    }
+    .tab-map-card:hover {
+      border-color: rgb(57 255 20 / 0.62);
+      background: rgb(57 255 20 / 0.08);
+      box-shadow: 0 0 18px rgb(57 255 20 / 0.14);
     }
     .tab-map-card.active { border-color: rgb(57 255 20 / 0.72); box-shadow: inset 0 0 0 1px rgb(57 255 20 / 0.16); }
     .tab-map-title { color: rgb(248 250 252); font-size: 0.84rem; font-weight: 600; }
     .tab-map-body { color: rgb(203 213 225); font-size: 0.73rem; line-height: 1.32; flex: 1; }
     .tab-map-logic { color: rgb(148 163 184); font-size: 0.68rem; line-height: 1.25; }
-    .tab-map-open { padding: 4px 8px; font-size: 0.72rem; }
     @media (max-width: 1536px) {
       .tab-map-panel { width: min(820px, calc(100vw - 32px)); }
       .tab-map-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -1158,7 +1165,8 @@
           <div class="text-sm text-slate-200 mt-1">Cosa contiene ogni tab prima di cambiare superficie.</div>
           <div class="tab-map-grid">
             <template x-for="tab in TABS" :key="tab.id">
-              <article class="tab-map-card" :class="activeTab === tab.id && 'active'">
+              <button type="button" class="tab-map-card" :class="activeTab === tab.id && 'active'"
+                      @click="setActiveTab(tab.id); tabsMapOpen = false">
                 <div class="flex items-center justify-between gap-2">
                   <div class="tab-map-title">
                     <span class="text-purple-300" x-text="tab.icon"></span>
@@ -1168,8 +1176,7 @@
                 </div>
                 <div class="tab-map-body" x-text="tabPreviewBody(tab.id)"></div>
                 <div class="tab-map-logic" x-text="tabPreviewLogic(tab.id)"></div>
-                <button class="tab-map-open self-start mt-auto" @click="setActiveTab(tab.id); tabsMapOpen = false">Apri Tab</button>
-              </article>
+              </button>
             </template>
           </div>
         </div>
@@ -1725,7 +1732,7 @@
                     <div class="flex items-center justify-between gap-3 mb-2 text-[11px] text-slate-400">
                       <span x-text="bitcoinDailyInefficiencyZoneSummary()"></span>
                       <div class="flex items-center gap-3">
-                        <button @click="askThiaAboutBtcPoint('strict-null')"
+                        <button @click="showThiaAskPreview('strict-null', $event)"
                                 class="thia-ask-btn compact">
                           chiedi THIA
                         </button>
@@ -1771,7 +1778,7 @@
                     <p class="text-xs text-slate-300 mt-1">POC, inefficienze, trendline e MM52 diventano domande, dati richiesti e null prima di qualunque test.</p>
                   </div>
                   <div class="flex items-center gap-2 flex-wrap">
-                    <button @click="askThiaAboutBtcPoint('method-intake')"
+                    <button @click="showThiaAskPreview('method-intake', $event)"
                             class="thia-ask-btn">
                       chiedi THIA
                     </button>
@@ -1886,7 +1893,7 @@
                             class="px-2 py-1 rounded text-[11px] font-mono border border-cyan-700 bg-slate-900 text-cyan-100 hover:border-cyan-300 cursor-pointer">
                       full-page
                     </button>
-                    <button @click="askThiaAboutBtcPoint('chart')"
+                    <button @click="showThiaAskPreview('chart', $event)"
                             class="thia-ask-btn">
                       chiedi THIA
                     </button>
@@ -2971,7 +2978,7 @@
                         <div class="flex items-center justify-between gap-2">
                           <div class="uppercase tracking-wider text-slate-500" x-text="row.label"></div>
                           <button x-show="String(row.label || '').toLowerCase().includes('null severo')"
-                                  @click.stop="askThiaAboutBtcPoint('strict-null')"
+                                  @click.stop="showThiaAskPreview('strict-null', $event)"
                                   class="thia-ask-btn compact">
                             chiedi THIA
                           </button>
@@ -3246,7 +3253,7 @@
       </template>
       <div class="tab-preview-actions">
         <button class="tab-preview-close" @click="tabPreview = null">Resta qui</button>
-        <button @click="confirmTabPreview()">Apri Tab</button>
+        <button @click="confirmTabPreview()" x-text="tabPreview?.confirmLabel || 'Apri Tab'"></button>
       </div>
     </div>
 
@@ -5718,7 +5725,7 @@
         document.body.style.overflow = on ? 'hidden' : '';
       },
 
-      askThiaAboutBtcPoint(point) {
+      btcThiaAskDetail(point) {
         const payload = this.bitcoinDailyInefficiencyPayload() || {};
         const card = this.bitcoinDailyInefficiencyCard() || {};
         const metrics = payload.metrics || {};
@@ -5769,11 +5776,43 @@
           tab: this.activeTab || 'campo',
           ...selected,
         };
+        return detail;
+      },
+
+      sendThiaAsk(detail) {
         if (window.DOMUS?.ask) {
           window.DOMUS.ask(detail);
         } else {
           window.dispatchEvent(new CustomEvent('dnd:thia:ask', { detail }));
         }
+      },
+
+      showThiaAskPreview(point, ev) {
+        const detail = this.btcThiaAskDetail(point);
+        const anchor = ev?.currentTarget;
+        const rect = anchor?.getBoundingClientRect?.() || { left: 24, right: 360, bottom: 96, top: 96 };
+        const width = Math.min(360, window.innerWidth - 24);
+        let x = rect.left;
+        let y = rect.bottom + 10;
+        if (x + width > window.innerWidth - 12) x = window.innerWidth - width - 12;
+        if (x < 12) x = 12;
+        if (y > window.innerHeight - 240) y = Math.max(12, rect.top - 230);
+        this.closeStatTipNow();
+        this.tabsMapOpen = false;
+        this.tabPreview = {
+          action: 'thia',
+          detail,
+          x,
+          y,
+          title: `chiedi THIA · ${detail.element || point}`,
+          body: `Invia questa domanda a THIA e apre la chat: "${detail.prompt || ''}"`,
+          logic: `Contesto inviato: ${detail.domain || 'dominio'} · tab ${detail.tab || 'n/a'} · ${detail.value || detail.result || ''}`,
+          confirmLabel: 'Invia a THIA',
+        };
+      },
+
+      askThiaAboutBtcPoint(point) {
+        this.sendThiaAsk(this.btcThiaAskDetail(point));
       },
 
       valueArtifactDecisionTone(card) {
@@ -6056,6 +6095,10 @@
         const preview = this.tabPreview;
         if (!preview) return;
         this.tabPreview = null;
+        if (preview.action === 'thia' && preview.detail) {
+          this.sendThiaAsk(preview.detail);
+          return;
+        }
         if (preview.reportsFilter) this.reportsFilter = preview.reportsFilter;
         this.setActiveTab(preview.id);
         if (preview.reportFilename) {
