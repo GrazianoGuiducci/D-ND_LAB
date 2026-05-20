@@ -3423,6 +3423,7 @@ async def submit_expert_image_intake(
         "created_at": stored["created_at"],
         "images": stored["images"],
         "files": stored["images"],
+        "extracted": stored.get("extracted", {}),
         "manifest": stored["manifest"],
         "boundary": (
             "Expert file intake captured only. No trading signal, seed write, "
@@ -4640,6 +4641,7 @@ def _write_expert_image_intake(domain: str, intake_id: str, body: ExpertImageInt
     base = paths.domain_data_dir(domain) / "contributions" / "expert_files" / intake_id
     base.mkdir(parents=True, exist_ok=True)
     images: list[dict[str, Any]] = []
+    extracted_files: list[dict[str, Any]] = []
     seen: set[str] = set()
     total_bytes = 0
     for idx, item in enumerate(body.images[:6], start=1):
@@ -4662,6 +4664,7 @@ def _write_expert_image_intake(domain: str, intake_id: str, body: ExpertImageInt
             "sha256": digest,
             "url": f"/api/domains/{domain}/expert_file_intake/{intake_id}/files/{safe_name}",
         })
+        extracted_files.append(_extract_expert_file_data(raw, safe_name, mime))
     record = {
         "id": intake_id,
         "created_at": created_at,
@@ -4672,6 +4675,16 @@ def _write_expert_image_intake(domain: str, intake_id: str, body: ExpertImageInt
         "context_tab": _clean_public_text(body.context_tab, 60),
         "context_view": _sanitize_context_view(body.context_view),
         "images": images,
+        "extracted": {
+            "status": "available",
+            "note_excerpt": _clean_public_text(body.note, 1200),
+            "files": extracted_files,
+            "limits": (
+                "Text-like files are excerpted server-side. Images expose metadata "
+                "and dimensions when readable; pixel/OCR interpretation requires a "
+                "vision/OCR module. PDFs expose metadata until a PDF parser is enabled."
+            ),
+        },
         "boundary": "Captured for operator/THIA review only; no automatic promotion.",
     }
     manifest = base / "manifest.json"
@@ -4705,7 +4718,85 @@ def _render_expert_image_intake(record: dict[str, Any]) -> str:
     for img in record.get("images") or []:
         lines.append(f"- `{img.get('filename')}` · {img.get('mime')} · {img.get('bytes')} bytes · {img.get('sha256')}")
         lines.append(f"  - url: {img.get('url')}")
+    extracted = record.get("extracted") or {}
+    if extracted:
+        lines.extend(["", "## Extracted data", ""])
+        for item in extracted.get("files") or []:
+            lines.append(f"- `{item.get('filename')}` · {item.get('kind')} · {item.get('extraction_status')}")
+            if item.get("dimensions"):
+                lines.append(f"  - dimensions: {item['dimensions'].get('width')}x{item['dimensions'].get('height')}")
+            if item.get("text_excerpt"):
+                lines.append("  - text_excerpt:")
+                lines.append("```")
+                lines.append(str(item.get("text_excerpt")))
+                lines.append("```")
     return "\n".join(lines) + "\n"
+
+
+def _extract_expert_file_data(raw: bytes, filename: str, mime: str) -> dict[str, Any]:
+    kind = "image" if mime.startswith("image/") else "document"
+    data: dict[str, Any] = {
+        "filename": filename,
+        "mime": mime,
+        "kind": kind,
+        "bytes": len(raw),
+    }
+    if mime.startswith("image/"):
+        dimensions = _image_dimensions(raw, mime)
+        data["extraction_status"] = "metadata_only"
+        data["visual_text_status"] = "not_extracted_without_vision_or_ocr"
+        if dimensions:
+            data["dimensions"] = dimensions
+        return data
+
+    if mime in {"text/plain", "text/markdown", "text/csv", "application/json", "application/x-ndjson", "application/yaml", "text/yaml"}:
+        text = raw.decode("utf-8", errors="replace")
+        clean = _clean_public_text(text, 4000)
+        data.update({
+            "extraction_status": "text_excerpt",
+            "line_count": len(text.splitlines()),
+            "text_excerpt": clean,
+        })
+        return data
+
+    if mime == "application/pdf":
+        data.update({
+            "extraction_status": "metadata_only",
+            "text_status": "not_extracted_without_pdf_parser",
+        })
+        return data
+
+    data["extraction_status"] = "unsupported_for_text_extraction"
+    return data
+
+
+def _image_dimensions(raw: bytes, mime: str) -> dict[str, int] | None:
+    try:
+        if mime == "image/png" and raw.startswith(b"\x89PNG\r\n\x1a\n") and len(raw) >= 24:
+            return {"width": int.from_bytes(raw[16:20], "big"), "height": int.from_bytes(raw[20:24], "big")}
+        if mime == "image/gif" and raw[:6] in {b"GIF87a", b"GIF89a"} and len(raw) >= 10:
+            return {"width": int.from_bytes(raw[6:8], "little"), "height": int.from_bytes(raw[8:10], "little")}
+        if mime == "image/jpeg" and raw.startswith(b"\xff\xd8"):
+            i = 2
+            while i + 9 < len(raw):
+                if raw[i] != 0xFF:
+                    i += 1
+                    continue
+                marker = raw[i + 1]
+                i += 2
+                if marker in {0xD8, 0xD9}:
+                    continue
+                if i + 2 > len(raw):
+                    break
+                segment_len = int.from_bytes(raw[i:i + 2], "big")
+                if segment_len < 2 or i + segment_len > len(raw):
+                    break
+                if marker in {0xC0, 0xC1, 0xC2, 0xC3, 0xC5, 0xC6, 0xC7, 0xC9, 0xCA, 0xCB, 0xCD, 0xCE, 0xCF} and segment_len >= 7:
+                    return {"width": int.from_bytes(raw[i + 5:i + 7], "big"), "height": int.from_bytes(raw[i + 3:i + 5], "big")}
+                i += segment_len
+    except Exception:
+        return None
+    return None
 
 
 def _redact_contact(value: Any) -> str:
