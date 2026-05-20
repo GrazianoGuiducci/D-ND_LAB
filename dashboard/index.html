@@ -741,6 +741,135 @@
     }
     @media (max-width: 1024px) { .stat-tip { display: none !important; } }
 
+    .tab-preview-popover {
+      position: fixed;
+      z-index: 85;
+      width: min(360px, calc(100vw - 24px));
+      background:
+        linear-gradient(180deg, rgba(34,211,238,.10), rgba(57,255,20,.07)),
+        rgb(14 18 28);
+      border: 1px solid rgb(57 255 20 / 0.78);
+      border-radius: 10px;
+      padding: 14px;
+      box-shadow:
+        inset 0 1px 0 rgb(255 255 255 / 0.08),
+        0 0 0 1px rgb(var(--neon-cyan) / 0.22),
+        0 0 24px rgb(57 255 20 / 0.24),
+        0 18px 42px rgb(0 0 0 / 0.70);
+      color: rgb(235 238 248);
+    }
+    .tab-preview-popover .tp-kicker,
+    .tab-map-panel .tm-kicker {
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+      font-size: 0.66rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgb(57 255 20);
+    }
+    .tab-preview-popover .tp-title {
+      margin-top: 0.35rem;
+      font-size: 0.98rem;
+      font-weight: 600;
+      color: rgb(248 250 252);
+    }
+    .tab-preview-popover .tp-body {
+      margin-top: 0.45rem;
+      font-size: 0.84rem;
+      line-height: 1.45;
+      color: rgb(226 232 240);
+    }
+    .tab-preview-popover .tp-logic {
+      margin-top: 0.55rem;
+      padding-top: 0.55rem;
+      border-top: 1px solid rgb(57 255 20 / 0.22);
+      font-size: 0.78rem;
+      color: rgb(203 213 225);
+      font-style: italic;
+    }
+    .tab-preview-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .tab-preview-actions button,
+    .tab-map-open {
+      border: 1px solid rgb(57 255 20 / 0.8);
+      background: rgb(57 255 20 / 0.12);
+      color: rgb(220 255 218);
+      border-radius: 7px;
+      padding: 6px 10px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      transition: border-color 120ms ease, background 120ms ease, color 120ms ease;
+    }
+    .tab-preview-actions button:hover,
+    .tab-map-open:hover {
+      background: rgb(57 255 20 / 0.2);
+      color: white;
+    }
+    .tab-preview-close {
+      border-color: rgb(148 163 184 / 0.35) !important;
+      background: rgb(15 23 42 / 0.7) !important;
+      color: rgb(203 213 225) !important;
+      font-weight: 500 !important;
+    }
+
+    .tab-map-shell { position: relative; flex-shrink: 0; }
+    .tab-map-trigger {
+      border: 1px solid rgb(var(--neon-cyan) / 0.55);
+      background: rgb(15 23 42 / 0.9);
+      color: rgb(203 213 225);
+      border-radius: 7px;
+      padding: 6px 10px;
+      font-size: 0.78rem;
+      white-space: nowrap;
+      transition: border-color 120ms ease, background 120ms ease, color 120ms ease;
+    }
+    .tab-map-trigger:hover,
+    .tab-map-trigger.active {
+      border-color: rgb(57 255 20 / 0.75);
+      background: rgb(57 255 20 / 0.10);
+      color: rgb(236 253 245);
+    }
+    .tab-map-panel {
+      position: absolute;
+      right: 0;
+      top: calc(100% + 8px);
+      z-index: 80;
+      width: min(720px, calc(100vw - 32px));
+      max-height: min(72vh, 620px);
+      overflow: auto;
+      background:
+        linear-gradient(180deg, rgba(34,211,238,.08), rgba(167,139,250,.05)),
+        rgb(15 23 42);
+      border: 1px solid rgb(var(--neon-cyan) / 0.5);
+      border-radius: 10px;
+      padding: 14px;
+      box-shadow: 0 20px 48px rgb(0 0 0 / 0.72), 0 0 24px rgb(var(--neon-cyan) / 0.16);
+    }
+    .tab-map-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .tab-map-card {
+      border: 1px solid rgb(var(--neon-cyan) / 0.26);
+      background: rgb(2 6 23 / 0.45);
+      border-radius: 8px;
+      padding: 10px;
+      min-height: 132px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+    .tab-map-card.active { border-color: rgb(57 255 20 / 0.72); box-shadow: inset 0 0 0 1px rgb(57 255 20 / 0.16); }
+    .tab-map-title { color: rgb(248 250 252); font-size: 0.9rem; font-weight: 600; }
+    .tab-map-body { color: rgb(203 213 225); font-size: 0.78rem; line-height: 1.42; flex: 1; }
+    .tab-map-logic { color: rgb(148 163 184); font-size: 0.72rem; line-height: 1.35; }
+    @media (max-width: 1280px) { .tab-map-shell { display: none !important; } }
+
     /* Dashboard top navigation.
        Le tab possono crescere per dominio: tenerle tutte inline affolla il
        desktop e rompe il mobile. La superficie stabile e' quindi un singolo
@@ -1014,6 +1143,33 @@
           </template>
         </div>
       </div>
+      <div class="tab-map-shell hidden xl:block" x-show="view === 'domain' && activeDomain"
+           @click.outside="tabsMapOpen = false">
+        <button class="tab-map-trigger" :class="tabsMapOpen && 'active'"
+                @click="tabsMapOpen = !tabsMapOpen">
+          Mappa tab
+        </button>
+        <div x-show="tabsMapOpen" x-cloak x-transition.opacity.duration.120ms class="tab-map-panel">
+          <div class="tm-kicker">Orientamento</div>
+          <div class="text-sm text-slate-200 mt-1">Cosa contiene ogni tab prima di cambiare superficie.</div>
+          <div class="tab-map-grid">
+            <template x-for="tab in TABS" :key="tab.id">
+              <article class="tab-map-card" :class="activeTab === tab.id && 'active'">
+                <div class="flex items-center justify-between gap-2">
+                  <div class="tab-map-title">
+                    <span class="text-purple-300" x-text="tab.icon"></span>
+                    <span x-text="tabPreviewTitle(tab.id)"></span>
+                  </div>
+                  <span class="text-[10px] uppercase tracking-wider text-green-300" x-show="activeTab === tab.id">aperta</span>
+                </div>
+                <div class="tab-map-body" x-text="tabPreviewBody(tab.id)"></div>
+                <div class="tab-map-logic" x-text="tabPreviewLogic(tab.id)"></div>
+                <button class="tab-map-open self-start mt-auto" @click="setActiveTab(tab.id); tabsMapOpen = false">Apri Tab</button>
+              </article>
+            </template>
+          </div>
+        </div>
+      </div>
       <!-- Right cluster: Domains + breadcrumb + Sito dropdown + lang + esterni
            (refactor 03/05 sera: pattern unificato col sito 4 pagine).
            ml-auto: in home view le lab-tabs sono x-show=false e flex-1 non
@@ -1219,7 +1375,7 @@
             <div class="stat-row" @mouseenter="showStatTip('oggi', $event)" @mouseleave="hideStatTip()"><span class="text-slate-400" x-text="uiTerm('oggi', t('dash.stats.oggi', 'oggi'))"></span><span class="stat-num text-green-400" x-text="freshnessStats().today"></span></div>
             <div class="stat-row" @mouseenter="showStatTip('fresche', $event)" @mouseleave="hideStatTip()"><span class="text-slate-400" x-text="uiTerm('fresche', t('dash.stats.fresche', 'fresche (7d)'))"></span><span class="stat-num text-cyan-400" x-text="freshnessStats().fresh"></span></div>
             <div class="stat-row" @mouseenter="showStatTip('ghost', $event)" @mouseleave="hideStatTip()"><span class="text-slate-400" x-text="uiTerm('ghost', t('dash.stats.ghost', 'ghost urgenti'))"></span><span class="stat-num text-amber-400" x-text="freshnessStats().ghosts"></span></div>
-            <div class="stat-row cursor-pointer hover:bg-slate-800/40 -mx-1 px-1 rounded" @click="activeTab = 'agente'; reportsFilter = 'cimitero'" @mouseenter="showStatTip('cimitero', $event)" @mouseleave="hideStatTip()">
+            <div class="stat-row cursor-pointer hover:bg-slate-800/40 -mx-1 px-1 rounded" @click="showTabPreview('agente', $event, { reportsFilter: 'cimitero', title: 'Cimitero · report scartati', body: 'Apre Agente filtrando i report falsificati o scartati, senza perdere il contesto della tab corrente.' })" @mouseenter="showStatTip('cimitero', $event)" @mouseleave="hideStatTip()">
               <span class="text-slate-400">🪦 <span x-text="uiTerm('cimitero', t('dash.stats.cimitero', 'cimitero'))"></span></span>
               <span class="stat-num text-slate-300" x-text="cimiteroCount()"></span>
             </div>
@@ -1307,9 +1463,9 @@
                 </p>
               </div>
               <div class="flex items-center gap-2 text-xs">
-                <button @click="setActiveTab('grafo')" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-cyan-300">Grafo</button>
-                <button @click="setActiveTab('agente')" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-purple-300">Report</button>
-                <button @click="setActiveTab('prodotti')" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-green-300">Prodotti</button>
+                <button @click="showTabPreview('grafo', $event)" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-cyan-300">Grafo</button>
+                <button @click="showTabPreview('agente', $event)" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-purple-300">Report</button>
+                <button @click="showTabPreview('prodotti', $event)" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-green-300">Prodotti</button>
               </div>
             </div>
 
@@ -1344,7 +1500,7 @@
                 </div>
                 <div class="space-y-3 text-sm text-slate-300">
                   <p x-show="campoStats().prodotti > 0">
-                    Il dominio ha già ricadute mature: passa dalla mappa alle metriche in <button @click="setActiveTab('prodotti')" class="text-green-300 hover:text-green-200 underline underline-offset-2">Prodotti</button>.
+                    Il dominio ha già ricadute mature: passa dalla mappa alle metriche in <button @click="showTabPreview('prodotti', $event)" class="text-green-300 hover:text-green-200 underline underline-offset-2">Prodotti</button>.
                   </p>
                   <p x-show="campoStats().prodotti === 0 && campoStats().applicazioni > 0">
                     Il dominio ha applicazioni candidate ma nessun prodotto maturo: la risultante è ancora in verifica.
@@ -1380,14 +1536,14 @@
               <section class="border border-slate-800 rounded-md p-4 bg-slate-950/30">
                 <div class="flex items-center justify-between gap-3 mb-3">
                   <h3 class="text-sm font-medium text-slate-200">Ultimi segnali</h3>
-                  <button @click="setActiveTab('agente')" class="text-xs text-purple-300 hover:text-purple-200">apri report</button>
+                  <button @click="showTabPreview('agente', $event)" class="text-xs text-purple-300 hover:text-purple-200">apri report</button>
                 </div>
                 <template x-if="reports.length === 0">
                   <p class="text-sm text-slate-400 italic">Nessun report ancora disponibile.</p>
                 </template>
                 <div class="space-y-2">
                   <template x-for="r in reports.slice(0, 3)" :key="r.filename">
-                    <button @click="setActiveTab('agente'); openReport(r.filename)"
+                    <button @click="showTabPreview('agente', $event, { reportFilename: r.filename, title: r.title || r.filename, body: 'Apre il report in Agente dopo questa anteprima, così puoi decidere se lasciare la lettura di Campo.' })"
                             class="w-full text-left border border-slate-800 hover:border-purple-700 rounded-md p-3 transition">
                       <div class="flex items-center justify-between gap-2">
                         <span class="text-sm text-slate-200 truncate" x-text="r.title || r.filename"></span>
@@ -3074,6 +3230,22 @@
       </template>
     </div>
 
+    <div x-show="tabPreview" x-cloak x-transition.opacity.duration.120ms
+         class="tab-preview-popover"
+         :style="tabPreviewStyle()"
+         @click.outside="tabPreview = null">
+      <div class="tp-kicker">Prima di cambiare tab</div>
+      <div class="tp-title" x-text="tabPreview?.title || ''"></div>
+      <div class="tp-body" x-text="tabPreview?.body || ''"></div>
+      <template x-if="tabPreview?.logic">
+        <div class="tp-logic" x-text="tabPreview.logic"></div>
+      </template>
+      <div class="tab-preview-actions">
+        <button class="tab-preview-close" @click="tabPreview = null">Resta qui</button>
+        <button @click="confirmTabPreview()">Apri Tab</button>
+      </div>
+    </div>
+
     <!-- v4.3 — Sidebar peek tooltip (closed-state preview). Single instance. -->
     <div id="sidebar-tip" class="sidebar-tip">
       <template x-if="sidebarTipSide === 'left'">
@@ -3469,6 +3641,11 @@
       body: 'Pipeline Scoperte/Soluzioni/Prodotti: candidate, verifiche, output maturi e metriche.',
       logic: (s) => `${s.campoStats().prodotti} prodotti · ${s.campoStats().applicazioni} applicazioni candidate.`,
     },
+    nav_info: {
+      title: 'Info · mappa del Lab',
+      body: 'Spiega dove sei, cosa puoi leggere e come il Lab trasforma dominio, report e artifact in superfici verificabili.',
+      logic: (s) => `${s.campoStats().cicli} cicli · dominio ${s.activeDomain || 'non selezionato'}.`,
+    },
   };
 
   // v3 — tab definitions, mirrors LabGraph.tsx:216 activeTab values.
@@ -3561,6 +3738,8 @@
       activeReportFilename: '',
       reportsDropdownOpen: false,
       tabsDropdownOpen: false,
+      tabsMapOpen: false,
+      tabPreview: null,
       cycleTraceDropdownOpen: false,
 
       // Falsifier — fetched lazily quando il report viene aperto
@@ -5809,9 +5988,82 @@
         return { today, fresh, ghosts: this.graphStats?.ghost_high_urgency || 0 };
       },
 
+      tabTooltipKey(id) {
+        if (id === 'incrocio') return 'nav_tassonomia';
+        return `nav_${id}`;
+      },
+
+      tabPreviewContent(id) {
+        const tab = TABS.find((x) => x.id === id) || {};
+        const tips = this.uiLocaleMap('tooltips');
+        const key = this.tabTooltipKey(id);
+        const domainDef = tips?.[key];
+        const def = domainDef && typeof domainDef === 'object' ? domainDef : STAT_TIPS[key];
+        const logic = typeof def?.logic === 'function' ? def.logic(this) : def?.logic;
+        return {
+          title: def?.title || tab.label || id,
+          body: def?.body || 'Apri questa tab per leggere una lente diversa del Lab.',
+          logic: logic || '',
+        };
+      },
+
+      tabPreviewTitle(id) {
+        return this.tabPreviewContent(id).title;
+      },
+
+      tabPreviewBody(id) {
+        return this.tabPreviewContent(id).body;
+      },
+
+      tabPreviewLogic(id) {
+        return this.tabPreviewContent(id).logic;
+      },
+
+      showTabPreview(id, ev, opts = {}) {
+        const base = this.tabPreviewContent(id);
+        const anchor = ev?.currentTarget;
+        const rect = anchor?.getBoundingClientRect?.() || { left: 24, right: 360, bottom: 96, top: 96 };
+        const width = Math.min(360, window.innerWidth - 24);
+        let x = rect.left;
+        let y = rect.bottom + 10;
+        if (x + width > window.innerWidth - 12) x = window.innerWidth - width - 12;
+        if (x < 12) x = 12;
+        if (y > window.innerHeight - 240) y = Math.max(12, rect.top - 230);
+        this.closeStatTipNow();
+        this.tabsMapOpen = false;
+        this.tabPreview = {
+          id,
+          x,
+          y,
+          reportFilename: opts.reportFilename || null,
+          reportsFilter: opts.reportsFilter || null,
+          title: opts.title || base.title,
+          body: opts.body || base.body,
+          logic: opts.logic || base.logic,
+        };
+      },
+
+      tabPreviewStyle() {
+        if (!this.tabPreview) return '';
+        return `left: ${this.tabPreview.x}px; top: ${this.tabPreview.y}px;`;
+      },
+
+      confirmTabPreview() {
+        const preview = this.tabPreview;
+        if (!preview) return;
+        this.tabPreview = null;
+        if (preview.reportsFilter) this.reportsFilter = preview.reportsFilter;
+        this.setActiveTab(preview.id);
+        if (preview.reportFilename) {
+          this.$nextTick(() => this.openReport(preview.reportFilename));
+        }
+      },
+
       // v3 — tab navigation (Cytoscape needs re-render when tab GRAFO becomes visible)
       setActiveTab(id) {
         this.closeStatTipNow();
+        this.tabPreview = null;
+        this.tabsMapOpen = false;
         this.activeTab = id;
         if (id === 'grafo') {
           this.$nextTick(() => {
