@@ -1824,6 +1824,28 @@
                                 x-text="q"></button>
                       </template>
                     </div>
+                    <div class="mt-3 rounded border border-green-400/70 bg-green-950/10 p-3">
+                      <div class="text-[10px] uppercase tracking-wider text-green-200">Intake immagini esperto</div>
+                      <p class="mt-1 text-xs text-slate-300">Carica screenshot/annotazioni BTC: THIA riceve contesto, note e link ai file salvati.</p>
+                      <textarea x-model="expertImageIntake.note"
+                                class="mt-2 w-full min-h-[64px] rounded border border-slate-700 bg-slate-950/70 px-2 py-2 text-xs text-slate-100 placeholder:text-slate-500 focus:border-green-400 focus:outline-none"
+                                placeholder="Nota per THIA: cosa deve guardare nelle immagini?"></textarea>
+                      <div class="mt-2 flex items-center gap-2 flex-wrap">
+                        <label class="thia-ask-btn cursor-pointer">
+                          scegli immagini
+                          <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple class="hidden"
+                                 @change="setExpertImageFiles($event)">
+                        </label>
+                        <button @click="submitExpertImageIntake()"
+                                class="thia-ask-btn"
+                                :disabled="expertImageIntake.uploading || expertImageIntake.files.length === 0"
+                                :class="(expertImageIntake.uploading || expertImageIntake.files.length === 0) && 'opacity-50 cursor-not-allowed'">
+                          invia a THIA
+                        </button>
+                      </div>
+                      <div class="mt-2 text-[11px] text-slate-400" x-text="expertImageFileSummary()"></div>
+                      <div class="mt-1 text-[11px]" :class="expertImageIntake.error ? 'text-amber-200' : 'text-green-200'" x-text="expertImageIntake.status"></div>
+                    </div>
                     <template x-if="bitcoinMethodRecommendedNext()">
                       <button @click="selectBitcoinMethodLens()"
                               class="mt-3 w-full text-left border border-amber-400/80 rounded p-3 bg-amber-950/10 hover:border-amber-200 transition cursor-pointer">
@@ -3708,6 +3730,7 @@
       latestValueArtifacts: { available: false, artifacts: [] },
       btcChartProvider: 'bitstamp',
       btcChartFullscreen: false,
+      expertImageIntake: { files: [], note: '', uploading: false, status: '', error: false, last: null },
       financePrecondition: { available: false },
       uiContract: { available: false },
       labThought: { available: false },
@@ -5723,6 +5746,95 @@
       setBtcChartFullscreen(on) {
         this.btcChartFullscreen = !!on;
         document.body.style.overflow = on ? 'hidden' : '';
+      },
+
+      setExpertImageFiles(ev) {
+        const files = Array.from(ev?.target?.files || []).filter((f) => f && f.type?.startsWith('image/')).slice(0, 6);
+        this.expertImageIntake.files = files;
+        this.expertImageIntake.error = false;
+        this.expertImageIntake.status = files.length
+          ? `${files.length} immagine/i pronte. Aggiungi una nota e invia a THIA.`
+          : 'Nessuna immagine valida selezionata.';
+      },
+
+      expertImageFileSummary() {
+        const files = this.expertImageIntake.files || [];
+        if (!files.length) return 'Nessuna immagine selezionata. Formati: PNG, JPG, WEBP, GIF. Max 6 file.';
+        return files.map((f) => `${f.name} · ${(f.size / 1024 / 1024).toFixed(2)} MB`).join(' | ');
+      },
+
+      fileToDataUrl(file) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = () => reject(reader.error || new Error('file read failed'));
+          reader.readAsDataURL(file);
+        });
+      },
+
+      async submitExpertImageIntake() {
+        if (!this.activeDomain || this.expertImageIntake.uploading) return;
+        const files = this.expertImageIntake.files || [];
+        if (!files.length) {
+          this.expertImageIntake.status = 'Seleziona almeno una immagine.';
+          this.expertImageIntake.error = true;
+          return;
+        }
+        const tooLarge = files.find((f) => f.size > 8 * 1024 * 1024);
+        if (tooLarge) {
+          this.expertImageIntake.status = `${tooLarge.name} supera 8 MB. Riduci o esporta l'immagine.`;
+          this.expertImageIntake.error = true;
+          return;
+        }
+        this.expertImageIntake.uploading = true;
+        this.expertImageIntake.error = false;
+        this.expertImageIntake.status = 'Caricamento immagini in corso...';
+        try {
+          const images = await Promise.all(files.map(async (file) => ({
+            filename: file.name,
+            mime: file.type || 'image/png',
+            data: await this.fileToDataUrl(file),
+          })));
+          const resp = await fetch(`/api/domains/${this.activeDomain}/expert_image_intake`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              expert_name: 'Alipio',
+              note: this.expertImageIntake.note || '',
+              context_tab: this.activeTab || null,
+              context_view: this.buildChatViewContext(),
+              images,
+            }),
+          });
+          const data = await resp.json().catch(() => ({}));
+          if (!resp.ok || !data.ok) {
+            throw new Error(data.detail || resp.statusText || 'upload failed');
+          }
+          this.expertImageIntake.last = data;
+          this.expertImageIntake.status = `Intake ${data.id} salvato: ${data.images?.length || 0} immagini. THIA riceve il contesto.`;
+          this.sendThiaAsk({
+            domain: this.activeDomain,
+            tab: this.activeTab || 'campo',
+            element: 'Alipio BTC visual image intake',
+            value: `${data.images?.length || 0} immagini caricate · ${data.id}`,
+            interpretation: 'Le immagini sono materiale esperto da usare come contesto di discussione, non come segnale automatico.',
+            dynamics: 'THIA deve aiutare a estrarre oggetti testabili: FVG/imbalance, LVN/Volume Profile, CME gap, POC, timeframe, regole di chiusura e falsificatori.',
+            result: (data.images || []).map((img) => `${img.filename}: ${img.url}`).join(' | '),
+            prompt: `Alipio ha caricato ${data.images?.length || 0} immagini BTC nel Lab. Usa la nota e i link per guidare il feedback esperto senza trasformarlo automaticamente in segnale. Nota: ${this.expertImageIntake.note || 'nessuna nota'}`,
+            canonicalQuestions: [
+              'Quale oggetto tecnico mostra ogni immagine: FVG, LVN/Volume Profile, CME gap, POC, trendline o MM52?',
+              'Quale fonte/timeframe/finestra rende l osservazione testabile?',
+              'Quale regola di chiusura, invalidazione e null severo servono prima del prossimo cycle?',
+            ],
+            attachments: data.images || [],
+            manifest: data.manifest,
+          });
+        } catch (err) {
+          this.expertImageIntake.error = true;
+          this.expertImageIntake.status = `errore upload: ${err.message}`;
+        } finally {
+          this.expertImageIntake.uploading = false;
+        }
       },
 
       btcThiaAskDetail(point) {

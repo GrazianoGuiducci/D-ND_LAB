@@ -28,6 +28,8 @@ Frontend (static HTML/JS) served from /static and /.
 from __future__ import annotations
 
 import asyncio
+import base64
+import binascii
 import hashlib
 import json
 import logging
@@ -198,6 +200,20 @@ class ContributionRequest(BaseModel):
     context_view: dict[str, Any] | None = None
 
 
+class ExpertImageItem(BaseModel):
+    filename: str
+    mime: str | None = None
+    data: str
+
+
+class ExpertImageIntakeRequest(BaseModel):
+    note: str = ""
+    expert_name: str | None = None
+    context_tab: str | None = None
+    context_view: dict[str, Any] | None = None
+    images: list[ExpertImageItem]
+
+
 class LeadRequest(BaseModel):
     kind: str = "general"  # newsletter / contact / support / collaboration / custom_domain / general
     message: str
@@ -229,6 +245,7 @@ async def _check_auth(request: Request) -> None:
         request.method == "GET"
         or request.url.path.endswith("/chat")
         or request.url.path.endswith("/contributions")
+        or request.url.path.endswith("/expert_image_intake")
         or request.url.path.endswith("/leads")
     ):
         return  # demo: read-only access without auth, including chat
@@ -3375,6 +3392,62 @@ async def chat_endpoint(domain: str, body: ChatRequest, request: Request) -> dic
 # ─── Contribution intake (public registry + preport) ───────────────
 
 
+@app.post("/api/domains/{domain}/expert_image_intake")
+async def submit_expert_image_intake(
+    domain: str,
+    body: ExpertImageIntakeRequest,
+    request: Request,
+) -> dict[str, Any]:
+    """Collect expert screenshots/visual notes without promoting them.
+
+    Browser sends base64 JSON to avoid a multipart dependency in the Lab API.
+    Files are stored as runtime contribution material plus a manifest. THIA
+    receives the manifest/URLs as context, but no seed/cycle mutation happens.
+    """
+    await _check_auth(request)
+    _validate_domain(domain)
+    _check_public_intake_rate(request)
+    if not body.images:
+        raise HTTPException(400, "At least one image is required.")
+    if len(body.images) > 6:
+        raise HTTPException(400, "Too many images; upload at most 6.")
+
+    intake_id = f"imgintake_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}"
+    stored = _write_expert_image_intake(domain, intake_id, body)
+    return {
+        "ok": True,
+        "id": intake_id,
+        "domain": domain,
+        "created_at": stored["created_at"],
+        "images": stored["images"],
+        "manifest": stored["manifest"],
+        "boundary": (
+            "Expert image intake captured only. No trading signal, seed write, "
+            "cycle run, or automatic promotion has been executed."
+        ),
+    }
+
+
+@app.get("/api/domains/{domain}/expert_image_intake/{intake_id}/files/{filename}")
+async def read_expert_image_intake_file(
+    domain: str,
+    intake_id: str,
+    filename: str,
+    request: Request,
+) -> FileResponse:
+    await _check_auth(request)
+    _validate_domain(domain)
+    if not re.fullmatch(r"imgintake_\d{8}_\d{6}_[a-f0-9]{8}", intake_id):
+        raise HTTPException(400, "Invalid intake id.")
+    safe_name = _safe_image_filename(filename)
+    if safe_name != filename:
+        raise HTTPException(400, "Invalid filename.")
+    fp = paths.domain_data_dir(domain) / "contributions" / "expert_images" / intake_id / safe_name
+    if not fp.exists() or not fp.is_file():
+        raise HTTPException(404, "Image not found.")
+    return FileResponse(fp)
+
+
 @app.post("/api/domains/{domain}/contributions")
 async def submit_contribution(
     domain: str,
@@ -4508,6 +4581,109 @@ def _read_jsonl(path: Path, limit: int) -> list[dict[str, Any]]:
     except OSError:
         return []
     return rows[-limit:][::-1]
+
+
+def _safe_image_filename(value: Any) -> str:
+    raw = Path(str(value or "image")).name
+    raw = re.sub(r"[^A-Za-z0-9._-]+", "_", raw).strip("._")
+    if not raw:
+        raw = "image"
+    stem = raw[:90]
+    ext = Path(stem).suffix.lower()
+    if ext not in {".png", ".jpg", ".jpeg", ".webp", ".gif"}:
+        stem = Path(stem).stem[:80] + ".png"
+    return stem
+
+
+def _decode_image_payload(item: ExpertImageItem) -> tuple[bytes, str]:
+    mime = _clean_public_text(item.mime or "", 80).lower()
+    data = str(item.data or "")
+    if data.startswith("data:"):
+        header, _, encoded = data.partition(",")
+        m = re.match(r"data:([^;]+);base64", header, re.I)
+        if m:
+            mime = m.group(1).lower()
+        data = encoded
+    allowed = {"image/png", "image/jpeg", "image/webp", "image/gif"}
+    if mime not in allowed:
+        raise HTTPException(400, f"Unsupported image type: {mime or 'unknown'}")
+    try:
+        raw = base64.b64decode(data, validate=True)
+    except (binascii.Error, ValueError) as exc:
+        raise HTTPException(400, "Invalid base64 image payload.") from exc
+    if not raw:
+        raise HTTPException(400, "Empty image payload.")
+    if len(raw) > 8 * 1024 * 1024:
+        raise HTTPException(400, "Image too large; limit is 8 MB per file.")
+    return raw, mime
+
+
+def _write_expert_image_intake(domain: str, intake_id: str, body: ExpertImageIntakeRequest) -> dict[str, Any]:
+    created_at = datetime.now(timezone.utc).isoformat()
+    base = paths.domain_data_dir(domain) / "contributions" / "expert_images" / intake_id
+    base.mkdir(parents=True, exist_ok=True)
+    images: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for idx, item in enumerate(body.images[:6], start=1):
+        raw, mime = _decode_image_payload(item)
+        safe_name = _safe_image_filename(item.filename)
+        if safe_name in seen:
+            p = Path(safe_name)
+            safe_name = f"{p.stem}_{idx}{p.suffix}"
+        seen.add(safe_name)
+        (base / safe_name).write_bytes(raw)
+        digest = hashlib.sha256(raw).hexdigest()
+        images.append({
+            "filename": safe_name,
+            "mime": mime,
+            "bytes": len(raw),
+            "sha256": digest,
+            "url": f"/api/domains/{domain}/expert_image_intake/{intake_id}/files/{safe_name}",
+        })
+    record = {
+        "id": intake_id,
+        "created_at": created_at,
+        "domain": domain,
+        "source_type": "expert_image_intake",
+        "expert_name": _clean_public_text(body.expert_name or "", 160),
+        "note": _clean_public_text(body.note, 2000),
+        "context_tab": _clean_public_text(body.context_tab, 60),
+        "context_view": _sanitize_context_view(body.context_view),
+        "images": images,
+        "boundary": "Captured for operator/THIA review only; no automatic promotion.",
+    }
+    manifest = base / "manifest.json"
+    manifest.write_text(json.dumps(record, indent=2, ensure_ascii=False), encoding="utf-8")
+    (base / "README.md").write_text(_render_expert_image_intake(record), encoding="utf-8")
+    registry = paths.domain_data_dir(domain) / "contributions" / "expert_images" / "registry.jsonl"
+    registry.parent.mkdir(parents=True, exist_ok=True)
+    with registry.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(record, ensure_ascii=False) + "\n")
+    record["manifest"] = str(manifest.relative_to(paths.domain_data_dir(domain)))
+    return record
+
+
+def _render_expert_image_intake(record: dict[str, Any]) -> str:
+    lines = [
+        f"# Expert image intake {record.get('id')}",
+        "",
+        f"- created_at: {record.get('created_at')}",
+        f"- domain: {record.get('domain')}",
+        f"- expert: {record.get('expert_name') or 'n/a'}",
+        f"- context_tab: {record.get('context_tab') or 'n/a'}",
+        f"- boundary: {record.get('boundary')}",
+        "",
+        "## Note",
+        "",
+        record.get("note") or "n/a",
+        "",
+        "## Images",
+        "",
+    ]
+    for img in record.get("images") or []:
+        lines.append(f"- `{img.get('filename')}` · {img.get('mime')} · {img.get('bytes')} bytes · {img.get('sha256')}")
+        lines.append(f"  - url: {img.get('url')}")
+    return "\n".join(lines) + "\n"
 
 
 def _redact_contact(value: Any) -> str:
