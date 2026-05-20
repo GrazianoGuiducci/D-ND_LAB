@@ -4681,8 +4681,9 @@ def _write_expert_image_intake(domain: str, intake_id: str, body: ExpertImageInt
             "files": extracted_files,
             "limits": (
                 "Text-like files are excerpted server-side. Images expose metadata "
-                "and dimensions when readable; pixel/OCR interpretation requires a "
-                "vision/OCR module. PDFs expose metadata until a PDF parser is enabled."
+                "and dimensions, plus a vision summary when the Lab vision model is "
+                "configured and accepts the file. PDFs expose metadata until a PDF "
+                "parser is enabled."
             ),
         },
         "boundary": "Captured for operator/THIA review only; no automatic promotion.",
@@ -4725,6 +4726,11 @@ def _render_expert_image_intake(record: dict[str, Any]) -> str:
             lines.append(f"- `{item.get('filename')}` · {item.get('kind')} · {item.get('extraction_status')}")
             if item.get("dimensions"):
                 lines.append(f"  - dimensions: {item['dimensions'].get('width')}x{item['dimensions'].get('height')}")
+            if item.get("visual_summary"):
+                lines.append("  - visual_summary:")
+                lines.append("```")
+                lines.append(str(item.get("visual_summary")))
+                lines.append("```")
             if item.get("text_excerpt"):
                 lines.append("  - text_excerpt:")
                 lines.append("```")
@@ -4747,6 +4753,11 @@ def _extract_expert_file_data(raw: bytes, filename: str, mime: str) -> dict[str,
         data["visual_text_status"] = "not_extracted_without_vision_or_ocr"
         if dimensions:
             data["dimensions"] = dimensions
+        vision = _describe_expert_image_with_llm(raw, filename, mime)
+        if vision:
+            data["extraction_status"] = "vision_summary"
+            data["visual_text_status"] = "vision_summary_available"
+            data["visual_summary"] = vision
         return data
 
     if mime in {"text/plain", "text/markdown", "text/csv", "application/json", "application/x-ndjson", "application/yaml", "text/yaml"}:
@@ -4797,6 +4808,56 @@ def _image_dimensions(raw: bytes, mime: str) -> dict[str, int] | None:
     except Exception:
         return None
     return None
+
+
+def _describe_expert_image_with_llm(raw: bytes, filename: str, mime: str) -> str:
+    if os.environ.get("DND_LAB_EXPERT_VISION", "enabled").lower() in {"0", "false", "disabled", "off"}:
+        return ""
+    if len(raw) > int(os.environ.get("DND_LAB_EXPERT_VISION_MAX_BYTES", str(5 * 1024 * 1024))):
+        return "Vision skipped: image is above configured analysis size limit."
+    try:
+        from core import llm_adapter
+        import openai
+    except ImportError:
+        return ""
+
+    config = llm_adapter.AdapterConfig.from_env()
+    try:
+        config.validate()
+    except ValueError:
+        return ""
+    vision_model = os.environ.get("DND_LAB_VISION_MODEL", "").strip()
+    if not vision_model:
+        vision_model = "google/gemini-2.0-flash-lite-001" if "openrouter.ai" in config.base_url else config.model
+    data_url = f"data:{mime};base64,{base64.b64encode(raw).decode('ascii')}"
+    prompt = (
+        "Describe this uploaded expert file for D-ND_LAB/THIA intake. "
+        "The domain may be Bitcoin/market analysis, but do not provide trading advice. "
+        "Extract only visible, checkable information: chart source, symbol, timeframe, "
+        "visible annotations/text, marked concepts such as FVG/imbalance, LVN/Volume Profile, "
+        "CME gap, POC, trendline, moving average, dates, price levels if legible, and what is not legible. "
+        "End with 3 verification questions that would make the contribution falsifiable. "
+        "Keep it concise and clearly separate visible evidence from interpretation."
+    )
+    try:
+        client = openai.OpenAI(base_url=config.base_url, api_key=config.api_key)
+        response = client.chat.completions.create(
+            model=vision_model,
+            messages=[
+                {"role": "system", "content": "You are a careful visual intake extractor. You do not promote uploaded images into operational claims."},
+                {"role": "user", "content": [
+                    {"type": "text", "text": f"filename: {filename}\n{prompt}"},
+                    {"type": "image_url", "image_url": {"url": data_url}},
+                ]},
+            ],
+            max_tokens=700,
+            timeout=int(os.environ.get("DND_LAB_EXPERT_VISION_TIMEOUT", "90")),
+        )
+        text = response.choices[0].message.content or ""
+        return _clean_public_text(text, 3500)
+    except Exception as exc:
+        logger.info("expert image vision extraction skipped for %s: %s", filename, exc)
+        return ""
 
 
 def _redact_contact(value: Any) -> str:
