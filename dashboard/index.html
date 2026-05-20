@@ -2779,7 +2779,14 @@
                   <div class="grid gap-2 pt-1">
                     <template x-for="row in selectedCampoLens.diagnostics" :key="row.label">
                       <div class="rounded border border-slate-800 bg-slate-950/40 p-2">
-                        <div class="uppercase tracking-wider text-slate-500" x-text="row.label"></div>
+                        <div class="flex items-center justify-between gap-2">
+                          <div class="uppercase tracking-wider text-slate-500" x-text="row.label"></div>
+                          <button x-show="String(row.label || '').toLowerCase().includes('null severo')"
+                                  @click.stop="askThiaAboutBtcPoint('strict-null')"
+                                  class="text-[10px] font-mono text-green-200 hover:text-green-100 cursor-pointer">
+                            chiedi THIA
+                          </button>
+                        </div>
                         <div class="text-slate-200 mt-0.5" x-text="row.value"></div>
                         <div class="text-slate-400 mt-1 leading-relaxed" x-show="row.note" x-text="row.note"></div>
                       </div>
