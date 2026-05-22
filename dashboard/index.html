@@ -460,7 +460,7 @@
       display: flex; justify-content: space-between; align-items: baseline;
     }
     .sidebar-tip .stat-row:last-child { border-bottom: 0; }
-    @media (max-width: 1080px) { .sidebar-tip { display: none; } }
+    @media (max-width: 1064px) { .sidebar-tip { display: none; } }
 
     /* v4.2 — Dynamic tooltip per nodi grafo. Pattern HoverPopover del sito,
        riadattato in vanilla CSS. Single instance, positioned by JS. */
@@ -473,7 +473,7 @@
     .node-tooltip .nt-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
     .node-tooltip .nt-action { font-size: 10px; padding: 3px 8px; border-radius: 4px; background: rgb(30 41 59); color: #cbd5e1; border: 0; cursor: pointer; transition: background 0.12s; }
     .node-tooltip .nt-action:hover { background: rgb(51 65 85); color: #c4b5fd; }
-    @media (max-width: 1080px) { .node-tooltip { display: none; } }
+    @media (max-width: 1064px) { .node-tooltip { display: none; } }
 
     /* Falsifier card (report viewer) — flag asimmetrici dal counter-pole.
        Color severity: high=rose, medium=amber, low=slate. */
@@ -503,22 +503,18 @@
        classi sidebar-left-closed / sidebar-right-closed, gestite dall'Alpine state. */
     /* CSS vars guidano i width — drag handle li aggiorna, valori
        persistiti in localStorage. Range: 200..480px, default 260/320. */
-    .lab-grid { display: grid; grid-template-columns: var(--sb-left-w, 260px) 1fr var(--sb-right-w, 320px); gap: 16px; align-items: start; }
-    .lab-grid.sidebar-left-closed { grid-template-columns: 40px 1fr var(--sb-right-w, 320px); }
-    .lab-grid.sidebar-right-closed { grid-template-columns: var(--sb-left-w, 260px) 1fr 40px; }
-    .lab-grid.sidebar-left-closed.sidebar-right-closed { grid-template-columns: 40px 1fr 40px; }
-    @media (min-width: 1081px) and (max-width: 1220px) {
-      .lab-grid {
-        grid-template-columns:
-          minmax(200px, min(var(--sb-left-w, 260px), 240px))
-          minmax(600px, 1fr)
-          minmax(200px, min(var(--sb-right-w, 320px), 240px));
-        gap: 12px;
-      }
-      .lab-grid.sidebar-left-closed { grid-template-columns: 40px minmax(600px, 1fr) minmax(200px, min(var(--sb-right-w, 320px), 240px)); }
-      .lab-grid.sidebar-right-closed { grid-template-columns: minmax(200px, min(var(--sb-left-w, 260px), 240px)) minmax(600px, 1fr) 40px; }
-      .lab-grid.sidebar-left-closed.sidebar-right-closed { grid-template-columns: 40px minmax(600px, 1fr) 40px; }
+    .lab-grid {
+      display: grid;
+      grid-template-columns:
+        minmax(200px, var(--sb-left-w, 260px))
+        minmax(600px, 1fr)
+        minmax(200px, var(--sb-right-w, 320px));
+      gap: 16px;
+      align-items: start;
     }
+    .lab-grid.sidebar-left-closed { grid-template-columns: 40px minmax(600px, 1fr) minmax(200px, var(--sb-right-w, 320px)); }
+    .lab-grid.sidebar-right-closed { grid-template-columns: minmax(200px, var(--sb-left-w, 260px)) minmax(600px, 1fr) 40px; }
+    .lab-grid.sidebar-left-closed.sidebar-right-closed { grid-template-columns: 40px minmax(600px, 1fr) 40px; }
 
     /* AGENTE single-column layout (operatore: "spostiamo come nell'immagine 3").
        Selector + viewer stack vertical. Selector flex-shrink 0,
@@ -586,15 +582,15 @@
     }
     .lab-sidebar-left  .resize-handle { right: -6px; }
     .lab-sidebar-right .resize-handle { left: -6px; }
-    @media (max-width: 1080px) { .resize-handle { display: none; } }
+    @media (max-width: 1064px) { .resize-handle { display: none; } }
 
     body.resizing { cursor: col-resize; user-select: none; }
     body.resizing * { cursor: col-resize !important; }
 
     /* v3.10 — Mobile drawer pattern. Pattern da Shell3Col.tsx (d-nd_com).
-       Sotto 1080px le sidebar escono dal flusso e tornano come overlay
+       Sotto 1064px le sidebar escono dal flusso e tornano come overlay
        laterali con backdrop. Peek button sui bordi. */
-    @media (max-width: 1080px) {
+    @media (max-width: 1064px) {
       .lab-grid { grid-template-columns: 1fr; gap: 12px; }
       .lab-grid > .lab-sidebar {
         position: fixed; top: 0; bottom: 0;
@@ -616,7 +612,7 @@
     }
 
     .mobile-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 85; opacity: 0; pointer-events: none; transition: opacity 220ms cubic-bezier(0.4,0,0.2,1); }
-    @media (max-width: 1080px) {
+    @media (max-width: 1064px) {
       .mobile-backdrop { display: block; }
       .lab-grid[data-mobile-drawer] ~ .mobile-backdrop,
       .mobile-backdrop.active { opacity: 1; pointer-events: auto; }
@@ -627,16 +623,16 @@
     .peek-btn-left  { left: 0;  border-left: 0;  border-radius: 0 10px 10px 0; }
     .peek-btn-right { right: 0; border-right: 0; border-radius: 10px 0 0 10px; }
     .peek-btn:hover { background: rgba(30,41,59,1); color: #c4b5fd; }
-    @media (max-width: 1080px) { .peek-btn { display: flex; } }
+    @media (max-width: 1064px) { .peek-btn { display: flex; } }
     body.drawer-open .peek-btn { opacity: 0; pointer-events: none; }
 
     /* Mobile close button dentro drawer header */
     .mobile-close-btn { display: none; }
-    @media (max-width: 1080px) { .mobile-close-btn { display: inline-flex; } }
+    @media (max-width: 1064px) { .mobile-close-btn { display: inline-flex; } }
 
     /* Mobile/tablet: layout compatto — evita scroll orizzontale sul header
        quando nav + dominio + controlli eccedono lo spazio. */
-    @media (max-width: 1080px) {
+    @media (max-width: 1064px) {
       .lab-tab { padding: 0.4rem 0.7rem; font-size: 0.78rem; }
       .lab-tab .tab-icon { display: none; }
       .agente-grid { gap: 8px !important; }   /* margine tra list e viewer ridotto */
@@ -751,7 +747,7 @@
       border-top: 1px solid rgb(var(--neon-cyan) / 0.18);
       font-style: italic;
     }
-    @media (max-width: 1080px) { .stat-tip { display: none !important; } }
+    @media (max-width: 1064px) { .stat-tip { display: none !important; } }
 
     .tab-preview-popover {
       position: fixed;
@@ -1152,7 +1148,7 @@
       .chat-panel-header { cursor: default; }
       .chat-resize-grip { display: none; }
     }
-    @media (max-width: 1080px) {
+    @media (max-width: 1064px) {
       /* Quando la chat e' aperta su mobile, deve coprire i peek button (z 70) */
       .chat-fab.open { z-index: 75; }
     }
@@ -1395,7 +1391,7 @@
   <!-- DOMAIN: 3-col layout full-page (tab bar ora inline nel header sopra) -->
   <main x-show="view === 'domain' && activeDomain" class="px-4 py-3">
 
-    <!-- 3-col grid (desktop) / mobile drawers (< 1080px) -->
+    <!-- 3-col grid (desktop) / mobile drawers (< 1064px) -->
     <div class="lab-grid"
          :class="{'sidebar-left-closed': !sidebarLeftOpen, 'sidebar-right-closed': !sidebarRightOpen}"
          :data-mobile-drawer="mobileDrawer || null">
@@ -2526,7 +2522,7 @@
                 <template x-for="s in scoperteSsp" :key="s.dir">
                   <div class="bg-slate-950 border border-slate-800 rounded p-4 space-y-2 cursor-pointer hover:border-cyan-700 transition"
                        :class="selectedScopertaSsp?.dir === s.dir && 'border-cyan-600'"
-                       @click="selectedScopertaSsp = s; selectedProdottoSsp = null; sidebarRightOpen = true; if (window.matchMedia('(max-width: 1080px)').matches) openMobileDrawer('right')">
+                       @click="selectedScopertaSsp = s; selectedProdottoSsp = null; sidebarRightOpen = true; if (window.matchMedia('(max-width: 1064px)').matches) openMobileDrawer('right')">
                     <div class="flex items-center justify-between">
                       <div class="flex-1">
                         <div class="text-sm font-medium text-slate-200" x-text="s.title_proposal || s.dir"></div>
@@ -2624,7 +2620,7 @@
                 <p class="text-xs text-slate-300">Stage 4 eseguito — verification.json reale, metriche empiriche da PoC A/B (claude-cli OAuth).</p>
                 <template x-for="p in prodottiSsp" :key="p.id">
                   <div class="bg-slate-950 border border-slate-800 rounded p-4 space-y-2 cursor-pointer hover:border-cyan-700 transition"
-                       @click="selectedProdottoSsp = p; selectedScopertaSsp = null; sidebarRightOpen = true; if (window.matchMedia('(max-width: 1080px)').matches) openMobileDrawer('right')"
+                       @click="selectedProdottoSsp = p; selectedScopertaSsp = null; sidebarRightOpen = true; if (window.matchMedia('(max-width: 1064px)').matches) openMobileDrawer('right')"
                        :class="{
                          'border-l-4 border-l-green-500': p.status === 'PASS',
                          'border-l-4 border-l-red-500': p.status === 'FAIL',
@@ -4631,7 +4627,7 @@
           const node = evt.target;
           this.selectedNode = node.data('full');
           this.sidebarRightOpen = true;
-          if (window.matchMedia('(max-width: 1080px)').matches) {
+          if (window.matchMedia('(max-width: 1064px)').matches) {
             this.openMobileDrawer('right');
           }
         });
@@ -4677,7 +4673,7 @@
       // v4.2 — node tooltip handlers. Posizionato relativo al rendered point del nodo
       // sullo schermo (cy.relativePosition + container offset).
       showNodeTooltip(cyNode, renderedPos) {
-        if (window.matchMedia('(max-width: 1080px)').matches) return;  // mobile usa drawer
+        if (window.matchMedia('(max-width: 1064px)').matches) return;  // mobile usa drawer
         this.cancelTooltipHide();
         this.hoverNode = cyNode.data('full');
         this.$nextTick(() => {
@@ -4747,7 +4743,7 @@
 
       // v4.3 — sidebar closed-state tooltip handlers
       showSidebarTip(side, ev) {
-        if (window.matchMedia('(max-width: 1080px)').matches) return;
+        if (window.matchMedia('(max-width: 1064px)').matches) return;
         if (this._sidebarTipHideTimer) { clearTimeout(this._sidebarTipHideTimer); this._sidebarTipHideTimer = null; }
         this.sidebarTipSide = side;
         // Capture aside element BEFORE nextTick — ev.currentTarget e' null
@@ -4784,7 +4780,7 @@
 
       // Stat tooltip rich — pattern dal sito (HoverPopover via portale).
       showStatTip(key, ev) {
-        if (window.matchMedia('(max-width: 1080px)').matches) return;
+        if (window.matchMedia('(max-width: 1064px)').matches) return;
         if (this._statTipHideTimer) { clearTimeout(this._statTipHideTimer); this._statTipHideTimer = null; }
         const tips = this.uiLocaleMap('tooltips');
         const domainDef = tips?.[key];
@@ -6661,7 +6657,7 @@
           if (node.data('isGroup')) return;
           this.selectedNode = node.data('full');
           this.sidebarRightOpen = true;
-          if (window.matchMedia('(max-width: 1080px)').matches) {
+          if (window.matchMedia('(max-width: 1064px)').matches) {
             this.openMobileDrawer('right');
           }
         });
