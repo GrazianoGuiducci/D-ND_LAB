@@ -915,6 +915,10 @@
       .domain-pill { max-width: 108px; padding-left: 6px !important; padding-right: 6px !important; }
       .lang-switcher { display: none !important; }
     }
+    @media (max-width: 827px) {
+      .dashboard-domains-label { display: none; }
+      .dashboard-topnav { gap: 6px !important; }
+    }
     @media (max-width: 560px) {
       .domain-breadcrumb { display: none !important; }
       .lab-tabs-mobile { min-width: 0; }
@@ -1093,8 +1097,21 @@
     .quick-actions { padding: 12px; border-bottom: 1px solid rgb(var(--neon-cyan) / 0.34); display: flex; flex-wrap: wrap; gap: 6px; background: rgba(0,0,0,.18); }
     .quick-action-btn { font-size: 11px; padding: 6px 10px; border-radius: 999px; background: rgba(167,139,250,.12); color: #c4b5fd; border: 1px solid rgba(167,139,250,.62); cursor: pointer; transition: all 0.15s; }
     .quick-action-btn:hover { background: rgba(167,139,250,.22); border-color: rgb(var(--neon-cyan)); box-shadow: 0 0 16px rgb(var(--neon-cyan) / 0.18); }
+    body.dashboard-chat-sheet { overflow: hidden; }
+    @media (min-width: 641px) and (max-width: 827px) {
+      .chat-fab.open {
+        left: 8px !important;
+        top: 8px !important;
+        right: auto !important;
+        bottom: auto !important;
+        width: calc(100vw - 16px) !important;
+        height: calc(100dvh - 16px) !important;
+        max-width: none !important;
+      }
+      .chat-fab.open .chat-resize-grip { display: none; }
+    }
     @media (max-width: 640px) {
-      .chat-fab.open { bottom: 18px !important; right: 18px !important; left: auto !important; top: auto !important; width: calc(100vw - 36px) !important; height: calc(100vh - 36px) !important; }
+      .chat-fab.open { left: 8px !important; top: 8px !important; right: auto !important; bottom: auto !important; width: calc(100vw - 16px) !important; height: calc(100dvh - 16px) !important; }
       .chat-closed-hint { display: none; }
       .chat-panel-header { cursor: default; }
       .chat-resize-grip { display: none; }
@@ -3923,6 +3940,11 @@
           this._onChatDragEnd();
           this._onChatResizeEnd();
         });
+        window.addEventListener('resize', () => {
+          this._clampChatWindow();
+          this.syncChatBodyLock();
+        });
+        this.$watch('chatOpen', () => this.syncChatBodyLock());
         // Restore agent list width
         try {
           const aw = parseInt(localStorage.getItem('dnd_agent_list_w') || '');
@@ -4060,12 +4082,15 @@
 
       openChatPanel() {
         this.chatOpen = true;
-        this.$nextTick(() => this._clampChatWindow());
+        this.$nextTick(() => {
+          this._clampChatWindow();
+          this.syncChatBodyLock();
+        });
       },
 
       chatWindowStyle() {
-        const isMobile = (window.innerWidth || 0) <= 640;
-        if (isMobile) return '';
+        const isSheet = (window.innerWidth || 0) <= 827;
+        if (isSheet) return '';
         this._ensureChatWindowPosition();
         return `left: ${Math.round(this.chatWindow.left)}px; top: ${Math.round(this.chatWindow.top)}px; right: auto; bottom: auto; width: ${Math.round(this.chatWindow.width)}px; height: ${Math.round(this.chatWindow.height)}px;`;
       },
@@ -4078,8 +4103,8 @@
       },
 
       _clampChatWindow() {
-        const isMobile = (window.innerWidth || 0) <= 640;
-        if (isMobile) return;
+        const isSheet = (window.innerWidth || 0) <= 827;
+        if (isSheet) return;
         const pad = 12;
         const vw = window.innerWidth || 1024;
         const vh = window.innerHeight || 768;
@@ -4094,8 +4119,12 @@
         try { localStorage.setItem('dnd_chat_window', JSON.stringify(this.chatWindow)); } catch (e) {}
       },
 
+      syncChatBodyLock() {
+        document.body.classList.toggle('dashboard-chat-sheet', !!this.chatOpen && (window.innerWidth || 0) <= 827);
+      },
+
       startChatDrag(ev) {
-        if ((window.innerWidth || 0) <= 640) return;
+        if ((window.innerWidth || 0) <= 827) return;
         if (ev.target.closest('button, input, textarea, a')) return;
         ev.preventDefault();
         this._ensureChatWindowPosition();
@@ -4122,7 +4151,7 @@
       },
 
       startChatResize(ev) {
-        if ((window.innerWidth || 0) <= 640) return;
+        if ((window.innerWidth || 0) <= 827) return;
         ev.preventDefault();
         this._ensureChatWindowPosition();
         try { ev.currentTarget.setPointerCapture?.(ev.pointerId); } catch (e) {}
