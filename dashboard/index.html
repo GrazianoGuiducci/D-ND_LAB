@@ -892,6 +892,21 @@
     .dashboard-topnav { min-width: 0; }
     .domain-breadcrumb { min-width: 0; max-width: 190px; }
     .domain-pill { max-width: 155px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .mobile-toggle {
+      display: none;
+      width: 34px;
+      height: 34px;
+      padding: 0;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgb(30 41 59);
+      border-radius: 8px;
+      background: rgb(15 23 42 / 0.92);
+      color: rgb(226 232 240);
+      line-height: 1;
+      font-size: 18px;
+    }
+    .mobile-toggle:hover { border-color: rgb(34 211 238 / 0.75); color: rgb(34 211 238); }
     .lab-tab { padding: 0.6rem 1.2rem; font-size: 0.875rem; font-weight: 500; border-bottom: 2px solid transparent; transition: all 0.15s; white-space: nowrap; color: rgb(var(--site-text-muted)); background: none; border-left: 0; border-right: 0; border-top: 0; cursor: pointer; }
     .lab-tab:hover { color: #cbd5e1; }
     .lab-tab.active { color: #c4b5fd; border-bottom-color: #a78bfa; }
@@ -910,7 +925,7 @@
         grid-template-columns: auto minmax(118px, 1fr) auto;
         grid-template-areas: "brand tabs nav";
         align-items: center;
-        padding: 10px 12px 8px !important;
+        padding: 7px 10px !important;
         gap: 8px !important;
       }
       .lab-brand { grid-area: brand; min-width: 0; }
@@ -922,6 +937,7 @@
       .domain-breadcrumb { max-width: 132px; }
       .domain-pill { max-width: 108px; padding-left: 6px !important; padding-right: 6px !important; }
       .lang-switcher { display: none !important; }
+      .mobile-toggle { display: inline-flex; flex: 0 0 34px; }
     }
     @media (max-width: 827px) {
       .dashboard-domains-label { display: none; }
