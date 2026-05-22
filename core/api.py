@@ -3408,7 +3408,7 @@ async def submit_expert_image_intake(
     """
     await _check_auth(request)
     _validate_domain(domain)
-    _check_public_intake_rate(request)
+    _check_public_intake_rate(request, max_hits=30, label="file upload")
     if not body.images:
         raise HTTPException(400, "At least one file is required.")
     if len(body.images) > 6:
@@ -4228,15 +4228,19 @@ def _client_key(request: Request) -> str:
     return "unknown"
 
 
-def _check_public_intake_rate(request: Request) -> None:
+def _check_public_intake_rate(
+    request: Request,
+    *,
+    max_hits: int = 5,
+    window_seconds: int = 600,
+    label: str = "contribution",
+) -> None:
     """Small in-process rate limit for public contribution/lead intake."""
     now = time.time()
     key = _client_key(request)
-    window_seconds = 600
-    max_hits = 5
     bucket = [ts for ts in _CONTRIBUTION_RATE.get(key, []) if now - ts < window_seconds]
     if len(bucket) >= max_hits:
-        raise HTTPException(429, "Too many contribution attempts; retry later.")
+        raise HTTPException(429, f"Too many {label} attempts; retry later.")
     bucket.append(now)
     _CONTRIBUTION_RATE[key] = bucket
 
