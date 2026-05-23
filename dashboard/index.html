@@ -1873,28 +1873,6 @@
                                 x-text="q"></button>
                       </template>
                     </div>
-                    <div class="mt-3 rounded border border-green-400/70 bg-green-950/10 p-3">
-                      <div class="text-[10px] uppercase tracking-wider text-green-200">Intake file esperto</div>
-                      <p class="mt-1 text-xs text-slate-300">Carica screenshot, PDF, note o dati BTC: THIA riceve contesto, nota e link ai file salvati.</p>
-                      <textarea x-model="expertImageIntake.note"
-                                class="mt-2 w-full min-h-[64px] rounded border border-slate-700 bg-slate-950/70 px-2 py-2 text-xs text-slate-100 placeholder:text-slate-500 focus:border-green-400 focus:outline-none"
-                                placeholder="Nota per THIA: cosa deve guardare nelle immagini?"></textarea>
-                      <div class="mt-2 flex items-center gap-2 flex-wrap">
-                        <label class="thia-ask-btn cursor-pointer">
-                          scegli file
-                          <input type="file" accept="image/png,image/jpeg,image/webp,image/gif,application/pdf,text/plain,text/markdown,text/csv,application/json,.md,.txt,.csv,.json,.jsonl,.pdf,.yaml,.yml" multiple class="hidden"
-                                 @change="setExpertImageFiles($event)">
-                        </label>
-                        <button @click="submitExpertImageIntake()"
-                                class="thia-ask-btn"
-                                :disabled="expertImageIntake.uploading || expertImageIntake.files.length === 0"
-                                :class="(expertImageIntake.uploading || expertImageIntake.files.length === 0) && 'opacity-50 cursor-not-allowed'">
-                          invia a THIA
-                        </button>
-                      </div>
-                      <div class="mt-2 text-[11px] text-slate-400" x-text="expertImageFileSummary()"></div>
-                      <div class="mt-1 text-[11px]" :class="expertImageIntake.error ? 'text-amber-200' : 'text-green-200'" x-text="expertImageIntake.status"></div>
-                    </div>
                     <template x-if="bitcoinMethodRecommendedNext()">
                       <button @click="selectBitcoinMethodLens()"
                               class="mt-3 w-full text-left border border-amber-400/80 rounded p-3 bg-amber-950/10 hover:border-amber-200 transition cursor-pointer">
@@ -3779,7 +3757,6 @@
       latestValueArtifacts: { available: false, artifacts: [] },
       btcChartProvider: 'bitstamp',
       btcChartFullscreen: false,
-      expertImageIntake: { files: [], note: '', uploading: false, status: '', error: false, last: null },
       financePrecondition: { available: false },
       uiContract: { available: false },
       labThought: { available: false },
@@ -5807,140 +5784,6 @@
       setBtcChartFullscreen(on) {
         this.btcChartFullscreen = !!on;
         document.body.style.overflow = on ? 'hidden' : '';
-      },
-
-      setExpertImageFiles(ev) {
-        const allowedExt = /\.(png|jpe?g|webp|gif|pdf|txt|md|csv|json|jsonl|ya?ml)$/i;
-        const files = Array.from(ev?.target?.files || [])
-          .filter((f) => f && (f.type?.startsWith('image/') || f.type === 'application/pdf' || f.type?.startsWith('text/') || f.type === 'application/json' || allowedExt.test(f.name || '')))
-          .slice(0, 6);
-        this.expertImageIntake.files = files;
-        this.expertImageIntake.error = false;
-        this.expertImageIntake.status = files.length
-          ? `${files.length} file pronti. Aggiungi una nota e invia a THIA.`
-          : 'Nessun file valido selezionato.';
-      },
-
-      expertImageFileSummary() {
-        const files = this.expertImageIntake.files || [];
-        if (!files.length) return 'Nessun file selezionato. Formati: immagini, PDF, TXT, MD, CSV, JSON/YAML. Max 6 file.';
-        return files.map((f) => `${f.name} · ${(f.size / 1024 / 1024).toFixed(2)} MB`).join(' | ');
-      },
-
-      fileToDataUrl(file) {
-        return new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result);
-          reader.onerror = () => reject(reader.error || new Error('file read failed'));
-          reader.readAsDataURL(file);
-        });
-      },
-
-      async imageToUploadPayload(file) {
-        const original = await this.fileToDataUrl(file);
-        if (!file.type?.startsWith('image/') || file.type === 'image/gif' || file.size < 900 * 1024) {
-          return { filename: file.name, mime: file.type || this.mimeFromFilename(file.name), data: original };
-        }
-        return new Promise((resolve) => {
-          const img = new Image();
-          img.onload = () => {
-            const maxSide = 1800;
-            const scale = Math.min(1, maxSide / Math.max(img.width || maxSide, img.height || maxSide));
-            const canvas = document.createElement('canvas');
-            canvas.width = Math.max(1, Math.round((img.width || maxSide) * scale));
-            canvas.height = Math.max(1, Math.round((img.height || maxSide) * scale));
-            const ctx = canvas.getContext('2d');
-            if (!ctx) {
-              resolve({ filename: file.name, mime: file.type || 'image/png', data: original });
-              return;
-            }
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            const jpg = canvas.toDataURL('image/jpeg', 0.82);
-            const originalBytes = String(original).length;
-            const jpgBytes = String(jpg).length;
-            if (jpgBytes < originalBytes) {
-              const stem = file.name.replace(/\.[^.]+$/, '') || 'image';
-              resolve({ filename: `${stem}.jpg`, mime: 'image/jpeg', data: jpg });
-            } else {
-              resolve({ filename: file.name, mime: file.type || 'image/png', data: original });
-            }
-          };
-          img.onerror = () => resolve({ filename: file.name, mime: file.type || 'image/png', data: original });
-          img.src = original;
-        });
-      },
-
-      mimeFromFilename(name) {
-        const lower = String(name || '').toLowerCase();
-        if (lower.endsWith('.pdf')) return 'application/pdf';
-        if (lower.endsWith('.md')) return 'text/markdown';
-        if (lower.endsWith('.csv')) return 'text/csv';
-        if (lower.endsWith('.json') || lower.endsWith('.jsonl')) return 'application/json';
-        if (lower.endsWith('.yaml') || lower.endsWith('.yml')) return 'application/yaml';
-        return 'text/plain';
-      },
-
-      async submitExpertImageIntake() {
-        if (!this.activeDomain || this.expertImageIntake.uploading) return;
-        const files = this.expertImageIntake.files || [];
-        if (!files.length) {
-          this.expertImageIntake.status = 'Seleziona almeno un file.';
-          this.expertImageIntake.error = true;
-          return;
-        }
-        const tooLarge = files.find((f) => f.size > 24 * 1024 * 1024);
-        if (tooLarge) {
-          this.expertImageIntake.status = `${tooLarge.name} supera 24 MB. Riduci o esporta l'immagine.`;
-          this.expertImageIntake.error = true;
-          return;
-        }
-        this.expertImageIntake.uploading = true;
-        this.expertImageIntake.error = false;
-        this.expertImageIntake.status = 'Ottimizzo e carico i file...';
-        try {
-          const images = await Promise.all(files.map((file) => this.imageToUploadPayload(file)));
-          const resp = await fetch(`/api/domains/${this.activeDomain}/expert_file_intake`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              expert_name: '',
-              note: this.expertImageIntake.note || '',
-              context_tab: this.activeTab || null,
-              context_view: this.buildChatViewContext(),
-              images,
-            }),
-          });
-          const data = await resp.json().catch(() => ({}));
-          if (!resp.ok || !data.ok) {
-            throw new Error(data.detail || resp.statusText || 'upload failed');
-          }
-          this.expertImageIntake.last = data;
-          this.expertImageIntake.status = `Intake ${data.id} salvato: ${data.files?.length || data.images?.length || 0} file. THIA riceve il contesto.`;
-          const uploadedFiles = data.files || data.images || [];
-          this.sendThiaAsk({
-            domain: this.activeDomain,
-            tab: this.activeTab || 'campo',
-            element: 'BTC expert file intake',
-            value: `${uploadedFiles.length} file caricati · ${data.id}`,
-            interpretation: 'I file sono materiale esperto da usare come contesto di discussione, non come segnale automatico. Non attribuire il contributo ad Alipio senza identita verificata.',
-            dynamics: 'THIA deve aiutare a estrarre oggetti testabili: FVG/imbalance, LVN/Volume Profile, CME gap, POC, timeframe, regole di chiusura e falsificatori.',
-            result: uploadedFiles.map((item) => `${item.filename}: ${item.url}`).join(' | '),
-            prompt: `Un visitatore esperto ha caricato ${uploadedFiles.length} file BTC nel Lab. Usa dati estratti, nota e link per guidare il feedback esperto senza trasformarlo automaticamente in segnale. Non chiamarlo Alipio se non c'e identita/email verificata. Nota: ${this.expertImageIntake.note || 'nessuna nota'}`,
-            canonicalQuestions: [
-              'Quale oggetto tecnico mostra ogni immagine: FVG, LVN/Volume Profile, CME gap, POC, trendline o MM52?',
-              'Quale fonte/timeframe/finestra rende l osservazione testabile?',
-              'Quale regola di chiusura, invalidazione e null severo servono prima del prossimo cycle?',
-            ],
-            attachments: uploadedFiles,
-            extracted: data.extracted || null,
-            manifest: data.manifest,
-          });
-        } catch (err) {
-          this.expertImageIntake.error = true;
-          this.expertImageIntake.status = `errore upload: ${err.message}`;
-        } finally {
-          this.expertImageIntake.uploading = false;
-        }
       },
 
       btcThiaAskDetail(point) {

@@ -36,6 +36,7 @@ import logging
 import os
 import re
 import subprocess
+import tempfile
 import threading
 import time
 import urllib.error
@@ -4621,12 +4622,25 @@ def _decode_image_payload(item: ExpertImageItem) -> tuple[bytes, str]:
         if m:
             mime = m.group(1).lower()
         data = encoded
+    filename_ext = Path(str(item.filename or "")).suffix.lower()
+    inferred_by_ext = {
+        ".pdf": "application/pdf",
+        ".txt": "text/plain",
+        ".md": "text/markdown",
+        ".csv": "text/csv",
+        ".json": "application/json",
+        ".jsonl": "application/x-ndjson",
+        ".yaml": "application/yaml",
+        ".yml": "application/yaml",
+    }
     allowed = {
         "image/png", "image/jpeg", "image/webp", "image/gif",
         "application/pdf", "text/plain", "text/markdown", "text/csv",
         "application/json", "application/x-ndjson",
         "application/yaml", "text/yaml",
     }
+    if mime not in allowed and filename_ext in inferred_by_ext:
+        mime = inferred_by_ext[filename_ext]
     if mime not in allowed:
         raise HTTPException(400, f"Unsupported file type: {mime or 'unknown'}")
     try:
@@ -4684,10 +4698,10 @@ def _write_expert_image_intake(domain: str, intake_id: str, body: ExpertImageInt
             "note_excerpt": _clean_public_text(body.note, 1200),
             "files": extracted_files,
             "limits": (
-                "Text-like files are excerpted server-side. Images expose metadata "
-                "and dimensions, plus a vision summary when the Lab vision model is "
-                "configured and accepts the file. PDFs expose metadata until a PDF "
-                "parser is enabled."
+                "Text-like files are excerpted server-side. PDFs are extracted with "
+                "the server pdftotext tool when possible. Images expose metadata and "
+                "dimensions, plus a vision summary when the Lab vision model is "
+                "configured and accepts the file."
             ),
         },
         "boundary": "Captured for operator/THIA review only; no automatic promotion.",
@@ -4774,15 +4788,57 @@ def _extract_expert_file_data(raw: bytes, filename: str, mime: str) -> dict[str,
         })
         return data
 
-    if mime == "application/pdf":
-        data.update({
-            "extraction_status": "metadata_only",
-            "text_status": "not_extracted_without_pdf_parser",
-        })
+    if mime == "application/pdf" or filename.lower().endswith(".pdf") or raw.startswith(b"%PDF"):
+        data["mime_detected"] = "application/pdf"
+        text, reason = _extract_pdf_text(raw, filename)
+        if text:
+            data.update({
+                "extraction_status": "pdf_text_excerpt",
+                "text_status": "extracted_with_pdftotext",
+                "text_excerpt": _clean_public_text(text, 5000),
+                "line_count": len(text.splitlines()),
+            })
+        else:
+            data.update({
+                "extraction_status": "metadata_only",
+                "text_status": reason or "pdf_text_not_extracted",
+            })
         return data
 
     data["extraction_status"] = "unsupported_for_text_extraction"
     return data
+
+
+def _extract_pdf_text(raw: bytes, filename: str) -> tuple[str, str]:
+    if not raw.startswith(b"%PDF"):
+        return "", "not_a_pdf_stream"
+    try:
+        with tempfile.NamedTemporaryFile(prefix="dnd_lab_pdf_", suffix=".pdf") as tmp:
+            tmp.write(raw)
+            tmp.flush()
+            proc = subprocess.run(
+                ["pdftotext", "-layout", "-enc", "UTF-8", tmp.name, "-"],
+                check=False,
+                capture_output=True,
+                timeout=8,
+            )
+    except FileNotFoundError:
+        return "", "pdftotext_not_available"
+    except subprocess.TimeoutExpired:
+        return "", "pdftotext_timeout"
+    except Exception as exc:
+        logger.info("expert PDF extraction failed for %s: %s", filename, exc)
+        return "", "pdftotext_error"
+    if proc.returncode != 0:
+        err = proc.stderr.decode("utf-8", errors="replace").strip()
+        logger.info("expert PDF extraction returned %s for %s: %s", proc.returncode, filename, err[:300])
+        return "", "pdftotext_failed"
+    text = proc.stdout.decode("utf-8", errors="replace")
+    text = re.sub(r"[\u200b\u200c\u200d\ufeff]", "", text)
+    text = re.sub(r"\n{4,}", "\n\n\n", text).strip()
+    if not text:
+        return "", "pdftotext_empty"
+    return text[:12000], ""
 
 
 def _image_dimensions(raw: bytes, mime: str) -> dict[str, int] | None:
