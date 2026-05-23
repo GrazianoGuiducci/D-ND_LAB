@@ -62,6 +62,8 @@ from core import paths
 
 logger = logging.getLogger(__name__)
 
+EXPERT_FILE_TEXT_EXCERPT_LIMIT = int(os.environ.get("DND_LAB_EXPERT_FILE_TEXT_EXCERPT_LIMIT", "12000"))
+
 
 # ─── Config ─────────────────────────────────────────────────────────
 
@@ -4780,7 +4782,7 @@ def _extract_expert_file_data(raw: bytes, filename: str, mime: str) -> dict[str,
 
     if mime in {"text/plain", "text/markdown", "text/csv", "application/json", "application/x-ndjson", "application/yaml", "text/yaml"}:
         text = raw.decode("utf-8", errors="replace")
-        clean = _clean_public_text(text, 4000)
+        clean = _clean_public_text(text, EXPERT_FILE_TEXT_EXCERPT_LIMIT)
         data.update({
             "extraction_status": "text_excerpt",
             "line_count": len(text.splitlines()),
@@ -4795,7 +4797,7 @@ def _extract_expert_file_data(raw: bytes, filename: str, mime: str) -> dict[str,
             data.update({
                 "extraction_status": "pdf_text_excerpt",
                 "text_status": "extracted_with_pdftotext",
-                "text_excerpt": _clean_public_text(text, 5000),
+                "text_excerpt": _clean_public_text(text, EXPERT_FILE_TEXT_EXCERPT_LIMIT),
                 "line_count": len(text.splitlines()),
             })
         else:
