@@ -1,0 +1,186 @@
+{
+  "schema": "dndlab.meta.migration_registry.v0",
+  "status": "draft",
+  "updated_at": "2026-05-20",
+  "purpose": "Reviewed proposals for moving capabilities between Labs. Draft only: no runtime effect.",
+  "migrations": [
+    {
+      "migration_id": "20260520_lab_review_card_to_finance",
+      "capability": "lab_review_card@0.1.0",
+      "source_lab": "bitcoin-regime-lab",
+      "target_lab": "finance",
+      "status": "proposed",
+      "reason": "Finance can benefit from reviewed expert or operator notes, but must adapt them to regime-hypothesis fields.",
+      "domain_adapter_required": true,
+      "required_changes": [
+        "define finance_regime_review_card fields",
+        "map source/provider, asset/window, hypothesis, metric, baseline/null, leakage guard, decision boundary and falsifier",
+        "render card in admin without treating it as seed",
+        "ground THIA in finance role and no-signal boundary"
+      ],
+      "risk": "medium",
+      "security_requirements": [
+        "review_quarantine",
+        "source_provenance_guard",
+        "no_signal_boundary",
+        "role_boundary_guard"
+      ],
+      "non_admissible_transfer": [
+        "BTC fields such as POC, FVG, LVN, CME gap or MM52",
+        "trading-signal language",
+        "automatic seed contamination"
+      ],
+      "verification": [
+        "form saves finance review card",
+        "admin shows sources and missing limits",
+        "THIA does not claim Finance Lab was updated",
+        "no direct seed mutation"
+      ]
+    },
+    {
+      "migration_id": "20260520_source_robustness_to_finance",
+      "capability": "source_robustness_gate@0.1.0",
+      "source_lab": "bitcoin-regime-lab",
+      "target_lab": "finance",
+      "status": "proposed",
+      "reason": "BTC cross-feed robustness can become provider/dataset/version robustness for finance.",
+      "domain_adapter_required": true,
+      "required_changes": [
+        "define finance source agreement metrics",
+        "compare yfinance/coingecko or versioned dataset constraints where available",
+        "make provider errors and stale data visible",
+        "block promotion when source status is insufficient"
+      ],
+      "risk": "medium",
+      "security_requirements": [
+        "source_provenance_guard",
+        "no_signal_boundary"
+      ],
+      "non_admissible_transfer": [
+        "exchange close-dispersion thresholds copied from BTC",
+        "assuming provider agreement implies market claim validity"
+      ],
+      "verification": [
+        "data_card carries provider/version/retrieval metadata",
+        "source disagreement downgrades verdict or marks review_required",
+        "UI exposes source status"
+      ]
+    },
+    {
+      "migration_id": "20260520_timeframe_matrix_to_finance_review",
+      "capability": "scale_or_timeframe_matrix@0.1.0",
+      "source_lab": "bitcoin-regime-lab",
+      "target_lab": "finance",
+      "status": "reviewing",
+      "reason": "Finance has multi-window/multi-horizon regimes; the BTC timeframe matrix may transfer as scale admissibility, not trading timeframe selection.",
+      "domain_adapter_required": true,
+      "required_changes": [
+        "rename to finance horizon/window admissibility matrix",
+        "define denominator per asset/window",
+        "require shuffle/block null per horizon",
+        "exclude best-timeframe language"
+      ],
+      "risk": "medium",
+      "security_requirements": [
+        "no_signal_boundary",
+        "source_provenance_guard"
+      ],
+      "non_admissible_transfer": [
+        "best timeframe recommendations",
+        "operational entry/exit interpretation"
+      ],
+      "verification": [
+        "matrix outputs test/watch/blocked only",
+        "each horizon has denominator or block reason",
+        "no signal labels appear"
+      ]
+    },
+    {
+      "migration_id": "20260520_physics_scale_sweep_to_meta_capability",
+      "capability": "scale_or_timeframe_matrix@0.1.0",
+      "source_lab": "physics",
+      "target_lab": "meta-lab",
+      "status": "proposed",
+      "reason": "Physics scale/finite-size sweep and BTC timeframe matrix look like one larger multi-scale admissibility family.",
+      "domain_adapter_required": false,
+      "required_changes": [
+        "compare physics scale sweep with BTC timeframe matrix",
+        "define generic scale_admissibility_matrix capability",
+        "declare valid_when and retire_when",
+        "avoid importing physics content into non-physics domains"
+      ],
+      "risk": "low",
+      "security_requirements": [
+        "source_provenance_guard"
+      ],
+      "non_admissible_transfer": [
+        "physics invariants copied as content to other domains",
+        "scale matrix used without domain-native null"
+      ],
+      "verification": [
+        "capability doc distinguishes scale as denominator from scale as display",
+        "at least two domain examples exist before generator promotion"
+      ]
+    },
+    {
+      "migration_id": "20260520_role_boundary_guard_to_public_thia",
+      "capability": "role_boundary_guard@0.1.0",
+      "source_lab": "bitcoin-regime-lab",
+      "target_lab": "all_public_lab_surfaces",
+      "status": "proposed",
+      "reason": "BTC testing exposed role confusion: THIA may speak as if the visitor is admin/operator or as if admin persistence updates the Lab.",
+      "domain_adapter_required": true,
+      "required_changes": [
+        "define role context per surface",
+        "make visitor/expert/admin/operator distinction explicit",
+        "test THIA responses after intake, file upload and admin save",
+        "ensure saved intake is described as review/quarantine, not Lab update"
+      ],
+      "risk": "high",
+      "security_requirements": [
+        "role_boundary_guard",
+        "review_quarantine",
+        "source_provenance_guard"
+      ],
+      "non_admissible_transfer": [
+        "generic role prompt that ignores domain context",
+        "hiding admin/operator difference from public user"
+      ],
+      "verification": [
+        "THIA does not claim privilege it lacks",
+        "visitor is not treated as admin",
+        "expert is unverified unless operator verifies",
+        "admin intake save is not described as seed update"
+      ]
+    },
+    {
+      "migration_id": "20260520_secret_redaction_guard_review",
+      "capability": "secret_redaction_guard@0.1.0",
+      "source_lab": "contribution_preport",
+      "target_lab": "all_intake_and_packet_surfaces",
+      "status": "proposed",
+      "reason": "File/chat/admin intake and packet continuity create multiple persistence surfaces where secrets must not be copied.",
+      "domain_adapter_required": false,
+      "required_changes": [
+        "inventory persistence surfaces",
+        "define block/redact policy per surface",
+        "reuse existing contribution redaction where available",
+        "add tests before enabling runtime enforcement"
+      ],
+      "risk": "high",
+      "security_requirements": [
+        "secret_redaction_guard",
+        "source_provenance_guard"
+      ],
+      "non_admissible_transfer": [
+        "silent redaction that hides data loss from operator",
+        "claiming all secrets are caught"
+      ],
+      "verification": [
+        "common token patterns blocked or redacted",
+        "redaction warning visible",
+        "no secret echo in admin or packets"
+      ]
+    }
+  ]
+}

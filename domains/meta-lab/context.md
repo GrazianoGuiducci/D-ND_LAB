@@ -168,6 +168,10 @@ Il lab figlio acquisisce anche:
 - `onboarding_contract.json` opzionale ma raccomandato: contratto macchina
   per i canali informativi del Lab, basato su
   `docs/templates/onboarding_contract.v1.json`.
+- profilo assistente THIA: blocco `assistant` dentro `ui_contract.json` o
+  contratto equivalente basato su `docs/templates/assistant_contract.v0.json`.
+  Non e' copy decorativa: definisce ruolo, starter, intake, file, review e
+  confini di promozione del lab figlio.
 
 1. **Lettura del corpus / contesto runtime** — leggi le memorie operatore
    in `/root/.claude/projects/-opt/memory/`, le cristallizzazioni del
@@ -299,6 +303,8 @@ Il lab figlio acquisisce anche:
    - `frame.right`: dettaglio, runtime, THIA/context assistant;
    - `common_modules`: moduli comuni usati;
    - `domain_modules`: moduli specifici con osservabili e baseline/null;
+   - `assistant`: contratto THIA domain-native con role boundary, starter,
+     intake profile, review quarantine e forbidden claims;
    - `admin_actions`: azioni consentite e confini;
    - `forbidden_labels`: parole/azioni che contaminano il dominio;
    - `e2e`: prove che cycle data raggiunge almeno sinistra, centro e destra.
@@ -556,7 +562,10 @@ Quando completi la generazione, **emetti SEMPRE come ultimo output** un blocco m
 
 1. Linka esplicitamente al runbook: `Esegui la cascade completa: vedi /opt/d-nd-seed/docs/LAB_BIRTH_CASCADE.md`
 2. Elenca i punti **specifici di questo lab** che richiederanno copy/UI lavoro (es. "una nuova card nella sezione Sei campi di applicazione di lab.d-nd.com landing", "decisione TM1 se aggiungere pagina dedicata su d-nd.com")
-3. Stima onestamente l'effort residuo: "~2-3h TM3 lane (lab.d-nd.com integration) + Sinapsi brief a TM1 per copy d-nd.com"
+3. Elenca il profilo THIA richiesto: starter domain-native, intake card,
+   forbidden labels, fonti ammesse e differenza tra review/admin record e
+   mutazione del Lab.
+4. Stima onestamente l'effort residuo: "~2-3h TM3 lane (lab.d-nd.com integration) + Sinapsi brief a TM1 per copy d-nd.com"
 
 Senza questo blocco, il lab nasce ma resta invisibile ai visitatori del sito — il valore generativo del meta-lab si dimezza. La cascade è parte integrante della generazione, non un'aggiunta opzionale.
 
@@ -576,6 +585,11 @@ Nota terminologica: `meta-lab` è il nome canonico attivo. `meta-prototyper`
   "leveraging cutting-edge ML"). Il modello D-ND ha tono diretto:
   nominare ciò che è, non decorare. Vedi `/opt/d-nd_com/CLAUDE.md`
   sez. "Come parla" se servono esempi.
+- **Assistente generico copiato da un altro Lab**. THIA deve parlare dal
+  dominio corrente. Finance non importa FVG/POC/LVN/CME; BTC non importa
+  leakage/score_min se non dichiarato dal proprio contratto; un lab generato
+  deve avere starter e intake coerenti con `ui_contract` e
+  `onboarding_contract`.
 - **Tradurre meccanicamente IT→EN** in about.md. Le due versioni IT/EN
   devono essere entrambe sorgenti, non l'una traduzione dell'altra.
   Riformula in lingua nativa. Vedi pattern `/opt/D-ND_LAB/domains/physics/about.md`

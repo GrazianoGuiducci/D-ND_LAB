@@ -307,6 +307,191 @@ def _ui_language_contract(kind: str) -> dict[str, Any]:
     return {}
 
 
+def _assistant_contract(slug: str, kind: str, exclusions: list[str], boundary: dict[str, Any] | None) -> dict[str, Any]:
+    """Domain-native THIA assistant profile for generated Labs.
+
+    This is a contract, not a prompt dump: runtimes can consume it to build
+    starter questions, intake forms and review boundaries without copying
+    another Lab's language.
+    """
+    forbidden = exclusions or ["premature public claim"]
+    purpose_it = "Risponde dallo stato del dominio, chiarisce i confini e prepara intake revisionabili senza modificare direttamente il Lab."
+    purpose_en = "Answer from domain state, clarify boundaries and prepare reviewable intake without direct Lab mutation."
+    if kind == "finance":
+        purpose_it = "Aiuta i visitatori a leggere il Finance Lab tramite baseline/null, provenienza dati, leakage guard e confini decisionali senza produrre consigli di trading."
+        purpose_en = "Help visitors read Finance Lab through baseline/null, data provenance, leakage guard and decision bounds without producing trading advice."
+        chat = [
+            {
+                "label_it": "Ultimo report",
+                "label_en": "Latest report",
+                "intent": "read_current_state",
+                "prompt_it": "Riassumi il risultato finance visibile: ipotesi, baseline/null, dati, leakage guard, cosa regge e cosa resta non operativo.",
+                "prompt_en": "Summarize the visible finance result: hypothesis, baseline/null, data, leakage guard, what holds and what remains non-operational.",
+            },
+            {
+                "label_it": "Esploriamo",
+                "label_en": "Explore",
+                "intent": "explore_domain",
+                "prompt_it": "Guidami nel Lab finance: regime sospetto, fonti dati, baseline/null, decision bounds e prima ispezione utile.",
+                "prompt_en": "Guide me through the finance Lab: suspected regime, data sources, baseline/null, decision bounds and first useful inspection.",
+            },
+            {
+                "label_it": "Aiutami a capire",
+                "label_en": "Help me understand",
+                "intent": "explain_boundary",
+                "prompt_it": "Spiega il confine tra ipotesi finance, evidenza, baseline/null e decisione non ammessa.",
+                "prompt_en": "Explain the boundary between finance hypothesis, evidence, baseline/null and non-admissible decision.",
+            },
+        ]
+        intake_feedback = [
+            {
+                "label_it": "Qualifica ipotesi",
+                "label_en": "Qualify hypothesis",
+                "intake_kind": "contribute",
+                "prompt_it": "Trasforma la nota finance in scheda revisionabile: source/provider, asset, finestra, ipotesi, metrica, baseline/null, leakage guard, decision boundary e falsificatore.",
+                "prompt_en": "Turn the finance note into a reviewable card: source/provider, asset, window, hypothesis, metric, baseline/null, leakage guard, decision boundary and falsifier.",
+            }
+        ]
+        review_card = "finance_regime_review_card"
+        required_fields = [
+            "source_provider",
+            "asset",
+            "window_or_horizon",
+            "hypothesis",
+            "metric",
+            "baseline_or_null",
+            "leakage_guard",
+            "decision_boundary",
+            "falsifier",
+        ]
+        forbidden_imports = ["POC", "FVG", "LVN", "CME gap", "entry", "exit", "target", "best timeframe"]
+    elif kind == "bitcoin-regime":
+        purpose_it = "Aiuta visitatori ed esperti non verificati a leggere lo stato BTC, qualificare materiale di metodo e preparare schede revisionabili senza produrre segnali di trading."
+        purpose_en = "Help visitors and unverified experts read BTC state, qualify method material and prepare reviewable method cards without producing trading signals."
+        chat = [
+            {
+                "label_it": "Ultimo report",
+                "label_en": "Latest report",
+                "intent": "read_current_state",
+                "prompt_it": "Riassumi il risultato BTC visibile: cosa e' stato controllato, cosa regge, cosa no e perche' non e' un segnale trading.",
+                "prompt_en": "Summarize the visible BTC result: what was checked, what held, what did not and why it is not a trading signal.",
+            },
+            {
+                "label_it": "Esploriamo",
+                "label_en": "Explore",
+                "intent": "explore_domain",
+                "prompt_it": "Guidami nel BTC Lab: dominio, tab corrente, report, traiettoria, metodo intake e prossima ispezione utile.",
+                "prompt_en": "Guide me through the BTC Lab: domain, current tab, reports, trajectory, method intake and next useful inspection.",
+            },
+            {
+                "label_it": "Aiutami a capire",
+                "label_en": "Help me understand",
+                "intent": "explain_boundary",
+                "prompt_it": "Spiega il risultato BTC distinguendo metodo, dati, null/falsificatore, feed robustness e confine no-signal.",
+                "prompt_en": "Explain the BTC result by separating method, data, null/falsifier, feed robustness and no-signal boundary.",
+            },
+        ]
+        intake_feedback = [
+            {
+                "label_it": "Qualifica la nota",
+                "label_en": "Qualify my note",
+                "intake_kind": "contribute",
+                "prompt_it": "Verifica se la nota BTC puo' diventare intake metodo revisionabile: fonte, exchange, timeframe, oggetto, regola di chiusura, invalidazione e falsificatore.",
+                "prompt_en": "Check whether the BTC note can become reviewable method intake: source, exchange, timeframe, object, closure rule, invalidation and falsifier.",
+            }
+        ]
+        review_card = "btc_expert_method_card"
+        required_fields = ["source", "exchange_or_provider", "timeframe", "object_type", "closure_rule", "invalidation", "falsifier", "open_questions"]
+        forbidden_imports = ["buy", "sell", "entry", "exit", "target", "profit", "alpha", "trading signal"]
+    else:
+        chat = [
+            {
+                "label_it": "Ultimo report",
+                "label_en": "Latest report",
+                "intent": "read_current_state",
+                "prompt_it": "Riassumi lo stato visibile del Lab: cosa e' stato osservato, cosa regge, cosa no e cosa resta provvisorio.",
+                "prompt_en": "Summarize the visible Lab state: what was observed, what holds, what does not and what remains provisional.",
+            },
+            {
+                "label_it": "Esploriamo",
+                "label_en": "Explore",
+                "intent": "explore_domain",
+                "prompt_it": "Guidami nel Lab: dominio, moduli visibili, fonti, falsificatore e prima ispezione utile.",
+                "prompt_en": "Guide me through the Lab: domain, visible modules, sources, falsifier and first useful inspection.",
+            },
+            {
+                "label_it": "Aiutami a capire",
+                "label_en": "Help me understand",
+                "intent": "explain_boundary",
+                "prompt_it": "Spiega il confine tra ipotesi, evidenza, null/baseline e cosa non puo' essere promosso.",
+                "prompt_en": "Explain the boundary between hypothesis, evidence, null/baseline and what cannot be promoted.",
+            },
+        ]
+        intake_feedback = [
+            {
+                "label_it": "Prepara contributo",
+                "label_en": "Prepare contribution",
+                "intake_kind": "contribute",
+                "prompt_it": "Aiutami a trasformare fonte, domanda, correzione o ipotesi in una scheda revisionabile per questo dominio.",
+                "prompt_en": "Help me turn a source, question, correction or hypothesis into a reviewable card for this domain.",
+            }
+        ]
+        review_card = f"{kind or 'domain'}_review_card"
+        required_fields = ["source", "object", "hypothesis", "baseline_or_null", "falsifier", "known_limits"]
+        forbidden_imports = forbidden
+
+    return {
+        "schema": "dndlab.assistant_contract.v0",
+        "domain": slug,
+        "surface": "lab_dashboard",
+        "module": "THIAContextAssistant",
+        "purpose": purpose_en,
+        "purpose_it": purpose_it,
+        "purpose_en": purpose_en,
+        "role_contract": {
+            "default_user_role": "public_visitor",
+            "admin_detection": "server_verified_only",
+            "expert_detection": "declared_or_inferred_but_unverified",
+        },
+        "starter_profile": {
+            "chat": chat,
+            "intake_feedback": intake_feedback,
+            "intake_contact": [
+                {
+                    "label_it": "Manda un messaggio",
+                    "label_en": "Send a message",
+                    "intake_kind": "question",
+                    "prompt_it": "Prepara un messaggio breve per D-ND. Chiedi solo dominio, obiettivo, dati disponibili e output desiderato.",
+                    "prompt_en": "Prepare a short message for D-ND. Ask only for domain, goal, available data and desired output.",
+                },
+                {
+                    "label_it": "Richiedi consulenza",
+                    "label_en": "Request advisory",
+                    "intake_kind": "question",
+                    "prompt_it": "Chiedi le informazioni minime per valutare supporto consulenziale senza promettere integrazione o risultato.",
+                    "prompt_en": "Ask the minimum information needed to evaluate advisory support without promising integration or outcome.",
+                },
+                {
+                    "label_it": "Supporto tecnico",
+                    "label_en": "Technical support",
+                    "intake_kind": "question",
+                    "prompt_it": "Aiuta a formulare una richiesta su demo Lab, Lab custom, integrazione, report o materiale caricato.",
+                    "prompt_en": "Help frame a request about demo Lab, custom Lab, integration, report or uploaded material.",
+                },
+            ],
+        },
+        "intake_profile": {
+            "review_card": review_card,
+            "required_fields": required_fields,
+            "file_upload": "optional",
+            "admin_record": "review_quarantine",
+            "forbidden_imports": forbidden_imports,
+        },
+        "promotion_boundary": "Assistant intake creates review/admin material only; it must not update seed, reports or Lab state directly.",
+        "domain_boundary": boundary,
+    }
+
+
 def _preset_summary_md(preset: dict[str, Any] | None) -> str:
     if not preset:
         return ""
@@ -907,6 +1092,7 @@ baseline/null and UI lens.
             "assertions.py",
             "transduction.md",
             "ui_contract.json",
+            "assistant_contract.v0",
             "mml.json",
         ],
         "null_baseline_requirements": ["naive baseline", "domain-native null/control", "stop condition"],
@@ -958,6 +1144,7 @@ baseline/null and UI lens.
             }
         ],
         "domain_boundary": boundary,
+        "assistant": _assistant_contract(slug, kind, exclusions, boundary),
         "admin_actions": [
             {"action": "run_cycle", "allowed": True, "boundary": "Run from current seed; no direction override without review."}
         ],
@@ -995,6 +1182,24 @@ baseline/null and UI lens.
             "capsule-only archive patterns",
             "human preference without falsification",
         ],
+        "assistant_intake": {
+            "schema": "dndlab.assistant_contract.v0",
+            "status": "allowed_with_quarantine",
+            "authority": "review_preparation",
+            "default_surface": "THIAContextAssistant",
+            "allowed_modes": ["chat", "intake_feedback", "intake_contact"],
+            "required_boundaries": [
+                "role_boundary_guard",
+                "source_provenance",
+                "privacy_secret_scan",
+                "review_quarantine",
+            ],
+            "never_claim": [
+                "assistant intake updated the seed",
+                "assistant intake changed Lab state",
+                "public expert material is verified authority before review",
+            ],
+        },
         "ui_surfaces": {
             "left": ["source_status", "contribution_counts", "warnings"],
             "center": ["domain_movement_view"],

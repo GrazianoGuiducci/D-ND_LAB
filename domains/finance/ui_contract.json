@@ -176,6 +176,78 @@
       "blocks": "Trattare il gate come hard boundary o nascondere eccezioni sotto soglia."
     }
   ],
+  "assistant": {
+    "schema": "dndlab.assistant_contract.v0",
+    "domain": "finance",
+    "surface": "lab_dashboard",
+    "module": "THIAContextAssistant",
+    "purpose": "Help visitors read Finance Lab state through baseline/null, data provenance, leakage guard and decision bounds without producing trading advice.",
+    "purpose_it": "Aiuta i visitatori a leggere lo stato del Finance Lab tramite baseline/null, provenienza dati, leakage guard e confini decisionali senza produrre consigli di trading.",
+    "purpose_en": "Help visitors read Finance Lab state through baseline/null, data provenance, leakage guard and decision bounds without producing trading advice.",
+    "starter_profile": {
+      "chat": [
+        {
+          "label_it": "Ultimo report",
+          "label_en": "Latest report",
+          "intent": "read_current_state",
+          "prompt_it": "Riassumi l'ultimo report o risultato finance visibile: cosa e' stato testato, quali baseline/null contano, cosa regge e cosa resta non operativo.",
+          "prompt_en": "Summarize the latest visible finance report or result: what was tested, which baselines/nulls matter, what holds and what remains non-operational."
+        },
+        {
+          "label_it": "Esploriamo",
+          "label_en": "Explore",
+          "intent": "explore_domain",
+          "prompt_it": "Guidami nel Finance Lab: regime sospetto, dati disponibili, baseline/null, leakage guard, decision bounds e prima ispezione utile.",
+          "prompt_en": "Guide me through the Finance Lab: suspected regime, available data, baseline/null, leakage guard, decision bounds and first useful inspection."
+        },
+        {
+          "label_it": "Aiutami a capire",
+          "label_en": "Help me understand",
+          "intent": "explain_boundary",
+          "prompt_it": "Spiegami lo stato finance distinguendo ipotesi, evidenza, baseline/null, decisione non ammessa e cosa servirebbe per rafforzarla.",
+          "prompt_en": "Explain the finance state by separating hypothesis, evidence, baseline/null, non-admissible decision and what would strengthen it."
+        }
+      ],
+      "intake_feedback": [
+        {
+          "label_it": "Qualifica ipotesi",
+          "label_en": "Qualify hypothesis",
+          "intake_kind": "contribute",
+          "prompt_it": "Aiutami a trasformare una nota finance in scheda revisionabile: fonte/provider, asset, finestra, ipotesi, metrica, baseline/null, leakage guard, confine decisionale e falsificatore.",
+          "prompt_en": "Help me turn a finance note into a reviewable card: source/provider, asset, window, hypothesis, metric, baseline/null, leakage guard, decision boundary and falsifier."
+        }
+      ],
+      "intake_contact": [
+        {
+          "label_it": "Manda un messaggio",
+          "label_en": "Send a message",
+          "intake_kind": "question",
+          "prompt_it": "Prepara un messaggio breve su una richiesta finance o Lab. Chiedi solo dominio, obiettivo, dati disponibili e output desiderato.",
+          "prompt_en": "Prepare a short message about a finance or Lab request. Ask only for domain, goal, available data and desired output."
+        },
+        {
+          "label_it": "Richiedi consulenza",
+          "label_en": "Request advisory",
+          "intake_kind": "question",
+          "prompt_it": "Chiedi le informazioni minime per valutare supporto consulenziale finance senza trasformarlo in consiglio operativo.",
+          "prompt_en": "Ask the minimum information needed to evaluate finance advisory support without turning it into operational advice."
+        },
+        {
+          "label_it": "Supporto tecnico",
+          "label_en": "Technical support",
+          "intake_kind": "question",
+          "prompt_it": "Aiuta a formulare una richiesta su dati, integrazione, report o Lab custom finance.",
+          "prompt_en": "Help frame a request about data, integration, report or custom finance Lab."
+        }
+      ]
+    },
+    "intake_profile": {
+      "review_card": "finance_regime_review_card",
+      "required_fields": ["source_provider", "asset", "window_or_horizon", "hypothesis", "metric", "baseline_or_null", "leakage_guard", "decision_boundary", "falsifier"],
+      "forbidden_imports": ["POC", "FVG", "LVN", "CME gap", "entry", "exit", "target", "best timeframe"]
+    },
+    "promotion_boundary": "Finance assistant intake creates review/admin material only; it must not create trading signals, forecasts or seed mutations."
+  },
   "admin_actions": [
     {
       "action": "run_cycle",

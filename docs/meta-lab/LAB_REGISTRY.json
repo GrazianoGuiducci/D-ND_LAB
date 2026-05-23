@@ -1,0 +1,235 @@
+{
+  "schema": "dndlab.meta.lab_registry.v0",
+  "status": "draft",
+  "updated_at": "2026-05-21",
+  "purpose": "Draft map of Lab lifecycle state and installed/candidate capabilities. No runtime effect.",
+  "labs": [
+    {
+      "lab": "finance",
+      "lab_version": "0.4.0",
+      "spec_version": "lab_spec.v1",
+      "lifecycle_state": "mature_reference",
+      "domain_family": "finance",
+      "primary_lessons": [
+        "baseline_null",
+        "precondition_boundary",
+        "data_card",
+        "decision_bounds",
+        "non_admissible_outputs"
+      ],
+      "active_capabilities": {
+        "no_signal_boundary": "0.1.0",
+        "value_artifact_before_cycle": "partial",
+        "source_provenance_guard": "partial",
+        "THIA_contextual_assistant": "candidate_adapter"
+      },
+      "candidate_capabilities": [
+        "lab_review_card",
+        "human_method_intake_card",
+        "source_robustness_gate",
+        "host_side_pre_cycle_refresh",
+        "finance_assistant_contract"
+      ],
+      "excluded_capabilities": [
+        {
+          "capability": "publish_signal",
+          "reason": "Finance Lab constrains exposure decisions; it does not issue trading signals."
+        }
+      ],
+      "security_profile": {
+        "risk_level": "high",
+        "required_boundaries": [
+          "no_signal_boundary",
+          "source_provenance_guard",
+          "review_quarantine"
+        ],
+        "sensitive_surfaces": [
+          "market data",
+          "visitor/expert finance claims",
+          "public dashboard interpretation"
+        ]
+      },
+      "next_review": "adapt BTC review-card flow as finance_regime_review_card without importing BTC fields",
+      "compatibility_status": "upgrade_available"
+    },
+    {
+      "lab": "bitcoin-regime-lab",
+      "lab_version": "0.4.0",
+      "spec_version": "lab_spec.v1",
+      "lifecycle_state": "active_alpha",
+      "domain_family": "bitcoin-regime",
+      "primary_lessons": [
+        "expert_intake",
+        "source_robustness",
+        "timeframe_matrix",
+        "confluence_ablation",
+        "no_signal_boundary",
+        "THIA_clarification_loop"
+      ],
+      "active_capabilities": {
+        "human_method_intake_card": "0.1.0",
+        "lab_review_card": "0.1.0",
+        "value_artifact_before_cycle": "0.1.0",
+        "host_side_pre_cycle_refresh": "0.1.0",
+        "source_robustness_gate": "0.1.0",
+        "scale_or_timeframe_matrix": "0.1.0",
+        "no_signal_boundary": "0.1.0",
+        "THIA_contextual_assistant": "0.1.0",
+        "markdown_admin_review": "0.1.0"
+      },
+      "candidate_capabilities": [
+        "confluence_ablation",
+        "secret_redaction_guard",
+        "role_boundary_guard"
+      ],
+      "excluded_capabilities": [
+        {
+          "capability": "publish_signal",
+          "reason": "BTC Lab is no-signal/no-advice by design."
+        }
+      ],
+      "security_profile": {
+        "risk_level": "high",
+        "required_boundaries": [
+          "no_signal_boundary",
+          "role_boundary_guard",
+          "source_provenance_guard",
+          "review_quarantine",
+          "secret_redaction_guard"
+        ],
+        "sensitive_surfaces": [
+          "trading-like language",
+          "expert attachments",
+          "visitor method claims",
+          "public THIA chat"
+        ]
+      },
+      "next_review": "stabilize lab_review_card and project transferable parts to Finance",
+      "compatibility_status": "current"
+    },
+    {
+      "lab": "physics",
+      "lab_version": "0.5.0",
+      "spec_version": "lab_spec.v1",
+      "lifecycle_state": "mature_reference",
+      "domain_family": "physics",
+      "primary_lessons": [
+        "scale_sweep",
+        "finite_size_guard",
+        "label_shuffle_null",
+        "invariant_boundary",
+        "assertion_heavy_runtime"
+      ],
+      "active_capabilities": {
+        "confluence_ablation": "partial",
+        "source_provenance_guard": "partial"
+      },
+      "candidate_capabilities": [
+        "scale_or_timeframe_matrix",
+        "value_artifact_before_cycle",
+        "lab_review_card"
+      ],
+      "excluded_capabilities": [
+        {
+          "capability": "no_signal_boundary",
+          "reason": "Not a trading/advice domain, but publication/research-claim boundaries still apply."
+        }
+      ],
+      "security_profile": {
+        "risk_level": "medium",
+        "required_boundaries": [
+          "source_provenance_guard",
+          "review_quarantine"
+        ],
+        "sensitive_surfaces": [
+          "public scientific claims",
+          "operator corpus",
+          "long-running experiments"
+        ]
+      },
+      "next_review": "formalize physics scale-sweep/finite-size capabilities for meta-lab transfer",
+      "compatibility_status": "needs_review"
+    },
+    {
+      "lab": "research-radar",
+      "lab_version": "0.2.0",
+      "spec_version": "lab_spec.v1",
+      "lifecycle_state": "installed_reference",
+      "domain_family": "research-radar",
+      "primary_lessons": [
+        "source_cards",
+        "claim_roadmap",
+        "source_echo_filter"
+      ],
+      "active_capabilities": {
+        "source_provenance_guard": "partial",
+        "review_quarantine": "partial"
+      },
+      "candidate_capabilities": [
+        "human_method_intake_card",
+        "source_robustness_gate",
+        "lab_review_card",
+        "THIA_contextual_assistant"
+      ],
+      "excluded_capabilities": [],
+      "security_profile": {
+        "risk_level": "medium",
+        "required_boundaries": [
+          "source_provenance_guard",
+          "review_quarantine",
+          "secret_redaction_guard"
+        ],
+        "sensitive_surfaces": [
+          "third-party claims",
+          "public sources",
+          "publication copy"
+        ]
+      },
+      "next_review": "check whether BTC source robustness can become multi-source claim robustness",
+      "compatibility_status": "upgrade_available"
+    },
+    {
+      "lab": "meta-lab",
+      "lab_version": "0.3.0",
+      "spec_version": "meta_lab_spec.v1",
+      "lifecycle_state": "active_alpha",
+      "domain_family": "meta-lab",
+      "primary_lessons": [
+        "intent_recognition",
+        "possibility_inventory",
+        "capability_cascade",
+        "install_or_block_generation"
+      ],
+      "active_capabilities": {
+        "review_quarantine": "partial",
+        "source_provenance_guard": "partial",
+        "THIA_contextual_assistant": "contract_source"
+      },
+      "candidate_capabilities": [
+        "capability_registry",
+        "lab_registry",
+        "migration_registry",
+        "organic_growth_loop",
+        "assistant_contract_generator"
+      ],
+      "excluded_capabilities": [],
+      "security_profile": {
+        "risk_level": "high",
+        "required_boundaries": [
+          "review_quarantine",
+          "source_provenance_guard",
+          "secret_redaction_guard",
+          "role_boundary_guard"
+        ],
+        "sensitive_surfaces": [
+          "domain generation",
+          "seed installation",
+          "cross-lab migration",
+          "public copy propagation"
+        ]
+      },
+      "next_review": "decide when draft registries become validator/generator inputs",
+      "compatibility_status": "current"
+    }
+  ]
+}

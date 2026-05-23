@@ -199,6 +199,86 @@
       "blocks": "Treating FVG zones as target, entry, exit, advice or trading signal."
     }
   ],
+  "assistant": {
+    "schema": "dndlab.assistant_contract.v0",
+    "domain": "bitcoin-regime-lab",
+    "surface": "lab_dashboard",
+    "module": "THIAContextAssistant",
+    "purpose": "Help visitors and unverified experts read BTC Lab state, qualify method material and prepare reviewable method cards without producing trading signals.",
+    "purpose_it": "Aiuta visitatori ed esperti non verificati a leggere lo stato del BTC Lab, qualificare materiale di metodo e preparare schede revisionabili senza produrre segnali di trading.",
+    "purpose_en": "Help visitors and unverified experts read BTC Lab state, qualify method material and prepare reviewable method cards without producing trading signals.",
+    "starter_profile": {
+      "chat": [
+        {
+          "label_it": "Ultimo report",
+          "label_en": "Latest report",
+          "intent": "read_current_state",
+          "prompt_it": "Riassumi l'ultimo report o risultato BTC visibile: cosa e' stato controllato, cosa regge, cosa no e perche' non e' un segnale trading.",
+          "prompt_en": "Summarize the latest visible BTC report or result: what was checked, what held, what did not and why it is not a trading signal."
+        },
+        {
+          "label_it": "Esploriamo",
+          "label_en": "Explore",
+          "intent": "explore_domain",
+          "prompt_it": "Guidami nel BTC Lab: dominio, tab corrente, report, traiettoria, prodotti, metodo intake e prima cosa utile da guardare.",
+          "prompt_en": "Guide me through the BTC Lab: domain, current tab, reports, trajectory, products, method intake and first useful inspection."
+        },
+        {
+          "label_it": "Aiutami a capire",
+          "label_en": "Help me understand",
+          "intent": "explain_boundary",
+          "prompt_it": "Spiegami il risultato BTC distinguendo ipotesi, dati, metodo, null/falsificatore, feed robustness e confine no-signal.",
+          "prompt_en": "Explain the BTC result by separating hypothesis, data, method, null/falsifier, feed robustness and no-signal boundary."
+        }
+      ],
+      "intake_feedback": [
+        {
+          "label_it": "Qualifica la nota",
+          "label_en": "Qualify my note",
+          "intake_kind": "contribute",
+          "prompt_it": "Verifica se la nota BTC e' abbastanza specifica per diventare intake metodo revisionabile: fonte, exchange, timeframe, oggetto, regola di chiusura, invalidazione e falsificatore.",
+          "prompt_en": "Check whether the BTC note is specific enough to become reviewable method intake: source, exchange, timeframe, object, closure rule, invalidation and falsifier."
+        },
+        {
+          "label_it": "Feedback esperto",
+          "label_en": "Expert feedback",
+          "intake_kind": "contribute",
+          "prompt_it": "Guidami a lasciare feedback BTC esperto non verificato: ruolo/fonte, FVG/LVN/CME/POC se pertinenti, timeframe, livelli, invalidazione e domande aperte.",
+          "prompt_en": "Guide me to leave unverified expert BTC feedback: role/source, FVG/LVN/CME/POC if relevant, timeframe, levels, invalidation and open questions."
+        }
+      ],
+      "intake_contact": [
+        {
+          "label_it": "Manda un messaggio",
+          "label_en": "Send a message",
+          "intake_kind": "question",
+          "prompt_it": "Prepara un messaggio breve su BTC Lab o D-ND. Chiedi solo cio' che serve per inviare la richiesta.",
+          "prompt_en": "Prepare a short message about BTC Lab or D-ND. Ask only what is needed to submit the request."
+        },
+        {
+          "label_it": "Richiedi consulenza",
+          "label_en": "Request advisory",
+          "intake_kind": "question",
+          "prompt_it": "Chiedi le informazioni minime per valutare supporto consulenziale senza trasformarlo in consiglio finanziario o trading.",
+          "prompt_en": "Ask the minimum information needed to evaluate advisory support without turning it into financial or trading advice."
+        },
+        {
+          "label_it": "Supporto tecnico",
+          "label_en": "Technical support",
+          "intake_kind": "question",
+          "prompt_it": "Aiuta a formulare una richiesta su file, report, dashboard, integrazione o Lab custom.",
+          "prompt_en": "Help frame a request about files, reports, dashboard, integration or custom Lab."
+        }
+      ]
+    },
+    "intake_profile": {
+      "review_card": "btc_expert_method_card",
+      "required_fields": ["source", "exchange_or_provider", "timeframe", "object_type", "closure_rule", "invalidation", "falsifier", "open_questions"],
+      "allowed_terms": ["FVG", "LVN", "HVN", "POC", "CME gap", "Kumo", "trendline", "feed robustness"],
+      "forbidden_outputs": ["buy", "sell", "entry", "exit", "target", "profit", "alpha", "trading signal"]
+    },
+    "promotion_boundary": "BTC assistant intake creates review/admin material only; it must not create trading signals, operational advice or seed mutations."
+  },
   "domain_boundary": null,
   "admin_actions": [
     {

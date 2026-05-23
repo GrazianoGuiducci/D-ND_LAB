@@ -52,6 +52,24 @@
     "capsule-only archive patterns",
     "human preference without falsification"
   ],
+  "assistant_intake": {
+    "schema": "dndlab.assistant_contract.v0",
+    "status": "allowed_with_quarantine",
+    "authority": "review_preparation",
+    "default_surface": "THIAContextAssistant",
+    "allowed_modes": ["chat", "intake_feedback", "intake_contact"],
+    "required_boundaries": [
+      "role_boundary_guard",
+      "source_provenance",
+      "privacy_secret_scan",
+      "review_quarantine"
+    ],
+    "never_claim": [
+      "assistant intake updated the seed",
+      "assistant intake changed Lab state",
+      "public expert material is verified authority before review"
+    ]
+  },
   "ui_surfaces": {
     "left": ["source_status", "contribution_counts", "warnings"],
     "center": ["domain_movement_view"],

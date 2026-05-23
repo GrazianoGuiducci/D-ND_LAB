@@ -1,0 +1,613 @@
+{
+  "schema": "dndlab.meta.capability_registry.v0",
+  "status": "draft",
+  "updated_at": "2026-05-21",
+  "purpose": "Versioned registry of reusable Lab capabilities. Draft only: no runtime effect until a tool or validator consumes it.",
+  "capabilities": [
+    {
+      "capability_id": "lab_review_card",
+      "version": "0.1.0",
+      "status": "draft",
+      "source_lab": "bitcoin-regime-lab",
+      "purpose": "Normalize reviewed human or file-derived input into a domain-adapted card before admin review.",
+      "use_when": [
+        "A visitor or expert provides material that may help a Lab.",
+        "The input needs source, boundary and review before contamination."
+      ],
+      "do_not_use_when": [
+        "The input is a secret or sensitive private dataset.",
+        "The operator wants direct seed mutation."
+      ],
+      "requires": [
+        "review_quarantine",
+        "source_provenance_guard",
+        "domain_adapter"
+      ],
+      "runtime_effects": [
+        "optional_admin_record"
+      ],
+      "ui_surfaces": [
+        "THIA chat",
+        "intake form",
+        "admin intake"
+      ],
+      "persisted_data": [
+        "review_card_md",
+        "source_refs",
+        "limits",
+        "domain_boundary"
+      ],
+      "minimum_checks": [
+        "no_direct_seed",
+        "source_limits_visible",
+        "operator_review_required"
+      ],
+      "security_boundary": [
+        "Do not store secrets.",
+        "Do not promote submitted material automatically."
+      ],
+      "valid_when": "A domain adapter can render the card with source, missing data, null/baseline or falsifier.",
+      "retire_when": "The card becomes a shortcut for unreviewed opinions."
+    },
+    {
+      "capability_id": "human_method_intake_card",
+      "version": "0.1.0",
+      "status": "draft",
+      "source_lab": "bitcoin-regime-lab",
+      "purpose": "Turn expert language, screenshots, PDFs or notes into method definitions, missing questions and falsifiers.",
+      "use_when": [
+        "Domain experts provide informal method material.",
+        "Terms are ambiguous and need operational definitions."
+      ],
+      "do_not_use_when": [
+        "The material is treated as authority.",
+        "The method cannot name what it measures."
+      ],
+      "requires": [
+        "lab_review_card",
+        "source_provenance_guard",
+        "review_quarantine"
+      ],
+      "runtime_effects": [
+        "optional_file_intake",
+        "admin_record"
+      ],
+      "ui_surfaces": [
+        "THIA chat",
+        "admin intake"
+      ],
+      "persisted_data": [
+        "method_card",
+        "open_questions",
+        "source_limits"
+      ],
+      "minimum_checks": [
+        "method_has_observable",
+        "missing_definitions_visible",
+        "no_direct_promotion"
+      ],
+      "security_boundary": [
+        "Unverified experts are not authoritative.",
+        "Attachments remain quarantined until review."
+      ],
+      "valid_when": "The card exposes source, object, rule, invalidation and falsifier or declares what is missing.",
+      "retire_when": "It converts expert language into claims without mechanical definition."
+    },
+    {
+      "capability_id": "value_artifact_before_cycle",
+      "version": "0.1.0",
+      "status": "draft",
+      "source_lab": "bitcoin-regime-lab",
+      "purpose": "Expose current data/value artifacts to UI and THIA before a cognitive cycle interprets them.",
+      "use_when": [
+        "The domain reads external or time-varying data.",
+        "The dashboard needs fresh context without running a full cycle."
+      ],
+      "do_not_use_when": [
+        "The artifact would be interpreted as a claim by itself.",
+        "The source cannot be traced."
+      ],
+      "requires": [
+        "data_card",
+        "source_provenance_guard"
+      ],
+      "runtime_effects": [
+        "writes_value_artifact"
+      ],
+      "ui_surfaces": [
+        "dashboard Campo",
+        "THIA context"
+      ],
+      "persisted_data": [
+        "value_artifact",
+        "data_card"
+      ],
+      "minimum_checks": [
+        "source_url_or_source_description",
+        "retrieval_timestamp",
+        "no_claim_boundary"
+      ],
+      "security_boundary": [
+        "Public/no-key data preferred for public demo.",
+        "No credentials in artifacts."
+      ],
+      "valid_when": "The artifact can be inspected without granting interpretive authority.",
+      "retire_when": "The artifact becomes a hidden dependency or a public claim."
+    },
+    {
+      "capability_id": "host_side_pre_cycle_refresh",
+      "version": "0.1.0",
+      "status": "draft",
+      "source_lab": "bitcoin-regime-lab",
+      "purpose": "Refresh data outside the agent cycle so the cycle reads deterministic artifacts.",
+      "use_when": [
+        "Network behavior may differ inside agent/runtime.",
+        "The cycle should reason over visible artifact state."
+      ],
+      "do_not_use_when": [
+        "The refresh has side effects not visible in artifacts.",
+        "The source requires secrets in public context."
+      ],
+      "requires": [
+        "value_artifact_before_cycle",
+        "data_card"
+      ],
+      "runtime_effects": [
+        "host_script",
+        "artifact_write"
+      ],
+      "ui_surfaces": [
+        "dashboard",
+        "cycle field"
+      ],
+      "persisted_data": [
+        "latest_artifact",
+        "refresh_trace"
+      ],
+      "minimum_checks": [
+        "artifact_schema",
+        "timestamp",
+        "failure_visible"
+      ],
+      "security_boundary": [
+        "No secret-bearing requests unless explicitly authorized.",
+        "Refresh failure must not silently reuse stale data."
+      ],
+      "valid_when": "The cycle can cite the artifact as its data surface.",
+      "retire_when": "The script becomes an opaque fetch hidden from UI and THIA."
+    },
+    {
+      "capability_id": "source_robustness_gate",
+      "version": "0.1.0",
+      "status": "draft",
+      "source_lab": "bitcoin-regime-lab",
+      "purpose": "Require events or data labels to survive source/provider disagreement checks.",
+      "use_when": [
+        "Multiple sources/providers can describe the same object.",
+        "Single-source artifacts can create false events."
+      ],
+      "do_not_use_when": [
+        "Only one source exists and the limitation is already explicit.",
+        "The gate hides source disagreement instead of showing it."
+      ],
+      "requires": [
+        "data_card",
+        "failure_visible"
+      ],
+      "runtime_effects": [
+        "optional_gate"
+      ],
+      "ui_surfaces": [
+        "source card",
+        "falsifier panel"
+      ],
+      "persisted_data": [
+        "provider_status",
+        "agreement_metric",
+        "downgrade_reason"
+      ],
+      "minimum_checks": [
+        "provider_list",
+        "agreement_threshold_or_reason",
+        "blocked_status_visible"
+      ],
+      "security_boundary": [
+        "Provider errors must not be hidden.",
+        "A gate failure must block promotion."
+      ],
+      "valid_when": "Source disagreement downgrades or blocks claims before interpretation.",
+      "retire_when": "The gate becomes decorative and claims still promote."
+    },
+    {
+      "capability_id": "scale_or_timeframe_matrix",
+      "version": "0.1.0",
+      "status": "draft",
+      "source_lab": "bitcoin-regime-lab",
+      "purpose": "Classify scales/timeframes as testable, watch or blocked using denominators and domain checks.",
+      "use_when": [
+        "The domain has multi-scale observations.",
+        "The scale itself changes admissibility."
+      ],
+      "do_not_use_when": [
+        "The scale is only a display preference.",
+        "No denominator or null can be defined per scale."
+      ],
+      "requires": [
+        "source_robustness_gate",
+        "baseline_or_null"
+      ],
+      "runtime_effects": [
+        "optional_matrix_artifact"
+      ],
+      "ui_surfaces": [
+        "dashboard matrix",
+        "THIA context"
+      ],
+      "persisted_data": [
+        "scale_status",
+        "block_reason",
+        "next_test_surface"
+      ],
+      "minimum_checks": [
+        "denominator",
+        "open_window_policy",
+        "scale_specific_null"
+      ],
+      "security_boundary": [
+        "A testable scale is not an operational signal.",
+        "Blocked scales must remain visible."
+      ],
+      "valid_when": "The matrix selects admissible test surfaces without predicting outcomes.",
+      "retire_when": "It becomes a best-timeframe opinion engine."
+    },
+    {
+      "capability_id": "confluence_ablation",
+      "version": "0.1.0",
+      "status": "draft",
+      "source_lab": "bitcoin-regime-lab",
+      "purpose": "Test components separately before accepting a combined/confluence narrative.",
+      "use_when": [
+        "A claim depends on multiple interacting indicators or sources.",
+        "A combination may hide that one component carries all value."
+      ],
+      "do_not_use_when": [
+        "Components cannot be separated without changing the object.",
+        "The confluence is only visual copy."
+      ],
+      "requires": [
+        "component_definitions",
+        "baseline_or_null"
+      ],
+      "runtime_effects": [
+        "optional_ablation_report"
+      ],
+      "ui_surfaces": [
+        "baseline comparison",
+        "falsifier panel"
+      ],
+      "persisted_data": [
+        "component_scores",
+        "full_model_score",
+        "ablation_verdict"
+      ],
+      "minimum_checks": [
+        "component_list",
+        "same_window_or_reason",
+        "failure_condition"
+      ],
+      "security_boundary": [
+        "Do not promote narrative confluence without ablation.",
+        "Keep failed components visible."
+      ],
+      "valid_when": "The confluence survives component ablations or is downgraded.",
+      "retire_when": "It is used to decorate already chosen claims."
+    },
+    {
+      "capability_id": "review_quarantine",
+      "version": "0.1.0",
+      "status": "active_draft",
+      "source_lab": "contribution_preport",
+      "purpose": "Hold external/public/operator inputs outside seed and cycle authority until review.",
+      "use_when": [
+        "Any input arrives from visitor, expert, operator notes or imported sources.",
+        "The input could affect Lab state."
+      ],
+      "do_not_use_when": [
+        "The data is already a committed domain artifact.",
+        "The operator explicitly performs a reviewed seed update."
+      ],
+      "requires": [
+        "source_provenance_guard"
+      ],
+      "runtime_effects": [
+        "admin_record",
+        "review_event"
+      ],
+      "ui_surfaces": [
+        "admin intake",
+        "preport"
+      ],
+      "persisted_data": [
+        "status",
+        "operator_note",
+        "review_events"
+      ],
+      "minimum_checks": [
+        "status_not_seed",
+        "review_event_append_only",
+        "promotion_path_explicit"
+      ],
+      "security_boundary": [
+        "Never write public contribution directly to seed.",
+        "Reject secrets and sensitive personal data."
+      ],
+      "valid_when": "The input is visible for review but has no Lab authority.",
+      "retire_when": "Quarantine records are treated as accepted evidence."
+    },
+    {
+      "capability_id": "no_signal_boundary",
+      "version": "0.1.0",
+      "status": "active_draft",
+      "source_lab": "finance",
+      "purpose": "Expose forbidden operational/advice outputs in high-risk domains.",
+      "use_when": [
+        "A domain could be mistaken for financial, medical, legal or operational advice.",
+        "Outputs may influence real-world decisions."
+      ],
+      "do_not_use_when": [
+        "The domain has no sensitive decision surface and a lighter boundary is enough."
+      ],
+      "requires": [
+        "forbidden_labels",
+        "ui_boundary"
+      ],
+      "runtime_effects": [
+        "prompt_boundary",
+        "ui_boundary"
+      ],
+      "ui_surfaces": [
+        "dashboard",
+        "THIA",
+        "reports"
+      ],
+      "persisted_data": [
+        "forbidden_labels",
+        "boundary_reason"
+      ],
+      "minimum_checks": [
+        "forbidden_labels_visible",
+        "assistant_respects_boundary"
+      ],
+      "security_boundary": [
+        "Block advice/signal language before publication or promotion."
+      ],
+      "valid_when": "The Lab can explain what cannot be done with current evidence.",
+      "retire_when": "Boundary text exists but prohibited outputs still appear."
+    },
+    {
+      "capability_id": "THIA_contextual_assistant",
+      "version": "0.1.0",
+      "status": "active_draft",
+      "source_lab": "public_lab_assistant",
+      "purpose": "Keep THIA grounded in active domain, tab, role and current artifact state, while providing reusable assistant/intake behavior through domain adapters.",
+      "use_when": [
+        "A page exposes Lab state to visitors or operators.",
+        "THIA must distinguish explain, clarify, review, contact/support and contribute.",
+        "A generated Lab needs an assistant profile without copying another Lab's domain language."
+      ],
+      "do_not_use_when": [
+        "No domain context is available.",
+        "The assistant is being used for generic site copy.",
+        "The target surface cannot provide role boundary and review quarantine."
+      ],
+      "requires": [
+        "role_boundary_guard",
+        "domain_context_snapshot",
+        "ui_contract",
+        "onboarding_contract",
+        "review_quarantine"
+      ],
+      "runtime_effects": [
+        "assistant_prompt_context",
+        "optional_intake_form",
+        "optional_admin_record"
+      ],
+      "ui_surfaces": [
+        "THIA chat",
+        "intake form",
+        "side labels",
+        "admin intake"
+      ],
+      "persisted_data": [
+        "conversation_trace_optional",
+        "review_submission_optional",
+        "assistant_contract"
+      ],
+      "minimum_checks": [
+        "active_domain",
+        "active_tab",
+        "role_declared",
+        "no_false_admin_claims",
+        "domain_native_starters",
+        "review_quarantine_visible",
+        "no_direct_seed_claim"
+      ],
+      "security_boundary": [
+        "Do not expose admin-only data to public visitors.",
+        "Do not claim Lab state changed unless it did.",
+        "Do not reuse BTC/Finance/sensitive-domain language outside its adapter.",
+        "Do not persist secrets or private corpus through public intake."
+      ],
+      "adapter_contract": {
+        "template": "docs/templates/assistant_contract.v0.json",
+        "required_sections": [
+          "role_contract",
+          "context_sources",
+          "starter_profile",
+          "intake_profile",
+          "file_profile",
+          "review_profile",
+          "verification"
+        ],
+        "valid_surfaces": [
+          "dnd_site",
+          "lab_dashboard",
+          "generated_lab",
+          "installer",
+          "admin"
+        ],
+        "domain_adapter_required": true
+      },
+      "valid_when": "THIA answers from current Lab context and role.",
+      "retire_when": "THIA behaves as generic chatbot, confuses visitor/admin, or imports another Lab's domain language."
+    },
+    {
+      "capability_id": "markdown_admin_review",
+      "version": "0.1.0",
+      "status": "active_draft",
+      "source_lab": "bitcoin-regime-lab",
+      "purpose": "Render review cards in admin as readable Markdown while preserving source text.",
+      "use_when": [
+        "A card is better reviewed as structured text than raw JSON."
+      ],
+      "do_not_use_when": [
+        "Markdown would hide raw source or extraction limits."
+      ],
+      "requires": [
+        "review_quarantine"
+      ],
+      "runtime_effects": [
+        "admin_render"
+      ],
+      "ui_surfaces": [
+        "admin intake"
+      ],
+      "persisted_data": [
+        "review_card_md"
+      ],
+      "minimum_checks": [
+        "no_html_injection",
+        "raw_source_accessible_if_needed"
+      ],
+      "security_boundary": [
+        "Render safe subset only.",
+        "Do not execute embedded HTML."
+      ],
+      "valid_when": "Review is more legible without losing source trace.",
+      "retire_when": "Rendering obscures what was actually submitted."
+    },
+    {
+      "capability_id": "source_provenance_guard",
+      "version": "0.1.0",
+      "status": "security_candidate",
+      "source_lab": "contribution_preport",
+      "purpose": "Require every external input or artifact to carry source, origin and limitation metadata.",
+      "use_when": [
+        "Any imported, public, expert or generated material enters a Lab surface."
+      ],
+      "do_not_use_when": [
+        "The material is purely internal code with git provenance."
+      ],
+      "requires": [],
+      "runtime_effects": [
+        "validation_or_review_check"
+      ],
+      "ui_surfaces": [
+        "admin",
+        "dashboard",
+        "THIA"
+      ],
+      "persisted_data": [
+        "source_type",
+        "source_ref",
+        "extraction_status",
+        "known_limits"
+      ],
+      "minimum_checks": [
+        "source_type_present",
+        "limits_present"
+      ],
+      "security_boundary": [
+        "Unknown source cannot promote.",
+        "Private or secret-bearing source must be blocked or quarantined."
+      ],
+      "valid_when": "Users can tell where an input came from and what is missing.",
+      "retire_when": "Source metadata is present but ignored by promotion gates."
+    },
+    {
+      "capability_id": "role_boundary_guard",
+      "version": "0.1.0",
+      "status": "security_candidate",
+      "source_lab": "THIA_contextual_assistant",
+      "purpose": "Prevent assistant/UI flows from confusing visitor, expert, admin, operator and Lab agent roles.",
+      "use_when": [
+        "A public or admin assistant can save, review, explain or suggest actions."
+      ],
+      "do_not_use_when": [
+        "The interface has only one authenticated operator role and no public surface."
+      ],
+      "requires": [
+        "THIA_contextual_assistant"
+      ],
+      "runtime_effects": [
+        "prompt_boundary",
+        "ui_copy_boundary"
+      ],
+      "ui_surfaces": [
+        "THIA chat",
+        "admin",
+        "intake form"
+      ],
+      "persisted_data": [
+        "role_context"
+      ],
+      "minimum_checks": [
+        "role_context_present",
+        "no_false_privilege_claim"
+      ],
+      "security_boundary": [
+        "Visitors cannot be treated as admin.",
+        "Experts cannot be treated as verified authority by default."
+      ],
+      "valid_when": "The assistant states and behaves according to the correct role.",
+      "retire_when": "Role text is present but actions cross privilege boundaries."
+    },
+    {
+      "capability_id": "secret_redaction_guard",
+      "version": "0.1.0",
+      "status": "security_candidate",
+      "source_lab": "contribution_preport",
+      "purpose": "Detect and block or redact common secrets before persistence, packet or publication.",
+      "use_when": [
+        "Public input, file intake, operator notes or generated docs may be persisted."
+      ],
+      "do_not_use_when": [
+        "A human is intentionally editing private local configuration outside Lab surfaces."
+      ],
+      "requires": [],
+      "runtime_effects": [
+        "input_filter",
+        "review_warning"
+      ],
+      "ui_surfaces": [
+        "THIA chat",
+        "admin",
+        "contribution endpoint"
+      ],
+      "persisted_data": [
+        "redaction_warning",
+        "blocked_reason"
+      ],
+      "minimum_checks": [
+        "common_token_patterns",
+        "no_secret_echo"
+      ],
+      "security_boundary": [
+        "Never display or commit detected secrets.",
+        "Prefer block over silent unsafe persistence."
+      ],
+      "valid_when": "Secret-like material is not persisted or echoed.",
+      "retire_when": "The guard creates false confidence and secrets still pass."
+    }
+  ]
+}

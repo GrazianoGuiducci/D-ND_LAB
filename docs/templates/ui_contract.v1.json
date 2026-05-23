@@ -98,6 +98,31 @@
       "blocks": "What contamination or false inference this module prevents."
     }
   ],
+  "assistant": {
+    "schema": "dndlab.assistant_contract.v0",
+    "contract_ref": "assistant_contract.v0.json",
+    "module": "THIAContextAssistant",
+    "surface": "lab_dashboard",
+    "purpose": "Answer from current domain state, explain boundaries and prepare reviewable intake without direct Lab mutation.",
+    "starter_profile": {
+      "source": "domain_adapter",
+      "required_modes": ["chat", "intake_feedback", "intake_contact"]
+    },
+    "intake_profile": {
+      "review_card": "<domain_review_card>",
+      "quarantine": true,
+      "submit_label": {
+        "it": "Invia modulo",
+        "en": "Submit form"
+      }
+    },
+    "role_contract": {
+      "default_user_role": "public_visitor",
+      "admin_detection": "server_verified_only",
+      "expert_detection": "declared_or_inferred_but_unverified"
+    },
+    "promotion_boundary": "Assistant intake prepares review/admin records; it does not update seed, reports or Lab state directly."
+  },
   "admin_actions": [
     {
       "action": "run_cycle",
