@@ -1757,13 +1757,12 @@
               <section class="mt-4 border border-amber-500/70 rounded-md p-4 bg-slate-950/40 shadow-[0_0_16px_rgba(245,158,11,.10)]">
                 <div class="flex items-start justify-between gap-3 flex-wrap mb-3">
                   <div>
-                    <h3 class="text-sm font-medium text-amber-100">Inefficienza daily BTC</h3>
-                    <p class="text-xs text-slate-300 mt-1">Watch-only: il controllo riempie quanto le zone e il denominatore e' basso.</p>
+                    <h3 class="text-sm font-medium text-amber-100" x-text="t('dash.btc.daily.title', 'Inefficienza daily BTC')"></h3>
+                    <p class="text-xs text-slate-300 mt-1" x-text="t('dash.btc.daily.lead', 'Watch-only: il controllo riempie quanto le zone e il denominatore e basso.')"></p>
                   </div>
                   <button @click="selectBitcoinDailyInefficiencyLens()"
-                          class="text-[11px] font-mono px-2 py-1 rounded border border-amber-400/80 text-amber-100 hover:border-amber-100 cursor-pointer">
-                    apri test
-                  </button>
+                          class="text-[11px] font-mono px-2 py-1 rounded border border-amber-400/80 text-amber-100 hover:border-amber-100 cursor-pointer"
+                          x-text="t('dash.btc.daily.openTest', 'apri test')"></button>
                 </div>
                 <div class="grid lg:grid-cols-[minmax(0,1fr)_minmax(260px,.38fr)] gap-3">
                   <div>
@@ -1782,13 +1781,11 @@
                       <span x-text="bitcoinDailyInefficiencyZoneSummary()"></span>
                       <div class="flex items-center gap-3">
                         <button @click="showThiaAskPreview('strict-null', $event)"
-                                class="thia-ask-btn compact">
-                          chiedi THIA
-                        </button>
+                                class="thia-ask-btn compact"
+                                x-text="t('dash.btc.askThia', 'chiedi THIA')"></button>
                         <button @click="selectBitcoinDailyInefficiencyLens()"
-                                class="font-mono text-amber-200 hover:text-amber-100 cursor-pointer">
-                          dettaglio completo
-                        </button>
+                                class="font-mono text-amber-200 hover:text-amber-100 cursor-pointer"
+                                x-text="t('dash.btc.daily.fullDetail', 'dettaglio completo')"></button>
                       </div>
                     </div>
                     <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-2">
@@ -1810,10 +1807,10 @@
                   </div>
                   <button @click="selectBitcoinDailyInefficiencyLens()"
                           class="text-left rounded border border-purple-500/60 bg-purple-950/10 p-3 hover:border-purple-200 transition cursor-pointer">
-                    <div class="text-[10px] uppercase tracking-wider text-purple-200">Verdetto corrente</div>
+                    <div class="text-[10px] uppercase tracking-wider text-purple-200" x-text="t('dash.btc.daily.currentVerdict', 'Verdetto corrente')"></div>
                     <div class="text-sm text-slate-100 mt-2 break-words" x-text="bitcoinDailyInefficiencyVerdictLabel()"></div>
-                    <div class="text-xs text-slate-300 mt-3" x-text="bitcoinDailyInefficiencyCard()?.evidence || ''"></div>
-                    <div class="text-[11px] text-amber-200 mt-3" x-text="bitcoinDailyInefficiencyCard()?.boundary || ''"></div>
+                    <div class="text-xs text-slate-300 mt-3" x-text="bitcoinDailyInefficiencyEvidence()"></div>
+                    <div class="text-[11px] text-amber-200 mt-3" x-text="localizedBoundary(bitcoinDailyInefficiencyCard()?.boundary || '')"></div>
                   </button>
                 </div>
               </section>
@@ -1823,18 +1820,16 @@
               <section class="mt-4 border border-cyan-500/80 rounded-md p-4 bg-slate-950/40 shadow-[0_0_16px_rgba(34,211,238,.16)]">
                 <div class="flex items-start justify-between gap-3 flex-wrap mb-3">
                   <div>
-                    <h3 class="text-sm font-medium text-cyan-200">Schede metodo BTC</h3>
-                    <p class="text-xs text-slate-300 mt-1">POC, inefficienze, trendline e MM52 diventano domande, dati richiesti e null prima di qualunque test.</p>
+                    <h3 class="text-sm font-medium text-cyan-200" x-text="t('dash.btc.method.title', 'Schede metodo BTC')"></h3>
+                    <p class="text-xs text-slate-300 mt-1" x-text="t('dash.btc.method.lead', 'POC, inefficienze, trendline e MM52 diventano domande, dati richiesti e null prima di qualunque test.')"></p>
                   </div>
                   <div class="flex items-center gap-2 flex-wrap">
                     <button @click="showThiaAskPreview('method-intake', $event)"
-                            class="thia-ask-btn">
-                      chiedi THIA
-                    </button>
+                            class="thia-ask-btn"
+                            x-text="t('dash.btc.askThia', 'chiedi THIA')"></button>
                     <button @click="selectBitcoinMethodLens()"
-                            class="text-[11px] font-mono px-2 py-1 rounded border border-cyan-500/90 text-cyan-100 hover:border-cyan-200 cursor-pointer">
-                      apri intake
-                    </button>
+                            class="text-[11px] font-mono px-2 py-1 rounded border border-cyan-500/90 text-cyan-100 hover:border-cyan-200 cursor-pointer"
+                            x-text="t('dash.btc.method.openIntake', 'apri intake')"></button>
                   </div>
                 </div>
                 <div class="grid lg:grid-cols-[minmax(0,1fr)_minmax(280px,.45fr)] gap-3">
@@ -1859,13 +1854,13 @@
                           </div>
                           <div class="text-sm text-slate-100 mt-2 font-medium line-clamp-2" x-text="card.title || card.claim"></div>
                           <div class="text-xs text-slate-300 mt-2 line-clamp-3" x-text="card.evidence || card.data_requirement || ''"></div>
-                          <div class="text-[11px] text-amber-200 mt-2 line-clamp-2" x-text="card.boundary || ''"></div>
+                          <div class="text-[11px] text-amber-200 mt-2 line-clamp-2" x-text="localizedBoundary(card.boundary || '')"></div>
                         </button>
                       </template>
                     </div>
                   </div>
                   <div class="rounded border border-purple-500/70 bg-purple-950/10 p-3">
-                    <div class="text-[10px] uppercase tracking-wider text-purple-200">THIA chiede all'esperto</div>
+                    <div class="text-[10px] uppercase tracking-wider text-purple-200" x-text="t('dash.btc.method.expertQuestions', 'THIA chiede all esperto')"></div>
                     <div class="mt-2 space-y-2">
                       <template x-for="q in bitcoinMethodQuestions().slice(0, 6)" :key="q">
                         <button @click="selectBitcoinMethodQuestion(q)"
@@ -1876,7 +1871,7 @@
                     <template x-if="bitcoinMethodRecommendedNext()">
                       <button @click="selectBitcoinMethodLens()"
                               class="mt-3 w-full text-left border border-amber-400/80 rounded p-3 bg-amber-950/10 hover:border-amber-200 transition cursor-pointer">
-                        <div class="text-[10px] uppercase tracking-wider text-amber-200">Prossimo test suggerito</div>
+                        <div class="text-[10px] uppercase tracking-wider text-amber-200" x-text="t('dash.btc.method.nextTest', 'Prossimo test suggerito')"></div>
                         <div class="text-sm text-slate-100 mt-1" x-text="bitcoinMethodRecommendedNext()?.title || bitcoinMethodRecommendedNext()?.method_id"></div>
                         <div class="text-xs text-slate-300 mt-2 line-clamp-3" x-text="bitcoinMethodRecommendedNext()?.precondition || bitcoinMethodRecommendedNext()?.why"></div>
                       </button>
@@ -3013,11 +3008,11 @@
               <p class="text-xs text-slate-300 leading-relaxed" x-text="selectedCampoLens.body"></p>
               <div class="border-t border-slate-800 pt-3 text-[11px] space-y-2">
                 <div>
-                  <div class="uppercase tracking-wider text-slate-500">Evidenza</div>
+                  <div class="uppercase tracking-wider text-slate-500" x-text="t('dash.detail.evidence', 'Evidenza')"></div>
                   <div class="text-slate-300 mt-0.5" x-text="selectedCampoLens.evidence"></div>
                 </div>
                 <div>
-                  <div class="uppercase tracking-wider text-slate-500">Limite operativo</div>
+                  <div class="uppercase tracking-wider text-slate-500" x-text="t('dash.detail.boundary', 'Limite operativo')"></div>
                   <div class="text-amber-200 mt-0.5" x-text="selectedCampoLens.boundary"></div>
                 </div>
                 <template x-if="selectedCampoLens.diagnostics && selectedCampoLens.diagnostics.length">
@@ -3026,11 +3021,10 @@
                       <div class="rounded border border-slate-800 bg-slate-950/40 p-2">
                         <div class="flex items-center justify-between gap-2">
                           <div class="uppercase tracking-wider text-slate-500" x-text="row.label"></div>
-                          <button x-show="String(row.label || '').toLowerCase().includes('null severo')"
+                          <button x-show="/null severo|strict null/i.test(String(row.label || ''))"
                                   @click.stop="showThiaAskPreview('strict-null', $event)"
-                                  class="thia-ask-btn compact">
-                            chiedi THIA
-                          </button>
+                                  class="thia-ask-btn compact"
+                                  x-text="t('dash.btc.askThia', 'chiedi THIA')"></button>
                         </div>
                         <div class="text-slate-200 mt-0.5" x-text="row.value"></div>
                         <div class="text-slate-400 mt-1 leading-relaxed" x-show="row.note" x-text="row.note"></div>
@@ -5293,12 +5287,51 @@
         const total = this.bitcoinDailyInefficiencyZones().length;
         const shown = Math.min(total, 6);
         const strict = metrics.strict_control_fill_rate ?? 'n/a';
-        return `Mostro ${shown}/${total} zone: la decisione dipende dal null severo ${strict}, non dalle singole card.`;
+        return this.lang === 'en'
+          ? `Showing ${shown}/${total} zones: the decision depends on strict null ${strict}, not on single cards.`
+          : `Mostro ${shown}/${total} zone: la decisione dipende dal null severo ${strict}, non dalle singole card.`;
       },
 
       bitcoinDailyInefficiencyControls() {
         const controls = this.bitcoinDailyInefficiencyPayload()?.matched_controls;
         return Array.isArray(controls) ? controls : [];
+      },
+
+      localizedBoundary(text) {
+        const raw = String(text || '');
+        if (!raw) return '';
+        const normalized = raw.toLowerCase();
+        if (normalized.includes('no trading signal')) {
+          if (normalized.includes('method intake')) {
+            return this.lang === 'en'
+              ? 'No trading signal: the method intake creates test contracts, not targets or advice.'
+              : 'Nessun segnale operativo: la scheda metodo crea contratti di test, non target o consigli.';
+          }
+          if (normalized.includes('matrix selects') || normalized.includes('next test surface')) {
+            return this.lang === 'en'
+              ? 'No trading signal: this matrix selects the next test surface, not an entry or exit timeframe.'
+              : 'Nessun segnale operativo: questa matrice sceglie la superficie del prossimo test, non un timeframe di ingresso o uscita.';
+          }
+          return this.lang === 'en'
+            ? 'No trading signal: zones and controls are test objects, not targets, entries, exits or advice.'
+            : 'Nessun segnale operativo: zone e controlli sono oggetti di test, non target, ingressi, uscite o consigli.';
+        }
+        if (raw === 'Boundary non dichiarato.') {
+          return this.lang === 'en' ? 'Boundary not declared.' : raw;
+        }
+        return raw;
+      },
+
+      localizedNullText(text) {
+        const raw = String(text || '');
+        if (!raw) return '';
+        const normalized = raw.toLowerCase();
+        if (normalized.includes('adjacent') && normalized.includes('equal-width')) {
+          return this.lang === 'en'
+            ? raw
+            : 'Controllo adiacente di pari ampiezza con stessa data evento e finestra forward.';
+        }
+        return raw;
       },
 
       selectLabThoughtLens(item = null) {
@@ -5352,10 +5385,10 @@
       bitcoinDailyInefficiencyStatRows() {
         const metrics = this.bitcoinDailyInefficiencyPayload()?.metrics || {};
         return [
-          { label: 'zone', value: String(metrics.zones_total ?? 0), tone: 'text-amber-200' },
-          { label: 'valide', value: String(metrics.zones_evaluable ?? 0), tone: 'text-cyan-300' },
+          { label: this.t('dash.btc.daily.stat.zones', 'zone'), value: String(metrics.zones_total ?? 0), tone: 'text-amber-200' },
+          { label: this.t('dash.btc.daily.stat.valid', 'valide'), value: String(metrics.zones_evaluable ?? 0), tone: 'text-cyan-300' },
           { label: 'fill', value: `${metrics.zone_fill_rate ?? 'n/a'}`, tone: 'text-green-300' },
-          { label: 'null severo', value: `${metrics.strict_control_fill_rate ?? metrics.control_fill_rate ?? 'n/a'}`, tone: 'text-purple-300' },
+          { label: this.t('dash.btc.daily.stat.strictNull', 'null severo'), value: `${metrics.strict_control_fill_rate ?? metrics.control_fill_rate ?? 'n/a'}`, tone: 'text-purple-300' },
         ];
       },
 
@@ -5366,26 +5399,52 @@
         const strictRate = metrics.strict_control_fill_rate;
         const denomReady = metrics.denominator_ready === true;
         if (strictRate !== undefined && zoneRate !== undefined && zoneRate <= strictRate) {
-          return `Watch-only: fill ${zoneRate} non batte il null severo ${strictRate}; resta oggetto di metodo, non segnale.`;
+          return this.lang === 'en'
+            ? `Watch-only: fill ${zoneRate} does not beat strict null ${strictRate}; it remains a method object, not a signal.`
+            : `Watch-only: fill ${zoneRate} non batte il null severo ${strictRate}; resta oggetto di metodo, non segnale.`;
         }
         if (zoneRate !== undefined && controlRate !== undefined && zoneRate === controlRate) {
-          return `Watch-only: fill ${zoneRate} uguale al controllo ${controlRate}; non c'e' vantaggio sul null. Denominatore ${denomReady ? 'pronto' : 'basso'}.`;
+          return this.lang === 'en'
+            ? `Watch-only: fill ${zoneRate} equals control ${controlRate}; no advantage over null. Denominator ${denomReady ? 'ready' : 'low'}.`
+            : `Watch-only: fill ${zoneRate} uguale al controllo ${controlRate}; non c'e' vantaggio sul null. Denominatore ${denomReady ? 'pronto' : 'basso'}.`;
         }
         if (denomReady === false) {
-          return 'Watch-only: denominatore basso; accumulare piu casi prima di interpretare.';
+          return this.lang === 'en'
+            ? 'Watch-only: low denominator; collect more cases before interpreting.'
+            : 'Watch-only: denominatore basso; accumulare piu casi prima di interpretare.';
         }
-        return 'Oggetto di test: leggere sempre contro controllo matched e boundary no-signal.';
+        return this.lang === 'en'
+          ? 'Test object: always read against matched control and no-signal boundary.'
+          : 'Oggetto di test: leggere sempre contro controllo matched e boundary no-signal.';
       },
 
       bitcoinDailyInefficiencyVerdictLabel() {
         const verdict = this.bitcoinDailyInefficiencyCard()?.verdict || 'watch';
         if (verdict === 'DAILY_INEFFICIENCY_PROXY_DENOMINATOR_LOW') {
-          return 'WATCH ONLY - DENOMINATORE BASSO';
+          return this.lang === 'en' ? 'WATCH ONLY - LOW DENOMINATOR' : 'WATCH ONLY - DENOMINATORE BASSO';
         }
         if (verdict === 'DAILY_INEFFICIENCY_PROXY_STRICT_NULL_NOT_BEATEN') {
-          return 'WATCH ONLY - NULL SEVERO NON BATTUTO';
+          return this.lang === 'en' ? 'WATCH ONLY - STRICT NULL NOT BEATEN' : 'WATCH ONLY - NULL SEVERO NON BATTUTO';
         }
         return verdict;
+      },
+
+      bitcoinDailyInefficiencyEvidence() {
+        const metrics = this.bitcoinDailyInefficiencyPayload()?.metrics || {};
+        const card = this.bitcoinDailyInefficiencyCard() || {};
+        if (metrics.zones_total !== undefined) {
+          const zones = metrics.zones_total ?? 0;
+          const evaluable = metrics.zones_evaluable ?? 0;
+          const filled = metrics.zones_filled ?? 0;
+          const controlsFilled = metrics.control_filled ?? metrics.controls_filled ?? 'n/a';
+          const controlsEval = metrics.control_evaluable ?? metrics.controls_evaluable ?? 'n/a';
+          const strictFilled = metrics.strict_controls_filled ?? 'n/a';
+          const strictEval = metrics.strict_controls_evaluable ?? 'n/a';
+          return this.lang === 'en'
+            ? `${zones} zones found, ${evaluable} evaluable, ${filled} filled; matched controls filled ${controlsFilled} of ${controlsEval}; strict dual-adjacent controls filled ${strictFilled} of ${strictEval}.`
+            : `${zones} zone trovate, ${evaluable} valutabili, ${filled} chiuse; controlli matched chiusi ${controlsFilled} su ${controlsEval}; controlli severi dual-adjacent chiusi ${strictFilled} su ${strictEval}.`;
+        }
+        return card.evidence || '';
       },
 
       bitcoinDailyInefficiencyZoneTitle(zone) {
@@ -5395,7 +5454,7 @@
       },
 
       bitcoinDailyInefficiencyZoneRange(zone) {
-        return `${this.btcPriceLabel(zone?.lower)} -> ${this.btcPriceLabel(zone?.upper)} · width ${this.btcPriceLabel(zone?.width)}`;
+        return `${this.btcPriceLabel(zone?.lower)} -> ${this.btcPriceLabel(zone?.upper)} · ${this.lang === 'en' ? 'width' : 'ampiezza'} ${this.btcPriceLabel(zone?.width)}`;
       },
 
       bitcoinDailyInefficiencyControlFor(zone) {
@@ -5404,8 +5463,8 @@
 
       bitcoinDailyInefficiencyControlSummary(zone) {
         const control = this.bitcoinDailyInefficiencyControlFor(zone);
-        if (!control) return 'control n/a';
-        return `control: ${control.fill?.status || 'n/a'} · ${this.btcPriceLabel(control.lower)} -> ${this.btcPriceLabel(control.upper)}`;
+        if (!control) return this.lang === 'en' ? 'control n/a' : 'controllo n/a';
+        return `${this.lang === 'en' ? 'control' : 'controllo'}: ${control.fill?.status || 'n/a'} · ${this.btcPriceLabel(control.lower)} -> ${this.btcPriceLabel(control.upper)}`;
       },
 
       bitcoinDailyInefficiencyDiagnostics(selected = null, control = null) {
@@ -5419,26 +5478,38 @@
         const trajectory = quality.trajectory || {};
         const rows = [];
         rows.push({
-          label: 'Null / controllo',
-          value: `${metrics.zone_fill_rate ?? 'n/a'} zone vs ${metrics.control_fill_rate ?? 'n/a'} controllo`,
-          note: card.null || 'Confronto con controllo adiacente di pari ampiezza.',
+          label: this.t('dash.btc.daily.diag.nullControl', 'Null / controllo'),
+          value: this.lang === 'en'
+            ? `${metrics.zone_fill_rate ?? 'n/a'} zones vs ${metrics.control_fill_rate ?? 'n/a'} control`
+            : `${metrics.zone_fill_rate ?? 'n/a'} zone vs ${metrics.control_fill_rate ?? 'n/a'} controllo`,
+          note: this.localizedNullText(card.null) || (this.lang === 'en' ? 'Comparison with adjacent equal-width control.' : 'Confronto con controllo adiacente di pari ampiezza.'),
         });
         if (metrics.strict_control_fill_rate !== undefined) {
           rows.push({
-            label: 'Null severo',
-            value: `${metrics.zone_fill_rate ?? 'n/a'} zone vs ${metrics.strict_control_fill_rate} severo`,
-            note: `${metrics.strict_controls_filled ?? 0}/${metrics.strict_controls_evaluable ?? 0} controlli dual-adjacent filled; se pareggia o supera il proxy, il metodo resta watch.`,
+            label: this.t('dash.btc.daily.diag.strictNull', 'Null severo'),
+            value: this.lang === 'en'
+              ? `${metrics.zone_fill_rate ?? 'n/a'} zones vs ${metrics.strict_control_fill_rate} strict`
+              : `${metrics.zone_fill_rate ?? 'n/a'} zone vs ${metrics.strict_control_fill_rate} severo`,
+            note: this.lang === 'en'
+              ? `${metrics.strict_controls_filled ?? 0}/${metrics.strict_controls_evaluable ?? 0} dual-adjacent controls filled; if it ties or beats the proxy, the method remains watch.`
+              : `${metrics.strict_controls_filled ?? 0}/${metrics.strict_controls_evaluable ?? 0} controlli dual-adjacent filled; se pareggia o supera il proxy, il metodo resta watch.`,
           });
         }
         rows.push({
-          label: 'Denominatore',
-          value: metrics.denominator_ready === true ? 'pronto' : 'basso',
-          note: `${metrics.zones_evaluable ?? 0} zone valutabili; prossimo valore utile: aumentare storia/denominatore prima di interpretare.`,
+          label: this.t('dash.btc.daily.diag.denominator', 'Denominatore'),
+          value: metrics.denominator_ready === true
+            ? this.t('dash.btc.daily.value.ready', 'pronto')
+            : this.t('dash.btc.daily.value.low', 'basso'),
+          note: this.lang === 'en'
+            ? `${metrics.zones_evaluable ?? 0} evaluable zones; next useful value: increase history/denominator before interpreting.`
+            : `${metrics.zones_evaluable ?? 0} zone valutabili; prossimo valore utile: aumentare storia/denominatore prima di interpretare.`,
         });
         if (falsifier.coherent !== undefined) {
           rows.push({
             label: 'Falsifier',
-            value: falsifier.coherent ? `coerente · ${(falsifier.flags || []).length} flag` : `non coerente · ${(falsifier.flags || []).length} flag`,
+            value: falsifier.coherent
+              ? `${this.lang === 'en' ? 'coherent' : 'coerente'} · ${(falsifier.flags || []).length} flag`
+              : `${this.lang === 'en' ? 'not coherent' : 'non coerente'} · ${(falsifier.flags || []).length} flag`,
             note: falsifier.summary || '',
           });
         }
@@ -5458,15 +5529,17 @@
         }
         if (trajectory.decision) {
           rows.push({
-            label: 'Traiettoria',
+            label: this.t('dash.btc.daily.diag.trajectory', 'Traiettoria'),
             value: `${trajectory.decision}${trajectory.confidence ? ` · ${trajectory.confidence}` : ''}`,
             note: trajectory.reason || '',
           });
         }
         if (selected?.zone_id && control) {
           rows.push({
-            label: 'Zona selezionata',
-            value: `${selected.fill?.status || 'n/a'} vs controllo ${control.fill?.status || 'n/a'}`,
+            label: this.t('dash.btc.daily.diag.selectedZone', 'Zona selezionata'),
+            value: this.lang === 'en'
+              ? `${selected.fill?.status || 'n/a'} vs control ${control.fill?.status || 'n/a'}`
+              : `${selected.fill?.status || 'n/a'} vs controllo ${control.fill?.status || 'n/a'}`,
             note: `${selected.zone_id} / ${control.zone_id || 'control'}`,
           });
         }
@@ -5493,11 +5566,11 @@
           evidence: selected.zone_id
             ? `${selected.zone_id}: ${this.bitcoinDailyInefficiencyZoneRange(selected)} · fill ${selected.fill?.status || 'n/a'}`
             : card.evidence || 'Artifact non sintetizzato.',
-          boundary: card.boundary || (
+          boundary: this.localizedBoundary(card.boundary || (
             payload.boundary?.trading_signal === false
               ? 'No trading signal: zone e controlli sono oggetti di test, non target.'
               : 'Boundary non dichiarato.'
-          ),
+          )),
           meta: [
             selected.event_date ? `event: ${selected.event_date}` : null,
             selected.direction ? `direction: ${selected.direction}` : null,
@@ -5526,10 +5599,10 @@
       bitcoinMethodStatRows() {
         const metrics = this.bitcoinMethodIntakeArtifact()?.payload?.metrics || {};
         return [
-          { label: 'metodi', value: String(metrics.methods_total ?? 0), tone: 'text-cyan-300' },
+          { label: this.t('dash.btc.method.stat.methods', 'metodi'), value: String(metrics.methods_total ?? 0), tone: 'text-cyan-300' },
           { label: 'watch', value: String(metrics.methods_watch ?? 0), tone: 'text-purple-300' },
           { label: 'test', value: String(metrics.methods_test_candidate ?? 0), tone: 'text-green-300' },
-          { label: 'definizioni', value: String(metrics.unresolved_definitions ?? 0), tone: 'text-amber-300' },
+          { label: this.t('dash.btc.method.stat.definitions', 'definizioni'), value: String(metrics.unresolved_definitions ?? 0), tone: 'text-amber-300' },
         ];
       },
 
@@ -5552,7 +5625,9 @@
           schema: 'dndlab.bitcoin.method_intake.v1',
           date: this.bitcoinMethodIntakeArtifact()?.payload?.generated_at || this.bitcoinMethodIntakeArtifact()?.mtime,
           evidence: question,
-          boundary: 'La risposta diventa scheda metodo o definizione mancante; non entra come segnale.',
+          boundary: this.lang === 'en'
+            ? 'The answer becomes a method card or missing definition; it does not enter as a signal.'
+            : 'La risposta diventa scheda metodo o definizione mancante; non entra come segnale.',
           meta: 'BTC method-intake',
         };
         this.activeTab = 'campo';
@@ -5575,7 +5650,7 @@
           schema: payload.schema || artifact.schema || 'dndlab.bitcoin.method_intake.v1',
           date: payload.generated_at || artifact.generated_at || artifact.mtime,
           evidence: selected.evidence || selected.data_requirement || next.why || 'Scheda metodo non sintetizzata.',
-          boundary: selected.boundary || 'No trading signal: l intake crea contratti di test, non target.',
+          boundary: this.localizedBoundary(selected.boundary || 'No trading signal: l intake crea contratti di test, non target.'),
           meta: [
             selected.method_id ? `method: ${selected.method_id}` : null,
             selected.falsifier ? `falsifier: ${selected.falsifier}` : null,
