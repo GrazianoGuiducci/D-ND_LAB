@@ -1549,6 +1549,20 @@ def _t(lang: str, key: str, **fmt: Any) -> str:
     return val
 
 
+def _html_lang_response(html: str, lang: str) -> HTMLResponse:
+    """Return HTML and persist the selected language for static + server pages."""
+    response = HTMLResponse(html)
+    for key in ("i18nextLng", "dnd-lang"):
+        response.set_cookie(
+            key=key,
+            value=lang,
+            max_age=60 * 60 * 24 * 365,
+            path="/",
+            samesite="lax",
+        )
+    return response
+
+
 def _lang_toggle_html(lang: str, current_path: str) -> str:
     """Render IT/EN toggle that preserves current path. Sets ?lang=xx (cookie persists via JS on click would be ideal, ma per ora query string è sufficiente — il cookie viene comunque settato dal sito statico)."""
     other = "en" if lang == "it" else "it"
@@ -2052,7 +2066,7 @@ async def public_lab_index(domain: str, request: Request) -> Any:
         body_html = "<ul class='cycle-list'>" + "\n".join(items) + "</ul>"
 
     lead = _t(lang, f"lead_{domain}") if f"lead_{domain}" in (_N_I18N.get(lang) or {}) else _t(lang, "card_default_desc")
-    return HTMLResponse(_LAB_INDEX_HTML_TEMPLATE.format(
+    return _html_lang_response(_LAB_INDEX_HTML_TEMPLATE.format(
         html_lang=_t(lang, "html_lang"),
         og_locale=_t(lang, "og_locale"),
         meta_title=_t(lang, "lab_meta_title_fmt", lab=domain),
@@ -2064,7 +2078,7 @@ async def public_lab_index(domain: str, request: Request) -> Any:
         header_html=_render_lab_header(lang, cycle_active=True, current_path=f"/n/{domain}/"),
         footer_html=_render_lab_footer(lang),
         lab=html_escape(domain), lead=html_escape(lead), body=body_html,
-    ))
+    ), lang)
 
 
 _MASTER_INDEX_HTML_TEMPLATE = """\
@@ -2217,7 +2231,7 @@ async def public_master_index(request: Request) -> Any:
             f"{last_html}"
             f"</a></div>"
         )
-    return HTMLResponse(_MASTER_INDEX_HTML_TEMPLATE.format(
+    return _html_lang_response(_MASTER_INDEX_HTML_TEMPLATE.format(
         html_lang=_t(lang, "html_lang"),
         og_locale=_t(lang, "og_locale"),
         meta_title=_t(lang, "master_meta_title"),
@@ -2233,7 +2247,7 @@ async def public_master_index(request: Request) -> Any:
         header_html=_render_lab_header(lang, cycle_active=True, current_path="/n/"),
         footer_html=_render_lab_footer(lang),
         cards="\n".join(cards),
-    ))
+    ), lang)
 
 
 @app.get("/n/{domain}/{cycle_ts}", response_class=HTMLResponse)
@@ -2272,7 +2286,7 @@ async def public_narrative_page(domain: str, cycle_ts: str, request: Request) ->
     prev_link = f"<a href='/n/{html_escape(domain)}/{older}'>{html_escape(_t(lang, 'narr_prev_link'))}</a>" if older else ""
     next_link = f"<a href='/n/{html_escape(domain)}/{newer}'>{html_escape(_t(lang, 'narr_next_link'))}</a>" if newer else ""
 
-    return HTMLResponse(_NARRATIVE_HTML_TEMPLATE.format(
+    return _html_lang_response(_NARRATIVE_HTML_TEMPLATE.format(
         html_lang=_t(lang, "html_lang"),
         og_locale=_t(lang, "og_locale"),
         meta_title=_t(lang, "narr_meta_title_fmt", title=title, lab=domain),
@@ -2303,7 +2317,7 @@ async def public_narrative_page(domain: str, cycle_ts: str, request: Request) ->
         trajectory_decision=html_escape(parsed.get("trajectory_decision") or "—"),
         prev_link=prev_link,
         next_link=next_link,
-    ))
+    ), lang)
 
 
 @app.get("/api/domains/{domain}/trajectory")
