@@ -274,6 +274,27 @@ che THIA deve fare ad Alipio e boundary `trading_signal=false`.
 Questa scheda e' il modo corretto per far parlare THIA con Alipio: raccoglie
 definizioni e critica utile, ma non modifica il seed e non promuove target.
 
+Autoaccensione BTC: il sistema puo' generare una specifica provvisoria quando i
+parametri umani mancano, ma deve dichiarare le assunzioni e chiamare proxy cio'
+che non replica TradingView:
+
+```bash
+python3 domains/bitcoin-regime-lab/tools/btc_auto_ignite.py --write --json
+```
+
+Output atteso: JSON `dndlab.bitcoin.auto_ignite.v1` scritto in
+`data/bitcoin-regime-lab/value/`. Consuma gli artifact BTC correnti, seleziona
+`volume_profile_lvn_void`, costruisce un proxy Volume Profile daily da OHLCV
+cross-feed, espone POC/LVN proxy, assunzioni, non verificati, null e prossimo
+contratto. Questo e' il backend naturale per un futuro bottone `autoaccendi
+Lab`: prima nasce consapevolezza/artifact, poi eventualmente il ciclo cognitivo
+lo interpreta.
+
+Il simulatore compra/vendi puo' essere costruito solo dopo questo strato: prima
+simulare closure/watch-zone e confronto con zone random; poi, se viene definita
+una regola esplicita di entrata/uscita/invalidation, misurare una strategia
+ipotetica contro buy-and-hold, costi, slippage e drawdown.
+
 Il primo tool daily-computable per la chiusura di inefficienza usa solo OHLCV
 daily e produce zone/test/null, non segnali:
 

@@ -90,3 +90,16 @@ This consumes `btc_exchange_ohlcv_latest.json`, creates a conservative daily
 three-candle FVG/inefficiency proxy, and compares each zone with a matched
 adjacent equal-width control. It is a test object for the Lab, not a target,
 entry, exit or trading signal.
+
+Build the first auto-ignition contract directly:
+
+```bash
+python3 domains/bitcoin-regime-lab/tools/btc_auto_ignite.py --write --json
+```
+
+This gathers the current BTC value artifacts, generates explicit provisional
+assumptions for the Alipio-derived LVN/Volume Profile method and writes
+`dndlab.bitcoin.auto_ignite.v1`. The artifact includes a daily OHLCV
+Volume Profile proxy, nearest LVN zones, baseline/null plan and simulator
+candidate scope. It does not run a cognitive cycle and does not produce a
+target, entry, exit or signal.

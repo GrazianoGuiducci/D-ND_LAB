@@ -98,6 +98,11 @@
       "name": "btc_daily_inefficiency_candidate",
       "path": "tools/btc_daily_inefficiency_candidate.py",
       "boundary": "consumes exchange OHLCV artifact and writes daily FVG/inefficiency proxy zones with matched adjacent controls; public_claim=false; trading_signal=false; operational=false"
+    },
+    {
+      "name": "btc_auto_ignite",
+      "path": "tools/btc_auto_ignite.py",
+      "boundary": "gathers BTC value artifacts and writes a provisional LVN/Volume Profile proxy contract with explicit assumptions and nulls; public_claim=false; trading_signal=false; operational=false"
     }
   ]
 }

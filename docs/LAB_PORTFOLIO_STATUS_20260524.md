@@ -87,6 +87,15 @@ Expected output:
 - nulls selected;
 - no trading signal.
 
+Implemented first backend step:
+
+- tool: `domains/bitcoin-regime-lab/tools/btc_auto_ignite.py`;
+- artifact: `data/bitcoin-regime-lab/value/btc_auto_ignite_latest.json`;
+- role: gather current BTC artifacts, generate provisional LVN/Volume Profile
+  proxy assumptions, expose nearest LVN proxy zones and define next nulls;
+- future UI: `autoaccendi Lab` button can call this tool/API before any
+  cognitive cycle.
+
 ## Next Finance Probe
 
 Finance should not be restarted as prediction. A useful probe is:
