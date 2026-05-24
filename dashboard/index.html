@@ -1647,8 +1647,11 @@
               <section class="mt-4 border border-cyan-900/60 rounded-md p-4 bg-cyan-950/10">
                 <div class="flex items-start justify-between gap-3 flex-wrap mb-3">
                   <div>
-                    <h3 class="text-sm font-medium text-cyan-200">Lente finance</h3>
-                    <p class="text-xs text-slate-400 mt-1">Regime, baseline/null, data-card e confini decisionali prima di qualunque lettura operativa.</p>
+                    <h3 class="text-sm font-medium text-cyan-200" x-text="lang === 'en' ? 'Finance lens' : 'Lente finance'"></h3>
+                    <p class="text-xs text-slate-400 mt-1"
+                       x-text="lang === 'en'
+                         ? 'Regime, baseline/null, data-card and decision boundaries before any operational read.'
+                         : 'Regime, baseline/null, data-card e confini decisionali prima di qualunque lettura operativa.'"></p>
                   </div>
                   <span class="text-[10px] font-mono px-2 py-1 rounded border border-cyan-900/70 text-cyan-200"
                         x-text="financeWindowCounts().label"></span>
@@ -1667,7 +1670,7 @@
                     <div class="mt-1 text-sm text-slate-200 line-clamp-3" x-text="financeDataCardSummary()"></div>
                   </button>
                   <button @click="selectFinanceLens('bounds')" class="text-left border border-slate-800 rounded p-3 bg-slate-950/50 hover:border-cyan-700 transition">
-                    <div class="text-[10px] uppercase tracking-wider text-slate-400">Non ammissibile</div>
+                    <div class="text-[10px] uppercase tracking-wider text-slate-400" x-text="lang === 'en' ? 'Not admissible' : 'Non ammissibile'"></div>
                     <div class="mt-1 text-sm text-amber-200 line-clamp-3" x-text="financeDecisionBound()"></div>
                   </button>
                 </div>
@@ -1676,7 +1679,7 @@
                           class="mt-3 w-full text-left border border-emerald-900/60 rounded-md p-3 bg-emerald-950/10 hover:border-emerald-600 transition cursor-pointer">
                     <div class="flex items-start justify-between gap-3 flex-wrap">
                       <div>
-                        <div class="text-[10px] uppercase tracking-wider text-emerald-300">Soglia di promozione</div>
+                        <div class="text-[10px] uppercase tracking-wider text-emerald-300" x-text="lang === 'en' ? 'Promotion threshold' : 'Soglia di promozione'"></div>
                         <div class="mt-1 text-sm text-slate-100" x-text="financePromotionSummary()"></div>
                       </div>
                       <span class="text-[10px] font-mono px-2 py-1 rounded border border-emerald-900/70 text-emerald-200"
@@ -6436,18 +6439,25 @@
 
       financePromotionSummary() {
         const b = this.financePromotionBoundary();
-        if (!b.available) return 'soglia non ancora cristallizzata nel contratto finance';
-        return `Gate provvisorio: ammessi ${b.admittedRobust}/${b.admittedPositives} robusti; sotto soglia ${b.rejectedRobust}/${b.rejectedPositives} survivor visibili.`;
+        if (!b.available) {
+          return this.lang === 'en'
+            ? 'threshold not yet crystallized in the finance contract'
+            : 'soglia non ancora cristallizzata nel contratto finance';
+        }
+        return this.lang === 'en'
+          ? `Provisional gate: ${b.admittedRobust}/${b.admittedPositives} robust admitted; ${b.rejectedRobust}/${b.rejectedPositives} visible survivors below threshold.`
+          : `Gate provvisorio: ammessi ${b.admittedRobust}/${b.admittedPositives} robusti; sotto soglia ${b.rejectedRobust}/${b.rejectedPositives} survivor visibili.`;
       },
 
       financePromotionMetrics() {
         const b = this.financePromotionBoundary();
         if (!b.available) return [];
         const fmt = (n, d) => Number.isFinite(n) && Number.isFinite(d) ? `${n}/${d}` : 'n/a';
+        const isEn = this.lang === 'en';
         return [
-          { label: 'ammessi robusti', value: fmt(b.admittedRobust, b.admittedPositives), tone: 'text-emerald-300' },
-          { label: 'sotto soglia', value: fmt(b.rejectedRobust, b.rejectedPositives), tone: 'text-amber-300' },
-          { label: 'controlli selezionati', value: fmt(b.selectedControls, b.controlCases), tone: 'text-cyan-300' },
+          { label: isEn ? 'robust admitted' : 'ammessi robusti', value: fmt(b.admittedRobust, b.admittedPositives), tone: 'text-emerald-300' },
+          { label: isEn ? 'below threshold' : 'sotto soglia', value: fmt(b.rejectedRobust, b.rejectedPositives), tone: 'text-amber-300' },
+          { label: isEn ? 'selected controls' : 'controlli selezionati', value: fmt(b.selectedControls, b.controlCases), tone: 'text-cyan-300' },
           { label: 'policy', value: 'no hard boundary', tone: 'text-purple-300' },
         ];
       },
@@ -6456,7 +6466,14 @@
         const windows = this.financeDiagnosticWindows();
         const dnd = windows.filter(w => String(w?.verdict || '').toUpperCase() === 'DND_DELTA').length;
         const no = windows.filter(w => String(w?.verdict || '').toUpperCase() === 'NO_DELTA').length;
-        if (!windows.length) return { dnd, no, total: 0, label: 'diagnostica non caricata' };
+        if (!windows.length) {
+          return {
+            dnd,
+            no,
+            total: 0,
+            label: this.lang === 'en' ? 'diagnostics not loaded' : 'diagnostica non caricata',
+          };
+        }
         return { dnd, no, total: windows.length, label: `${dnd} DND_DELTA · ${no} NO_DELTA` };
       },
 
@@ -6468,58 +6485,97 @@
       financeRegimeGate() {
         const latest = this.latestReport();
         const verdict = String(latest?.verdict || '').trim();
-        if (/NO_DELTA/i.test(verdict)) return 'ultimo ciclo in NO_DELTA: il detector non ha potenza recuperabile per promozione';
-        if (/DND_DELTA/i.test(verdict)) return 'delta presente: richiede replica doppia prima di qualunque promozione';
+        if (/NO_DELTA/i.test(verdict)) {
+          return this.lang === 'en'
+            ? 'latest cycle is NO_DELTA: the detector has no recoverable power for promotion'
+            : 'ultimo ciclo in NO_DELTA: il detector non ha potenza recuperabile per promozione';
+        }
+        if (/DND_DELTA/i.test(verdict)) {
+          return this.lang === 'en'
+            ? 'delta present: requires double replication before any promotion'
+            : 'delta presente: richiede replica doppia prima di qualunque promozione';
+        }
         const w = this.financePrimaryWindow();
-        if (!w) return 'nessuna finestra finance pronta; apri Agente o lancia un cycle';
+        if (!w) {
+          return this.lang === 'en'
+            ? 'no finance window ready; open Agent or run a cycle'
+            : 'nessuna finestra finance pronta; apri Agente o lancia un cycle';
+        }
         return `${w.asset || w.symbol || 'asset'} ${w.label || 'window'}: ${w.verdict || 'verdict n/a'}`;
       },
 
       financeBaselineSummary() {
         const w = this.financePrimaryWindow();
-        if (!w) return 'baseline richiesta: ordered-vs-shuffle, random walk e VaR/RV';
+        if (!w) {
+          return this.lang === 'en'
+            ? 'required baseline: ordered-vs-shuffle, random walk and VaR/RV'
+            : 'baseline richiesta: ordered-vs-shuffle, random walk e VaR/RV';
+        }
         const z = Number(w.effect_z);
         const shuffles = w.shuffles || this.latestDiagnostic?.payload?.shuffles || '?';
         const zText = Number.isFinite(z) ? z.toFixed(2) : 'n/a';
-        return `effect_z ${zText} vs ${shuffles} shuffle; VaR/RV restano competitor espliciti`;
+        return this.lang === 'en'
+          ? `effect_z ${zText} vs ${shuffles} shuffles; VaR/RV remain explicit competitors`
+          : `effect_z ${zText} vs ${shuffles} shuffle; VaR/RV restano competitor espliciti`;
       },
 
       financeDataCardSummary() {
         const w = this.financePrimaryWindow();
-        if (!w) return 'provider, source_url, retrieval_ts e n_obs obbligatori';
-        const range = w.actual_start && w.actual_end ? `${w.actual_start}..${w.actual_end}` : (w.era_hint || 'finestra n/a');
+        if (!w) {
+          return this.lang === 'en'
+            ? 'provider, source_url, retrieval_ts and n_obs are required'
+            : 'provider, source_url, retrieval_ts e n_obs obbligatori';
+        }
+        const range = w.actual_start && w.actual_end
+          ? `${w.actual_start}..${w.actual_end}`
+          : (w.era_hint || (this.lang === 'en' ? 'window n/a' : 'finestra n/a'));
         return `${w.provider || 'provider?'} ${w.asset || w.symbol || ''} · n=${w.n || '?'} · ${range}`;
       },
 
       financeDecisionBound() {
         const boundary = this.financePromotionBoundary();
         if (boundary.available) {
-          return `non trattare score ${boundary.scoreMin} come confine duro; ${boundary.rejectedRobust}/${boundary.rejectedPositives} survivor sotto soglia restano visibili`;
+          return this.lang === 'en'
+            ? `do not treat score ${boundary.scoreMin} as a hard boundary; ${boundary.rejectedRobust}/${boundary.rejectedPositives} survivors below threshold remain visible`
+            : `non trattare score ${boundary.scoreMin} come confine duro; ${boundary.rejectedRobust}/${boundary.rejectedPositives} survivor sotto soglia restano visibili`;
         }
         const latestVerdict = String(this.latestReport()?.verdict || '');
         if (/NO_DELTA|underpowered|rejected/i.test(latestVerdict)) {
-          return 'non promuovere; ridisegnare target/oggetto o baseline prima del prossimo claim';
+          return this.lang === 'en'
+            ? 'do not promote; redesign target/object or baseline before the next claim'
+            : 'non promuovere; ridisegnare target/oggetto o baseline prima del prossimo claim';
         }
         if (this.latestDiagnostic?.payload?.boundary?.trading_signal === false) {
-          return 'nessun segnale trading; solo metodo o vincolo strutturale';
+          return this.lang === 'en'
+            ? 'no trading signal; method or structural constraint only'
+            : 'nessun segnale trading; solo metodo o vincolo strutturale';
         }
-        return 'vietati buy/sell/forecast/profit senza prodotto maturo e revisione';
+        return this.lang === 'en'
+          ? 'buy/sell/forecast/profit are forbidden without a mature product and review'
+          : 'vietati buy/sell/forecast/profit senza prodotto maturo e revisione';
       },
 
       selectFinanceLens(kind) {
+        const isEn = this.lang === 'en';
         const w = this.financePrimaryWindow();
         const counts = this.financeWindowCounts();
         const latest = this.latestReport();
-        const dataRange = w?.actual_start && w?.actual_end ? `${w.actual_start}..${w.actual_end}` : (w?.era_hint || 'finestra non disponibile');
-        const commonBoundary = 'Non e un segnale trading e non autorizza buy/sell/forecast/profit.';
+        const dataRange = w?.actual_start && w?.actual_end
+          ? `${w.actual_start}..${w.actual_end}`
+          : (w?.era_hint || (isEn ? 'window not available' : 'finestra non disponibile'));
+        const commonBoundary = isEn
+          ? 'It is not a trading signal and does not authorize buy/sell/forecast/profit.'
+          : 'Non e un segnale trading e non autorizza buy/sell/forecast/profit.';
         const lenses = {
           regime: {
             kind: 'finance',
             title: 'Regime gate',
             body: this.financeRegimeGate(),
-            evidence: latest?.verdict || 'Nessun verdict recente disponibile.',
+            evidence: latest?.verdict || (isEn ? 'No recent verdict available.' : 'Nessun verdict recente disponibile.'),
             boundary: /NO_DELTA|underpowered|rejected/i.test(latest?.verdict || '')
-              ? 'Il ciclo corrente blocca la promozione: serve ridisegnare oggetto o target.'
+              ? (isEn
+                ? 'The current cycle blocks promotion: object or target must be redesigned.'
+                : 'Il ciclo corrente blocca la promozione: serve ridisegnare oggetto o target.')
               : commonBoundary,
           },
           baseline: {
@@ -6527,36 +6583,46 @@
             title: 'Baseline / null',
             body: this.financeBaselineSummary(),
             evidence: counts.total
-              ? `${counts.dnd} finestre DND_DELTA, ${counts.no} NO_DELTA su ${counts.total}; shuffle=${w?.shuffles || this.latestDiagnostic?.payload?.shuffles || 'n/a'}.`
-              : 'Baseline non caricata nella diagnostica corrente.',
-            boundary: 'Un delta isolato non basta: servono replica doppia, null coerenti e competitor VaR/RV prima della promozione.',
+              ? (isEn
+                ? `${counts.dnd} DND_DELTA windows, ${counts.no} NO_DELTA out of ${counts.total}; shuffles=${w?.shuffles || this.latestDiagnostic?.payload?.shuffles || 'n/a'}.`
+                : `${counts.dnd} finestre DND_DELTA, ${counts.no} NO_DELTA su ${counts.total}; shuffle=${w?.shuffles || this.latestDiagnostic?.payload?.shuffles || 'n/a'}.`)
+              : (isEn ? 'Baseline not loaded in the current diagnostics.' : 'Baseline non caricata nella diagnostica corrente.'),
+            boundary: isEn
+              ? 'An isolated delta is not enough: double replication, coherent nulls and VaR/RV competitors are required before promotion.'
+              : 'Un delta isolato non basta: servono replica doppia, null coerenti e competitor VaR/RV prima della promozione.',
           },
           data: {
             kind: 'finance',
             title: 'Data-card',
             body: this.financeDataCardSummary(),
-            evidence: w ? `${w.provider || 'provider?'} ${w.source_url || ''} · retrieved ${w.retrieval_ts || 'n/a'} · ${dataRange}.` : 'Nessuna data-card disponibile.',
-            boundary: 'Senza provider, source_url, retrieval_ts e n_obs il claim resta non auditabile.',
+            evidence: w ? `${w.provider || 'provider?'} ${w.source_url || ''} · retrieved ${w.retrieval_ts || 'n/a'} · ${dataRange}.` : (isEn ? 'No data-card available.' : 'Nessuna data-card disponibile.'),
+            boundary: isEn
+              ? 'Without provider, source_url, retrieval_ts and n_obs the claim remains non-auditable.'
+              : 'Senza provider, source_url, retrieval_ts e n_obs il claim resta non auditabile.',
           },
           bounds: {
             kind: 'finance',
-            title: 'Non ammissibile',
+            title: isEn ? 'Not admissible' : 'Non ammissibile',
             body: this.financeDecisionBound(),
             evidence: this.latestDiagnostic?.payload?.boundary
               ? `operational=${!!this.latestDiagnostic.payload.boundary.operational}, trading_signal=${!!this.latestDiagnostic.payload.boundary.trading_signal}, public_claim=${!!this.latestDiagnostic.payload.boundary.public_claim}.`
-              : 'Boundary non disponibile.',
+              : (isEn ? 'Boundary not available.' : 'Boundary non disponibile.'),
             boundary: commonBoundary,
           },
           promotion: {
             kind: 'finance',
-            title: 'Soglia di promozione',
+            title: isEn ? 'Promotion threshold' : 'Soglia di promozione',
             body: this.financePromotionSummary(),
             evidence: (() => {
               const b = this.financePromotionBoundary();
-              if (!b.available) return 'Contratto precondition non disponibile.';
-              return `${this.financePromotionGate()} · cycle ${b.sourceCycle || 'n/a'} · controlli selezionati ${b.selectedControls}/${b.controlCases}, control robust ${b.controlRobust}/${b.controlCases}.`;
+              if (!b.available) return isEn ? 'Precondition contract not available.' : 'Contratto precondition non disponibile.';
+              return isEn
+                ? `${this.financePromotionGate()} · cycle ${b.sourceCycle || 'n/a'} · selected controls ${b.selectedControls}/${b.controlCases}, robust controls ${b.controlRobust}/${b.controlCases}.`
+                : `${this.financePromotionGate()} · cycle ${b.sourceCycle || 'n/a'} · controlli selezionati ${b.selectedControls}/${b.controlCases}, control robust ${b.controlRobust}/${b.controlCases}.`;
             })(),
-            boundary: 'È una soglia provvisoria di promozione sintetica: non è hard boundary, non è claim mercato, non autorizza rescue sotto soglia senza nuovo meccanismo falsificabile.',
+            boundary: isEn
+              ? 'It is a provisional synthetic-promotion threshold: not a hard boundary, not a market claim, and no below-threshold rescue is allowed without a new falsifiable mechanism.'
+              : 'È una soglia provvisoria di promozione sintetica: non è hard boundary, non è claim mercato, non autorizza rescue sotto soglia senza nuovo meccanismo falsificabile.',
           },
         };
         this.selectedNode = null;
