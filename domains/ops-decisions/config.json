@@ -2,8 +2,37 @@
   "$schema": "../../config.schema.json",
   "domain": "ops-decisions",
   "version": "0.1.0-alpha",
-  "title": "D-ND Ops-Decisions Lab",
-  "description": "Lab di funzione che trasforma friction operativa del sistema D-ND in regole strutturali. Due facce: (1) incident regeneration — applica Riparazione Regressiva a incident reports, propone fix al nodo regressivo; (2) decision archeology — cristallizza pattern decisionali da memorie operatore, commit, COWORK. Output: regole proposte, non regole imposte.",
+  "title": "D-ND MetaMasterLab",
+  "description": "Lab di sistema che governa l'evoluzione dei Lab D-ND: osserva intenti, risultanti, incidenti, report e falsifier per far prevalere crescita esponenziale, differenza e falsificabilita' su rumore, simmetria sterile e deriva d'intento. Lo slug resta ops-decisions per compatibilita'.",
+  "surface": {
+    "kind": "system_lab",
+    "display_name": "D-ND MetaMasterLab",
+    "legacy_name": "D-ND Ops-Decisions Lab",
+    "badge_it": "LAB DI SISTEMA",
+    "badge_en": "SYSTEM LAB",
+    "meta_layer": "metamaster",
+    "rename_policy": "surface_only_keep_slug"
+  },
+  "metamaster": {
+    "role": "governa l'evoluzione dei Lab come strumenti D-ND senza risolvere direttamente il dominio target",
+    "target_lab_input": "future_optional",
+    "future_outputs": [
+      "evolution_decision.json",
+      "lab_steward_report.md",
+      "intent_drift_check.json",
+      "exponentiality_score.json",
+      "tool_selection_proposal.json"
+    ],
+    "future_capabilities": [
+      "selezione del Lab piu' adatto a un intento non ancora cercato",
+      "monitoraggio deriva d'intento tra richiesta, seed, risultante e output",
+      "separazione crescita esponenziale da accumulo di rumore",
+      "rilevamento simmetrie sterili e all-pass tautologici",
+      "proposta di evoluzione, fusione, sospensione o rifondazione di Lab",
+      "promozione di pattern ricorrenti a guard, assertion o UI lens",
+      "orchestrazione multi-Lab come strumenti applicativi D-ND"
+    ]
+  },
   "model": {
     "context_file": "context.md",
     "tension_to_category": "tension_to_category.json",

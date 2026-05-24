@@ -169,7 +169,7 @@ domain result exists.
 | `research-radar` | emerging research/technology claim radar; turns claims into source cards, watch/test/reject/promote boundaries |
 | `bitcoin-regime-lab` | BTC regime monitoring reference Lab; no advice or signals, translates POC/FVG/LVN/CME/timeframe language into observable tests |
 | `bio-rhythms` | demo domain for biosignal/regime rhythm hypotheses |
-| `ops-decisions` | demo domain for operational decision constraints |
+| `ops-decisions` | system Lab surfaced as D-ND MetaMasterLab; governs live Lab evolution while keeping the legacy slug for compatibility |
 
 After install, these domains are available out-of-box. Default is
 `physics` — change `LAB_DOMAIN` in `.env` to switch.

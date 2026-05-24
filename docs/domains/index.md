@@ -24,8 +24,13 @@ The lab ships several domains:
   gap and timeframe language into data-card, baseline/null and falsifier
   contracts before any operational claim.
 
-Other generated domains, such as finance, bio-rhythms and ops-decisions, live
-under `domains/` and may still be in active demo/prototype hardening.
+- **D-ND MetaMasterLab** (`ops-decisions`) — system Lab that governs the
+  evolution of live Labs. It keeps intent, seed, reports, falsifier and
+  resultant aligned so exponentiality prevails over noise and sterile symmetry.
+  The runtime slug remains `ops-decisions` for compatibility.
+
+Other generated domains, such as finance and bio-rhythms, live under
+`domains/` and may still be in active demo/prototype hardening.
 
 To write your own, see [Extending](extending.md).
 

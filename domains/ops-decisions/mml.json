@@ -1,12 +1,34 @@
 {
   "$schema": "../../mml.schema.json",
   "lab": "ops-decisions",
+  "display_name": "D-ND MetaMasterLab",
+  "legacy_name": "D-ND Ops-Decisions Lab",
   "version": "0.2.0-alpha",
 
   "identity": {
-    "type": "function",
-    "level": "ground",
-    "responsibility": "Lab di funzione ground-level che trasforma friction operativa in regole strutturali. Due facce: incident regeneration (Riparazione Regressiva su incident_*.md) e decision archeology (cristallizzazione automatica da corpus decisionale operatore)."
+    "type": "system",
+    "level": "meta-master",
+    "responsibility": "Lab di sistema che governa l'evoluzione dei Lab D-ND come strumenti vivi. Mantiene compatibilita' runtime con lo slug ops-decisions, usa incident regeneration e decision archaeology come sensori, e propone decisioni evolutive affinche' esponenzialita', differenza e falsificabilita' prevalgano su rumore, simmetria sterile e deriva d'intento."
+  },
+
+  "metamaster_contract": {
+    "target_lab_input": "future_optional",
+    "mutation_policy": "proposal_only",
+    "governance_axes": [
+      "intent_to_resultant_alignment",
+      "exponentiality_vs_noise",
+      "falsifiability_vs_symmetry",
+      "all_pass_null_audit",
+      "lab_tool_selection",
+      "promote_suspend_merge_refound"
+    ],
+    "future_outputs": [
+      "evolution_decision.json",
+      "lab_steward_report.md",
+      "intent_drift_check.json",
+      "exponentiality_score.json",
+      "tool_selection_proposal.json"
+    ]
   },
 
   "kernel_refs": {

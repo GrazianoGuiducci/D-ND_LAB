@@ -1,25 +1,38 @@
-# Lab D-ND — ops-decisions
+# Lab D-ND — MetaMasterLab
 
 ## About
 
-Questo lab studia il sistema D-ND dall'interno. Legge gli incidenti
-(cycle falliti, errori di deploy, processi orfani) e le decisioni
-dell'operatore (memorie, feedback, commit) per estrarre regole
-strutturali che il sistema non ha ancora formalizzato.
+MetaMasterLab e' il Lab di sistema che governa l'evoluzione dei Lab D-ND.
+Non studia un dominio esterno come mercato, fisica o biosegnali: osserva i Lab
+come strumenti vivi e verifica se stanno producendo differenza reale o soltanto
+rumore, simmetria sterile, all-pass tautologici e deriva d'intento.
 
-Due facce dello stesso lavoro. La prima risale dagli incidenti al nodo
-dove mancava la condizione — propone fix regressivi, non toppe. La
-seconda scava nel deposito decisionale — trova pattern ricorrenti e
-li cristallizza come regole candidate.
+La sua domanda centrale e':
 
-Il lab non impone niente. Propone. L'operatore decide cosa diventa
-regola e cosa va nel cimitero. Ogni proposta porta la sua metrica:
-"quante volte questo pattern appare nel corpus" e "il fix proposto
-avrebbe prevenuto la ricorrenza?"
+> l'intento iniziale, il seme, i report, il falsifier e la risultante stanno
+> ancora descrivendo lo stesso movimento, oppure il Lab sta crescendo senza
+> preservare la propria essenza?
 
-Naive baseline: fix al sintomo + cristallizzazione manuale episodica.
-Questo lab verifica se il modus D-ND (inversione al nodo regressivo +
-pattern matching automatico) produce delta misurabile.
+Il vecchio nucleo `ops-decisions` resta valido e compatibile: incident
+regeneration e decision archaeology diventano due sensori interni del
+MetaMasterLab. Gli incidenti mostrano dove un Lab non vede piu' un confine; le
+decisioni storiche mostrano quali regole l'operatore applica gia' prima che il
+sistema le formalizzi.
 
-Il lab e in collaudo. Il primo cycle gira sul corpus reale del sistema:
-2 incident report, 97 memorie operatore, 1 canale COWORK.
+Il Lab non impone modifiche e non cambia direttamente i Lab target. Propone
+decisioni evolutive verificabili: quale tensione chiudere, quale guard rendere
+assertion, quale superficie UI manca, quale claim va degradato a vincolo, quale
+Lab usare come strumento per un intento non ancora formulato.
+
+Output futuri previsti, non ancora obbligatori:
+
+- `evolution_decision.json`: prossima mossa proposta per un Lab target.
+- `lab_steward_report.md`: lettura sintetica dello stato evolutivo.
+- `intent_drift_check.json`: distanza tra intento, seed, report e risultante.
+- `exponentiality_score.json`: differenza utile vs accumulo di rumore.
+- `tool_selection_proposal.json`: quale Lab usare come strumento D-ND in un
+  contesto applicativo.
+
+Meta-lab genera Lab e template. MetaMasterLab governa i Lab gia' vivi affinche'
+l'esponenzialita' evolutiva prevalga su rumore e simmetria, senza perdere
+l'essenza del movimento iniziale.
