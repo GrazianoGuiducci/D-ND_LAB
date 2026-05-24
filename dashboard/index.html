@@ -897,6 +897,7 @@
     .lab-tabs { display: none !important; }
     .lab-tabs-mobile { display: block; flex: 0 1 220px; max-width: 220px; min-width: 150px; }
     .lab-tabs-mobile > div[x-show] { z-index: 80; }
+    .dashboard-domain-nav { min-width: 0; }
     .dashboard-topnav { min-width: 0; }
     .domain-breadcrumb { min-width: 0; max-width: 190px; }
     .domain-pill { max-width: 155px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -930,18 +931,18 @@
       }
       .lab-topbar {
         display: grid !important;
-        grid-template-columns: auto minmax(118px, 1fr) auto;
-        grid-template-areas: "brand tabs nav";
+        grid-template-columns: auto auto minmax(118px, 1fr) auto;
+        grid-template-areas: "brand domains tabs nav";
         align-items: center;
         padding: 7px 10px !important;
         gap: 8px !important;
       }
       .lab-brand { grid-area: brand; min-width: 0; }
       .lab-brand-text { font-size: 1.1rem !important; max-width: 116px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .dashboard-domain-nav { grid-area: domains; gap: 4px !important; }
       .lab-tabs-mobile { grid-area: tabs; flex: none; width: 100%; max-width: none; min-width: 0; }
       .lab-tabs-mobile .tab-label { max-width: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       .dashboard-topnav { grid-area: nav; gap: 4px !important; margin-left: 0 !important; justify-self: end; }
-      .dashboard-domains-label { display: none; }
       .domain-breadcrumb { max-width: 132px; }
       .domain-pill { max-width: 108px; padding-left: 6px !important; padding-right: 6px !important; }
       .lang-switcher { display: none !important; }
@@ -949,6 +950,7 @@
     }
     @media (max-width: 827px) {
       .dashboard-domains-label { display: none; }
+      .dashboard-domain-nav { gap: 6px !important; }
       .dashboard-topnav { gap: 6px !important; }
     }
     @media (max-width: 560px) {
@@ -1193,6 +1195,24 @@
         <!-- Version label rimosso dalla toolbar (operatore: 'occupa spazio e non serve').
              Resta visibile in tab Info → Reference. -->
       </div>
+      <nav class="dashboard-domain-nav flex items-center gap-2 text-sm flex-shrink-0">
+        <button class="tip-below px-3 py-1 rounded hover:bg-slate-800 flex items-center gap-1.5"
+                :class="{'bg-slate-800': view === 'home'}"
+                @click="goHome()"
+                data-tip="Torna alla lista Domini"
+                data-i18n-attr="dash.nav.toolTip:data-tip">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0">
+            <path d="M3 9.5L12 3l9 6.5V21a1 1 0 0 1-1 1h-5v-7h-6v7H4a1 1 0 0 1-1-1V9.5z"/>
+          </svg>
+          <span class="dashboard-domains-label" data-i18n="dash.nav.domains">Domini</span>
+        </button>
+        <template x-if="activeDomain && view === 'domain'">
+          <div class="domain-breadcrumb flex items-center gap-1">
+            <span class="text-slate-500 text-xs">/</span>
+            <button class="domain-pill px-3 py-1 rounded hover:bg-slate-800 font-mono text-cyan-400 text-xs" x-text="activeDomain"></button>
+          </div>
+        </template>
+      </nav>
       <div class="tab-map-shell hidden xl:block" x-show="view === 'domain' && activeDomain"
            @click.outside="tabsMapOpen = false">
         <button class="tab-map-trigger" :class="tabsMapOpen && 'active'"
@@ -1254,29 +1274,11 @@
           </template>
         </div>
       </div>
-      <!-- Right cluster: Domains + breadcrumb + Sito dropdown + lang + esterni
+      <!-- Right cluster: Sito dropdown + lang + esterni
            (refactor 03/05 sera: pattern unificato col sito 4 pagine).
            ml-auto: in home view le lab-tabs sono x-show=false e flex-1 non
            riempie — ml-auto spinge il cluster a destra always. -->
       <nav class="dashboard-topnav flex items-center gap-2 text-sm flex-shrink-0 ml-auto">
-        <!-- Home dashboard (Domains list) -->
-        <button class="tip-below px-3 py-1 rounded hover:bg-slate-800 flex items-center gap-1.5"
-                :class="{'bg-slate-800': view === 'home'}"
-                @click="view = 'home'"
-                data-tip="Torna alla lista Domini"
-                data-i18n-attr="dash.nav.toolTip:data-tip">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0">
-            <path d="M3 9.5L12 3l9 6.5V21a1 1 0 0 1-1 1h-5v-7h-6v7H4a1 1 0 0 1-1-1V9.5z"/>
-          </svg>
-          <span class="dashboard-domains-label" data-i18n="dash.nav.domains">Domains</span>
-        </button>
-        <template x-if="activeDomain">
-          <div class="domain-breadcrumb flex items-center gap-1">
-            <span class="text-slate-500 text-xs">/</span>
-            <button class="domain-pill px-3 py-1 rounded hover:bg-slate-800 font-mono text-cyan-400 text-xs" @click="view = 'domain'" x-text="activeDomain"></button>
-          </div>
-        </template>
-
         <!-- Layer 2: Sito dropdown (hover/click) — Alpine reactive -->
         <div class="site-nav-wrap ml-2 hidden md:block"
              x-data="{ siteOpen: false }"
@@ -4274,6 +4276,21 @@
       },
       closeMobileDrawer() {
         this.mobileDrawer = null;
+        document.body.classList.remove('drawer-open');
+        document.body.style.overflow = '';
+      },
+
+      goHome() {
+        this.view = 'home';
+        this.activeDomain = null;
+        this.activeReport = null;
+        this.selectedNode = null;
+        this.selectedCampoLens = null;
+        this.selectedScopertaSsp = null;
+        this.selectedProdottoSsp = null;
+        this.mobileDrawer = null;
+        this.tabsMapOpen = false;
+        this.tabsDropdownOpen = false;
         document.body.classList.remove('drawer-open');
         document.body.style.overflow = '';
       },
