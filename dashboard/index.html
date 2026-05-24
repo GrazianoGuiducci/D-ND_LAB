@@ -1853,7 +1853,7 @@
                             <span class="text-[10px] uppercase tracking-wider" :class="valueArtifactDecisionTone(card)" x-text="card.status || card.decision || 'watch'"></span>
                           </div>
                           <div class="text-sm text-slate-100 mt-2 font-medium line-clamp-2" x-text="card.title || card.claim"></div>
-                          <div class="text-xs text-slate-300 mt-2 line-clamp-3" x-text="card.evidence || card.data_requirement || ''"></div>
+                          <div class="text-xs text-slate-300 mt-2 line-clamp-3" x-text="sourcePreview(card.evidence || card.data_requirement || '')"></div>
                           <div class="text-[11px] text-amber-200 mt-2 line-clamp-2" x-text="localizedBoundary(card.boundary || '')"></div>
                         </button>
                       </template>
@@ -3027,7 +3027,7 @@
                                   x-text="t('dash.btc.askThia', 'chiedi THIA')"></button>
                         </div>
                         <div class="text-slate-200 mt-0.5" x-text="row.value"></div>
-                        <div class="text-slate-400 mt-1 leading-relaxed" x-show="row.note" x-text="row.note"></div>
+                        <div class="text-slate-400 mt-1 leading-relaxed" x-show="sourcePreview(row.note)" x-text="sourcePreview(row.note)"></div>
                       </div>
                     </template>
                   </div>
@@ -5351,6 +5351,19 @@
         return raw;
       },
 
+      sourcePreview(text) {
+        const raw = String(text || '').trim();
+        if (!raw) return '';
+        if (this.lang === 'en') return raw;
+        const latinWords = (raw.match(/[A-Za-z]{3,}/g) || []).length;
+        const italianMarkers = /\b(non|che|con|per|prima|dopo|segnale|controllo|scheda|metodo|domanda|testo|fonte|dati)\b/i.test(raw);
+        const englishMarkers = /\b(the|this|must|can|before|after|source|claim|report|window|risk|definition|trendline|daily|intraday|feed|provider|evidence|control|method|target|advice)\b/i.test(raw);
+        if (englishMarkers && !italianMarkers && latinWords >= 3) {
+          return 'Testo sorgente in inglese; l originale resta invariato.';
+        }
+        return raw;
+      },
+
       localizedNullText(text) {
         const raw = String(text || '');
         if (!raw) return '';
@@ -5678,7 +5691,7 @@
           subtitle: selected.status || selected.decision || next.method_id || 'method intake',
           schema: payload.schema || artifact.schema || 'dndlab.bitcoin.method_intake.v1',
           date: payload.generated_at || artifact.generated_at || artifact.mtime,
-          evidence: selected.evidence || selected.data_requirement || next.why || 'Scheda metodo non sintetizzata.',
+          evidence: this.sourcePreview(selected.evidence || selected.data_requirement || next.why || 'Scheda metodo non sintetizzata.'),
           boundary: this.localizedBoundary(selected.boundary || 'No trading signal: l intake crea contratti di test, non target.'),
           meta: [
             selected.method_id ? `method: ${selected.method_id}` : null,
