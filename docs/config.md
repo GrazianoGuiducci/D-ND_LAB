@@ -20,16 +20,21 @@ you with interactive prompts.
 | `LLM_API_KEY` | provider-dependent | — | Generic OpenAI-compatible API key. For OpenRouter, `OPENROUTER_API_KEY` is also accepted. CLI/local providers may not need it. |
 | `LLM_MODEL` | provider-dependent | — | Model id (e.g. `deepseek/deepseek-v4-pro`). For OpenRouter, `OPENROUTER_MODEL` is also accepted. |
 | `LLM_PROVIDER` | no | `openrouter` | Label only, doesn't affect the call |
-| `LLM_PROVIDER_CHAIN` | no | `codex-cli,claude-cli,openrouter` | Provider dispatcher order. Use `openrouter` for HTTP-only or local OpenAI-compatible endpoints. |
+| `LLM_PROVIDER_CHAIN` | no | `codex-cli` | Provider dispatcher order. Other providers, including paid HTTP providers such as `openrouter`, are opt-in. |
 | `LLM_MAX_TURNS` | no | `25` | Hard cap per cycle |
 | `LLM_TIMEOUT_SECONDS` | no | `1200` | Whole-loop timeout per cycle |
 | `LLM_MAX_COST_USD` | no | unset | Optional cost cap per cycle |
 
-The default chain tries local/OAuth CLI providers before HTTP fallback:
+The default chain tries only Codex CLI:
 
 ```text
-codex-cli -> claude-cli -> openrouter
+codex-cli
 ```
+
+Claude CLI and paid/OpenAI-compatible HTTP fallback are never implicit. To use
+them explicitly, set `LLM_PROVIDER_CHAIN=codex-cli,claude-cli`,
+`LLM_PROVIDER_CHAIN=codex-cli,claude-cli,openrouter`, or
+`LLM_PROVIDER_CHAIN=openrouter`.
 
 Installations may use any OpenAI-compatible endpoint, including local LLMs via
 `LLM_BASE_URL=http://localhost:11434/v1`, but movements that require tool use
@@ -45,7 +50,7 @@ The agent movement is provider-agnostic at the artifact boundary:
   writes `CYCLE_REPAIR_NO_CLAIM` as a runtime control artifact.
 
 Codex/Claude CLI are convenience runtimes for local subscription accounts, not
-requirements for third-party installs. HTTP-only installs should set
+requirements for third-party installs. HTTP-only installs must set
 `LLM_PROVIDER_CHAIN=openrouter` or `LLM_PROVIDER_CHAIN=openai` to reach the
 OpenAI-compatible path directly. Local OpenAI-compatible servers can use the
 same path with their own `LLM_BASE_URL`.

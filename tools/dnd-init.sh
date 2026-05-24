@@ -74,10 +74,10 @@ fi
 if [ -f /opt/THIA/.env ]; then
     set -a; source /opt/THIA/.env; set +a
 fi
-if [ -f /root/.codex_lab/auth.json ]; then
-    export CODEX_HOME=/root/.codex_lab
+if [ -n "${LAB_CODEX_HOME:-}" ]; then
+    export CODEX_HOME="$LAB_CODEX_HOME"
 fi
-export LLM_PROVIDER_CHAIN="${LLM_PROVIDER_CHAIN:-codex-cli,claude-cli,openrouter}"
+export LLM_PROVIDER_CHAIN="${LLM_PROVIDER_CHAIN:-codex-cli}"
 
 cd /opt/D-ND_LAB
 

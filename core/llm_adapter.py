@@ -102,7 +102,7 @@ class AdapterConfig:
 # CLI locali + OpenRouter HTTP fallback. Per uso personale interno
 # (subscription OAuth = gratis, tool use nativo). Per chi installa D-ND_LAB
 # altrove: configurabile tramite LLM_PROVIDER_CHAIN env var. Current default =
-# "codex-cli,claude-cli,openrouter".
+# "codex-cli". Paid HTTP fallback must be explicitly requested.
 # ---------------------------------------------------------------------------
 
 
@@ -343,11 +343,10 @@ def run_agent(
     """
     config = config or AdapterConfig.from_env()
 
-    # Provider chain (refactor 01/05): se LLM_PROVIDER_CHAIN configurata,
-    # prova in ordine ogni provider. Default chain: codex-cli → claude-cli
-    # → openrouter (= comportamento legacy se i CLI non sono disponibili).
-    # Per disabilitare: LLM_PROVIDER_CHAIN=openrouter (solo HTTP).
-    chain_str = os.environ.get("LLM_PROVIDER_CHAIN", "codex-cli,claude-cli,openrouter")
+    # Provider chain: default uses only Codex CLI.
+    # Paid/OpenAI-compatible HTTP providers are opt-in, e.g.
+    # LLM_PROVIDER_CHAIN=codex-cli,claude-cli,openrouter or openrouter.
+    chain_str = os.environ.get("LLM_PROVIDER_CHAIN", "codex-cli")
     chain = [p.strip().lower() for p in chain_str.split(",") if p.strip()]
 
     # CLI providers (claude-cli, codex-cli) gestiscono tool use nativamente
@@ -363,6 +362,7 @@ def run_agent(
             "LLM_FALLBACK_ON_CLI_SIDE_EFFECT_MISS",
             "",
         ).lower() in {"1", "true", "yes", "on"}
+        fell_through_to_http = False
         for provider in chain:
             if provider == "claude-cli":
                 try:
@@ -395,7 +395,20 @@ def run_agent(
             if provider in ("openrouter", "openai"):
                 # falls through to OpenAI-compat HTTP path below
                 logger.info(f"provider chain: falling through to {provider} (HTTP)")
+                fell_through_to_http = True
                 break
+        if not fell_through_to_http:
+            providers = ",".join(chain)
+            if last_err is not None:
+                raise RuntimeError(
+                    f"all non-HTTP providers in chain failed ({providers}); "
+                    "paid HTTP fallback is disabled unless explicitly present "
+                    "in LLM_PROVIDER_CHAIN"
+                ) from last_err
+            raise RuntimeError(
+                f"no HTTP provider in chain ({providers}); paid HTTP fallback "
+                "is disabled unless explicitly present in LLM_PROVIDER_CHAIN"
+            )
 
     # Bridge route for bare (no-tools) calls — uses operator subscription
     # (codex/claude CLI via THIA tm3_bridge), zero marginal cost.

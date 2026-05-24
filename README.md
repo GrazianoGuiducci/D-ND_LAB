@@ -147,10 +147,13 @@ LLM_MODEL=ollama/<local-model>              # self-hosted
 `reasoning_details` for thinking-mode models (DeepSeek, Anthropic
 extended, Gemini 3) is preserved across multi-turn loops automatically.
 
-The Lab does not require Codex. On this VPS the default chain starts with
-`codex-cli` to use the local subscription runtime, but an installed Lab can run
-with `LLM_PROVIDER_CHAIN=openrouter` and any OpenAI-compatible endpoint,
-including local providers such as Ollama. The invariant is the artifact
+The Lab does not require Codex. On this VPS the default chain uses only
+`codex-cli`. Claude CLI and paid HTTP providers such as OpenRouter are opt-in
+with `LLM_PROVIDER_CHAIN=codex-cli,claude-cli`,
+`LLM_PROVIDER_CHAIN=openrouter`, or
+`LLM_PROVIDER_CHAIN=codex-cli,claude-cli,openrouter`. Installed Labs can also
+run against local OpenAI-compatible endpoints such as Ollama. The invariant is
+the artifact
 contract: each agent cycle must produce `data/<domain>/reports/agent_<ts>.md`.
 If a provider cannot write files but returns a complete markdown report as its
 final answer, the Lab materializes that answer into the expected report path;

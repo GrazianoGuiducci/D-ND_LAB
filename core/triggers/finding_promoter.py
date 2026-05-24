@@ -86,11 +86,11 @@ If not promotable, leave applicative_rule/use_case/kernel_name_suggestion empty 
 
 
 # Provider chain (refactor 03/05 sera, operatore decision):
-# codex-cli (TM7 ChatGPT account) → claude-cli (OAuth subscription)
-# → openrouter (paid HTTP). Override via LLM_PROVIDER_CHAIN env var.
+# codex-cli (TM7 ChatGPT account) by default.
+# Other providers, including paid HTTP fallback, are opt-in via LLM_PROVIDER_CHAIN.
 LLM_PROVIDER_CHAIN = [
     p.strip()
-    for p in os.environ.get("LLM_PROVIDER_CHAIN", "codex-cli,claude-cli,openrouter").split(",")
+    for p in os.environ.get("LLM_PROVIDER_CHAIN", "codex-cli").split(",")
     if p.strip()
 ]
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY") or os.environ.get("LLM_API_KEY", "")
@@ -242,7 +242,7 @@ _PROVIDERS = {
 
 
 def call_llm_chain(prompt: str, timeout: int = 300) -> str:
-    """Provider chain dispatcher: codex → claude → openrouter (default)."""
+    """Provider chain dispatcher; paid HTTP providers are opt-in."""
     for name in LLM_PROVIDER_CHAIN:
         fn = _PROVIDERS.get(name)
         if not fn:

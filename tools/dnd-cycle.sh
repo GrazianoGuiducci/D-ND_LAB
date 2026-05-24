@@ -1,11 +1,10 @@
 #!/bin/bash
 # dnd-cycle.sh — Wrapper per cycle manuale del D-ND_LAB con env caricato.
 #
-# Carica OPENROUTER_API_KEY + altre env vars dal file canonico THIA prima
-# di invocare il CLI del lab. Necessario perché il cron / shell manuali
-# non leggono .env automaticamente, e senza OPENROUTER_API_KEY il 3°
-# fallback (deepseek-v4-pro via OpenRouter) fallisce silenziosamente
-# quando codex 401 + claude down.
+# Carica env canonico THIA + env locale del Lab prima di invocare il CLI.
+# Il fallback HTTP pagato non e' default per i cycle/test: OpenRouter va
+# richiesto esplicitamente con LLM_PROVIDER_CHAIN=codex-cli,claude-cli,openrouter
+# o LLM_PROVIDER_CHAIN=openrouter.
 #
 # Pattern speculare a /opt/MM_D-ND/tools/lab_agent.sh (commit 04/05).
 #
@@ -31,8 +30,9 @@ REQUESTED_OPENROUTER_MODEL="${OPENROUTER_MODEL:-}"
 REQUESTED_LAB_DATA_DIR="${LAB_DATA_DIR:-}"
 
 # Load env canonico THIA, poi env locale del Lab.
-# Il fallback HTTP usa OpenRouter tramite OPENROUTER_API_KEY/OPENROUTER_MODEL;
-# LLM_* resta supportato solo come compatibilita' OpenAI-compatible legacy.
+# OpenRouter resta supportato tramite OPENROUTER_API_KEY/OPENROUTER_MODEL solo
+# se incluso esplicitamente nella provider chain. LLM_* resta supportato come
+# compatibilita' OpenAI-compatible legacy.
 if [ -f /opt/THIA/.env ]; then
     set -a
     source /opt/THIA/.env
@@ -44,15 +44,14 @@ if [ -f /opt/D-ND_LAB/.env ]; then
     set +a
 fi
 
-# Codex isolated home (refactor 04/05) per evitare race condition con
-# VS Code extension chatgpt sullo stesso account ChatGPT.
-if [ -f /root/.codex_lab/auth.json ]; then
-    export CODEX_HOME=/root/.codex_lab
+# Codex home: use the operator's active Codex login by default. An isolated
+# home can still be requested explicitly with LAB_CODEX_HOME=/path.
+if [ -n "${LAB_CODEX_HOME:-}" ]; then
+    export CODEX_HOME="$LAB_CODEX_HOME"
 fi
 
-# Provider chain default: codex CLI primary → claude CLI fallback →
-# openrouter HTTP (deepseek-v4-pro) ultimo resort.
-export LLM_PROVIDER_CHAIN="${LLM_PROVIDER_CHAIN:-codex-cli,claude-cli,openrouter}"
+# Provider chain default: only Codex CLI. Other providers are opt-in.
+export LLM_PROVIDER_CHAIN="${LLM_PROVIDER_CHAIN:-codex-cli}"
 if [ -n "$REQUESTED_LLM_PROVIDER_CHAIN" ]; then
     export LLM_PROVIDER_CHAIN="$REQUESTED_LLM_PROVIDER_CHAIN"
 fi
