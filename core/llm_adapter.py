@@ -145,19 +145,12 @@ def _claude_preflight_check() -> bool:
 def _codex_subprocess_env() -> dict[str, str]:
     """Env per subprocess codex.
 
-    Se LAB_CODEX_HOME è settato (es. /root/.codex-lab), inietta CODEX_HOME
-    isolando l'auth del lab da quella di VSCode ChatGPT extension (che usa
-    ~/.codex/). Evita race su refresh token (refresh_token_reused) quando
-    extension e lab girano in parallelo.
-
-    Storico: 2026-05-05 cycle 1413 codex auth si rompe perché VSCode codex
-    app-server e lab CLI condividono ~/.codex/auth.json.
+    CODEX_HOME is controlled by the caller/wrapper. Do not reinterpret
+    LAB_CODEX_HOME here: .env can contain an obsolete isolated home, and this
+    adapter must not silently switch away from the operator's active Codex
+    login.
     """
-    env = os.environ.copy()
-    lab_codex_home = env.get("LAB_CODEX_HOME")
-    if lab_codex_home:
-        env["CODEX_HOME"] = lab_codex_home
-    return env
+    return os.environ.copy()
 
 
 def _codex_preflight_check() -> bool:

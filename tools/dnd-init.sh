@@ -27,6 +27,9 @@ CORPUS=""
 DO_VALIDATE=true
 DO_FIRST_CYCLE=false
 RUNTIME="any"
+REQUESTED_LLM_PROVIDER_CHAIN="${LLM_PROVIDER_CHAIN:-}"
+REQUESTED_LAB_CODEX_HOME="${LAB_CODEX_HOME:-}"
+REQUESTED_CODEX_HOME="${CODEX_HOME:-}"
 
 # Parse args
 while [ $# -gt 0 ]; do
@@ -74,10 +77,18 @@ fi
 if [ -f /opt/THIA/.env ]; then
     set -a; source /opt/THIA/.env; set +a
 fi
-if [ -n "${LAB_CODEX_HOME:-}" ]; then
-    export CODEX_HOME="$LAB_CODEX_HOME"
+if [ -n "$REQUESTED_LAB_CODEX_HOME" ]; then
+    export CODEX_HOME="$REQUESTED_LAB_CODEX_HOME"
+elif [ -n "$REQUESTED_CODEX_HOME" ]; then
+    export CODEX_HOME="$REQUESTED_CODEX_HOME"
+else
+    unset CODEX_HOME
+    unset LAB_CODEX_HOME
 fi
-export LLM_PROVIDER_CHAIN="${LLM_PROVIDER_CHAIN:-codex-cli}"
+export LLM_PROVIDER_CHAIN="codex-cli"
+if [ -n "$REQUESTED_LLM_PROVIDER_CHAIN" ]; then
+    export LLM_PROVIDER_CHAIN="$REQUESTED_LLM_PROVIDER_CHAIN"
+fi
 
 cd /opt/D-ND_LAB
 

@@ -28,6 +28,8 @@ REQUESTED_LLM_PROVIDER_CHAIN="${LLM_PROVIDER_CHAIN:-}"
 REQUESTED_LLM_MODEL="${LLM_MODEL:-}"
 REQUESTED_OPENROUTER_MODEL="${OPENROUTER_MODEL:-}"
 REQUESTED_LAB_DATA_DIR="${LAB_DATA_DIR:-}"
+REQUESTED_LAB_CODEX_HOME="${LAB_CODEX_HOME:-}"
+REQUESTED_CODEX_HOME="${CODEX_HOME:-}"
 
 # Load env canonico THIA, poi env locale del Lab.
 # OpenRouter resta supportato tramite OPENROUTER_API_KEY/OPENROUTER_MODEL solo
@@ -44,14 +46,21 @@ if [ -f /opt/D-ND_LAB/.env ]; then
     set +a
 fi
 
-# Codex home: use the operator's active Codex login by default. An isolated
-# home can still be requested explicitly with LAB_CODEX_HOME=/path.
-if [ -n "${LAB_CODEX_HOME:-}" ]; then
-    export CODEX_HOME="$LAB_CODEX_HOME"
+# Codex home: use the operator's active Codex login by default. Ignore
+# LAB_CODEX_HOME loaded from .env; an isolated home must be requested
+# explicitly on the command line for this invocation.
+if [ -n "$REQUESTED_LAB_CODEX_HOME" ]; then
+    export CODEX_HOME="$REQUESTED_LAB_CODEX_HOME"
+elif [ -n "$REQUESTED_CODEX_HOME" ]; then
+    export CODEX_HOME="$REQUESTED_CODEX_HOME"
+else
+    unset CODEX_HOME
+    unset LAB_CODEX_HOME
 fi
 
-# Provider chain default: only Codex CLI. Other providers are opt-in.
-export LLM_PROVIDER_CHAIN="${LLM_PROVIDER_CHAIN:-codex-cli}"
+# Provider chain default: only Codex CLI. Ignore LLM_PROVIDER_CHAIN loaded
+# from .env; other providers are opt-in only when passed by the caller.
+export LLM_PROVIDER_CHAIN="codex-cli"
 if [ -n "$REQUESTED_LLM_PROVIDER_CHAIN" ]; then
     export LLM_PROVIDER_CHAIN="$REQUESTED_LLM_PROVIDER_CHAIN"
 fi
