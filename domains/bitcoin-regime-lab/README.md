@@ -103,3 +103,15 @@ assumptions for the Alipio-derived LVN/Volume Profile method and writes
 Volume Profile proxy, nearest LVN zones, baseline/null plan and simulator
 candidate scope. It does not run a cognitive cycle and does not produce a
 target, entry, exit or signal.
+
+Test the generated LVN/Volume Profile proxy directly:
+
+```bash
+python3 domains/bitcoin-regime-lab/tools/btc_volume_profile_lvn_proxy.py --write --json
+```
+
+This performs a no-lookahead proxy backtest. For each event it builds the
+profile from prior daily candles only, selects the nearest LVN zone and compares
+forward closure against adjacent, opposite-distance and shuffled-volume
+controls. It measures whether the proxy phenomenon is stronger than controls;
+it does not define a buy/sell rule.

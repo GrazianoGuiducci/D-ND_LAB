@@ -96,6 +96,15 @@ Implemented first backend step:
 - future UI: `autoaccendi Lab` button can call this tool/API before any
   cognitive cycle.
 
+Implemented proxy-test step:
+
+- tool: `domains/bitcoin-regime-lab/tools/btc_volume_profile_lvn_proxy.py`;
+- artifact: `data/bitcoin-regime-lab/value/btc_volume_profile_lvn_proxy_latest.json`;
+- role: no-lookahead LVN proxy backtest against adjacent, opposite and
+  shuffled-volume controls;
+- simulator rule: only after this layer, and only with explicit entry/exit,
+  costs, slippage and baseline.
+
 ## Next Finance Probe
 
 Finance should not be restarted as prediction. A useful probe is:

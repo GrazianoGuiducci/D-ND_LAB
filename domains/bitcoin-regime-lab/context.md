@@ -295,6 +295,18 @@ simulare closure/watch-zone e confronto con zone random; poi, se viene definita
 una regola esplicita di entrata/uscita/invalidation, misurare una strategia
 ipotetica contro buy-and-hold, costi, slippage e drawdown.
 
+Primo test proxy LVN:
+
+```bash
+python3 domains/bitcoin-regime-lab/tools/btc_volume_profile_lvn_proxy.py --write --json
+```
+
+Output atteso: JSON `dndlab.bitcoin.volume_profile_lvn_proxy.v1`. Il tool usa
+solo candele precedenti alla data evento per costruire il profilo, poi misura
+se la chiusura della zona LVN vicina batte controlli adiacenti, opposti e
+shuffled-volume. Se non batte i controlli, il metodo resta `watch`.
+
+
 Il primo tool daily-computable per la chiusura di inefficienza usa solo OHLCV
 daily e produce zone/test/null, non segnali:
 

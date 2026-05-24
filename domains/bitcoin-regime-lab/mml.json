@@ -103,6 +103,11 @@
       "name": "btc_auto_ignite",
       "path": "tools/btc_auto_ignite.py",
       "boundary": "gathers BTC value artifacts and writes a provisional LVN/Volume Profile proxy contract with explicit assumptions and nulls; public_claim=false; trading_signal=false; operational=false"
+    },
+    {
+      "name": "btc_volume_profile_lvn_proxy",
+      "path": "tools/btc_volume_profile_lvn_proxy.py",
+      "boundary": "tests the generated LVN/Volume Profile proxy against adjacent, opposite and shuffled-volume controls; public_claim=false; trading_signal=false; operational=false"
     }
   ]
 }

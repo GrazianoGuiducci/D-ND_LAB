@@ -1209,10 +1209,64 @@
       /* Quando la chat e' aperta su mobile, deve coprire i peek button (z 70) */
       .chat-fab.open { z-index: 75; }
     }
+    [x-cloak] { display: none !important; }
+    .lab-use-gate {
+      position: fixed;
+      inset: 0;
+      z-index: 120;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background: rgba(2, 6, 23, .86);
+      backdrop-filter: blur(12px);
+    }
+    .lab-use-gate-card {
+      width: min(720px, 100%);
+      border: 1px solid rgb(var(--neon-cyan) / .72);
+      border-radius: 8px;
+      background: linear-gradient(180deg, rgba(15, 23, 42, .98), rgba(2, 6, 23, .98));
+      box-shadow: 0 0 40px rgb(var(--neon-cyan) / .18), 0 18px 80px rgba(0,0,0,.52);
+    }
+    .lab-use-gate-card li { margin-top: 6px; }
   </style>
 </head>
 <body class="bg-slate-950 text-slate-200 min-h-screen" x-data="dashboard()" x-init="init()"
       :class="siteDrawerOpen && 'overflow-hidden'">
+
+  <div x-cloak x-show="!labUseAccepted" class="lab-use-gate" role="dialog" aria-modal="true" aria-labelledby="lab-use-gate-title">
+    <div class="lab-use-gate-card p-6">
+      <div class="text-xs uppercase tracking-wider text-cyan-300 font-mono" x-text="lang === 'en' ? 'Exploration Boundary' : 'Confine di esplorazione'"></div>
+      <h1 id="lab-use-gate-title" class="text-2xl font-semibold text-slate-50 mt-2" x-text="lang === 'en' ? 'D-ND Lab is a research and falsification system' : 'D-ND Lab e un sistema di ricerca e falsificazione'"></h1>
+      <p class="text-sm text-slate-300 mt-3 leading-relaxed"
+         x-text="lang === 'en'
+          ? 'The Lab builds observable hypotheses, generators, simulations and controls. Outputs are exploratory artifacts, not automatic decisions, instructions or guarantees.'
+          : 'Il Lab costruisce ipotesi osservabili, generatori, simulazioni e controlli. Gli output sono artifact esplorativi, non decisioni automatiche, istruzioni o garanzie.'"></p>
+      <div class="grid md:grid-cols-2 gap-4 mt-5 text-sm">
+        <div class="border border-cyan-800/70 rounded p-4 bg-slate-950/55">
+          <div class="font-mono text-cyan-200 uppercase text-xs" x-text="lang === 'en' ? 'Allowed' : 'Consentito'"></div>
+          <ul class="mt-2 text-slate-300 list-disc pl-4">
+            <li x-text="lang === 'en' ? 'Research, education, simulation and backtesting.' : 'Ricerca, formazione, simulazione e backtest.'"></li>
+            <li x-text="lang === 'en' ? 'Baseline, nulls, falsifiers and safety boundaries.' : 'Baseline, null, falsifier e confini di sicurezza.'"></li>
+            <li x-text="lang === 'en' ? 'Lab generators for constructive, lawful domains.' : 'Generatori di Lab per domini costruttivi e leciti.'"></li>
+          </ul>
+        </div>
+        <div class="border border-amber-700/70 rounded p-4 bg-slate-950/55">
+          <div class="font-mono text-amber-200 uppercase text-xs" x-text="lang === 'en' ? 'Not allowed' : 'Non consentito'"></div>
+          <ul class="mt-2 text-slate-300 list-disc pl-4">
+            <li x-text="lang === 'en' ? 'Weapons, military targeting or population-control systems.' : 'Armi, targeting militare o sistemi di controllo della popolazione.'"></li>
+            <li x-text="lang === 'en' ? 'Fraud, coercion, surveillance abuse or evasion.' : 'Frode, coercizione, abuso di sorveglianza o elusione.'"></li>
+            <li x-text="lang === 'en' ? 'Financial or other high-impact advice presented as automatic authority.' : 'Advice finanziario o ad alto impatto presentato come autorita automatica.'"></li>
+          </ul>
+        </div>
+      </div>
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-6">
+        <p class="text-xs text-slate-400" x-text="lang === 'en' ? 'Continue only if this boundary matches your use of the Lab.' : 'Continua solo se questo confine corrisponde al tuo uso del Lab.'"></p>
+        <button @click="acceptLabUseBoundary()"
+                class="px-4 py-2 rounded border border-green-400 bg-green-500/15 text-green-100 hover:bg-green-500/25 hover:shadow-[0_0_22px_rgba(34,197,94,.35)] transition font-mono text-sm"
+                x-text="lang === 'en' ? 'Accept and explore' : 'Accetta ed esplora'"></button>
+      </div>
+    </div>
+  </div>
 
   <!-- Header — tabs inline nel toolbar (operatore: una sola riga per
        eliminare il page scroll causato dal compensare con calc viewport) -->
@@ -3885,6 +3939,7 @@
       latestValueArtifacts: { available: false, artifacts: [] },
       btcChartProvider: 'bitstamp',
       btcChartFullscreen: false,
+      labUseAccepted: false,
       financePrecondition: { available: false },
       uiContract: { available: false },
       labThought: { available: false },
@@ -4000,6 +4055,11 @@
       },
 
       async init() {
+        try {
+          this.labUseAccepted = localStorage.getItem('dnd_lab_use_boundary_v1') === 'accepted';
+        } catch (e) {
+          this.labUseAccepted = false;
+        }
         // Listener cambio lingua (i18n.js dispatcha CustomEvent dnd-lang-change)
         window.addEventListener('dnd-lang-change', async (e) => {
           this.lang = e.detail.lang;
@@ -4102,6 +4162,11 @@
             this._clampChatWindow();
           }
         } catch (e) {}
+      },
+
+      acceptLabUseBoundary() {
+        this.labUseAccepted = true;
+        try { localStorage.setItem('dnd_lab_use_boundary_v1', 'accepted'); } catch (e) {}
       },
 
       // UI fix #13 — click su sidebar collassata apre. Skip se il click e'
