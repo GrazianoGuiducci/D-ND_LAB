@@ -1709,9 +1709,14 @@
                                 class="text-left border border-slate-800 hover:border-cyan-700 rounded-md p-3 bg-slate-950/40 transition cursor-pointer min-h-[128px]">
                           <div class="flex items-center justify-between gap-2">
                             <span class="text-[10px] font-mono text-cyan-300 truncate" x-text="card.claim_id || card.id || 'claim'"></span>
-                            <span class="text-[10px] uppercase tracking-wider"
-                                  :class="valueArtifactDecisionTone(card)"
-                                  x-text="card.decision || card.status || 'watch'"></span>
+                            <span class="flex items-center gap-2">
+                              <button @click.stop="askThiaTranslateValueArtifact(card)"
+                                      class="text-[10px] text-cyan-300 hover:text-cyan-100"
+                                      x-text="thiaTranslateLabel(valueArtifactCardText(card))"></button>
+                              <span class="text-[10px] uppercase tracking-wider"
+                                    :class="valueArtifactDecisionTone(card)"
+                                    x-text="card.decision || card.status || 'watch'"></span>
+                            </span>
                           </div>
                           <div class="text-sm text-slate-200 mt-2 line-clamp-2" x-text="card.title || card.claim || card.question || 'Claim card'"></div>
                           <div class="text-xs text-slate-400 mt-2 line-clamp-3" x-text="card.reason || card.boundary || card.evidence || ''"></div>
@@ -2323,19 +2328,43 @@
                         </svg>
                         <div class="bicono-fields">
                           <div class="bicono-field" :class="!activeReport.bicono.roots && 'empty'">
-                            <div class="label">two roots</div>
+                            <div class="flex items-center justify-between gap-2">
+                              <div class="label">two roots</div>
+                              <button x-show="activeReport.bicono.roots"
+                                      @click="askThiaTranslateBiconoField('roots')"
+                                      class="text-[10px] text-cyan-300 hover:text-cyan-100"
+                                      x-text="thiaTranslateLabel(activeReport.bicono.roots || '')"></button>
+                            </div>
                             <div class="value" x-text="activeReport.bicono.roots || ''"></div>
                           </div>
                           <div class="bicono-field" :class="!activeReport.bicono.singular && 'empty'">
-                            <div class="label">singular</div>
+                            <div class="flex items-center justify-between gap-2">
+                              <div class="label">singular</div>
+                              <button x-show="activeReport.bicono.singular"
+                                      @click="askThiaTranslateBiconoField('singular')"
+                                      class="text-[10px] text-cyan-300 hover:text-cyan-100"
+                                      x-text="thiaTranslateLabel(activeReport.bicono.singular || '')"></button>
+                            </div>
                             <div class="value" x-text="activeReport.bicono.singular || ''"></div>
                           </div>
                           <div class="bicono-field" :class="!activeReport.bicono.invariant && 'empty'">
-                            <div class="label">invariant of passage</div>
+                            <div class="flex items-center justify-between gap-2">
+                              <div class="label">invariant of passage</div>
+                              <button x-show="activeReport.bicono.invariant"
+                                      @click="askThiaTranslateBiconoField('invariant')"
+                                      class="text-[10px] text-cyan-300 hover:text-cyan-100"
+                                      x-text="thiaTranslateLabel(activeReport.bicono.invariant || '')"></button>
+                            </div>
                             <div class="value" x-text="activeReport.bicono.invariant || ''"></div>
                           </div>
                           <div class="bicono-field" :class="!activeReport.bicono.field && 'empty'">
-                            <div class="label">field of possibility</div>
+                            <div class="flex items-center justify-between gap-2">
+                              <div class="label">field of possibility</div>
+                              <button x-show="activeReport.bicono.field"
+                                      @click="askThiaTranslateBiconoField('field')"
+                                      class="text-[10px] text-cyan-300 hover:text-cyan-100"
+                                      x-text="thiaTranslateLabel(activeReport.bicono.field || '')"></button>
+                            </div>
                             <div class="value" x-text="activeReport.bicono.field || ''"></div>
                           </div>
                         </div>
@@ -6214,6 +6243,49 @@
             index,
             lens: f.lens ?? null,
             severity: f.severity || '',
+          },
+        });
+      },
+
+      valueArtifactCardText(card = {}) {
+        return [
+          card.claim_id || card.id ? `id: ${card.claim_id || card.id}` : '',
+          card.title || card.claim || card.question ? `title: ${card.title || card.claim || card.question}` : '',
+          card.decision || card.status ? `decision: ${card.decision || card.status}` : '',
+          card.reason ? `reason: ${card.reason}` : '',
+          card.boundary ? `boundary: ${card.boundary}` : '',
+          card.evidence ? `evidence: ${card.evidence}` : '',
+          card.data_card ? `data_card: ${typeof card.data_card === 'string' ? card.data_card : JSON.stringify(card.data_card).slice(0, 2000)}` : '',
+        ].filter(Boolean).join('\n');
+      },
+
+      askThiaTranslateValueArtifact(card = null) {
+        const artifact = this.latestValueArtifact();
+        const selected = card || this.latestValueArtifactCards()[0] || {};
+        this.askThiaTranslateText({
+          text: this.valueArtifactCardText(selected),
+          tab: 'campo',
+          element: this.lang === 'en' ? 'Verifiable artifact card' : 'card artifact verificabile',
+          objectRef: {
+            filename: artifact?.filename || '',
+            schema: artifact?.schema || '',
+            claim_id: selected.claim_id || selected.id || '',
+            decision: selected.decision || selected.status || '',
+          },
+        });
+      },
+
+      askThiaTranslateBiconoField(field) {
+        const b = this.activeReport?.bicono || {};
+        const value = String(b[field] || '').trim();
+        if (!value) return;
+        this.askThiaTranslateText({
+          text: value,
+          tab: 'agente',
+          element: this.lang === 'en' ? `Bicone ${field}` : `campo bicono ${field}`,
+          objectRef: {
+            report: this.activeReport?.filename || this.activeReportFilename || '',
+            field,
           },
         });
       },
