@@ -1344,14 +1344,14 @@
             <h2 class="text-xl font-medium" x-text="d.title"></h2>
             <span class="text-xs text-slate-300 font-mono" x-text="d.version"></span>
           </div>
-          <p class="text-sm text-slate-400 mb-4 line-clamp-2" x-text="d.description"></p>
+          <p class="text-sm text-slate-400 mb-4 line-clamp-2" x-text="localizedDomainDescription(d)"></p>
           <div class="flex justify-between text-xs text-slate-300 font-mono pt-3 border-t border-slate-800">
             <span><span data-i18n="dash.dom.piano">piano:</span> <span class="text-cyan-400" x-text="d.piano"></span></span>
-            <span><span class="text-cyan-400" x-text="d.n_tensions"></span> tensions</span>
-            <span><span class="text-cyan-400" x-text="d.n_reports"></span> reports</span>
+            <span><span class="text-cyan-400" x-text="d.n_tensions"></span> <span x-text="lang === 'en' ? 'tensions' : 'tensioni'"></span></span>
+            <span><span class="text-cyan-400" x-text="d.n_reports"></span> <span x-text="lang === 'en' ? 'reports' : 'report'"></span></span>
           </div>
-          <template x-if="d.direzione || d.direzione_en">
-            <p class="mt-3 text-xs italic text-slate-300 line-clamp-2" x-text="'→ ' + ((this.lang === 'en' && d.direzione_en) ? d.direzione_en : (d.direzione || ''))"></p>
+          <template x-if="localizedDomainDirection(d)">
+            <p class="mt-3 text-xs italic text-slate-300 line-clamp-2" x-text="'→ ' + localizedDomainDirection(d)"></p>
           </template>
 
           <!-- Controlli dominio (UI placeholder — gestione futura).
@@ -5318,6 +5318,29 @@
         }
         if (raw === 'Boundary non dichiarato.') {
           return this.lang === 'en' ? 'Boundary not declared.' : raw;
+        }
+        return raw;
+      },
+
+      localizedDomainDescription(domain) {
+        const d = domain || {};
+        if (this.lang === 'en') return d.description || '';
+        const map = {
+          'bitcoin-regime-lab': 'Lab candidato generato da richiesta dominio bitcoin-regime-lab: osserva ipotesi BTC e blocca interpretazioni operative deboli prima che diventino claim.',
+          editorial: 'Lab editoriale: legge archivi e bozze pubblicate, distingue fonte verificabile da insight ricevuto e prepara materiale controllabile.',
+          'meta-lab': 'Lab a livello di sistema: genera e valuta nuovi Lab, seed cognitivi e template installabili.',
+          physics: 'Lab autonomo originale: applica il modus D-ND a fisica matematica e ponti falsificabili.',
+          'research-radar': 'Lab per monitorare claim emergenti di ricerca e tecnologia e trasformarli in evidenza testabile.',
+        };
+        return map[d.id] || d.description || '';
+      },
+
+      localizedDomainDirection(domain) {
+        const d = domain || {};
+        if (this.lang === 'en' && d.direzione_en) return d.direzione_en;
+        const raw = d.direzione || d.direzione_en || '';
+        if (this.lang !== 'en' && /(^|\s)(the|this|must|can|current|boundary|source|system|claim|test|report|window|generated|published|content|evidence|before|after|from|into)(\s|$)/i.test(raw)) {
+          return '';
         }
         return raw;
       },
