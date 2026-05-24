@@ -912,10 +912,26 @@
       border-color: rgba(52, 211, 153, 0.95);
       box-shadow: 0 0 0 1px rgba(52, 211, 153, 0.28), 0 18px 44px rgba(16, 185, 129, 0.18);
     }
+    .domain-card.genesis-lab {
+      border-color: rgba(168, 85, 247, 0.72);
+      background:
+        linear-gradient(135deg, rgba(168, 85, 247, 0.13), rgba(14, 116, 144, 0.13) 46%, rgba(15, 23, 42, 0.96)),
+        rgb(15, 23, 42);
+      box-shadow: 0 0 0 1px rgba(192, 132, 252, 0.12), 0 18px 40px rgba(168, 85, 247, 0.14);
+    }
+    .domain-card.genesis-lab:hover {
+      border-color: rgba(192, 132, 252, 0.95);
+      box-shadow: 0 0 0 1px rgba(192, 132, 252, 0.28), 0 18px 44px rgba(168, 85, 247, 0.2);
+    }
     .system-lab-badge {
       border: 1px solid rgba(52, 211, 153, 0.5);
       color: #6ee7b7;
       background: rgba(6, 78, 59, 0.35);
+    }
+    .genesis-lab-badge {
+      border: 1px solid rgba(192, 132, 252, 0.52);
+      color: #d8b4fe;
+      background: rgba(88, 28, 135, 0.35);
     }
     .mobile-toggle {
       display: none;
@@ -1381,10 +1397,14 @@
     <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
       <template x-for="d in domains" :key="d.id">
         <div class="domain-card bg-slate-900 border border-slate-800 hover:border-purple-700 rounded-lg p-5 transition cursor-pointer"
-             :class="{'system-lab': d.id === 'ops-decisions'}"
+             :class="{'system-lab': d.id === 'ops-decisions', 'genesis-lab': d.id === 'meta-lab'}"
              @click="enterDomain(d.id)">
           <div class="flex items-center justify-between mb-3">
             <div class="min-w-0">
+              <template x-if="d.id === 'meta-lab'">
+                <span class="genesis-lab-badge inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono uppercase tracking-wider mb-2"
+                      x-text="lang === 'en' ? 'Genesis Lab' : 'Lab genesis'"></span>
+              </template>
               <template x-if="d.id === 'ops-decisions'">
                 <span class="system-lab-badge inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono uppercase tracking-wider mb-2"
                       x-text="lang === 'en' ? 'System Lab' : 'Lab di sistema'"></span>
