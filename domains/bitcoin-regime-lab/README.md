@@ -75,9 +75,10 @@ Build the Alipio/Rea method-intake cards directly:
 python3 domains/bitcoin-regime-lab/tools/btc_method_intake_card.py --write --json
 ```
 
-This turns POC, inefficiency, trendline, MM52 and timeframe language into
-missing definitions, THIA questions, data requirements and null/falsifier
-contracts. It is not a signal tool.
+This turns POC, LVN/Volume Profile voids, inefficiency, trendline, MM52 and
+timeframe language into missing definitions, THIA questions, data requirements
+and null/falsifier contracts. The default focus is now the Alipio-derived
+`volume_profile_lvn_void` card. It is not a signal tool.
 
 Build the first daily-computable inefficiency candidate directly:
 

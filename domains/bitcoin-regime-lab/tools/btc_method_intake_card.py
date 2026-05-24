@@ -84,6 +84,28 @@ METHODS: list[dict[str, Any]] = [
         "current_blocker": "the simple daily FVG proxy failed strict dual-adjacent null; choose FVG/LVN/CME subtype and define closure before retesting",
     },
     {
+        "method_id": "volume_profile_lvn_void",
+        "title": "LVN / Volume Profile void",
+        "human_phrase": "area di inefficienza cioe' con pochi volumi",
+        "candidate_observable": "low-volume zone inside a declared Volume Profile window, with closure/fill rule",
+        "required_definitions": [
+            "exchange/source",
+            "profile_type_fixed_visible_session",
+            "profile_window_start_end",
+            "binning_rule_or_rows",
+            "low_volume_threshold",
+            "POC_HVN_endpoint_rule",
+            "touch_or_fill_rule",
+            "forward_window",
+            "tolerance",
+        ],
+        "data_requirement": "TradingView profile parameters or explicit OHLCV volume-profile proxy labelled as proxy",
+        "baseline_null": "equal_width_random_zones + adjacent_profile_window + shuffled_volume_profile_proxy + no_lookahead_declaration",
+        "falsifier": "volume_proxy_confusion, selected_window_artifact or fill_rate_without_denominator",
+        "status": "watch",
+        "current_blocker": "the screenshots show LVN/Volume Profile language, but profile window/binning/low-volume threshold are not declared",
+    },
+    {
         "method_id": "trendline_poc_retest",
         "title": "Retest trendline + POC",
         "human_phrase": "retest del POC e della trend line ascendente",
@@ -177,7 +199,7 @@ def _field_state() -> dict[str, Any]:
     }
 
 
-def build_method_intake(*, focus: str = "inefficiency_closure") -> dict[str, Any]:
+def build_method_intake(*, focus: str = "volume_profile_lvn_void") -> dict[str, Any]:
     generated_at = _utc_now()
     field = _field_state()
     timeframe = _timeframe_state()
@@ -259,12 +281,13 @@ def build_method_intake(*, focus: str = "inefficiency_closure") -> dict[str, Any
             "method_id": focus_method["method_id"],
             "title": focus_method["title"],
             "why": (
-                "The simple daily FVG proxy failed a stricter null. The next "
-                "useful step is to split the human phrase into FVG, LVN or "
-                "CME-gap closure before another test."
+                "The latest Alipio material points to Volume Profile / low-volume "
+                "inefficiency language. The simple daily FVG proxy is not enough; "
+                "the next useful step is to specify the LVN/profile contract or "
+                "block it with explicit missing parameters."
             ),
             "tool_candidate": "btc_volume_profile_lvn_proxy.py or refined btc_daily_inefficiency_candidate.py",
-            "precondition": "define inefficiency subtype, zone/fill/invalidation rule and strict null",
+            "precondition": "define profile window, binning/rows, low-volume threshold, fill rule and strict null",
         },
         "boundary": {
             "public_claim": False,
@@ -290,7 +313,7 @@ def write_artifact(payload: dict[str, Any]) -> dict[str, str]:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Build BTC method-intake cards.")
-    parser.add_argument("--focus", default="inefficiency_closure", help="Recommended next method_id.")
+    parser.add_argument("--focus", default="volume_profile_lvn_void", help="Recommended next method_id.")
     parser.add_argument("--write", action="store_true", help="Write under data/bitcoin-regime-lab/value/")
     parser.add_argument("--json", action="store_true", help="Print JSON payload.")
     args = parser.parse_args()

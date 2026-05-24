@@ -266,9 +266,10 @@ python3 domains/bitcoin-regime-lab/tools/btc_method_intake_card.py --write --jso
 Output atteso: JSON `dndlab.bitcoin.method_intake.v1` scritto in
 `data/bitcoin-regime-lab/value/`. Consuma, se presenti, field gate e timeframe
 matrix; poi produce card per POC/Volume Profile, POC sotto, chiusura
-inefficienza, trendline+POC, MM52 e timeframe. Ogni card espone definizioni
-mancanti, dati richiesti, null/falsifier, domande che THIA deve fare ad Alipio
-e boundary `trading_signal=false`.
+inefficienza, LVN/Volume Profile void, trendline+POC, MM52 e timeframe. Dopo
+l'intake Alipio 2026-05-24, il focus default e' `volume_profile_lvn_void`.
+Ogni card espone definizioni mancanti, dati richiesti, null/falsifier, domande
+che THIA deve fare ad Alipio e boundary `trading_signal=false`.
 
 Questa scheda e' il modo corretto per far parlare THIA con Alipio: raccoglie
 definizioni e critica utile, ma non modifica il seed e non promuove target.

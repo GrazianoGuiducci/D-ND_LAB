@@ -210,6 +210,83 @@ Candidate first spec, after the 2026-05-19 strict-null result:
   declared binning/window rule, labelled as proxy unless real volume-profile
   data is available.
 
+## Alipio Source Intake - 2026-05-24
+
+Source observed by TM7-vps:
+
+- local extracted text: `/opt/alipio file_BTC.md`;
+- two operator-provided TradingView BTCUSD Bitstamp screenshots;
+- screenshots are not stored in the repo;
+- the extracted text is not copied verbatim into the public repo.
+
+External reference check, used only to tighten definitions:
+
+- TradingView defines Volume Profile as traded activity over a specified period
+  at price levels, with POC as the price level with the highest traded volume:
+  `https://www.tradingview.com/support/solutions/43000502040-volume-profile/`
+- CME states Bitcoin futures trade Sunday-Friday, creating a concrete source
+  boundary for any CME-gap test:
+  `https://www.cmegroup.com/education/courses/introduction-to-bitcoin/what-are-bitcoin-futures`
+- TradingView public FVG scripts commonly model FVG as a three-candle
+  imbalance/skip zone; treat this as community implementation evidence, not as
+  authority:
+  `https://www.tradingview.com/script/3FU8M8KK-QuantRX-Fair-Value-Gap/`
+
+Updated reading of the material:
+
+- Alipio's "chiusura inefficienza" must remain a typed object, not a generic
+  bullish/bearish expectation.
+- The three admissible subtypes are:
+  - FVG/imbalance: candle-derived skipped zone;
+  - LVN/Volume Profile void: low-volume area inside a declared profile window;
+  - CME gap: futures session close/open gap with futures-specific source.
+- The screenshots emphasize weekly BTCUSD Bitstamp context, Volume Profile,
+  POC, MM52, trendline retests and momentum-change labels.
+- The phrase "POC sotto" is a risk/watch language. The Lab must translate it
+  into relation-to-price plus baseline, not into warning, target or entry.
+- The right-side Volume Profile visible in the screenshot is not reproducible
+  from daily OHLCV alone unless the Lab declares a proxy. A true replay needs
+  the profile window, row/bin setting, source volume and session policy.
+
+Immediate cycle implication:
+
+1. Do not rerun the broad daily FVG proxy as if it represented the full Alipio
+   method. It already became `watch` under stricter null.
+2. The next BTC object should be an **Alipio method-spec cycle**, not a price
+   prediction cycle.
+3. Best first candidate: `LVN/Volume Profile inefficiency spec card`.
+4. If the exact TradingView profile parameters are not available, build only a
+   proxy artifact and label it `proxy`, not `poc_replay`.
+5. Keep Bitstamp as screenshot replay source, then test Binance/Coinbase as
+   feed robustness before promotion.
+
+Recommended next method contract:
+
+```text
+Object: LVN / Volume Profile inefficiency closure
+Source: BTCUSD Bitstamp first; Binance/Coinbase for robustness
+Timeframe: weekly screenshot context, daily data only for proxy unless native
+  weekly/profile data is declared
+Required parameters: profile window, binning/rows, POC/HVN/LVN threshold,
+  touch/fill rule, invalidation rule, forward window
+Nulls: equal-width random zones, adjacent profile window, shuffled-volume
+  profile proxy, no-lookahead declaration
+Allowed output: watch/test/reject, missing definitions, next data request
+Forbidden output: target, entry, exit, buy/sell, advice
+```
+
+Questions to send back to Alipio before a stronger cycle:
+
+1. Nei due screenshot, quale finestra esatta del Volume Profile genera POC/LVN?
+2. Il profilo e Fixed Range, Visible Range o sessione/periodo specifico?
+3. Quante righe/bin usa TradingView nel profilo?
+4. Una inefficienza LVN e chiusa con wick, close, attraversamento completo o
+   arrivo a HVN/POC?
+5. MM52 e SMA o EMA, su weekly o daily, e quale close/touch invalida il test?
+6. Le trendline sono costruite su quali pivot e con quale tolleranza?
+7. Quale output sarebbe utile se il Lab non puo dare segnali: zona watch,
+   invalidazione, reject reason o prossima domanda?
+
 ## UI Implications
 
 The dashboard should make value obvious to a BTC observer without pretending to
