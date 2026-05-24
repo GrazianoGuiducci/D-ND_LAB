@@ -305,6 +305,9 @@ Output atteso: JSON `dndlab.bitcoin.volume_profile_lvn_proxy.v1`. Il tool usa
 solo candele precedenti alla data evento per costruire il profilo, poi misura
 se la chiusura della zona LVN vicina batte controlli adiacenti, opposti e
 shuffled-volume. Se non batte i controlli, il metodo resta `watch`.
+Default corrente: finestra profilo 45 daily chiuse, forward 10 giorni, stride 3
+e closure rule `close`, scelti per ottenere denominatore sufficiente senza
+rendere il test piu permissivo con wick intraday.
 
 
 Il primo tool daily-computable per la chiusura di inefficienza usa solo OHLCV

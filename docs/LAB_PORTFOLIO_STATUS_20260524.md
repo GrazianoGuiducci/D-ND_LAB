@@ -104,6 +104,9 @@ Implemented proxy-test step:
   shuffled-volume controls;
 - simulator rule: only after this layer, and only with explicit entry/exit,
   costs, slippage and baseline.
+- current default after grid test: 45-day profile, 10-day forward window,
+  stride 3, close-based closure. It produces enough events and currently keeps
+  LVN in `watch` because strict controls are stronger.
 
 ## Next Finance Probe
 

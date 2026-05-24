@@ -197,10 +197,10 @@ def build_lvn_proxy(
     *,
     input_path: Path = EXCHANGE_LATEST,
     bins: int = 36,
-    window_days: int = 90,
-    forward_window: int = 20,
-    stride: int = 7,
-    closure_rule: str = "wick",
+    window_days: int = 45,
+    forward_window: int = 10,
+    stride: int = 3,
+    closure_rule: str = "close",
 ) -> dict[str, Any]:
     exchange = _read_json(input_path)
     auto = _read_json_optional(AUTO_IGNITE_LATEST)
@@ -356,10 +356,10 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Build BTC LVN/Volume Profile proxy test artifact.")
     parser.add_argument("--input", default=str(EXCHANGE_LATEST))
     parser.add_argument("--bins", type=int, default=36)
-    parser.add_argument("--window-days", type=int, default=90)
-    parser.add_argument("--forward-window", type=int, default=20)
-    parser.add_argument("--stride", type=int, default=7)
-    parser.add_argument("--closure-rule", choices=["wick", "close"], default="wick")
+    parser.add_argument("--window-days", type=int, default=45)
+    parser.add_argument("--forward-window", type=int, default=10)
+    parser.add_argument("--stride", type=int, default=3)
+    parser.add_argument("--closure-rule", choices=["wick", "close"], default="close")
     parser.add_argument("--write", action="store_true")
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args()

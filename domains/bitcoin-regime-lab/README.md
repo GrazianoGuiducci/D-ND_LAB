@@ -115,3 +115,7 @@ profile from prior daily candles only, selects the nearest LVN zone and compares
 forward closure against adjacent, opposite-distance and shuffled-volume
 controls. It measures whether the proxy phenomenon is stronger than controls;
 it does not define a buy/sell rule.
+
+Default test profile: 45 prior daily candles, 10-day forward window, stride 3,
+close-based closure. This gives enough events on the current 180-candle data
+card and keeps the result conservative.
