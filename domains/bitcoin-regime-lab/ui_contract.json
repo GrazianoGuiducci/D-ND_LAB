@@ -139,6 +139,78 @@
         "body": "Cicli cognitivi del Lab: raccolgono dati, generano una claim-card, attaccano l'ipotesi e aggiornano il seme.",
         "logic": "Ogni lettura deve lasciare runtime trace e memoria di cosa non puo' essere promosso."
       }
+    },
+    "en": {
+      "teorie": {
+        "title": "Methods",
+        "body": "Operational families translated into observables: Volume Profile, POC/LVN/HVN, FVG, CME gap, trendline and feed robustness.",
+        "logic": "No method is authoritative by itself: it enters only with a mechanical definition, data-card and coherent null."
+      },
+      "ponti": {
+        "title": "Confluences",
+        "body": "Where multiple BTC readings meet on the same level, timeframe or observable boundary.",
+        "logic": "A confluence is not a signal: it must survive feed checks, timeframe checks, baseline and anti-lookahead control."
+      },
+      "vuoti": {
+        "title": "Gaps",
+        "body": "Candidate inefficiencies: FVG, low-volume node, CME gap or an area not yet defined by robust data.",
+        "logic": "A gap remains a hypothesis until it is localized, dated, versioned and falsified against an appropriate null."
+      },
+      "scoperte": {
+        "title": "Claim-cards",
+        "body": "Readable cards declaring claim, source, timeframe, data-card, evidence and decision reason.",
+        "logic": "Useful output: watch, test, reject or roadmap; never buy/sell/target."
+      },
+      "applicazioni": {
+        "title": "Watchlist",
+        "body": "Unpromoted claims that deserve observation or a declared next test.",
+        "logic": "The watchlist preserves possibilities without turning them into operational signals."
+      },
+      "prodotti": {
+        "title": "Checks",
+        "body": "Mature outputs only after data-card, baseline/null, feed robustness and review of the no-signal boundary.",
+        "logic": "The Bitcoin Lab can produce monitoring and falsification, not financial advice."
+      },
+      "cicli": {
+        "title": "Readings",
+        "body": "Cognitive Lab cycles: collect data, generate a claim-card, attack the hypothesis and update the seed.",
+        "logic": "Each reading must leave a runtime trace and memory of what cannot be promoted."
+      },
+      "nav_campo": {
+        "title": "Field - resultant",
+        "body": "First BTC read: cycles, claim-cards, checks, filters and recent signals.",
+        "logic": "Use this surface to see the current state before opening a specific lens."
+      },
+      "nav_grafo": {
+        "title": "Graph - relations",
+        "body": "Relations across claims, timeframes, baselines and falsifier boundaries.",
+        "logic": "Use it to see which concepts are connected before reading a report."
+      },
+      "nav_bicono": {
+        "title": "Bicone - poles",
+        "body": "Hypothesis poles extracted from readings: roots, singular, invariant and field of possibility.",
+        "logic": "Use it to read conceptual structure without treating it as an operating signal."
+      },
+      "nav_agente": {
+        "title": "Agent - evidence",
+        "body": "Full reports, verdicts, counter-pole flags and cycle trace.",
+        "logic": "Use it when you need source text, falsification and runtime detail."
+      },
+      "nav_tassonomia": {
+        "title": "Trajectory - movement",
+        "body": "Cycle sequence and regime-lab movement across time.",
+        "logic": "Use it to see whether the Lab is changing direction or repeating a pattern."
+      },
+      "nav_prodotti": {
+        "title": "Products - SSP",
+        "body": "Claim-cards, watchlist, reject reasons and checks.",
+        "logic": "Use it to distinguish watch/test/reject from anything that is actually verified."
+      },
+      "nav_info": {
+        "title": "Info - Lab map",
+        "body": "Where you are, what can be read and how the Lab turns BTC domain material into verifiable surfaces.",
+        "logic": "Use it for orientation before interpreting report or artifact content."
+      }
     }
   },
   "common_modules": [

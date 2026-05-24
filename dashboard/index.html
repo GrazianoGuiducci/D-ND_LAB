@@ -1173,12 +1173,12 @@
       <div class="tab-map-shell hidden xl:block" x-show="view === 'domain' && activeDomain"
            @click.outside="tabsMapOpen = false">
         <button class="tab-map-trigger" :class="tabsMapOpen && 'active'"
-                @click="tabsMapOpen = !tabsMapOpen">
-          Mappa Dashboard
-        </button>
+                @click="tabsMapOpen = !tabsMapOpen"
+                x-text="lang === 'en' ? 'Dashboard Map' : 'Mappa Dashboard'"></button>
         <div x-show="tabsMapOpen" x-cloak x-transition.opacity.duration.120ms class="tab-map-panel">
-          <div class="tm-kicker">Orientamento</div>
-          <div class="text-sm text-slate-200 mt-1">Cosa contiene ogni tab prima di cambiare superficie.</div>
+          <div class="tm-kicker" x-text="lang === 'en' ? 'Orientation' : 'Orientamento'"></div>
+          <div class="text-sm text-slate-200 mt-1"
+               x-text="lang === 'en' ? 'What each tab contains before changing surface.' : 'Cosa contiene ogni tab prima di cambiare superficie.'"></div>
           <div class="tab-map-grid">
             <template x-for="tab in TABS" :key="tab.id">
               <button type="button" class="tab-map-card" :class="activeTab === tab.id && 'active'"
@@ -1188,7 +1188,8 @@
                     <span class="text-purple-300" x-text="tab.icon"></span>
                     <span x-text="tabPreviewTitle(tab.id)"></span>
                   </div>
-                  <span class="text-[10px] uppercase tracking-wider text-green-300" x-show="activeTab === tab.id">aperta</span>
+                  <span class="text-[10px] uppercase tracking-wider text-green-300" x-show="activeTab === tab.id"
+                        x-text="lang === 'en' ? 'open' : 'aperta'"></span>
                 </div>
                 <div class="tab-map-body" x-text="tabPreviewBody(tab.id)"></div>
                 <div class="tab-map-logic" x-text="tabPreviewLogic(tab.id)"></div>
@@ -3337,15 +3338,15 @@
          class="tab-preview-popover"
          :style="tabPreviewStyle()"
          @click.outside="tabPreview = null">
-      <div class="tp-kicker">Prima di cambiare tab</div>
+      <div class="tp-kicker" x-text="lang === 'en' ? 'Before changing tab' : 'Prima di cambiare tab'"></div>
       <div class="tp-title" x-text="tabPreview?.title || ''"></div>
       <div class="tp-body" x-text="tabPreview?.body || ''"></div>
       <template x-if="tabPreview?.logic">
         <div class="tp-logic" x-text="tabPreview.logic"></div>
       </template>
       <div class="tab-preview-actions">
-        <button class="tab-preview-close" @click="tabPreview = null">Resta qui</button>
-        <button @click="confirmTabPreview()" x-text="tabPreview?.confirmLabel || 'Apri Tab'"></button>
+        <button class="tab-preview-close" @click="tabPreview = null" x-text="lang === 'en' ? 'Stay here' : 'Resta qui'"></button>
+        <button @click="confirmTabPreview()" x-text="tabPreview?.confirmLabel || (lang === 'en' ? 'Open Tab' : 'Apri Tab')"></button>
       </div>
     </div>
 
