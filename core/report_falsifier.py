@@ -52,6 +52,11 @@ Read carefully:
 2. The empirical data files the report references (JSON/CSV in the domain
    data dir).
 
+The context below is complete for this movement. Do not ask the operator for
+files, paths, report text, or data. If the available substrate is insufficient,
+return valid JSON with coherent=null, flags=[], and explain the missing
+substrate in `summary`.
+
 Then apply 5 lenses. Each lens is tied to a failure-mode and to an axiom
 of the D-ND model. Apply them STRICTLY — false silence is worse than a
 flag the operator can dismiss.
@@ -335,7 +340,11 @@ def _is_safe_context_file(path: Path) -> bool:
 
 
 def _build_context(report_text: str, data_excerpts: list[dict[str, str]]) -> str:
-    parts = ["## REPORT (markdown the producer just wrote)\n", report_text[:8000], "\n"]
+    parts = [
+        "## REPORT (markdown the producer just wrote; use this text, do not request it again)\n",
+        report_text[:24_000],
+        "\n",
+    ]
     if data_excerpts:
         parts.append("## EMPIRICAL DATA FILES\n")
         for d in data_excerpts:

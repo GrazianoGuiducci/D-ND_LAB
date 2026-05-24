@@ -65,6 +65,11 @@ producer's exploratory framing is preserved. You only correct the LANGUAGE
 of claims that contradict the report's own numerical evidence OR the data
 files it references.
 
+The context below is complete for this movement. Do not ask the operator for
+files, paths, report text, or data. If a cited datum is absent from the context,
+return valid JSON with zero rewrites and state the missing substrate in
+`summary`.
+
 ### What to look for (3 lenses, tied to D-ND axioms — domain-agnostic)
 
 **L1 (A2) — Absolute language vs biased data.**
@@ -383,7 +388,10 @@ def _record_runtime_repair_skip(
 
 
 _DATA_FILE_REF_RE = re.compile(
-    r"`?(?:data/[^`\s)]+|domains/[^`\s)]+/(?:data|corpus|reports)/[^`\s)]+|[A-Za-z0-9_]+\.(?:json|csv|jsonl))`?",
+    r"`?((?:/opt/D-ND_LAB|/data)/[^`\s)]+?\.(?:json|csv|jsonl|md|py)"
+    r"|data/[^`\s)]+?\.(?:json|csv|jsonl|md|py)"
+    r"|domains/[^`\s)]+?/(?:data|corpus|reports|tools)/[^`\s)]+?\.(?:json|csv|jsonl|md|py)"
+    r"|[A-Za-z0-9_][A-Za-z0-9_.-]*\.(?:json|csv|jsonl))`?",
 )
 
 
@@ -400,11 +408,11 @@ def _collect_data_excerpts(
     domain_data = paths.domain_data_dir(ctx.domain)
 
     for m in _DATA_FILE_REF_RE.finditer(report_text):
-        ref = m.group(0).strip("`")
+        ref = m.group(1).strip("`")
         for base in (Path(ref), domain_data / Path(ref).name, domain_data / ref):
             try:
                 p = base if base.is_absolute() else (Path("/opt/D-ND_LAB") / base)
-                if p.exists() and p.is_file():
+                if p.exists() and p.is_file() and _is_safe_context_file(p):
                     candidates.add(p.resolve())
                     break
             except Exception:
@@ -422,6 +430,14 @@ def _collect_data_excerpts(
         for p in sorted(artifact_dir.glob("call_*.json")):
             candidates.add(p.resolve())
 
+    # Domain value artifacts are often the empirical substrate for reports
+    # but are not always cited with exact paths in the first report sections.
+    value_dir = domain_data / "value"
+    if value_dir.exists() and value_dir.is_dir():
+        for p in sorted(value_dir.glob("*.json"), key=lambda x: x.stat().st_mtime, reverse=True)[:10]:
+            if _is_safe_context_file(p):
+                candidates.add(p.resolve())
+
     if not candidates:
         return []
 
@@ -438,8 +454,27 @@ def _collect_data_excerpts(
     return out
 
 
+def _is_safe_context_file(path: Path) -> bool:
+    """Allow only repository/runtime lab files, never arbitrary filesystem reads."""
+    try:
+        resolved = path.resolve()
+    except Exception:
+        return False
+    configured_data_root = paths.domain_data_dir("meta-lab").parent.resolve()
+    safe_roots = [
+        Path("/opt/D-ND_LAB").resolve(),
+        configured_data_root,
+        Path("/data").resolve(),
+    ]
+    return any(resolved == root or root in resolved.parents for root in safe_roots)
+
+
 def _build_context(report_text: str, data_excerpts: list[dict[str, str]]) -> str:
-    parts = ["## REPORT (markdown the producer just wrote)\n", report_text[:8000], "\n"]
+    parts = [
+        "## REPORT (markdown the producer just wrote; use this text, do not request it again)\n",
+        report_text[:24_000],
+        "\n",
+    ]
     if data_excerpts:
         parts.append("\n## EMPIRICAL DATA FILES (the substrate the report references)\n")
         for d in data_excerpts:
