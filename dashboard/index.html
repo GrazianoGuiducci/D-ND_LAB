@@ -1673,8 +1673,10 @@
               <section class="mt-4 border border-cyan-900/60 rounded-md p-4 bg-cyan-950/10">
                 <div class="flex items-start justify-between gap-3 flex-wrap mb-3">
                   <div>
-                    <h3 class="text-sm font-medium text-cyan-200">Artifact verificabili</h3>
-                    <p class="text-xs text-slate-400 mt-1">Righe value-facing lette dal falsifier: claim-card, baseline, decisione e confine.</p>
+                    <h3 class="text-sm font-medium text-cyan-200" x-text="lang === 'en' ? 'Verifiable artifacts' : 'Artifact verificabili'"></h3>
+                    <p class="text-xs text-slate-400 mt-1" x-text="lang === 'en'
+                      ? 'Value-facing rows read from the falsifier: claim-card, baseline, decision and boundary.'
+                      : 'Righe value-facing lette dal falsifier: claim-card, baseline, decisione e confine.'"></p>
                   </div>
                   <button @click="selectValueArtifactLens()"
                           class="text-[11px] font-mono text-cyan-200 hover:text-cyan-100 cursor-pointer"
@@ -1725,28 +1727,30 @@
               <section class="mt-4 border border-emerald-400/70 rounded-md p-4 bg-emerald-950/10 shadow-[0_0_16px_rgba(16,185,129,.14)]">
                 <div class="flex items-start justify-between gap-3 flex-wrap mb-3">
                   <div>
-                    <h3 class="text-sm font-medium text-emerald-100">Domanda e cascata del Lab</h3>
-                    <p class="text-xs text-slate-300 mt-1">Mostra cosa muove il ciclo e cosa puo' propagarsi ad altri Lab senza diventare regola automatica.</p>
+                    <h3 class="text-sm font-medium text-emerald-100" x-text="lang === 'en' ? 'Lab question and cascade' : 'Domanda e cascata del Lab'"></h3>
+                    <p class="text-xs text-slate-300 mt-1" x-text="lang === 'en'
+                      ? 'Shows what moves the cycle and what can propagate to other Labs without becoming an automatic rule.'
+                      : 'Mostra cosa muove il ciclo e cosa puo propagarsi ad altri Lab senza diventare regola automatica.'"></p>
                   </div>
                   <button @click="selectLabThoughtLens()"
                           class="text-[11px] font-mono px-2 py-1 rounded border border-emerald-300/80 text-emerald-100 hover:border-emerald-100 cursor-pointer">
-                    apri campo
+                    <span x-text="lang === 'en' ? 'open field' : 'apri campo'"></span>
                   </button>
                 </div>
                 <div class="grid lg:grid-cols-[minmax(0,1fr)_minmax(280px,.45fr)] gap-3">
                   <button @click="selectLabThoughtLens()"
                           class="text-left rounded border border-emerald-400/50 bg-slate-950/50 p-3 hover:border-emerald-200 transition cursor-pointer">
-                    <div class="text-[10px] uppercase tracking-wider text-emerald-200">Domanda corrente</div>
-                    <div class="text-sm text-slate-100 mt-2" x-text="labThought.question_field?.primary_question || 'Domanda non disponibile'"></div>
-                    <div class="text-xs text-amber-200 mt-3" x-text="labThought.question_field?.next_question || ''"></div>
+                    <div class="text-[10px] uppercase tracking-wider text-emerald-200" x-text="lang === 'en' ? 'Current question' : 'Domanda corrente'"></div>
+                    <div class="text-sm text-slate-100 mt-2" x-text="localizedLabThoughtText(labThought.question_field?.primary_question || (lang === 'en' ? 'Question not available' : 'Domanda non disponibile'))"></div>
+                    <div class="text-xs text-amber-200 mt-3" x-text="localizedLabThoughtText(labThought.question_field?.next_question || '')"></div>
                   </button>
                   <div class="grid gap-2">
                     <template x-for="item in (labThought.capability_cascade || []).slice(0, 3)" :key="item.capability_id || item.new_affordance">
                       <button @click="selectLabThoughtLens(item)"
                               class="text-left rounded border border-cyan-500/50 bg-slate-950/50 p-3 hover:border-cyan-200 transition cursor-pointer">
                         <div class="text-[10px] uppercase tracking-wider text-cyan-200" x-text="item.capability_id || 'capability'"></div>
-                        <div class="text-xs text-slate-200 mt-2" x-text="item.new_affordance || ''"></div>
-                        <div class="text-[11px] text-purple-200 mt-2" x-text="(item.transferable_domains || []).join(', ')"></div>
+                        <div class="text-xs text-slate-200 mt-2" x-text="localizedLabThoughtText(item.new_affordance || '')"></div>
+                        <div class="text-[11px] text-purple-200 mt-2" x-text="localizedLabThoughtText((item.transferable_domains || []).join(', '))"></div>
                       </button>
                     </template>
                   </div>
@@ -1866,15 +1870,15 @@
                       <template x-for="q in bitcoinMethodQuestions().slice(0, 6)" :key="q">
                         <button @click="selectBitcoinMethodQuestion(q)"
                                 class="w-full text-left text-xs text-slate-200 border border-purple-500/50 rounded p-2 bg-slate-950/50 hover:border-purple-200 transition cursor-pointer"
-                                x-text="q"></button>
+                                x-text="localizedBtcMethodText(q)"></button>
                       </template>
                     </div>
                     <template x-if="bitcoinMethodRecommendedNext()">
                       <button @click="selectBitcoinMethodLens()"
                               class="mt-3 w-full text-left border border-amber-400/80 rounded p-3 bg-amber-950/10 hover:border-amber-200 transition cursor-pointer">
                         <div class="text-[10px] uppercase tracking-wider text-amber-200" x-text="t('dash.btc.method.nextTest', 'Prossimo test suggerito')"></div>
-                        <div class="text-sm text-slate-100 mt-1" x-text="bitcoinMethodRecommendedNext()?.title || bitcoinMethodRecommendedNext()?.method_id"></div>
-                        <div class="text-xs text-slate-300 mt-2 line-clamp-3" x-text="bitcoinMethodRecommendedNext()?.precondition || bitcoinMethodRecommendedNext()?.why"></div>
+                        <div class="text-sm text-slate-100 mt-1" x-text="localizedBtcMethodText(bitcoinMethodRecommendedNext()?.title || bitcoinMethodRecommendedNext()?.method_id)"></div>
+                        <div class="text-xs text-slate-300 mt-2 line-clamp-3" x-text="localizedBtcMethodText(bitcoinMethodRecommendedNext()?.precondition || bitcoinMethodRecommendedNext()?.why)"></div>
                       </button>
                     </template>
                   </div>
@@ -1914,7 +1918,7 @@
                         <div class="text-sm font-mono text-slate-100" x-text="row.timeframe"></div>
                         <span class="text-[10px] uppercase tracking-wider" x-text="row.status"></span>
                       </div>
-                      <div class="text-xs text-cyan-200 mt-2" x-text="row.label + ' · ' + row.role"></div>
+                      <div class="text-xs text-cyan-200 mt-2" x-text="localizedTimeframeText(row.label + ' · ' + row.role)"></div>
                       <div class="text-xs text-slate-400 mt-2 line-clamp-3" x-text="row.reason"></div>
                     </button>
                   </template>
@@ -5066,12 +5070,20 @@
       },
 
       reportVerdictLabel(r) {
-        if (!r) return 'nessun report';
+        if (!r) return this.lang === 'en' ? 'no report' : 'nessun report';
         const verdict = String(r.verdict || '').trim();
         if (verdict) return verdict;
-        if (r.falsifier_coherent === false) return `${r.n_flags || 0} flag dal falsifier`;
-        if (r.falsifier_coherent === true) return 'falsifier coerente; verdict non parsato';
-        return 'verdict non disponibile';
+        if (r.falsifier_coherent === false) {
+          return this.lang === 'en'
+            ? `${r.n_flags || 0} falsifier flag${Number(r.n_flags || 0) === 1 ? '' : 's'}`
+            : `${r.n_flags || 0} flag dal falsifier`;
+        }
+        if (r.falsifier_coherent === true) {
+          return this.lang === 'en'
+            ? 'falsifier coherent; verdict not parsed'
+            : 'falsifier coerente; verdict non parsato';
+        }
+        return this.lang === 'en' ? 'verdict not available' : 'verdict non disponibile';
       },
 
       domainDecisionHint() {
@@ -5086,12 +5098,12 @@
           text.includes('underpowered') ||
           text.includes('no_delta')
         ) {
-          return 'ridisegnare l’oggetto, non promuovere';
+          return this.lang === 'en' ? 'redesign the object, do not promote' : 'ridisegnare l oggetto, non promuovere';
         }
-        if (this.prodottiSsp?.length > 0) return 'verificare prodotti maturi';
-        if (this.applicazioniSsp?.candidates?.length > 0) return 'valutare candidate';
-        if (this.reports.length > 0) return 'continuare dal prossimo vincolo';
-        return 'primo ciclo da eseguire';
+        if (this.prodottiSsp?.length > 0) return this.lang === 'en' ? 'verify mature products' : 'verificare prodotti maturi';
+        if (this.applicazioniSsp?.candidates?.length > 0) return this.lang === 'en' ? 'evaluate candidates' : 'valutare candidate';
+        if (this.reports.length > 0) return this.lang === 'en' ? 'continue from the next constraint' : 'continuare dal prossimo vincolo';
+        return this.lang === 'en' ? 'first cycle to run' : 'primo ciclo da eseguire';
       },
 
       domainIntentTitle() {
@@ -5311,7 +5323,7 @@
               ? 'No trading signal: the method intake creates test contracts, not targets or advice.'
               : 'Nessun segnale operativo: la scheda metodo crea contratti di test, non target o consigli.';
           }
-          if (normalized.includes('matrix selects') || normalized.includes('next test surface')) {
+          if (normalized.includes('matrix selects') || normalized.includes('next test surface') || normalized.includes('selects the next test') || normalized.includes('seleziona il prossimo test')) {
             return this.lang === 'en'
               ? 'No trading signal: this matrix selects the next test surface, not an entry or exit timeframe.'
               : 'Nessun segnale operativo: questa matrice sceglie la superficie del prossimo test, non un timeframe di ingresso o uscita.';
@@ -5368,6 +5380,88 @@
         return raw;
       },
 
+      localizedLabThoughtText(text) {
+        const raw = String(text || '').trim();
+        if (!raw) return '';
+        const enToIt = {
+          "Can `bitcoin-regime-lab` turn the requested intent into an observable cycle without promoting an untested result?": "Il Lab bitcoin-regime-lab puo trasformare l'intento richiesto in un ciclo osservabile senza promuovere un risultato non testato?",
+          'What is the smallest real cycle that can make the domain-specific movement observable?': 'Qual e il ciclo reale minimo che puo rendere osservabile il movimento specifico del dominio?',
+          'Convert a domain request into an isolated install-or-block candidate with M1-M8 evidence.': 'Convertire una richiesta di dominio in un candidato isolato install-or-block con evidenza M1-M8.',
+          'installable reference candidate': 'candidato reference installabile',
+          'blocked domain with useful missing nodes': 'dominio bloccato con nodi mancanti utili',
+          'domain-specific tool or data requirement before first real cycle': 'strumento o requisito dati specifico del dominio prima del primo cycle reale',
+          'domain-native observables from first real cycle': 'osservabili nativi del dominio dal primo cycle reale',
+          'claim-appropriate baseline/null': 'baseline/null adatto al claim',
+          'cycle-to-UI evidence before public use': 'evidenza cycle-to-UI prima dell uso pubblico',
+          'no observable can be defined without copying another domain': 'nessun osservabile definibile senza copiare un altro dominio',
+          'baseline/null cannot be built out-of-box': 'baseline/null non costruibile out-of-box',
+          'cycle output cannot update seed, report and UI surfaces': 'l output del cycle non puo aggiornare seed, report e superfici UI',
+          'future generated labs': 'Lab generati futuri',
+        };
+        const itToEn = {
+          'La domanda e la cascata arrivano dal contratto di transduzione del dominio.': 'The question and cascade come from the domain transduction contract.',
+          'La cascata e una candidata di propagazione: non trasferisce contenuti o regole senza osservabili, baseline/null e UI lens del dominio ricevente.': 'The cascade is a propagation candidate: it does not transfer content or rules without observables, baseline/null and UI lenses for the receiving domain.',
+          'Vie aperte prima del collapse operativo.': 'Open paths before operational collapse.',
+          'Cosa impedisce promozione o interpretazione.': 'What prevents promotion or interpretation.',
+          'Cosa renderebbe falsa o non utile la via.': 'What would make the path false or not useful.',
+        };
+        return this.lang === 'en' ? (itToEn[raw] || raw) : (enToIt[raw] || raw);
+      },
+
+      localizedLabThoughtList(items) {
+        return (Array.isArray(items) ? items : [])
+          .map((item) => this.localizedLabThoughtText(item))
+          .join(' · ');
+      },
+
+      localizedBtcMethodText(text) {
+        const raw = String(text || '').trim();
+        if (!raw) return '';
+        const itToEn = {
+          "Quando dici inefficienza qui intendi FVG/imbalance, LVN/Volume Profile o CME gap?": 'When you say inefficiency here, do you mean FVG/imbalance, LVN/Volume Profile or CME gap?',
+          "Quale exchange/sorgente e' il riferimento: Bitstamp soltanto o evento robusto su Binance/Coinbase?": 'Which exchange/source is the reference: Bitstamp only, or a robust event on Binance/Coinbase?',
+          "Per ogni POC: qual e' la finestra Volume Profile esatta e quale binning/tolleranza usi?": 'For each POC: what exact Volume Profile window and binning/tolerance do you use?',
+          "Quando una inefficienza e' chiusa: wick, close, attraversamento completo, percentuale, volume o arrivo a HVN/POC?": 'When is an inefficiency closed: wick, close, full traversal, percentage, volume or arrival at HVN/POC?',
+          "Se e' LVN: quale soglia definisce 'pochi volumi' e quale finestra profilo va usata?": "If it is LVN: what threshold defines 'low volume' and what profile window should be used?",
+          'MM52 significa SMA/EMA, su quale timeframe, e quale regola invalida il test?': 'Does MA52 mean SMA or EMA, on which timeframe, and what rule invalidates the test?',
+          'Chiusura inefficienza': 'Inefficiency closure',
+        };
+        const enToIt = {
+          'define inefficiency subtype, zone/fill/invalidation rule and strict null': 'definire sottotipo di inefficienza, regola zona/fill/invalidazione e null severo',
+        };
+        if (this.lang === 'en') return itToEn[raw] || raw;
+        return enToIt[raw] || raw;
+      },
+
+      localizedTimeframeText(text) {
+        const raw = String(text || '').trim();
+        if (!raw) return '';
+        const itToEn = {
+          'mensile': 'monthly',
+          'settimanale': 'weekly',
+          'daily': 'daily',
+          '4 ore': '4 hours',
+          '1 ora': '1 hour',
+          '45 minuti': '45 minutes',
+          '30 minuti': '30 minutes',
+          '15 minuti': '15 minutes',
+          '10 minuti': '10 minutes',
+          '5 minuti': '5 minutes',
+          '1 minuto': '1 minute',
+          'regime macro': 'macro regime',
+          'regime primario': 'primary regime',
+          'primo campo testabile': 'first testable field',
+          'setup strutturale': 'structural setup',
+          'setup locale': 'local setup',
+          'micro struttura': 'micro structure',
+          'timing candidate': 'timing candidate',
+          'rumore/trigger': 'noise/trigger',
+          'micro rumore': 'micro noise',
+        };
+        if (this.lang !== 'en') return raw;
+        return raw.split(' · ').map((part) => itToEn[part] || part).join(' · ');
+      },
+
       localizedNullText(text) {
         const raw = String(text || '');
         if (!raw) return '';
@@ -5391,12 +5485,12 @@
           type: 'campo',
           kind: 'lab-thought',
           category: 'lab-thought',
-          title: q.primary_question || 'Domanda del Lab',
+          title: this.localizedLabThoughtText(q.primary_question || (this.lang === 'en' ? 'Lab question' : 'Domanda del Lab')),
           subtitle: selected.capability_id || 'question_field',
           schema: 'dndlab.lab_thought.v1',
           date: this.labThought?.source || '',
-          evidence: q.next_question || 'La domanda e la cascata arrivano dal contratto di transduzione del dominio.',
-          boundary: 'La cascata e una candidata di propagazione: non trasferisce contenuti o regole senza osservabili, baseline/null e UI lens del dominio ricevente.',
+          evidence: this.localizedLabThoughtText(q.next_question || 'La domanda e la cascata arrivano dal contratto di transduzione del dominio.'),
+          boundary: this.localizedLabThoughtText('La cascata e una candidata di propagazione: non trasferisce contenuti o regole senza osservabili, baseline/null e UI lens del dominio ricevente.'),
           meta: [
             selected.capability_id ? `capability: ${selected.capability_id}` : null,
             selected.source_domain ? `source: ${selected.source_domain}` : null,
@@ -5404,24 +5498,24 @@
           ].filter(Boolean).join(' · '),
           diagnostics: [
             {
-              label: 'Possibilita',
-              value: Array.isArray(q.possibility_field) ? q.possibility_field.join(' · ') : 'n/a',
-              note: 'Vie aperte prima del collapse operativo.',
+              label: this.lang === 'en' ? 'Possibility' : 'Possibilita',
+              value: this.localizedLabThoughtList(q.possibility_field) || 'n/a',
+              note: this.localizedLabThoughtText('Vie aperte prima del collapse operativo.'),
             },
             {
-              label: 'Nodi mancanti',
-              value: Array.isArray(q.missing_nodes) ? q.missing_nodes.join(' · ') : 'n/a',
-              note: 'Cosa impedisce promozione o interpretazione.',
+              label: this.lang === 'en' ? 'Missing nodes' : 'Nodi mancanti',
+              value: this.localizedLabThoughtList(q.missing_nodes) || 'n/a',
+              note: this.localizedLabThoughtText('Cosa impedisce promozione o interpretazione.'),
             },
             {
-              label: 'Falsificazione',
-              value: Array.isArray(q.falsification_paths) ? q.falsification_paths.join(' · ') : 'n/a',
-              note: 'Cosa renderebbe falsa o non utile la via.',
+              label: this.lang === 'en' ? 'Falsification' : 'Falsificazione',
+              value: this.localizedLabThoughtList(q.falsification_paths) || 'n/a',
+              note: this.localizedLabThoughtText('Cosa renderebbe falsa o non utile la via.'),
             },
             {
-              label: 'Cascata',
-              value: selected.new_affordance || 'n/a',
-              note: selected.next_question || '',
+              label: this.lang === 'en' ? 'Cascade' : 'Cascata',
+              value: this.localizedLabThoughtText(selected.new_affordance || 'n/a'),
+              note: this.localizedLabThoughtText(selected.next_question || ''),
             },
           ],
         };
@@ -5714,10 +5808,10 @@
       bitcoinTimeframeStatRows() {
         const metrics = this.bitcoinTimeframeArtifact()?.payload?.metrics || {};
         return [
-          { label: 'prossimo test', value: metrics.recommended_next_test_timeframe || 'n/a', tone: 'text-cyan-300' },
-          { label: 'testabili', value: String(metrics.timeframes_testable ?? 0), tone: 'text-green-300' },
+          { label: this.lang === 'en' ? 'next test' : 'prossimo test', value: metrics.recommended_next_test_timeframe || 'n/a', tone: 'text-cyan-300' },
+          { label: this.lang === 'en' ? 'testable' : 'testabili', value: String(metrics.timeframes_testable ?? 0), tone: 'text-green-300' },
           { label: 'watch', value: String(metrics.timeframes_watch ?? 0), tone: 'text-purple-300' },
-          { label: 'bloccati', value: String(metrics.timeframes_blocked ?? 0), tone: 'text-amber-300' },
+          { label: this.lang === 'en' ? 'blocked' : 'bloccati', value: String(metrics.timeframes_blocked ?? 0), tone: 'text-amber-300' },
         ];
       },
 
@@ -5740,12 +5834,14 @@
         this.selectedCampoLens = {
           type: 'campo',
           category: 'timeframe',
-          title: selected.timeframe ? `${selected.timeframe} · ${selected.label}` : (card.title || (this.lang === 'en' ? 'BTC timeframe matrix' : 'Matrice timeframe BTC')),
+          title: selected.timeframe ? `${selected.timeframe} · ${this.localizedTimeframeText(selected.label)}` : (card.title || (this.lang === 'en' ? 'BTC timeframe matrix' : 'Matrice timeframe BTC')),
           subtitle: selected.status || card.decision || 'timeframe matrix',
           schema: payload.schema || artifact.schema || 'dndlab.bitcoin.timeframe_matrix.v1',
           date: payload.generated_at || artifact.generated_at || artifact.mtime,
-          evidence: selected.reason || card.evidence || 'Matrice non sintetizzata.',
-          boundary: card.boundary || 'No trading signal: seleziona il prossimo test, non una direzione operativa.',
+          evidence: selected.reason || card.evidence || (this.lang === 'en' ? 'Matrix not summarized.' : 'Matrice non sintetizzata.'),
+          boundary: this.localizedBoundary(card.boundary || (this.lang === 'en'
+            ? 'No trading signal: selects the next test, not an operational direction.'
+            : 'No trading signal: seleziona il prossimo test, non una direzione operativa.')),
           meta: [
             `role: ${selected.role || 'n/a'}`,
             `native_feed: ${selected.native_feed || 'n/a'}`,
@@ -5896,7 +5992,7 @@
         const provider = this.btcSelectedSeries()?.provider || this.btcChartProvider || 'feed';
         return [
           { label: provider, value: `${latest.date || 'n/a'} · ${this.btcPriceLabel(latest.close)}`, tone: 'text-cyan-300' },
-          { label: 'dispersione close', value: `${metrics.latest_close_dispersion_pct ?? 'n/a'}%`, tone: 'text-purple-300' },
+          { label: this.lang === 'en' ? 'close dispersion' : 'dispersione close', value: `${metrics.latest_close_dispersion_pct ?? 'n/a'}%`, tone: 'text-purple-300' },
           { label: 'feed ok', value: `${metrics.providers_ok ?? 0} / ${Number(metrics.providers_ok || 0) + Number(metrics.providers_error || 0)}`, tone: 'text-green-300' },
           { label: 'boundary', value: artifact.boundary?.trading_signal === false ? 'no signal' : 'unknown', tone: 'text-amber-200' },
         ];
