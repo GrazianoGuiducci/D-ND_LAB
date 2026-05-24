@@ -3972,6 +3972,9 @@
           try {
             this.domains = await fetch('/api/domains').then(r => r.json());
           } catch (_) { /* noop */ }
+          if (this.activeTab === 'grafo') {
+            this.$nextTick(() => this.renderGraph());
+          }
         });
         // Registra plugin Cytoscape (fcose layout — più stabile per grafi
         // piccoli con clustering, refactor 03/05 sera).
