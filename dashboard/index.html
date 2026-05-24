@@ -2279,6 +2279,9 @@
                             <span class="lens-label" x-text="`L${flag.lens}`" :title="falsifierSummary.lens_labels?.[`L${flag.lens}`] || ''"></span>
                             <span class="severity-label" x-text="flag.severity"></span>
                             <span class="text-[10px] text-slate-300 italic" x-text="falsifierSummary.lens_labels?.[`L${flag.lens}`] || ''"></span>
+                            <button @click="askThiaTranslateFalsifierFlag(flag, i)"
+                                    class="ml-auto text-[10px] text-cyan-300 hover:text-cyan-100"
+                                    x-text="thiaTranslateLabel(`${flag.claim || ''} ${flag.evidence || ''} ${flag.suggestion || ''}`)"></button>
                           </div>
                           <!-- v4.8 — diff view: claim ↔ evidence side-by-side -->
                           <div class="grid sm:grid-cols-2 gap-2 mb-2">
@@ -3016,7 +3019,10 @@
               <div class="flex items-center gap-2">
                 <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-cyan-900/40 text-cyan-300">CAMPO</span>
                 <span class="text-[10px] font-mono text-slate-300" x-text="selectedCampoLens.kind"></span>
-                <button @click="selectedCampoLens = null" class="ml-auto text-slate-300 hover:text-slate-200 text-xs">×</button>
+                <button @click="askThiaTranslateCampoLens()"
+                        class="ml-auto text-[10px] text-cyan-300 hover:text-cyan-100"
+                        x-text="thiaTranslateLabel(campoLensText(selectedCampoLens))"></button>
+                <button @click="selectedCampoLens = null" class="text-slate-300 hover:text-slate-200 text-xs">×</button>
               </div>
               <div class="text-sm text-slate-100" x-text="selectedCampoLens.title"></div>
               <p class="text-xs text-slate-300 leading-relaxed" x-text="selectedCampoLens.body"></p>
@@ -6120,20 +6126,54 @@
         return 'traduci con THIA';
       },
 
-      askThiaTranslateActiveReport() {
-        if (!this.activeReport) return;
-        const content = String(this.activeReport.content || '').trim();
-        const excerpt = content.length > 12000 ? `${content.slice(0, 12000)}\n\n[excerpt truncated]` : content;
-        const sourceLang = this.detectTextLanguage(content || this.activeReport.title || '');
+      thiaTranslatePrompt(kind, sameLang) {
+        if (this.lang === 'en') {
+          if (sameLang) return `Explain this ${kind} in English. Then list verified output, source text, inferred interpretation and open questions.`;
+          return `Translate and explain this ${kind}. Keep translation and explanation separate, then list verified output, source text, inferred interpretation and open questions.`;
+        }
+        if (sameLang) return `Spiega questo ${kind} in italiano. Poi elenca output verificato, testo sorgente, interpretazione inferita e domande aperte.`;
+        return `Traduci e spiega questo ${kind}. Tieni separata la traduzione dalla spiegazione, poi elenca output verificato, testo sorgente, interpretazione inferita e domande aperte.`;
+      },
+
+      askThiaTranslateText({ text, element, tab = this.activeTab || 'campo', objectRef = {} }) {
+        const sourceText = String(text || '').trim();
+        if (!sourceText) return;
+        const sourceLang = this.detectTextLanguage(sourceText);
         const sameLang = sourceLang === (this.lang || 'it');
         this.sendThiaAsk({
           mode: 'translate_explain',
           sourceLang,
           targetLang: this.lang || 'it',
           domain: this.activeDomain || '',
+          tab,
+          element,
+          text: sourceText.length > 12000 ? `${sourceText.slice(0, 12000)}\n\n[excerpt truncated]` : sourceText,
+          objectRef,
+          prompt: this.thiaTranslatePrompt(element || 'Lab text', sameLang),
+        });
+      },
+
+      campoLensText(lens) {
+        const l = lens || {};
+        const diagnostics = Array.isArray(l.diagnostics)
+          ? l.diagnostics.map((row) => `${row.label || ''}: ${row.value || ''}\n${row.note || ''}`).join('\n\n')
+          : '';
+        return [
+          l.title,
+          l.body,
+          l.evidence,
+          l.boundary,
+          diagnostics,
+        ].filter(Boolean).join('\n\n');
+      },
+
+      askThiaTranslateActiveReport() {
+        if (!this.activeReport) return;
+        const content = String(this.activeReport.content || '').trim();
+        this.askThiaTranslateText({
+          text: content || this.activeReport.title || this.activeReport.filename || '',
           tab: 'agente',
-          element: this.lang === 'en' ? 'Lab report' : 'Report del Lab',
-          text: excerpt || this.activeReport.title || this.activeReport.filename || '',
+          element: this.lang === 'en' ? 'Lab report' : 'report del Lab',
           objectRef: {
             filename: this.activeReport.filename || this.activeReportFilename || '',
             title: this.activeReport.title || '',
@@ -6141,13 +6181,40 @@
             falsifier_coherent: this.activeReport.falsifier_coherent ?? null,
             n_flags: this.activeReport.n_flags ?? null,
           },
-          prompt: this.lang === 'en'
-            ? (sameLang
-              ? 'Explain this Lab report in English. Then list verified output, source text, inferred interpretation and open questions.'
-              : 'Translate and explain this Lab report. Keep translation and explanation separate, then list verified output, source text, inferred interpretation and open questions.')
-            : (sameLang
-              ? 'Spiega questo report del Lab in italiano. Poi elenca output verificato, testo sorgente, interpretazione inferita e domande aperte.'
-              : 'Traduci e spiega questo report del Lab. Tieni separata la traduzione dalla spiegazione, poi elenca output verificato, testo sorgente, interpretazione inferita e domande aperte.'),
+        });
+      },
+
+      askThiaTranslateCampoLens() {
+        if (!this.selectedCampoLens) return;
+        this.askThiaTranslateText({
+          text: this.campoLensText(this.selectedCampoLens),
+          tab: 'campo',
+          element: this.lang === 'en' ? 'Field detail lens' : 'lente dettaglio Campo',
+          objectRef: {
+            kind: this.selectedCampoLens.kind || '',
+            category: this.selectedCampoLens.category || '',
+            title: this.selectedCampoLens.title || '',
+            schema: this.selectedCampoLens.schema || '',
+          },
+        });
+      },
+
+      askThiaTranslateFalsifierFlag(flag, index = 0) {
+        const f = flag || {};
+        this.askThiaTranslateText({
+          text: [
+            `claim: ${f.claim || 'n/a'}`,
+            `evidence: ${f.evidence || 'n/a'}`,
+            `suggestion: ${f.suggestion || 'n/a'}`,
+          ].join('\n'),
+          tab: 'agente',
+          element: this.lang === 'en' ? 'Falsifier flag' : 'flag del falsifier',
+          objectRef: {
+            report: this.activeReport?.filename || this.activeReportFilename || '',
+            index,
+            lens: f.lens ?? null,
+            severity: f.severity || '',
+          },
         });
       },
 
