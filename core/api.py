@@ -2385,6 +2385,19 @@ async def get_cycle_quality(domain: str, request: Request) -> dict[str, Any]:
     }
 
 
+@app.get("/api/domains/{domain}/miniboot_status")
+async def get_miniboot_status(domain: str, request: Request, lang: str = "it") -> dict[str, Any]:
+    """Compact per-Lab resume status for the manager MiniDash.
+
+    This endpoint is deliberately read-only: it does not promote findings or
+    mutate a seed. It gives the next operator/instance enough runtime context
+    to resume from the last real cycle instead of relying on chat memory.
+    """
+    await _check_auth(request)
+    _validate_domain(domain)
+    return _build_miniboot_status(domain, lang=lang)
+
+
 @app.get("/api/domains/{domain}/cost")
 async def get_cost(domain: str, request: Request) -> dict[str, Any]:
     await _check_auth(request)
@@ -5109,6 +5122,180 @@ def _read_json_safe(p: Path, default: Any) -> Any:
         return json.loads(p.read_text())
     except json.JSONDecodeError:
         return default
+
+
+def _latest_json_file(folder: Path, pattern: str) -> tuple[Path, dict[str, Any]] | tuple[None, None]:
+    if not folder.exists():
+        return None, None
+    files = sorted(folder.glob(pattern), key=lambda p: p.stat().st_mtime, reverse=True)
+    if not files:
+        return None, None
+    payload = _read_json_safe(files[0], {})
+    return (files[0], payload) if isinstance(payload, dict) else (None, None)
+
+
+def _movement(trace: dict[str, Any], name: str) -> dict[str, Any]:
+    movements = trace.get("movements")
+    if not isinstance(movements, list):
+        return {}
+    for item in movements:
+        if isinstance(item, dict) and item.get("name") == name:
+            return item
+    return {}
+
+
+def _latest_report_info(domain: str) -> dict[str, Any]:
+    reports_dir = paths.reports_dir(domain)
+    if not reports_dir.exists():
+        return {}
+    reports = sorted(_agent_report_files(reports_dir), key=lambda p: p.stat().st_mtime, reverse=True)
+    if not reports:
+        return {}
+    report = reports[0]
+    title = report.stem
+    try:
+        for line in report.read_text(errors="replace").splitlines():
+            cleaned = line.strip().lstrip("#").strip()
+            if cleaned:
+                title = cleaned[:160]
+                break
+    except OSError:
+        pass
+    return {
+        "filename": report.name,
+        "title": title,
+        "mtime": datetime.fromtimestamp(report.stat().st_mtime, tz=timezone.utc).isoformat(),
+    }
+
+
+def _crontab_lab_flags(domain: str) -> dict[str, bool]:
+    flags = {
+        "cycle_installed": False,
+        "value_refresh_installed": False,
+    }
+    try:
+        proc = subprocess.run(
+            ["crontab", "-l"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+            check=False,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return flags
+    text = proc.stdout or ""
+    flags["cycle_installed"] = f"dnd-cycle.sh {domain}" in text
+    if domain == "bitcoin-regime-lab":
+        flags["value_refresh_installed"] = "bitcoin-refresh-value.sh" in text
+    return flags
+
+
+def _build_miniboot_status(domain: str, *, lang: str = "it") -> dict[str, Any]:
+    domain_dir = paths.domain_data_dir(domain)
+    trace_path, trace = _latest_json_file(domain_dir, "cycle_trace_*.json")
+    trace = trace or {}
+    latest_report = _latest_report_info(domain)
+    cron = _crontab_lab_flags(domain)
+
+    agent = _movement(trace, "agent")
+    falsifier = _movement(trace, "report_falsifier")
+    seed_integrator = _movement(trace, "seed_integrator")
+    trajectory = _movement(trace, "trajectory_evaluator")
+    promotion = _movement(trace, "promotion_proposer")
+    value_artifact, value_payload = _latest_json_file(domain_dir / "value", "*.json")
+
+    cycle_ts = trace.get("cycle_ts") or ""
+    errors = trace.get("n_errors", 0) if isinstance(trace.get("n_errors", 0), int) else 0
+    pending = trace.get("n_pending", 0) if isinstance(trace.get("n_pending", 0), int) else 0
+    provider = (agent.get("metrics") or {}).get("stop_reason") or ""
+    falsifier_metrics = falsifier.get("metrics") or {}
+    seed_metrics = seed_integrator.get("metrics") or {}
+    trajectory_metrics = trajectory.get("metrics") or {}
+    promotion_metrics = promotion.get("metrics") or {}
+
+    en = (lang or "").lower().startswith("en")
+    if en:
+        active = [
+            f"Latest cycle {cycle_ts or 'not found'}: {errors} errors, {pending} pending.",
+            f"Latest report: {latest_report.get('title') or 'no agent report found'}.",
+            "Cron is installed for cognitive cycles." if cron["cycle_installed"] else "No cognitive cron detected for this Lab.",
+        ]
+        can = [
+            "Resume from the latest cycle trace, report and falsifier instead of chat memory.",
+            "Use THIA to explain the latest report and turn useful material into a reviewed module.",
+            "Let the next cron cycle test whether the latest mutation improves the Lab.",
+        ]
+        missing = []
+        if not cron["value_refresh_installed"] and domain == "bitcoin-regime-lab":
+            missing.append("BTC value refresh cron is not detected.")
+        if promotion_metrics.get("decision") == "ELIGIBLE_NO_PROPOSALS":
+            missing.append("Cycle was eligible, but no candidate rule was promoted from the report.")
+        if not value_artifact:
+            missing.append("No value artifact found for the domain.")
+        next_steps = [
+            "After the next cron run, compare the new cycle trace with this resume state.",
+            "If a report contains a stable pattern, ask THIA for weak points, useful value and next step.",
+        ]
+    else:
+        active = [
+            f"Ultimo ciclo {cycle_ts or 'non trovato'}: {errors} errori, {pending} pending.",
+            f"Ultimo report: {latest_report.get('title') or 'nessun report agente trovato'}.",
+            "Cron installato per i cicli cognitivi." if cron["cycle_installed"] else "Nessun cron cognitivo rilevato per questo Lab.",
+        ]
+        can = [
+            "Riprendere da cycle trace, report e falsificatore invece che dalla memoria della chat.",
+            "Usare THIA per spiegare l'ultimo report e trasformare il materiale utile in modulo revisionato.",
+            "Lasciare al prossimo ciclo cron la verifica della mutazione piu recente del Lab.",
+        ]
+        missing = []
+        if not cron["value_refresh_installed"] and domain == "bitcoin-regime-lab":
+            missing.append("Cron di refresh valore BTC non rilevato.")
+        if promotion_metrics.get("decision") == "ELIGIBLE_NO_PROPOSALS":
+            missing.append("Il ciclo era eleggibile, ma nessuna regola candidata e stata promossa dal report.")
+        if not value_artifact:
+            missing.append("Nessun artifact di valore trovato per il dominio.")
+        next_steps = [
+            "Dopo il prossimo cron, confrontare il nuovo cycle trace con questo stato di ripresa.",
+            "Se un report contiene un pattern stabile, chiedere a THIA punti deboli, utilita e prossimo passo.",
+        ]
+
+    if not missing:
+        missing = [
+            "Nessun blocco immediato rilevato; resta da osservare il prossimo ciclo automatico."
+            if not en else
+            "No immediate blocker detected; the next automatic cycle still needs observation."
+        ]
+
+    return {
+        "available": bool(trace_path or latest_report),
+        "domain": domain,
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "source": "runtime_synthesized",
+        "resume": {
+            "cycle_ts": cycle_ts,
+            "cycle_trace": trace_path.name if trace_path else "",
+            "latest_report": latest_report,
+            "value_artifact": value_artifact.name if value_artifact else "",
+        },
+        "runtime": {
+            "provider": provider,
+            "errors": errors,
+            "pending": pending,
+            "falsifier_flags": falsifier_metrics.get("n_flags"),
+            "falsifier_coherent": falsifier_metrics.get("coherent"),
+            "aeternitas_decision": seed_metrics.get("aeternitas_decision"),
+            "trajectory_decision": trajectory_metrics.get("decision"),
+            "trajectory_confidence": trajectory_metrics.get("confidence"),
+            "promotion_decision": promotion_metrics.get("decision"),
+            "cron_cycle": cron["cycle_installed"],
+            "cron_value_refresh": cron["value_refresh_installed"],
+            "value_generated_at": value_payload.get("generated_at") if isinstance(value_payload, dict) else None,
+        },
+        "active": active,
+        "can": can,
+        "missing": missing,
+        "next": next_steps,
+    }
 
 
 def _count_reports(domain: str) -> int:
