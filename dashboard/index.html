@@ -5512,12 +5512,15 @@
       localizedDomainDescription(domain) {
         const d = domain || {};
         const en = {
+          'bio-rhythms': 'Domain Lab for cardiac and circadian biosignal regime detection: normal/arrhythmia or wake/sleep dipoles checked against shuffle surrogates.',
           finance: 'Domain Lab for regime shifts in FX, crypto and equity markets: generative bull/bear dipoles checked against random-walk surrogates.',
           'ops-decisions': 'System Lab that governs the evolution of live D-ND Labs: keeps intent, seed, reports, falsifier and resultant aligned so exponentiality prevails over noise and sterile symmetry.',
         };
         const it = {
+          'bio-rhythms': 'Lab di dominio per regime detection in biosegnali cardiaci e circadiani: dipolo normale/aritmia o veglia/sonno generativo contro shuffle surrogato.',
           'bitcoin-regime-lab': 'Lab candidato generato da richiesta dominio bitcoin-regime-lab: osserva ipotesi BTC e blocca interpretazioni operative deboli prima che diventino claim.',
           editorial: 'Lab editoriale: legge archivi e bozze pubblicate, distingue fonte verificabile da insight ricevuto e prepara materiale controllabile.',
+          finance: 'Lab di dominio per regime shift nei mercati FX, crypto ed equity: dipolo bull/bear generativo contro random walk surrogato.',
           'meta-lab': 'Lab a livello di sistema: genera e valuta nuovi Lab, seed cognitivi e template installabili.',
           'ops-decisions': 'Lab di sistema che governa l\'evoluzione dei Lab D-ND: mantiene allineati intento, seme, report, falsifier e risultante affinche l\'esponenzialita prevalga su rumore e simmetria sterile.',
           physics: 'Lab autonomo originale: applica il modus D-ND a fisica matematica e ponti falsificabili.',
@@ -5528,14 +5531,40 @@
 
       localizedDomainDirection(domain) {
         const d = domain || {};
+        const domainId = d.id || d.domain || this.activeDomain || '';
         if (this.lang === 'en' && d.direzione_en) return d.direzione_en;
         const raw = d.direzione || d.direzione_en || '';
-        if (this.lang === 'en' && d.id === 'ops-decisions') {
-          return 'Govern Lab evolution: preserve essence while intent adapts as a resultant, and separate exponential growth from noise.';
-        }
-        if (this.lang !== 'en' && d.id === 'ops-decisions') {
-          return 'Governare l\'evoluzione dei Lab: preservare l\'essenza mentre l\'intento si adegua come risultante, separando crescita esponenziale da rumore.';
-        }
+        const localized = {
+          'bio-rhythms': {
+            en: 'PhysioNet nsr001 still resolves to a synthetic fallback; repair acquisition/versioning before biological validation resumes.',
+            it: 'PhysioNet nsr001 risolve ancora su fallback sintetico: riparare acquisizione/versioning prima di riprendere la validazione biologica.',
+          },
+          editorial: {
+            en: 'Most published content is echo of received insight rather than source; first task: discriminate source from echo.',
+            it: 'Gran parte dei contenuti pubblicati e eco di insight ricevuti piu che fonte; primo compito: discriminare.',
+          },
+          finance: {
+            en: 'SPY current-window orientation is partial locality, not recurring evidence.',
+            it: 'L orientamento SPY sulla finestra corrente e localita parziale, non evidenza ricorrente.',
+          },
+          'meta-lab': {
+            en: 'Regenerate or patch finance-reference-autogen with an executable regression boundary before generated Labs are installed or promoted.',
+            it: 'Rigenerare o patchare finance-reference-autogen con boundary regression eseguibile prima di installare o promuovere Lab generati.',
+          },
+          'ops-decisions': {
+            en: 'Govern Lab evolution: preserve essence while intent adapts as a resultant, and separate exponential growth from noise.',
+            it: 'Governare l evoluzione dei Lab: preservare l essenza mentre l intento si adegua come risultante, separando crescita esponenziale da rumore.',
+          },
+          physics: {
+            en: 'Test internal physical nulls for graph-only residues and separate physical dynamics from graph-reader reconstruction.',
+            it: 'Testare null fisici interni per i residui graph-only e separare dinamica fisica da ricostruzione del reader grafico.',
+          },
+          'research-radar': {
+            en: 'A claim without source/data-card stays watch or reject, not discovery.',
+            it: 'Un claim senza source/data-card resta watch o reject, non discovery.',
+          },
+        }[domainId]?.[this.lang === 'en' ? 'en' : 'it'];
+        if (localized) return localized;
         if (this.lang !== 'en' && /(^|\s)(the|this|must|can|current|boundary|source|system|claim|test|report|window|generated|published|content|evidence|before|after|from|into)(\s|$)/i.test(raw)) {
           return '';
         }
@@ -7785,6 +7814,35 @@
             push("Cosa può e non può dire?");
             push("Come posso contribuire?");
           }
+        }
+        if (this.activeDomain === 'ops-decisions') {
+          push("Quale Lab deve evolvere?");
+          push("Dove c'e rumore o deriva?");
+          push("Qual e il prossimo passo utile?");
+        } else if (this.activeDomain === 'meta-lab') {
+          push("Quale Lab possiamo generare?");
+          push("Perche il template e bloccato?");
+          push("Cosa serve per installarlo?");
+        } else if (this.activeDomain === 'research-radar') {
+          push("Quale claim e testabile?");
+          push("Cosa manca per promuoverlo?");
+          push("Spiega semplice il rischio");
+        } else if (this.activeDomain === 'bio-rhythms') {
+          push("Il dato e reale o sintetico?");
+          push("Quale controllo serve?");
+          push("Prossimo passo sul dataset");
+        } else if (this.activeDomain === 'editorial') {
+          push("Cosa abbiamo di utile?");
+          push("Fonte o eco?");
+          push("Prossimo passo editoriale");
+        } else if (this.activeDomain === 'finance') {
+          push("Cosa e segnale e cosa no?");
+          push("Quale baseline manca?");
+          push("Spiega semplice il regime");
+        } else if (this.activeDomain === 'physics') {
+          push("Quale ponte fisico regge?");
+          push("Quale null manca?");
+          push("Spiega semplice il risultato");
         }
 
         if (this.activeTab === 'info') {
