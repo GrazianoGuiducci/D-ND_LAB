@@ -2252,7 +2252,13 @@
                 <div>
                   <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
                     <div class="text-xs font-mono text-slate-300" x-text="activeReport.filename"></div>
-                    <button @click="activeReport = null" class="text-xs text-slate-300 hover:text-slate-300">close</button>
+                    <div class="flex items-center gap-2">
+                      <button @click="askThiaTranslateActiveReport()"
+                              class="text-xs text-cyan-300 hover:text-cyan-100"
+                              x-text="lang === 'en' ? 'translate / explain' : 'traduci / spiega'"></button>
+                      <button @click="activeReport = null" class="text-xs text-slate-300 hover:text-slate-300"
+                              x-text="lang === 'en' ? 'close' : 'chiudi'"></button>
+                    </div>
                   </div>
 
 
@@ -6091,6 +6097,31 @@
 
       askThiaAboutBtcPoint(point) {
         this.sendThiaAsk(this.btcThiaAskDetail(point));
+      },
+
+      askThiaTranslateActiveReport() {
+        if (!this.activeReport) return;
+        const content = String(this.activeReport.content || '').trim();
+        const excerpt = content.length > 12000 ? `${content.slice(0, 12000)}\n\n[excerpt truncated]` : content;
+        this.sendThiaAsk({
+          mode: 'translate_explain',
+          sourceLang: 'auto',
+          targetLang: this.lang || 'it',
+          domain: this.activeDomain || '',
+          tab: 'agente',
+          element: this.lang === 'en' ? 'Lab report' : 'Report del Lab',
+          text: excerpt || this.activeReport.title || this.activeReport.filename || '',
+          objectRef: {
+            filename: this.activeReport.filename || this.activeReportFilename || '',
+            title: this.activeReport.title || '',
+            verdict: this.activeReport.verdict || '',
+            falsifier_coherent: this.activeReport.falsifier_coherent ?? null,
+            n_flags: this.activeReport.n_flags ?? null,
+          },
+          prompt: this.lang === 'en'
+            ? 'Translate and explain this Lab report. Keep translation and explanation separate, then list verified output, source text, inferred interpretation and open questions.'
+            : 'Traduci e spiega questo report del Lab. Tieni separata la traduzione dalla spiegazione, poi elenca output verificato, testo sorgente, interpretazione inferita e domande aperte.',
+        });
       },
 
       valueArtifactDecisionTone(card) {
