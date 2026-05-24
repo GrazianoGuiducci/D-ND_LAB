@@ -2255,7 +2255,7 @@
                     <div class="flex items-center gap-2">
                       <button @click="askThiaTranslateActiveReport()"
                               class="text-xs text-cyan-300 hover:text-cyan-100"
-                              x-text="lang === 'en' ? 'translate / explain' : 'traduci / spiega'"></button>
+                              x-text="thiaTranslateLabel(activeReport?.content || activeReport?.title || '')"></button>
                       <button @click="activeReport = null" class="text-xs text-slate-300 hover:text-slate-300"
                               x-text="lang === 'en' ? 'close' : 'chiudi'"></button>
                     </div>
@@ -6099,13 +6099,36 @@
         this.sendThiaAsk(this.btcThiaAskDetail(point));
       },
 
+      detectTextLanguage(text) {
+        const raw = String(text || '').toLowerCase();
+        const sample = raw.slice(0, 6000);
+        if (!sample.trim()) return 'auto';
+        const enMatches = (sample.match(/\b(the|and|with|without|before|after|source|report|claim|evidence|result|current|cycle|domain|question|what|which|this|that|from|into|must|should|can)\b/g) || []).length;
+        const itMatches = (sample.match(/\b(il|lo|la|gli|le|un|una|e|che|con|senza|prima|dopo|fonte|report|claim|evidenza|risultato|corrente|ciclo|dominio|domanda|cosa|quale|questo|questa|deve|puo)\b/g) || []).length;
+        if (enMatches >= itMatches + 4 && enMatches >= 6) return 'en';
+        if (itMatches >= enMatches + 4 && itMatches >= 6) return 'it';
+        return 'auto';
+      },
+
+      thiaTranslateLabel(text) {
+        const source = this.detectTextLanguage(text);
+        const target = this.lang || 'it';
+        if (source === target) {
+          return target === 'en' ? 'explain with THIA' : 'spiega con THIA';
+        }
+        if (target === 'en') return 'translate with THIA';
+        return 'traduci con THIA';
+      },
+
       askThiaTranslateActiveReport() {
         if (!this.activeReport) return;
         const content = String(this.activeReport.content || '').trim();
         const excerpt = content.length > 12000 ? `${content.slice(0, 12000)}\n\n[excerpt truncated]` : content;
+        const sourceLang = this.detectTextLanguage(content || this.activeReport.title || '');
+        const sameLang = sourceLang === (this.lang || 'it');
         this.sendThiaAsk({
           mode: 'translate_explain',
-          sourceLang: 'auto',
+          sourceLang,
           targetLang: this.lang || 'it',
           domain: this.activeDomain || '',
           tab: 'agente',
@@ -6119,8 +6142,12 @@
             n_flags: this.activeReport.n_flags ?? null,
           },
           prompt: this.lang === 'en'
-            ? 'Translate and explain this Lab report. Keep translation and explanation separate, then list verified output, source text, inferred interpretation and open questions.'
-            : 'Traduci e spiega questo report del Lab. Tieni separata la traduzione dalla spiegazione, poi elenca output verificato, testo sorgente, interpretazione inferita e domande aperte.',
+            ? (sameLang
+              ? 'Explain this Lab report in English. Then list verified output, source text, inferred interpretation and open questions.'
+              : 'Translate and explain this Lab report. Keep translation and explanation separate, then list verified output, source text, inferred interpretation and open questions.')
+            : (sameLang
+              ? 'Spiega questo report del Lab in italiano. Poi elenca output verificato, testo sorgente, interpretazione inferita e domande aperte.'
+              : 'Traduci e spiega questo report del Lab. Tieni separata la traduzione dalla spiegazione, poi elenca output verificato, testo sorgente, interpretazione inferita e domande aperte.'),
         });
       },
 
