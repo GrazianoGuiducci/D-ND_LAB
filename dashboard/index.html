@@ -534,14 +534,14 @@
     }
 
     /* v4.1+ — Resize handles port-fedele dal sito (Shell3Col s3c-resizer).
-       12px wide hit area, sottile linea visibile sempre, grip dots su hover.
+       24px hit area, sottile linea visibile sempre, grip dots su hover.
        Auto close/reopen logic: drag verso il centro su closed riapre dopo
        threshold; drag oltre l'open verso il bordo collassa.
 
        In closed state (sidebar 40px), il resize handle e' DENTRO il gutter
        e funge anche da trigger di drag-to-reopen. */
     .resize-handle {
-      position: absolute; top: 0; bottom: 0; width: 12px;
+      position: absolute; top: 0; bottom: 0; width: 24px;
       cursor: col-resize; user-select: none; z-index: 5;
       display: flex; align-items: center; justify-content: center;
       background: transparent; touch-action: none;
@@ -564,7 +564,7 @@
     .resize-handle .rz-grip {
       position: absolute; top: 50%; left: 50%;
       transform: translate(-50%, -50%);
-      width: 22px; height: 40px;
+      width: 28px; height: 46px;
       border-radius: 9999px;
       background: rgb(34 34 44);
       border: 1px solid rgb(255 255 255 / 0.22);
@@ -580,8 +580,8 @@
       content: ''; width: 2px; height: 16px;
       background: rgb(var(--site-text-subtle)); border-radius: 1px;
     }
-    .lab-sidebar-left  .resize-handle { right: -6px; }
-    .lab-sidebar-right .resize-handle { left: -6px; }
+    .lab-sidebar-left  .resize-handle { right: -12px; }
+    .lab-sidebar-right .resize-handle { left: -12px; }
     @media (max-width: 1064px) { .resize-handle { display: none; } }
 
     body.resizing { cursor: col-resize; user-select: none; }
@@ -1101,17 +1101,31 @@
       bottom: calc(100% + 6px);
       left: 50%;
       transform: translateX(-50%);
-      background: #121216;
+      background: rgb(15 23 42 / .98);
       color: #d8dbe7;
-      border: 1px solid rgba(167, 139, 250, .4);
+      border: 1px solid rgb(34 211 238 / .55);
       border-radius: 6px;
-      padding: 6px 10px;
+      padding: 7px 10px;
       font-size: 11px;
       font-family: ui-sans-serif, system-ui;
       white-space: nowrap;
       z-index: 60;
       pointer-events: none;
-      box-shadow: 0 4px 16px rgba(0,0,0,.4);
+      box-shadow: 0 10px 28px rgba(0,0,0,.48), 0 0 18px rgb(34 211 238 / .10);
+    }
+    [data-tip]:hover::before {
+      content: '';
+      position: absolute;
+      bottom: calc(100% + 2px);
+      left: 50%;
+      width: 8px;
+      height: 8px;
+      transform: translateX(-50%) rotate(45deg);
+      background: rgb(15 23 42 / .98);
+      border-right: 1px solid rgb(34 211 238 / .45);
+      border-bottom: 1px solid rgb(34 211 238 / .45);
+      z-index: 61;
+      pointer-events: none;
     }
     /* Variant tip-below — tooltip sotto invece che sopra. Usato per
        elementi nell'header (top: 0) dove tooltip up uscirebbe dal viewport. */
@@ -1119,6 +1133,15 @@
     .tip-below [data-tip]:hover::after {
       bottom: auto;
       top: calc(100% + 6px);
+    }
+    [data-tip].tip-below:hover::before,
+    .tip-below [data-tip]:hover::before {
+      bottom: auto;
+      top: calc(100% + 2px);
+      border-right: 0;
+      border-bottom: 0;
+      border-left: 1px solid rgb(34 211 238 / .45);
+      border-top: 1px solid rgb(34 211 238 / .45);
     }
     /* Custom select coerente con .selector della home (custom chevron, no rendering OS). */
     select.dnd-select {
@@ -1528,7 +1551,7 @@
         <button @click="sidebarLeftOpen = !sidebarLeftOpen" class="sidebar-toggle" :title="sidebarLeftOpen ? 'Collassa' : 'Espandi'">
           <span x-text="sidebarLeftOpen ? '◂' : '▸'"></span>
         </button>
-        <div class="resize-handle" @pointerdown="startResize($event, 'left')" title="Drag per ridimensionare · Drag verso il centro per riaprire">
+        <div class="resize-handle" @pointerdown="startResize($event, 'left')" data-tip="Trascina per ridimensionare · verso il centro per riaprire">
           <div class="rz-line"></div>
           <div class="rz-grip"></div>
         </div>
@@ -3305,7 +3328,7 @@
         <button @click="sidebarRightOpen = !sidebarRightOpen" class="sidebar-toggle" :title="sidebarRightOpen ? '▸' : '◂'">
           <span x-text="sidebarRightOpen ? '▸' : '◂'"></span>
         </button>
-        <div class="resize-handle" @pointerdown="startResize($event, 'right')" title="Drag per ridimensionare · Drag verso il centro per riaprire">
+        <div class="resize-handle" @pointerdown="startResize($event, 'right')" data-tip="Trascina per ridimensionare · verso il centro per riaprire">
           <div class="rz-line"></div>
           <div class="rz-grip"></div>
         </div>
