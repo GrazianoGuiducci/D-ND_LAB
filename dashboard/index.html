@@ -534,7 +534,7 @@
     }
 
     /* v4.1+ — Resize handles port-fedele dal sito (Shell3Col s3c-resizer).
-       24px hit area, sottile linea visibile sempre, grip dots su hover.
+       24px hit area, rail visibile sempre, grip leggibile anche senza hover.
        Auto close/reopen logic: drag verso il centro su closed riapre dopo
        threshold; drag oltre l'open verso il bordo collassa.
 
@@ -544,16 +544,18 @@
       position: absolute; top: 0; bottom: 0; width: 24px;
       cursor: col-resize; user-select: none; z-index: 5;
       display: flex; align-items: center; justify-content: center;
-      background: transparent; touch-action: none;
+      background: linear-gradient(90deg, transparent, rgb(34 211 238 / .08), transparent);
+      touch-action: none;
       transition: background 120ms ease;
     }
-    .resize-handle:hover { background: rgba(34,211,238,.22); }
-    .resize-handle.active { background: rgba(34,211,238,.32); }
+    .resize-handle:hover { background: rgba(34,211,238,.18); }
+    .resize-handle.active { background: rgba(34,211,238,.28); }
     .resize-handle .rz-line {
-      width: 2px; height: 60%;
-      background: rgb(34 211 238 / 0.4);   /* cyan visibile sempre */
-      border-radius: 1px;
+      width: 3px; height: 100%;
+      background: rgb(34 211 238 / 0.72);
+      border-radius: 999px;
       transition: all 120ms ease;
+      box-shadow: 0 0 10px rgb(34 211 238 / 0.24);
     }
     .resize-handle:hover .rz-line,
     .resize-handle.active .rz-line {
@@ -566,12 +568,12 @@
       transform: translate(-50%, -50%);
       width: 28px; height: 46px;
       border-radius: 9999px;
-      background: rgb(34 34 44);
-      border: 1px solid rgb(255 255 255 / 0.22);
+      background: rgb(15 23 42 / .92);
+      border: 1px solid rgb(34 211 238 / 0.55);
       display: flex; align-items: center; justify-content: center; gap: 2px;
-      opacity: 0; pointer-events: none;
+      opacity: .72; pointer-events: none;
       transition: opacity 220ms ease;
-      box-shadow: 0 4px 14px rgb(0 0 0 / 0.4);
+      box-shadow: 0 4px 14px rgb(0 0 0 / 0.45), 0 0 16px rgb(34 211 238 / .14);
     }
     .resize-handle:hover .rz-grip,
     .resize-handle.active .rz-grip { opacity: 1; }
