@@ -277,6 +277,7 @@
     .bicono-svg .pole-empty { stroke-dasharray: 4,3; opacity: .35; }
     /* Detail card values must wrap — selectedNode.label/verdict possono essere lunghi */
     .detail-card, .detail-card * { min-width: 0; overflow-wrap: break-word; }
+    .schema-token { overflow-wrap: anywhere; word-break: break-word; }
     .selected-node-badge span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 200px; }
     .bicono-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(200px,100%),1fr)); gap: 8px; margin-top: 10px; font-size: 12px; min-width: 0; }
     .bicono-field { padding: 6px 8px; background: rgba(8,8,12,.56); border-left: 2px solid rgba(167,139,250,.62); border-radius: 4px; }
@@ -1048,9 +1049,33 @@
     .chip-type-scoperta { background: rgba(244,114,182,.18); color: #f9a8d4; }
     .chip-maturity { background: rgba(34,211,238,.18); color: #67e8f9; }
     .chip-date { background: rgba(184,188,204,.18); color: #cbd5e1; text-transform: none; letter-spacing: 0; }
-    .detail-card { padding: 10px; background: rgba(0,0,0,.22); border-radius: 6px; border: 1px solid rgb(var(--neon-cyan) / 0.54); box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.05), 0 0 14px rgb(var(--neon-cyan) / 0.10); }
-    .detail-action { display: block; width: 100%; text-align: left; font-size: 12px; padding: 6px 10px; border-radius: 4px; background: rgb(30 41 59); transition: background 0.15s, border-color 0.15s, box-shadow 0.15s; cursor: pointer; border: 1px solid rgb(var(--neon-cyan) / 0.36); }
+    .detail-card { padding: 10px; background: rgba(0,0,0,.22); border-radius: 6px; border: 1px solid rgb(var(--neon-cyan) / 0.26); box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.04); }
+    .detail-action { display: block; width: 100%; text-align: left; font-size: 12px; padding: 6px 10px; border-radius: 4px; background: rgb(30 41 59); transition: background 0.15s, border-color 0.15s, box-shadow 0.15s; cursor: pointer; border: 1px solid rgb(var(--neon-cyan) / 0.24); }
     .detail-action:hover { background: rgb(51 65 85); border-color: rgb(var(--neon-cyan)); box-shadow: 0 0 18px rgb(var(--neon-cyan) / 0.18); }
+    .quiet-section {
+      border-color: rgb(51 65 85 / .76) !important;
+      background: rgb(2 6 23 / .22) !important;
+      box-shadow: none !important;
+    }
+    .quiet-surface {
+      border-color: rgb(51 65 85 / .62) !important;
+      background: rgb(2 6 23 / .26) !important;
+      box-shadow: none !important;
+    }
+    .quiet-surface:hover {
+      border-color: rgb(34 211 238 / .42) !important;
+      background: rgb(15 23 42 / .66) !important;
+    }
+    .quiet-action {
+      border-color: rgb(51 65 85 / .72) !important;
+      background: rgb(15 23 42 / .48) !important;
+      color: rgb(203 213 225);
+      box-shadow: none !important;
+    }
+    .quiet-action:hover {
+      border-color: rgb(34 211 238 / .48) !important;
+      color: rgb(224 242 254);
+    }
     .thia-ask-btn {
       display: inline-flex;
       align-items: center;
@@ -1943,7 +1968,7 @@
                               <div class="text-sm text-slate-100 mt-1 leading-relaxed" x-text="bitcoinPolicyValueLensSummary()"></div>
                             </div>
                             <button @click="selectBitcoinPolicySimulatorLens(bitcoinPolicyValueLensPrimaryCase())"
-                                    class="text-[10px] font-mono px-2 py-1 rounded border border-slate-700 text-cyan-100 hover:border-cyan-400 cursor-pointer"
+                                      class="text-[10px] font-mono px-1.5 py-0.5 rounded border quiet-action cursor-pointer"
                                     x-text="lang === 'en' ? 'case' : 'caso'"></button>
                           </div>
                           <div class="grid grid-cols-3 gap-2 mt-3">
@@ -1980,7 +2005,7 @@
 
             <div x-show="activeDomain !== 'bitcoin-regime-lab' || btcAdvancedOpen" x-cloak>
             <template x-if="latestValueArtifacts.available">
-              <section class="mt-4 border border-cyan-900/60 rounded-md p-4 bg-cyan-950/10">
+              <section class="mt-4 border rounded-md p-4 quiet-section">
                 <div class="flex items-start justify-between gap-3 flex-wrap mb-3">
                   <div>
                     <h3 class="text-sm font-medium text-cyan-200" x-text="lang === 'en' ? 'Verifiable artifacts' : 'Artifact verificabili'"></h3>
@@ -1989,24 +2014,24 @@
                       : 'Righe value-facing lette dal falsifier: claim-card, baseline, decisione e confine.'"></p>
                   </div>
                   <button @click="selectValueArtifactLens()"
-                          class="text-[11px] font-mono text-cyan-200 hover:text-cyan-100 cursor-pointer"
+                          class="text-[11px] font-mono text-slate-400 hover:text-cyan-100 cursor-pointer schema-token"
                           x-text="latestValueArtifact()?.filename || 'artifact'"></button>
                 </div>
                 <div class="grid xl:grid-cols-[minmax(0,1.05fr)_minmax(300px,.95fr)] gap-3 items-stretch">
                   <div class="grid sm:grid-cols-2 xl:grid-cols-3 gap-3 content-start">
                     <button @click="selectValueArtifactLens()"
-                            class="text-left bg-slate-950/50 border border-slate-800 hover:border-cyan-700 rounded p-3 transition cursor-pointer min-h-[92px]">
+                            class="text-left border rounded p-3 transition cursor-pointer min-h-[92px] quiet-surface">
                       <div class="text-[10px] uppercase tracking-wider text-slate-400">Schema</div>
-                      <div class="text-sm font-mono text-cyan-300 mt-1 line-clamp-2" x-text="latestValueArtifact()?.schema || 'n/a'"></div>
+                      <div class="text-sm font-mono text-cyan-300 mt-1 line-clamp-2 schema-token" x-text="valueArtifactSchemaLabel(latestValueArtifact())"></div>
                     </button>
                     <button @click="selectValueArtifactLens()"
-                            class="text-left bg-slate-950/50 border border-slate-800 hover:border-cyan-700 rounded p-3 transition cursor-pointer min-h-[92px]">
+                            class="text-left border rounded p-3 transition cursor-pointer min-h-[92px] quiet-surface">
                       <div class="text-[10px] uppercase tracking-wider text-slate-400">Card</div>
                       <div class="text-lg font-mono text-purple-300 mt-1" x-text="latestValueArtifact()?.n_cards ?? 0"></div>
                     </button>
                     <template x-for="row in latestValueArtifactSummaryRows()" :key="row.label">
                       <button @click="selectValueArtifactLens()"
-                              class="text-left bg-slate-950/50 border border-slate-800 hover:border-cyan-700 rounded p-3 transition cursor-pointer min-h-[92px]">
+                              class="text-left border rounded p-3 transition cursor-pointer min-h-[92px] quiet-surface">
                         <div class="text-[10px] uppercase tracking-wider text-slate-400" x-text="row.label"></div>
                         <div class="text-sm font-mono mt-1 line-clamp-2" :class="row.tone" x-text="row.value"></div>
                       </button>
@@ -2016,7 +2041,7 @@
                     <div class="grid gap-3 content-start">
                       <template x-for="card in latestValueArtifactCards()" :key="card.claim_id || card.title || JSON.stringify(card).slice(0,40)">
                         <button @click="selectValueArtifactLens(card)"
-                                class="text-left border border-slate-800 hover:border-cyan-700 rounded-md p-3 bg-slate-950/40 transition cursor-pointer min-h-[128px]">
+                                class="text-left border rounded-md p-3 transition cursor-pointer min-h-[128px] quiet-surface">
                           <div class="flex items-center justify-between gap-2">
                             <span class="text-[10px] font-mono text-cyan-300 truncate" x-text="card.claim_id || card.id || 'claim'"></span>
                             <span class="flex items-center gap-2">
@@ -2115,7 +2140,7 @@
             </template>
 
             <template x-if="activeDomain === 'bitcoin-regime-lab' && labThought?.available">
-              <section class="mt-4 border border-emerald-400/70 rounded-md p-4 bg-emerald-950/10 shadow-[0_0_16px_rgba(16,185,129,.14)]">
+              <section class="mt-4 border rounded-md p-4 quiet-section">
                 <div class="flex items-start justify-between gap-3 flex-wrap mb-3">
                   <div>
                     <h3 class="text-sm font-medium text-emerald-100" x-text="lang === 'en' ? 'Lab question and cascade' : 'Domanda e cascata del Lab'"></h3>
@@ -2124,13 +2149,13 @@
                       : 'Mostra cosa muove il ciclo e cosa puo propagarsi ad altri Lab senza diventare regola automatica.'"></p>
                   </div>
                   <button @click="selectLabThoughtLens()"
-                          class="text-[11px] font-mono px-2 py-1 rounded border border-emerald-300/80 text-emerald-100 hover:border-emerald-100 cursor-pointer">
+                          class="text-[11px] font-mono px-2 py-1 rounded border quiet-action cursor-pointer">
                     <span x-text="lang === 'en' ? 'open field' : 'apri campo'"></span>
                   </button>
                 </div>
                 <div class="grid lg:grid-cols-[minmax(0,1fr)_minmax(280px,.45fr)] gap-3">
                   <button @click="selectLabThoughtLens()"
-                          class="text-left rounded border border-emerald-400/50 bg-slate-950/50 p-3 hover:border-emerald-200 transition cursor-pointer">
+                          class="text-left rounded border p-3 transition cursor-pointer quiet-surface">
                     <div class="text-[10px] uppercase tracking-wider text-emerald-200" x-text="lang === 'en' ? 'Current question' : 'Domanda corrente'"></div>
                     <div class="text-sm text-slate-100 mt-2" x-text="localizedLabThoughtText(labThought.question_field?.primary_question || (lang === 'en' ? 'Question not available' : 'Domanda non disponibile'))"></div>
                     <div class="text-xs text-amber-200 mt-3" x-text="localizedLabThoughtText(labThought.question_field?.next_question || '')"></div>
@@ -2138,7 +2163,7 @@
                   <div class="grid gap-2">
                     <template x-for="item in (labThought.capability_cascade || []).slice(0, 3)" :key="item.capability_id || item.new_affordance">
                       <button @click="selectLabThoughtLens(item)"
-                              class="text-left rounded border border-cyan-500/50 bg-slate-950/50 p-3 hover:border-cyan-200 transition cursor-pointer">
+                              class="text-left rounded border p-3 transition cursor-pointer quiet-surface">
                         <div class="text-[10px] uppercase tracking-wider text-cyan-200" x-text="item.capability_id || 'capability'"></div>
                         <div class="text-xs text-slate-200 mt-2" x-text="localizedLabThoughtText(item.new_affordance || '')"></div>
                         <div class="text-[11px] text-purple-200 mt-2" x-text="localizedLabThoughtText((item.transferable_domains || []).join(', '))"></div>
@@ -2150,14 +2175,14 @@
             </template>
 
             <template x-if="bitcoinDailyInefficiencyArtifact()">
-              <section class="mt-4 border border-amber-500/70 rounded-md p-4 bg-slate-950/40 shadow-[0_0_16px_rgba(245,158,11,.10)]">
+              <section class="mt-4 border rounded-md p-4 quiet-section">
                 <div class="flex items-start justify-between gap-3 flex-wrap mb-3">
                   <div>
                     <h3 class="text-sm font-medium text-amber-100" x-text="t('dash.btc.daily.title', 'Inefficienza daily BTC')"></h3>
                     <p class="text-xs text-slate-300 mt-1" x-text="t('dash.btc.daily.lead', 'Watch-only: il controllo riempie quanto le zone e il denominatore e basso.')"></p>
                   </div>
                   <button @click="selectBitcoinDailyInefficiencyLens()"
-                          class="text-[11px] font-mono px-2 py-1 rounded border border-amber-400/80 text-amber-100 hover:border-amber-100 cursor-pointer"
+                          class="text-[11px] font-mono px-2 py-1 rounded border quiet-action cursor-pointer"
                           x-text="t('dash.btc.daily.openTest', 'apri test')"></button>
                 </div>
                 <div class="grid lg:grid-cols-[minmax(0,1fr)_minmax(260px,.38fr)] gap-3">
@@ -2165,13 +2190,13 @@
                     <div class="grid sm:grid-cols-4 gap-2 mb-3">
                       <template x-for="row in bitcoinDailyInefficiencyStatRows()" :key="row.label">
                         <button @click="selectBitcoinDailyInefficiencyLens()"
-                                class="text-left rounded border border-amber-500/50 bg-slate-950/60 p-3 hover:border-amber-200 transition cursor-pointer">
+                                class="text-left rounded border p-3 transition cursor-pointer quiet-surface">
                           <div class="text-[10px] uppercase tracking-wider text-slate-300" x-text="row.label"></div>
                           <div class="text-lg font-mono mt-1" :class="row.tone" x-text="row.value"></div>
                         </button>
                       </template>
                     </div>
-                    <div class="mb-3 rounded border border-amber-400/60 bg-amber-950/10 px-3 py-2 text-xs text-amber-100"
+                    <div class="mb-3 rounded border quiet-surface px-3 py-2 text-xs text-amber-100"
                          x-text="bitcoinDailyInefficiencyValueMessage()"></div>
                     <div class="flex items-center justify-between gap-3 mb-2 text-[11px] text-slate-400">
                       <span x-text="bitcoinDailyInefficiencyZoneSummary()"></span>
@@ -2187,7 +2212,7 @@
                     <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-2">
                       <template x-for="zone in bitcoinDailyInefficiencyVisibleZones()" :key="zone.zone_id">
                         <button @click="selectBitcoinDailyInefficiencyLens(zone)"
-                                class="text-left rounded border border-amber-500/50 bg-slate-950/60 p-3 hover:border-amber-200 transition cursor-pointer min-h-[112px]">
+                                class="text-left rounded border p-3 transition cursor-pointer min-h-[112px] quiet-surface">
                           <div class="flex items-center justify-between gap-2">
                             <span class="text-[10px] font-mono text-amber-200 truncate" x-text="zone.event_date || 'date'"></span>
                             <span class="text-[10px] uppercase tracking-wider"
@@ -2202,7 +2227,7 @@
                     </div>
                   </div>
                   <button @click="selectBitcoinDailyInefficiencyLens()"
-                          class="text-left rounded border border-purple-500/60 bg-purple-950/10 p-3 hover:border-purple-200 transition cursor-pointer">
+                          class="text-left rounded border p-3 transition cursor-pointer quiet-surface">
                     <div class="text-[10px] uppercase tracking-wider text-purple-200" x-text="t('dash.btc.daily.currentVerdict', 'Verdetto corrente')"></div>
                     <div class="text-sm text-slate-100 mt-2 break-words" x-text="bitcoinDailyInefficiencyVerdictLabel()"></div>
                     <div class="text-xs text-slate-300 mt-3" x-text="bitcoinDailyInefficiencyEvidence()"></div>
@@ -2213,7 +2238,7 @@
             </template>
 
             <template x-if="bitcoinMethodIntakeArtifact()">
-              <section class="mt-4 border border-cyan-500/80 rounded-md p-4 bg-slate-950/40 shadow-[0_0_16px_rgba(34,211,238,.16)]">
+              <section class="mt-4 border rounded-md p-4 quiet-section">
                 <div class="flex items-start justify-between gap-3 flex-wrap mb-3">
                   <div>
                     <h3 class="text-sm font-medium text-cyan-200" x-text="t('dash.btc.method.title', 'Schede metodo BTC')"></h3>
@@ -2224,7 +2249,7 @@
                             class="thia-ask-btn"
                             x-text="t('dash.btc.askThia', 'chiedi THIA')"></button>
                     <button @click="selectBitcoinMethodLens()"
-                            class="text-[11px] font-mono px-2 py-1 rounded border border-cyan-500/90 text-cyan-100 hover:border-cyan-200 cursor-pointer"
+                            class="text-[11px] font-mono px-2 py-1 rounded border quiet-action cursor-pointer"
                             x-text="t('dash.btc.method.openIntake', 'apri intake')"></button>
                   </div>
                 </div>
@@ -2233,7 +2258,7 @@
                     <div class="grid sm:grid-cols-4 gap-2 mb-3">
                       <template x-for="row in bitcoinMethodStatRows()" :key="row.label">
                         <button @click="selectBitcoinMethodLens()"
-                                class="text-left rounded border border-cyan-500/70 bg-slate-950/60 p-3 hover:border-cyan-200 transition cursor-pointer">
+                                class="text-left rounded border p-3 transition cursor-pointer quiet-surface">
                           <div class="text-[10px] uppercase tracking-wider text-slate-300" x-text="row.label"></div>
                           <div class="text-lg font-mono mt-1" :class="row.tone" x-text="row.value"></div>
                         </button>
@@ -2242,7 +2267,7 @@
                     <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-2">
                       <template x-for="card in bitcoinMethodCards()" :key="card.method_id || card.claim_id">
                         <button @click="selectBitcoinMethodLens(card)"
-                                class="text-left rounded border bg-slate-950/60 p-3 hover:border-cyan-200 transition cursor-pointer min-h-[150px]"
+                                class="text-left rounded border p-3 transition cursor-pointer min-h-[150px] quiet-surface"
                                 :class="bitcoinMethodCardClass(card)">
                           <div class="flex items-center justify-between gap-2">
                             <span class="text-[10px] font-mono text-cyan-300 truncate" x-text="card.method_id || 'method'"></span>
@@ -2255,18 +2280,18 @@
                       </template>
                     </div>
                   </div>
-                  <div class="rounded border border-purple-500/70 bg-purple-950/10 p-3">
+                  <div class="rounded border p-3 quiet-surface">
                     <div class="text-[10px] uppercase tracking-wider text-purple-200" x-text="t('dash.btc.method.expertQuestions', 'THIA chiede all esperto')"></div>
                     <div class="mt-2 space-y-2">
                       <template x-for="q in bitcoinMethodQuestions().slice(0, 6)" :key="q">
                         <button @click="selectBitcoinMethodQuestion(q)"
-                                class="w-full text-left text-xs text-slate-200 border border-purple-500/50 rounded p-2 bg-slate-950/50 hover:border-purple-200 transition cursor-pointer"
+                                class="w-full text-left text-xs text-slate-200 border rounded p-2 transition cursor-pointer quiet-surface"
                                 x-text="localizedBtcMethodText(q)"></button>
                       </template>
                     </div>
                     <template x-if="bitcoinMethodRecommendedNext()">
                       <button @click="selectBitcoinMethodLens()"
-                              class="mt-3 w-full text-left border border-amber-400/80 rounded p-3 bg-amber-950/10 hover:border-amber-200 transition cursor-pointer">
+                              class="mt-3 w-full text-left border rounded p-3 transition cursor-pointer quiet-surface">
                         <div class="text-[10px] uppercase tracking-wider text-amber-200" x-text="t('dash.btc.method.nextTest', 'Prossimo test suggerito')"></div>
                         <div class="text-sm text-slate-100 mt-1" x-text="localizedBtcMethodText(bitcoinMethodRecommendedNext()?.title || bitcoinMethodRecommendedNext()?.method_id)"></div>
                         <div class="text-xs text-slate-300 mt-2 line-clamp-3" x-text="localizedBtcMethodText(bitcoinMethodRecommendedNext()?.precondition || bitcoinMethodRecommendedNext()?.why)"></div>
@@ -3473,7 +3498,10 @@
                 <button @click="selectedCampoLens = null" class="text-slate-300 hover:text-slate-200 text-xs">×</button>
               </div>
               <div class="text-sm text-slate-100" x-text="selectedCampoLens.title"></div>
-              <p class="text-xs text-slate-300 leading-relaxed" x-text="selectedCampoLens.body"></p>
+              <p class="text-xs text-slate-300 leading-relaxed schema-token" x-text="selectedCampoLens.body"></p>
+              <template x-if="selectedCampoLens.schema">
+                <div class="text-[10px] font-mono text-slate-500 schema-token" x-text="selectedCampoLens.schema"></div>
+              </template>
               <div class="border-t border-slate-800 pt-3 text-[11px] space-y-2">
                 <div>
                   <div class="uppercase tracking-wider text-slate-500" x-text="t('dash.detail.evidence', 'Evidenza')"></div>
@@ -5761,6 +5789,27 @@
         return this.latestValueArtifacts?.latest || null;
       },
 
+      valueArtifactSchemaLabel(artifact) {
+        const schema = artifact?.schema || artifact?.payload?.schema || '';
+        const map = {
+          'dndlab.bitcoin.volume_profile_lvn_proxy.v1': 'Volume Profile LVN proxy',
+          'dndlab.bitcoin.policy_simulator.v1': 'BTC policy simulator',
+          'dndlab.bitcoin.exchange_ohlcv.v1': 'BTC OHLCV feed',
+          'dndlab.bitcoin.daily_inefficiency.v1': 'Daily inefficiency',
+          'dndlab.bitcoin.method_intake.v1': 'Method intake',
+          'dndlab.bitcoin.timeframe_matrix.v1': 'Timeframe matrix',
+        };
+        if (map[schema]) return map[schema];
+        if (!schema) return 'n/a';
+        return schema
+          .replace(/^dndlab\.bitcoin\./, '')
+          .replace(/\.v\d+$/, '')
+          .split(/[._-]+/)
+          .filter(Boolean)
+          .map((part) => part === 'lvn' ? 'LVN' : part.charAt(0).toUpperCase() + part.slice(1))
+          .join(' ');
+      },
+
       latestValueArtifactCards() {
         const payload = this.latestValueArtifact()?.payload || {};
         const cards = payload.cards;
@@ -7250,8 +7299,9 @@
           kind: 'artifact',
           title,
           body: artifact.schema
-            ? `${artifact.schema} · ${artifact.n_cards ?? 0} card · ${artifact.generated_at || artifact.mtime || 'timestamp n/a'}`
+            ? `${this.valueArtifactSchemaLabel(artifact)} · ${artifact.n_cards ?? 0} card · ${artifact.generated_at || artifact.mtime || 'timestamp n/a'}`
             : `${artifact.filename} · ${artifact.n_cards ?? 0} card`,
+          schema: artifact.schema || artifact.payload?.schema || '',
           evidence,
           boundary,
         };
