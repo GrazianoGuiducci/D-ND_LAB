@@ -595,9 +595,20 @@
       content: ''; width: 2px; height: 16px;
       background: rgb(var(--site-text-subtle)); border-radius: 1px;
     }
-    .lab-sidebar-left  .resize-handle { right: -12px; }
-    .lab-sidebar-right .resize-handle { left: -12px; }
+    .lab-sidebar-left  .resize-handle { right: 0; }
+    .lab-sidebar-right .resize-handle { left: 0; }
     @media (max-width: 1064px) { .resize-handle { display: none; } }
+
+    .btc-chart-frame {
+      display: block;
+      width: 100%;
+      max-width: none;
+    }
+    .btc-chart-frame svg {
+      display: block;
+      width: 100%;
+      max-width: none;
+    }
 
     body.resizing { cursor: col-resize; user-select: none; }
     body.resizing * { cursor: col-resize !important; }
@@ -1863,7 +1874,7 @@
                 </div>
                 <div class="space-y-3">
                   <button @click="selectBitcoinPolicySimulatorLens()"
-                          class="w-full block text-left rounded-md border border-slate-800 bg-slate-950/60 p-3 min-h-[360px] overflow-hidden hover:border-slate-600 transition cursor-pointer">
+                          class="btc-chart-frame w-full block text-left rounded-md border border-slate-800 bg-slate-950/60 p-3 min-h-[360px] overflow-hidden hover:border-slate-600 transition cursor-pointer">
                     <svg viewBox="0 0 720 300" preserveAspectRatio="none" class="w-full h-[360px] block">
                       <line x1="48" y1="30" x2="48" y2="218" stroke="#334155" stroke-width="1"></line>
                       <line x1="48" y1="218" x2="696" y2="218" stroke="#334155" stroke-width="1"></line>
