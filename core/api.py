@@ -2478,16 +2478,45 @@ async def get_latest_value_artifacts(domain: str, request: Request) -> dict[str,
     if not value_dir.exists():
         return {"available": False, "domain": domain, "artifacts": []}
 
-    json_files = sorted(
+    json_files_all = sorted(
         value_dir.glob("*.json"),
         key=lambda p: p.stat().st_mtime,
         reverse=True,
-    )[:10]
+    )
+    json_files = json_files_all[:10]
     if not json_files:
         return {"available": False, "domain": domain, "artifacts": []}
 
     artifacts: list[dict[str, Any]] = []
+    seen_schemas: set[str] = set()
+    selected_files: list[Path] = []
+    selected_names: set[str] = set()
+
+    def add_selected(fp: Path) -> None:
+        if fp.name in selected_names:
+            return
+        selected_files.append(fp)
+        selected_names.add(fp.name)
+
     for fp in json_files:
+        add_selected(fp)
+        payload = _read_json_safe(fp, {})
+        schema = payload.get("schema")
+        if isinstance(schema, str) and schema:
+            seen_schemas.add(schema)
+
+    # The Campo UI needs stable schema coverage, not only the newest files.
+    # Otherwise a burst of fresh artifacts can push older-but-current substrates
+    # such as BTC OHLCV out of the response and hide their surface.
+    for fp in json_files_all[10:]:
+        payload = _read_json_safe(fp, {})
+        schema = payload.get("schema")
+        if not isinstance(schema, str) or not schema or schema in seen_schemas:
+            continue
+        add_selected(fp)
+        seen_schemas.add(schema)
+
+    for fp in selected_files:
         payload = _read_json_safe(fp, {})
         item = {
             "filename": fp.name,
