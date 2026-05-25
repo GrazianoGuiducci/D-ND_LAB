@@ -121,14 +121,19 @@
         0 0 0 1px rgb(var(--neon-purple) / 0.10);
     }
     button.border:hover,
-    .rounded.border:hover,
-    .rounded-md.border:hover {
+    a.border:hover,
+    [role="button"].border:hover,
+    [tabindex].border:hover {
       border-color: rgb(var(--neon-cyan)) !important;
       box-shadow:
         inset 0 1px 0 rgb(255 255 255 / 0.08),
         0 0 0 1px rgb(var(--neon-cyan) / 0.35),
         0 0 24px rgb(var(--neon-cyan) / 0.22),
         0 12px 28px rgb(0 0 0 / 0.28);
+    }
+    .rounded.border:hover:not(button):not(a):not([role="button"]):not([tabindex]),
+    .rounded-md.border:hover:not(button):not(a):not([role="button"]):not([tabindex]) {
+      background-color: rgb(15 23 42 / .42);
     }
     /* Text contrast boost: piu' brillante del default Tailwind */
     .text-slate-100 { color: rgb(250 250 252) !important; }   /* headings extra bright */
