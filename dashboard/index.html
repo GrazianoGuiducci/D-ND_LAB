@@ -1067,9 +1067,21 @@
       background: rgb(2 6 23 / .26) !important;
       box-shadow: none !important;
     }
-    .quiet-surface:hover {
+    button.quiet-surface:hover,
+    a.quiet-surface:hover,
+    .quiet-surface[role="button"]:hover {
       border-color: rgb(34 211 238 / .42) !important;
       background: rgb(15 23 42 / .66) !important;
+    }
+    .read-only-surface {
+      border-color: rgb(51 65 85 / .58) !important;
+      background: rgb(2 6 23 / .22) !important;
+      box-shadow: none !important;
+      cursor: default;
+    }
+    .read-only-surface:hover {
+      border-color: rgb(51 65 85 / .58) !important;
+      background: rgb(15 23 42 / .42) !important;
     }
     .quiet-action {
       border-color: rgb(51 65 85 / .72) !important;
@@ -2201,7 +2213,7 @@
                         </button>
                       </template>
                     </div>
-                    <div class="mb-3 rounded border quiet-surface px-3 py-2 text-xs text-amber-100"
+                    <div class="mb-3 rounded border read-only-surface px-3 py-2 text-xs text-amber-100"
                          x-text="bitcoinDailyInefficiencyValueMessage()"></div>
                     <div class="flex items-center justify-between gap-3 mb-2 text-[11px] text-slate-400">
                       <span x-text="bitcoinDailyInefficiencyZoneSummary()"></span>
@@ -2285,7 +2297,7 @@
                       </template>
                     </div>
                   </div>
-                  <div class="rounded border p-3 quiet-surface">
+                  <div class="rounded border p-3 read-only-surface">
                     <div class="text-[10px] uppercase tracking-wider text-purple-200" x-text="t('dash.btc.method.expertQuestions', 'THIA chiede all esperto')"></div>
                     <div class="mt-2 space-y-2">
                       <template x-for="q in bitcoinMethodQuestions().slice(0, 6)" :key="q">
@@ -3519,7 +3531,7 @@
                 <template x-if="selectedCampoLens.diagnostics && selectedCampoLens.diagnostics.length">
                   <div class="grid gap-2 pt-1">
                     <template x-for="row in selectedCampoLens.diagnostics" :key="row.label">
-                      <div class="rounded border border-slate-800 bg-slate-950/40 p-2">
+                      <div class="rounded border p-2 read-only-surface">
                         <div class="flex items-center justify-between gap-2">
                           <div class="uppercase tracking-wider text-slate-500" x-text="row.label"></div>
                           <button x-show="/null severo|strict null/i.test(String(row.label || ''))"
