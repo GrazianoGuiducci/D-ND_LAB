@@ -3817,21 +3817,41 @@
       title: 'Oggi · ultime 24h',
       body: 'Reports prodotti nelle ultime 24 ore.',
       logic: (s) => `Attualmente: ${s.freshnessStats().today}. Si azzera a mezzanotte UTC.`,
+      en: {
+        title: 'Today · last 24h',
+        body: 'Reports produced in the last 24 hours.',
+        logic: (s) => `Current count: ${s.freshnessStats().today}. Resets at midnight UTC.`,
+      },
     },
     fresche: {
       title: 'Fresche · ultimi 7 giorni',
       body: 'Reports degli ultimi 7 giorni. Finestra scorrevole, ricalcolata ogni request.',
       logic: (s) => `Attualmente: ${s.freshnessStats().fresh}. Dopo 7gg → archive sliding window.`,
+      en: {
+        title: 'Recent · last 7 days',
+        body: 'Reports from the last 7 days. Sliding window, recalculated on each request.',
+        logic: (s) => `Current count: ${s.freshnessStats().fresh}. After 7 days they move out of the sliding window.`,
+      },
     },
     ghost: {
       title: 'Ghost urgenti · prossime scoperte',
       body: 'Connessioni mature che il graph ha intuito ma non ancora cristallizzato. Tensioni candidate ad alta urgenza.',
       logic: (s) => `Attualmente: ${s.freshnessStats().ghosts}. Alta urgenza = molte teorie condivise + nodi freschi + centrality alta. Le "prossime scoperte probabili".`,
+      en: {
+        title: 'Open hypotheses · next discoveries',
+        body: 'Mature connections the graph has sensed but not crystallized yet. High-urgency candidate tensions.',
+        logic: (s) => `Current count: ${s.freshnessStats().ghosts}. High urgency = shared methods, fresh nodes and high centrality. These are the likely next discoveries.`,
+      },
     },
     cimitero: {
       title: 'Cimitero · A5',
       body: 'Reports falsificati o flagged dal counter-pole. Cio\' che non sopravvive non scompare — alimenta il prossimo ciclo come compost (A5 ciclo autopoietico).',
       logic: (s) => `Attualmente: ${s.cimiteroCount()} reports. Click per aprirli filtrati nella tab Agente.`,
+      en: {
+        title: 'Rejected · A5',
+        body: 'Reports falsified or flagged by the counter-pole. What does not survive does not disappear: it feeds the next cycle.',
+        logic: (s) => `Current count: ${s.cimiteroCount()} reports. Click to open them filtered in the Agent tab.`,
+      },
     },
     legend_tensione: {
       title: 'Tensione',
@@ -4972,7 +4992,8 @@
         if (this._statTipHideTimer) { clearTimeout(this._statTipHideTimer); this._statTipHideTimer = null; }
         const tips = this.uiLocaleMap('tooltips');
         const domainDef = tips?.[key];
-        const def = domainDef && typeof domainDef === 'object' ? domainDef : STAT_TIPS[key];
+        const rawDef = domainDef && typeof domainDef === 'object' ? domainDef : STAT_TIPS[key];
+        const def = rawDef?.[this.lang] && typeof rawDef[this.lang] === 'object' ? rawDef[this.lang] : rawDef;
         if (!def) return;
         const logic = typeof def.logic === 'function' ? def.logic(this) : def.logic;
         this.statTipContent = { title: def.title, body: def.body, logic };
@@ -6807,7 +6828,8 @@
         const tips = this.uiLocaleMap('tooltips');
         const key = this.tabTooltipKey(id);
         const domainDef = tips?.[key];
-        const def = domainDef && typeof domainDef === 'object' ? domainDef : STAT_TIPS[key];
+        const rawDef = domainDef && typeof domainDef === 'object' ? domainDef : STAT_TIPS[key];
+        const def = rawDef?.[this.lang] && typeof rawDef[this.lang] === 'object' ? rawDef[this.lang] : rawDef;
         const logic = typeof def?.logic === 'function' ? def.logic(this) : def?.logic;
         return {
           title: def?.title || tab.label || id,
