@@ -228,6 +228,11 @@
       display: flex;
       flex-direction: column;
     }
+    .lab-content > [x-show] > .bg-slate-900.border,
+    .lab-content > [x-show] > .border.border-slate-800:first-child {
+      border-color: rgb(51 65 85 / .72) !important;
+      box-shadow: none !important;
+    }
     .lab-content * { min-width: 0; }
     /* Tab pane: ogni x-show toggle e' figlio di lab-content. Quando attivo
        fill l'altezza disponibile. NB: NON facciamo flex:1 sul first-child
@@ -1696,11 +1701,11 @@
           <!-- Legenda -->
           <h4 class="text-xs uppercase tracking-wider text-slate-300 mt-5 mb-2" data-i18n="dash.sb.legenda">Legenda</h4>
           <div class="space-y-1.5 text-xs text-slate-400">
-            <div class="flex items-center gap-2" @mouseenter="showStatTip('legend_tensione', $event)" @mouseleave="hideStatTip()"><i class="legend-dot" style="background:#22d3ee"></i> <span x-text="uiTerm('legend_tensione', t('dash.sb.legend.tensione', 'tensione'))"></span></div>
-            <div class="flex items-center gap-2" @mouseenter="showStatTip('legend_report', $event)" @mouseleave="hideStatTip()"><i class="legend-dot" style="background:#a78bfa"></i> <span x-text="uiTerm('legend_report', t('dash.sb.legend.report', 'report'))"></span></div>
-            <div class="flex items-center gap-2" @mouseenter="showStatTip('legend_teoria', $event)" @mouseleave="hideStatTip()"><i class="legend-dot" style="background:#34d399"></i> <span x-text="uiTerm('legend_teoria', t('dash.sb.legend.teoria', 'teoria'))"></span></div>
-            <div class="flex items-center gap-2" @mouseenter="showStatTip('legend_ghost', $event)" @mouseleave="hideStatTip()"><i class="legend-dot" style="background:#fbbf24"></i> <span x-text="uiTerm('legend_ghost', t('dash.sb.legend.ghost', 'ghost'))"></span></div>
-            <div class="flex items-center gap-2" @mouseenter="showStatTip('legend_scoperta', $event)" @mouseleave="hideStatTip()"><i class="legend-dot" style="background:#f472b6"></i> <span x-text="uiTerm('legend_scoperta', t('dash.sb.legend.scoperta', 'scoperta'))"></span></div>
+            <div class="flex items-center gap-2" @mouseenter="showStatTip('legend_tensione', $event)" @mouseleave="hideStatTip()"><i class="legend-dot" style="background:#22d3ee"></i> <span x-text="uiTerm('legend_tensione', lang === 'en' ? 'hypothesis' : 'ipotesi')"></span></div>
+            <div class="flex items-center gap-2" @mouseenter="showStatTip('legend_report', $event)" @mouseleave="hideStatTip()"><i class="legend-dot" style="background:#a78bfa"></i> <span x-text="uiTerm('legend_report', lang === 'en' ? 'reading' : 'lettura')"></span></div>
+            <div class="flex items-center gap-2" @mouseenter="showStatTip('legend_teoria', $event)" @mouseleave="hideStatTip()"><i class="legend-dot" style="background:#34d399"></i> <span x-text="uiTerm('legend_teoria', lang === 'en' ? 'method' : 'metodo')"></span></div>
+            <div class="flex items-center gap-2" @mouseenter="showStatTip('legend_ghost', $event)" @mouseleave="hideStatTip()"><i class="legend-dot" style="background:#fbbf24"></i> <span x-text="uiTerm('legend_ghost', lang === 'en' ? 'open' : 'aperto')"></span></div>
+            <div class="flex items-center gap-2" @mouseenter="showStatTip('legend_scoperta', $event)" @mouseleave="hideStatTip()"><i class="legend-dot" style="background:#f472b6"></i> <span x-text="uiTerm('legend_scoperta', lang === 'en' ? 'claim' : 'claim')"></span></div>
           </div>
 
           <!-- Label toggle -->
@@ -1715,7 +1720,7 @@
                un avviso 'chiedi accesso anticipato alla demo'". -->
           <button @click="showEarlyAccessModal = true" class="w-full mt-5 px-3 py-2 rounded bg-slate-700 hover:bg-slate-600 border border-slate-600 text-slate-200 text-xs font-medium transition flex items-center justify-center gap-1.5">
             <span class="text-amber-400">●</span>
-            <span>Early access</span>
+            <span x-text="lang === 'en' ? 'Early access' : 'Accesso anticipato'"></span>
           </button>
           <p class="text-[10px] text-slate-300 mt-2 leading-relaxed" data-i18n="dash.sb.collaudo">Il lab e' in collaudo. Per provarlo o adattarlo a un dominio specifico, scrivi.</p>
         </div>
@@ -3885,7 +3890,7 @@
   <div x-show="localAssistantEnabled() && view === 'domain' && activeDomain" x-cloak class="chat-fab" :class="chatOpen && 'open'" :style="chatOpen ? chatWindowStyle() : null">
 
     <!-- Closed state: floating bubble -->
-    <button x-show="!chatOpen" @click="openChatPanel()" class="fab-bubble" title="Chat con il lab">
+    <button x-show="!chatOpen" @click="openChatPanel()" class="fab-bubble" :title="lang === 'en' ? 'Chat with the Lab' : 'Chat con il Lab'">
       <span style="position:relative">
         <span>◆</span>
         <template x-if="chatMessages.length > 0">
@@ -3909,8 +3914,8 @@
           </template>
         </div>
         <div class="flex items-center gap-1">
-          <button @pointerdown.stop @click="resetChat()" title="Reset chat">↻</button>
-          <button @pointerdown.stop @click="chatOpen = false" title="Chiudi">×</button>
+          <button @pointerdown.stop @click="resetChat()" :title="lang === 'en' ? 'Reset chat' : 'Reset chat'">↻</button>
+          <button @pointerdown.stop @click="chatOpen = false" :title="lang === 'en' ? 'Close' : 'Chiudi'">×</button>
         </div>
       </div>
 
@@ -3993,10 +3998,10 @@
 
       <!-- Input -->
       <form @submit.prevent="sendChat()" class="border-t border-slate-700 p-2 flex gap-2 bg-slate-950/40">
-        <textarea x-model="chatInput" :disabled="chatLoading" rows="2" placeholder="Chiedi al lab…" class="flex-1 bg-slate-950 border border-slate-700 rounded px-3 py-2 text-xs focus:border-purple-500 outline-none resize-none"></textarea>
+        <textarea x-model="chatInput" :disabled="chatLoading" rows="2" :placeholder="lang === 'en' ? 'Ask the Lab...' : 'Chiedi al Lab...'" class="flex-1 bg-slate-950 border border-slate-700 rounded px-3 py-2 text-xs focus:border-purple-500 outline-none resize-none"></textarea>
         <button type="submit" :disabled="chatLoading || !chatInput.trim()" class="px-3 py-2 rounded bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-xs font-medium" data-i18n="dash.chat.send">Send</button>
       </form>
-      <div class="chat-resize-grip" @pointerdown.stop="startChatResize($event)" title="Ridimensiona"></div>
+      <div class="chat-resize-grip" @pointerdown.stop="startChatResize($event)" :title="lang === 'en' ? 'Resize' : 'Ridimensiona'"></div>
     </div>
   </div>
 
@@ -4006,28 +4011,26 @@
     <div class="bg-slate-900 border border-slate-700 rounded-lg p-6 max-w-md w-full">
       <h2 class="text-lg font-medium mb-2 flex items-center gap-2">
         <span class="text-amber-400">●</span>
-        <span>Demo in collaudo</span>
+        <span x-text="lang === 'en' ? 'Demo in trial' : 'Demo in collaudo'"></span>
       </h2>
-      <p class="text-sm text-slate-400 mb-4 leading-relaxed">
-        Stiamo affinando il lab autonomo prima di aprire l'esecuzione cycle al pubblico.
-        L'avvio diretto del cycle e' temporaneamente disattivato.
-      </p>
-      <p class="text-sm text-slate-300 mb-4 leading-relaxed">
-        Se vuoi <span class="text-slate-100">accesso anticipato alla demo</span>, vedere il
-        lab girare su un dominio specifico (finanza, biologia, linguistica, ...), o
-        adattarlo a un caso d'uso, scrivici:
-      </p>
+      <p class="text-sm text-slate-400 mb-4 leading-relaxed"
+         x-text="lang === 'en'
+           ? 'We are refining the autonomous Lab before opening cycle execution to the public. Direct cycle launch is temporarily disabled.'
+           : 'Stiamo affinando il lab autonomo prima di aprire l esecuzione cycle al pubblico. L avvio diretto del cycle e temporaneamente disattivato.'"></p>
+      <p class="text-sm text-slate-300 mb-4 leading-relaxed"
+         x-text="lang === 'en'
+           ? 'For early access, to see the Lab run on a specific domain, or to adapt it to a use case, write to us:'
+           : 'Per accesso anticipato alla demo, per vedere il Lab girare su un dominio specifico, o per adattarlo a un caso d uso, scrivici:'"></p>
       <a href="mailto:info@d-nd.com?subject=Accesso anticipato alla demo D-ND_LAB"
          class="block w-full px-4 py-3 rounded bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium text-center transition">
         info@d-nd.com
       </a>
-      <div class="text-[11px] text-slate-300 mt-4 leading-relaxed">
-        Quello che vedi qui e' uno snapshot del campo: tensioni, scoperte, falsifier,
-        bias_corrector, grafo. I dati sono reali — il cycle attivo e' in esecuzione
-        controllata mentre il sistema viene completato.
-      </div>
+      <div class="text-[11px] text-slate-300 mt-4 leading-relaxed"
+           x-text="lang === 'en'
+             ? 'What you see here is a field snapshot: hypotheses, discoveries, falsifier, bias_corrector and graph. The data is real; active cycle execution remains controlled while the system is completed.'
+             : 'Quello che vedi qui e uno snapshot del campo: ipotesi, scoperte, falsifier, bias_corrector e grafo. I dati sono reali; il cycle attivo resta in esecuzione controllata mentre il sistema viene completato.'"></div>
       <div class="flex justify-end mt-4">
-        <button @click="showEarlyAccessModal = false" class="px-4 py-2 text-sm text-slate-400 hover:text-white">Chiudi</button>
+        <button @click="showEarlyAccessModal = false" class="px-4 py-2 text-sm text-slate-400 hover:text-white" x-text="lang === 'en' ? 'Close' : 'Chiudi'"></button>
       </div>
     </div>
   </div>
@@ -4164,22 +4167,42 @@
     legend_tensione: {
       title: 'Tensione',
       body: 'Claim aperto che il lab vuole verificare. Pressione che spinge il prossimo ciclo. Color cyan.',
+      en: {
+        title: 'Hypothesis',
+        body: 'Open claim the Lab wants to verify. It is the pressure that drives the next cycle. Cyan.',
+      },
     },
     legend_report: {
       title: 'Report',
       body: 'Output di un ciclo agente: verdict + bicono (4 poli) + flag dal counter-pole. Color purple.',
+      en: {
+        title: 'Reading',
+        body: 'Output of an agent cycle: verdict, bicone poles and counter-pole flags. Purple.',
+      },
     },
     legend_teoria: {
       title: 'Teoria',
       body: 'Una delle 5 colonne pillar (Q/T/G/E/R). Hub del grafo. Color emerald.',
+      en: {
+        title: 'Method',
+        body: 'A pillar or method node used as a graph hub. Emerald.',
+      },
     },
     legend_ghost: {
       title: 'Ghost',
       body: 'Tensione candidata, non ancora attivata. Lab decide se promuoverla o farla decadere. Color amber.',
+      en: {
+        title: 'Open',
+        body: 'Candidate tension not yet activated. The Lab decides whether to promote it or let it decay. Amber.',
+      },
     },
     legend_scoperta: {
       title: 'Scoperta',
       body: 'Claim cristallizzato (sopravvissuto) o falsificato (cimitero). Endpoint di un percorso di tensione. Color rose.',
+      en: {
+        title: 'Claim',
+        body: 'Crystallized or rejected claim. Endpoint of a hypothesis path. Rose.',
+      },
     },
     nav_campo: {
       title: 'Campo · risultante',
@@ -8709,7 +8732,7 @@
           push("Quali pezzi sono pronti?");
           push("Quale direzione editoriale?");
         }
-        push("Ci aiuti a migliorare questo Lab?");
+        push(this.chatCopy("Ci aiuti a migliorare questo Lab?", "Help us improve this Lab?"));
         return actions.slice(0, 4);
       },
 
@@ -8721,25 +8744,29 @@
         }
       },
 
+      chatCopy(it, en) {
+        return this.lang === 'en' ? en : it;
+      },
+
       markerStarterActions(marker) {
         const focus = `${marker?.focus || ''} ${marker?.section_label || ''}`.toLowerCase();
         const refs = Array.isArray(marker?.data_refs) ? marker.data_refs.join(' ').toLowerCase() : '';
         const actions = [];
         if (focus.includes('raccolta proposta') || refs.includes('contribution')) {
-          actions.push("Voglio proporre una modifica utile");
-          actions.push("Quali specifiche servono per separare segnale e rumore?");
+          actions.push(this.chatCopy("Voglio proporre una modifica utile", "I want to propose a useful change"));
+          actions.push(this.chatCopy("Quali specifiche servono per separare segnale e rumore?", "Which specs separate signal from noise?"));
         } else if (focus.includes('pipeline') || refs.includes('prodotti') || refs.includes('ssp')) {
-          actions.push("Spiegami cosa è maturo e cosa no");
-          actions.push("Cosa serve per far avanzare questa scoperta?");
+          actions.push(this.chatCopy("Spiegami cosa è maturo e cosa no", "Explain what is mature and what is not"));
+          actions.push(this.chatCopy("Cosa serve per far avanzare questa scoperta?", "What is needed to advance this discovery?"));
         } else if (focus.includes('cimitero') || refs.includes('falsifier')) {
-          actions.push("Cosa è caduto e perché?");
-          actions.push("Quale errore non va reinserito nel ciclo?");
+          actions.push(this.chatCopy("Cosa è caduto e perché?", "What failed and why?"));
+          actions.push(this.chatCopy("Quale errore non va reinserito nel ciclo?", "Which error should not re-enter the cycle?"));
         } else if (focus.includes('grafo') || refs.includes('selected_node')) {
-          actions.push(this.selectedNode ? "Spiega il nodo che sto guardando" : "Quale relazione conviene leggere?");
-          actions.push("Quale vuoto o ponte merita verifica?");
+          actions.push(this.selectedNode ? this.chatCopy("Spiega il nodo che sto guardando", "Explain the node I am looking at") : this.chatCopy("Quale relazione conviene leggere?", "Which relation should I read?"));
+          actions.push(this.chatCopy("Quale vuoto o ponte merita verifica?", "Which gap or bridge deserves verification?"));
         } else if (focus.includes('campo') || refs.includes('latest_diagnostic')) {
-          actions.push(this.activeDomain === 'bitcoin-regime-lab' ? "Che risultato BTC sto vedendo adesso?" : "Che risultato sto vedendo adesso?");
-          actions.push("Quale controllo serve al prossimo ciclo?");
+          actions.push(this.activeDomain === 'bitcoin-regime-lab' ? this.chatCopy("Che risultato BTC sto vedendo adesso?", "Which BTC result am I seeing now?") : this.chatCopy("Che risultato sto vedendo adesso?", "Which result am I seeing now?"));
+          actions.push(this.chatCopy("Quale controllo serve al prossimo ciclo?", "Which control is needed for the next cycle?"));
         }
         return actions;
       },
@@ -8747,35 +8774,35 @@
       closedChatHint() {
         const marker = this.currentPerceptionMarker();
         if (marker?.focus) {
-          if (`${marker.focus}`.toLowerCase().includes('raccolta proposta')) return "Hai una proposta? Posso trasformarla in specifica.";
-          if (`${marker.focus}`.toLowerCase().includes('pipeline')) return "Vuoi capire cosa può diventare prodotto?";
-          if (`${marker.focus}`.toLowerCase().includes('cimitero')) return "Vuoi capire cosa è stato falsificato?";
-          if (`${marker.focus}`.toLowerCase().includes('grafo')) return this.selectedNode ? "Vuoi spiegare questo nodo?" : "Vuoi leggere relazioni e vuoti?";
-          if (`${marker.focus}`.toLowerCase().includes('campo')) return this.activeDomain === 'bitcoin-regime-lab' ? "Vuoi capire il risultato BTC che stai vedendo?" : "Vuoi capire il risultato che stai vedendo?";
+          if (`${marker.focus}`.toLowerCase().includes('raccolta proposta')) return this.chatCopy("Hai una proposta? Posso trasformarla in specifica.", "Have a proposal? I can turn it into a spec.");
+          if (`${marker.focus}`.toLowerCase().includes('pipeline')) return this.chatCopy("Vuoi capire cosa può diventare prodotto?", "Want to understand what can become a product?");
+          if (`${marker.focus}`.toLowerCase().includes('cimitero')) return this.chatCopy("Vuoi capire cosa è stato falsificato?", "Want to understand what was rejected?");
+          if (`${marker.focus}`.toLowerCase().includes('grafo')) return this.selectedNode ? this.chatCopy("Vuoi spiegare questo nodo?", "Want to explain this node?") : this.chatCopy("Vuoi leggere relazioni e vuoti?", "Want to read relations and gaps?");
+          if (`${marker.focus}`.toLowerCase().includes('campo')) return this.activeDomain === 'bitcoin-regime-lab' ? this.chatCopy("Vuoi capire il risultato BTC che stai vedendo?", "Want to understand the BTC result you are seeing?") : this.chatCopy("Vuoi capire il risultato che stai vedendo?", "Want to understand the result you are seeing?");
         }
-        if (this.activeTab === 'info') return "Vuoi orientarti o proporre un miglioramento?";
-        if (this.activeTab === 'campo') return this.activeDomain === 'bitcoin-regime-lab' ? "Vuoi capire il risultato BTC che stai vedendo?" : "Vuoi capire il risultato che stai vedendo?";
-        if (this.activeTab === 'grafo') return this.selectedNode ? "Vuoi spiegare questo nodo?" : "Vuoi leggere relazioni e vuoti del grafo?";
-        if (this.activeTab === 'prodotti') return "Vuoi capire quali scoperte diventano prodotti?";
-        if (this.activeTab === 'agente') return "Vuoi leggere report, falsificazioni e prossimo passo?";
-        if (this.activeTab === 'incrocio') return "Vuoi seguire la traiettoria tassonomica?";
-        return "Vuoi usare l'assistente come ingresso al Lab?";
+        if (this.activeTab === 'info') return this.chatCopy("Vuoi orientarti o proporre un miglioramento?", "Want orientation or to propose an improvement?");
+        if (this.activeTab === 'campo') return this.activeDomain === 'bitcoin-regime-lab' ? this.chatCopy("Vuoi capire il risultato BTC che stai vedendo?", "Want to understand the BTC result you are seeing?") : this.chatCopy("Vuoi capire il risultato che stai vedendo?", "Want to understand the result you are seeing?");
+        if (this.activeTab === 'grafo') return this.selectedNode ? this.chatCopy("Vuoi spiegare questo nodo?", "Want to explain this node?") : this.chatCopy("Vuoi leggere relazioni e vuoti del grafo?", "Want to read graph relations and gaps?");
+        if (this.activeTab === 'prodotti') return this.chatCopy("Vuoi capire quali scoperte diventano prodotti?", "Want to understand which discoveries become products?");
+        if (this.activeTab === 'agente') return this.chatCopy("Vuoi leggere report, falsificazioni e prossimo passo?", "Want to read reports, rejections and next step?");
+        if (this.activeTab === 'incrocio') return this.chatCopy("Vuoi seguire la traiettoria tassonomica?", "Want to follow the taxonomy trajectory?");
+        return this.chatCopy("Vuoi usare l assistente come ingresso al Lab?", "Want to use the assistant as an entry into the Lab?");
       },
 
       emptyChatHint() {
         const marker = this.currentPerceptionMarker();
         if (marker?.focus) {
           const focus = `${marker.focus}`.toLowerCase();
-          if (focus.includes('raccolta proposta')) return "Posso raccogliere la proposta come pre-report: dominio, fonte, ipotesi, falsificazione, vincoli e valore atteso.";
-          if (focus.includes('pipeline')) return "Posso distinguere cosa è scoperta, cosa è candidata e cosa è davvero verificata.";
-          if (focus.includes('cimitero')) return "Posso spiegare cosa è caduto, quale prova lo ha fatto cadere e cosa servirebbe per riaprirlo.";
-          if (focus.includes('grafo')) return "Posso leggere nodi, ponti e vuoti partendo da ciò che stai guardando.";
-          if (focus.includes('campo')) return "Posso leggere il segnale attuale e indicare quali controlli servono al prossimo ciclo.";
+          if (focus.includes('raccolta proposta')) return this.chatCopy("Posso raccogliere la proposta come pre-report: dominio, fonte, ipotesi, falsificazione, vincoli e valore atteso.", "I can collect the proposal as a pre-report: domain, source, hypothesis, falsification, constraints and expected value.");
+          if (focus.includes('pipeline')) return this.chatCopy("Posso distinguere cosa è scoperta, cosa è candidata e cosa è davvero verificata.", "I can distinguish what is a discovery, what is a candidate and what is actually verified.");
+          if (focus.includes('cimitero')) return this.chatCopy("Posso spiegare cosa è caduto, quale prova lo ha fatto cadere e cosa servirebbe per riaprirlo.", "I can explain what failed, what evidence rejected it and what would be needed to reopen it.");
+          if (focus.includes('grafo')) return this.chatCopy("Posso leggere nodi, ponti e vuoti partendo da ciò che stai guardando.", "I can read nodes, bridges and gaps from what you are looking at.");
+          if (focus.includes('campo')) return this.chatCopy("Posso leggere il risultato attuale e indicare quali controlli servono al prossimo ciclo.", "I can read the current result and indicate which controls are needed for the next cycle.");
         }
-        if (this.activeTab === 'info') return "Posso orientarti nel Lab o raccogliere una specifica migliorativa.";
-        if (this.activeTab === 'campo') return "Posso spiegare la risultante, i segnali recenti e cosa servirebbe al prossimo ciclo.";
-        if (this.activeTab === 'prodotti') return "Posso distinguere scoperte, applicazioni candidate e prodotti verificati.";
-        return "Il Lab ha seed, report e cimitero in contesto: chiedi cosa stai vedendo o proponi un affinamento.";
+        if (this.activeTab === 'info') return this.chatCopy("Posso orientarti nel Lab o raccogliere una specifica migliorativa.", "I can orient you in the Lab or collect an improvement spec.");
+        if (this.activeTab === 'campo') return this.chatCopy("Posso spiegare la risultante, i segnali recenti e cosa servirebbe al prossimo ciclo.", "I can explain the resultant, recent readings and what the next cycle would need.");
+        if (this.activeTab === 'prodotti') return this.chatCopy("Posso distinguere scoperte, applicazioni candidate e prodotti verificati.", "I can distinguish discoveries, candidate applications and verified products.");
+        return this.chatCopy("Il Lab ha seed, report e cimitero in contesto: chiedi cosa stai vedendo o proponi un affinamento.", "The Lab has seed, reports and rejected items in context: ask what you are seeing or propose a refinement.");
       },
 
       useQuickAction(prompt) {
@@ -8785,7 +8812,10 @@
 
       askImproveLab() {
         this.chatOpen = true;
-        this.chatInput = "Ci aiuti a migliorare questo Lab? Ho un suggerimento o competenza da offrire.";
+        this.chatInput = this.chatCopy(
+          "Ci aiuti a migliorare questo Lab? Ho un suggerimento o competenza da offrire.",
+          "Help us improve this Lab? I have a suggestion or expertise to offer."
+        );
         this.sendChat();
       },
 
