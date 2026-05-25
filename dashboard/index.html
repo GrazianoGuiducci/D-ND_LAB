@@ -1795,6 +1795,91 @@
               </section>
             </template>
 
+            <template x-if="activeDomain === 'bitcoin-regime-lab' && bitcoinOhlcvArtifact()">
+              <section class="mt-4 border border-cyan-500/80 rounded-md p-4 bg-slate-950/50 shadow-[0_0_20px_rgba(34,211,238,.14)]">
+                <div class="flex items-start justify-between gap-3 flex-wrap mb-3">
+                  <div>
+                    <h3 class="text-base font-medium text-cyan-100" x-text="lang === 'en' ? 'BTC simulator chart' : 'Grafico simulatore BTC'"></h3>
+                    <p class="text-xs text-slate-300 mt-1" x-text="lang === 'en'
+                      ? 'Normal daily BTC path with simulator event windows overlaid, to see distance and error against history.'
+                      : 'Andamento daily BTC normale con finestre evento del simulatore sovrapposte, per leggere distanza ed errore rispetto allo storico.'"></p>
+                  </div>
+                  <div class="flex gap-1 flex-wrap">
+                    <template x-for="opt in btcSeriesOptions()" :key="'primary-' + opt.provider">
+                      <button @click="btcChartProvider = opt.provider"
+                              class="px-2 py-1 rounded text-[11px] font-mono border transition cursor-pointer"
+                              :class="btcChartProvider === opt.provider ? 'border-cyan-500 bg-cyan-950/40 text-cyan-100' : 'border-slate-700 bg-slate-900 text-slate-300 hover:border-cyan-700'"
+                              x-text="opt.provider"></button>
+                    </template>
+                    <button @click="setBtcChartFullscreen(true)"
+                            class="px-2 py-1 rounded text-[11px] font-mono border border-cyan-700 bg-slate-900 text-cyan-100 hover:border-cyan-300 cursor-pointer">
+                      <span x-text="lang === 'en' ? 'full-page' : 'pagina intera'"></span>
+                    </button>
+                  </div>
+                </div>
+                <div class="grid xl:grid-cols-[minmax(0,1fr)_320px] gap-4 items-stretch">
+                  <button @click="selectBitcoinPolicySimulatorLens()"
+                          class="text-left rounded-md border border-slate-800 bg-slate-950/70 p-3 min-h-[420px] overflow-hidden hover:border-cyan-600 transition cursor-pointer">
+                    <svg viewBox="0 0 720 300" preserveAspectRatio="none" class="w-full h-[420px] block">
+                      <line x1="48" y1="30" x2="48" y2="218" stroke="#334155" stroke-width="1"></line>
+                      <line x1="48" y1="218" x2="696" y2="218" stroke="#334155" stroke-width="1"></line>
+                      <line x1="48" y1="77" x2="696" y2="77" stroke="#1f2937" stroke-width="1"></line>
+                      <line x1="48" y1="124" x2="696" y2="124" stroke="#1f2937" stroke-width="1"></line>
+                      <line x1="48" y1="171" x2="696" y2="171" stroke="#1f2937" stroke-width="1"></line>
+                      <g x-html="btcVolumeBarsSvg()"></g>
+                      <g x-html="btcChartCandlesSvg()"></g>
+                      <polyline :points="btcClosePolyline()" fill="none" stroke="#22d3ee" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round" opacity="0.72"></polyline>
+                      <g x-html="btcPolicyOverlaySvg()"></g>
+                      <text x="44" y="24" fill="#cdd0de" font-size="11" font-family="monospace" x-text="btcChartStats().highLabel"></text>
+                      <text x="44" y="236" fill="#cdd0de" font-size="11" font-family="monospace" x-text="btcChartStats().lowLabel"></text>
+                      <text x="44" y="285" fill="#cdd0de" font-size="11" font-family="monospace" x-text="btcChartStats().windowLabel"></text>
+                    </svg>
+                  </button>
+                  <div class="grid gap-3 content-start">
+                    <template x-if="bitcoinPolicySimulatorArtifact()">
+                      <button @click="selectBitcoinPolicySimulatorLens()"
+                              class="text-left border border-purple-600/70 rounded-md p-3 bg-purple-950/10 hover:border-purple-400 transition min-h-[150px]">
+                        <div class="flex items-center justify-between gap-2">
+                          <div class="text-[10px] uppercase tracking-wider text-purple-200" x-text="lang === 'en' ? 'Simulator read' : 'Lettura simulatore'"></div>
+                          <span class="text-[10px] font-mono px-2 py-1 rounded border"
+                                :class="bitcoinPolicySimulatorDecisionTone()"
+                                x-text="bitcoinPolicySimulatorDecisionLabel()"></span>
+                        </div>
+                        <div class="text-sm text-slate-100 mt-2" x-text="bitcoinPolicySimulatorShortRead()"></div>
+                        <div class="text-xs text-slate-400 mt-2" x-text="bitcoinPolicySimulatorEvidence()"></div>
+                      </button>
+                    </template>
+                    <div class="grid grid-cols-2 gap-2">
+                      <template x-for="row in bitcoinPolicySimulatorStatRows()" :key="'primary-' + row.label">
+                        <button @click="selectBitcoinPolicySimulatorLens()"
+                                class="text-left border border-slate-800 hover:border-cyan-700 rounded p-3 bg-slate-950/50 transition min-h-[86px]">
+                          <div class="text-[10px] uppercase tracking-wider text-slate-400" x-text="row.label"></div>
+                          <div class="text-sm font-mono mt-1" :class="row.tone" x-text="row.value"></div>
+                          <div class="text-[11px] text-slate-500 mt-1 line-clamp-1" x-text="row.note || ''"></div>
+                        </button>
+                      </template>
+                    </div>
+                    <div class="border border-slate-800 rounded-md bg-slate-950/40 p-3">
+                      <div class="flex items-center justify-between gap-2">
+                        <div class="text-[10px] uppercase tracking-wider text-slate-400" x-text="lang === 'en' ? 'Overlay' : 'Sovrapposizione'"></div>
+                        <span class="text-[10px] font-mono text-cyan-300" x-text="bitcoinPolicySimulatorChartPoints().length + ' eventi'"></span>
+                      </div>
+                      <div class="mt-2 grid grid-cols-2 gap-2 text-[11px]">
+                        <div class="rounded border border-emerald-700/50 px-2 py-1 text-emerald-200" x-text="lang === 'en' ? 'green: closed' : 'verde: chiuse'"></div>
+                        <div class="rounded border border-amber-700/50 px-2 py-1 text-amber-200" x-text="lang === 'en' ? 'amber: open' : 'ambra: aperte'"></div>
+                      </div>
+                    </div>
+                    <button @click="btcAdvancedOpen = !btcAdvancedOpen"
+                            class="text-left border border-slate-800 hover:border-cyan-700 rounded p-3 bg-slate-950/50 transition">
+                      <div class="text-[10px] uppercase tracking-wider text-slate-400" x-text="lang === 'en' ? 'Diagnostics' : 'Diagnostica'"></div>
+                      <div class="text-sm text-cyan-200 mt-1" x-text="btcAdvancedOpen ? (lang === 'en' ? 'hide advanced sections' : 'nascondi sezioni avanzate') : (lang === 'en' ? 'show advanced sections' : 'mostra sezioni avanzate')"></div>
+                    </button>
+                  </div>
+                </div>
+              </section>
+            </template>
+
+            <div x-show="activeDomain !== 'bitcoin-regime-lab' || btcAdvancedOpen" x-cloak>
             <template x-if="latestValueArtifacts.available">
               <section class="mt-4 border border-cyan-900/60 rounded-md p-4 bg-cyan-950/10">
                 <div class="flex items-start justify-between gap-3 flex-wrap mb-3">
@@ -2169,6 +2254,7 @@
                       <g x-html="btcVolumeBarsSvg()"></g>
                       <g x-html="btcChartCandlesSvg()"></g>
                       <polyline :points="btcClosePolyline()" fill="none" stroke="#22d3ee" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round" opacity="0.72"></polyline>
+                      <g x-html="btcPolicyOverlaySvg()"></g>
                       <text x="44" y="24" fill="#cdd0de" font-size="11" font-family="monospace" x-text="btcChartStats().highLabel"></text>
                       <text x="44" y="236" fill="#cdd0de" font-size="11" font-family="monospace" x-text="btcChartStats().lowLabel"></text>
                       <text x="44" y="285" fill="#cdd0de" font-size="11" font-family="monospace" x-text="btcChartStats().windowLabel"></text>
@@ -2218,6 +2304,7 @@
                           <g x-html="btcVolumeBarsSvg()"></g>
                           <g x-html="btcChartCandlesSvg()"></g>
                           <polyline :points="btcClosePolyline()" fill="none" stroke="#22d3ee" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round" opacity="0.72"></polyline>
+                          <g x-html="btcPolicyOverlaySvg()"></g>
                           <text x="44" y="24" fill="#cdd0de" font-size="11" font-family="monospace" x-text="btcChartStats().highLabel"></text>
                           <text x="44" y="236" fill="#cdd0de" font-size="11" font-family="monospace" x-text="btcChartStats().lowLabel"></text>
                           <text x="44" y="285" fill="#cdd0de" font-size="11" font-family="monospace" x-text="btcChartStats().windowLabel"></text>
@@ -2271,6 +2358,7 @@
                 <p class="text-sm text-slate-300 mt-3" x-text="latestDiagnostic.payload?.maturity?.reason || ''"></p>
               </section>
             </template>
+            </div>
           </div>
         </div>
 
@@ -4035,6 +4123,7 @@
       latestValueArtifacts: { available: false, artifacts: [] },
       btcChartProvider: 'bitstamp',
       btcChartFullscreen: false,
+      btcAdvancedOpen: false,
       labUseAccepted: false,
       financePrecondition: { available: false },
       uiContract: { available: false },
@@ -6521,6 +6610,36 @@
           const y = bottom - ((Number(c.close) - low) / range) * (bottom - top);
           return `${x.toFixed(1)},${y.toFixed(1)}`;
         }).join(' ');
+      },
+
+      btcPolicyOverlaySvg() {
+        const candles = this.btcSelectedCandles();
+        const points = this.bitcoinPolicySimulatorChartPoints();
+        if (!candles.length || !points.length) return '';
+        const stats = this.btcChartStats();
+        const high = Number(stats.high);
+        const low = Number(stats.low);
+        const range = high > low ? high - low : 1;
+        const left = 58, right = 688, top = 30, bottom = 218;
+        const step = candles.length > 1 ? (right - left) / (candles.length - 1) : 0;
+        const byDate = new Map(candles.map((c, i) => [c.date, { candle: c, index: i }]));
+        const y = (value) => bottom - ((Number(value) - low) / range) * (bottom - top);
+        return points.map((point) => {
+          const match = byDate.get(point.date);
+          if (!match) return '';
+          const close = Number(point.close ?? match.candle.close);
+          if (!Number.isFinite(close)) return '';
+          const x = left + match.index * step;
+          const cy = Math.max(top, Math.min(bottom, y(close)));
+          const closed = !!point.policy_closed;
+          const stroke = closed ? '#34d399' : '#fbbf24';
+          const fill = closed ? '#10b981' : '#f59e0b';
+          const opacity = closed ? '0.76' : '0.9';
+          return [
+            `<line x1="${x.toFixed(1)}" x2="${x.toFixed(1)}" y1="${top}" y2="${bottom}" stroke="${stroke}" stroke-width="1.2" opacity="${opacity}" stroke-dasharray="${closed ? '2 5' : '5 4'}"></line>`,
+            `<circle cx="${x.toFixed(1)}" cy="${cy.toFixed(1)}" r="${closed ? 3.1 : 4}" fill="${fill}" stroke="#020617" stroke-width="1.4" opacity="0.96"></circle>`,
+          ].join('');
+        }).join('');
       },
 
       btcChartStatRows() {
