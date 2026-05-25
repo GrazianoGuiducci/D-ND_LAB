@@ -583,7 +583,7 @@
       border-radius: 9999px;
       background: rgb(15 23 42 / .92);
       border: 1px solid rgb(34 211 238 / 0.55);
-      display: flex; align-items: center; justify-content: center; gap: 2px;
+      display: none; align-items: center; justify-content: center; gap: 2px;
       opacity: .72; pointer-events: none;
       transition: opacity 220ms ease;
       box-shadow: 0 4px 14px rgb(0 0 0 / 0.45), 0 0 16px rgb(34 211 238 / .14);
@@ -598,6 +598,17 @@
     .lab-sidebar-left  .resize-handle { right: 0; }
     .lab-sidebar-right .resize-handle { left: 0; }
     @media (max-width: 1064px) { .resize-handle { display: none; } }
+
+    .lab-sidebar-left {
+      padding-right: 30px;
+      box-shadow: inset -6px 0 0 rgb(34 211 238 / .68);
+    }
+    .lab-sidebar-right {
+      padding-left: 30px;
+      box-shadow: inset 6px 0 0 rgb(34 211 238 / .68);
+    }
+    .lab-sidebar-left .sidebar-toggle { right: 22px; }
+    .lab-sidebar-right .sidebar-toggle { left: 22px; }
 
     .btc-chart-frame {
       display: block;
