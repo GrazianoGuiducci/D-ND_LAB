@@ -108,6 +108,11 @@
       "name": "btc_volume_profile_lvn_proxy",
       "path": "tools/btc_volume_profile_lvn_proxy.py",
       "boundary": "tests the generated LVN/Volume Profile proxy against adjacent, opposite and shuffled-volume controls; public_claim=false; trading_signal=false; operational=false"
+    },
+    {
+      "name": "btc_policy_simulator",
+      "path": "tools/btc_policy_simulator.py",
+      "boundary": "manual-only research simulator; measures declared BTC method policies against controls, walk-forward splits and parameter sensitivity before any cron/cycle/UI integration"
     }
   ]
 }

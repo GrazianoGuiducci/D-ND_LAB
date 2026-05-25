@@ -133,6 +133,12 @@ Human method intake:
 - Next movement should expose one daily method specification or daily-computable
   FVG/inefficiency candidate with matched null. Do not promote POC/FVG/MM52
   language to target, entry, exit or signal.
+- BTC policy simulator v1 is manual-only research infrastructure. It measures
+  declared historical method policies against controls, walk-forward splits and
+  parameter perturbations. Lab value can be positive or negative: stable
+  underperformance versus controls is useful evidence for redesign/falsification.
+  Do not wire the simulator into refresh hooks, cron or cycle reading until the
+  first manual artifact is inspected.
 
 
 ## Skill retrieval

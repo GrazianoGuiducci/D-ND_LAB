@@ -119,3 +119,17 @@ it does not define a buy/sell rule.
 Default test profile: 45 prior daily candles, 10-day forward window, stride 3,
 close-based closure. This gives enough events on the current 180-candle data
 card and keeps the result conservative.
+
+Run the first BTC Lab policy simulator manually:
+
+```bash
+python3 domains/bitcoin-regime-lab/tools/btc_policy_simulator.py --write --json
+```
+
+This writes `dndlab.bitcoin.policy_simulator.v1`. v0 starts from the LVN /
+Volume Profile proxy and measures a declared historical zone-closure policy
+against adjacent, opposite-distance, shuffled-volume and strict union controls.
+It also reports walk-forward stability, parameter sensitivity and a Lab-value
+score. The score is research usefulness, not PnL alone: a stable negative edge
+is useful evidence for redesign/falsification. The simulator is manual-only and
+is not part of value refresh, pre-cycle hooks, cron or UI-specific handling.
