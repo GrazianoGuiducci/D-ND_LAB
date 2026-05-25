@@ -2155,8 +2155,8 @@
                             <div class="text-sm font-mono mt-1" :class="row.tone" x-text="row.value"></div>
                           </button>
                         </template>
-                        <div class="rounded border border-amber-500/40 bg-amber-950/10 p-3 text-[11px] text-amber-100">
-                          Feed di contesto: non produce livelli operativi, target, entry o exit.
+                        <div class="rounded border border-amber-500/40 bg-amber-950/10 p-3 text-[11px] text-amber-100"
+                             x-text="lang === 'en' ? 'Context feed: it does not produce operative levels, targets, entries or exits.' : 'Feed di contesto: non produce livelli operativi, target, entry o exit.'">
                         </div>
                       </div>
                     </div>
@@ -2169,14 +2169,14 @@
               <section class="mt-4 border border-cyan-900/60 rounded-md p-4 bg-cyan-950/10">
                 <div class="flex items-start justify-between gap-3 flex-wrap mb-3">
                   <div>
-                    <h3 class="text-sm font-medium text-cyan-200">Diagnostica ricorsiva</h3>
-                    <p class="text-xs text-slate-400 mt-1">Ultimo artifact value-facing rientrato nel Campo.</p>
+                    <h3 class="text-sm font-medium text-cyan-200" x-text="lang === 'en' ? 'Recursive diagnostics' : 'Diagnostica ricorsiva'"></h3>
+                    <p class="text-xs text-slate-400 mt-1" x-text="lang === 'en' ? 'Latest value-facing artifact re-entered into the Field.' : 'Ultimo artifact value-facing rientrato nel Campo.'"></p>
                   </div>
                   <span class="text-[11px] font-mono text-slate-400" x-text="latestDiagnostic.filename"></span>
                 </div>
                 <div class="grid md:grid-cols-4 gap-3">
                   <div class="bg-slate-950/50 border border-slate-800 rounded p-3">
-                    <div class="text-[10px] uppercase tracking-wider text-slate-400">Maturità</div>
+                    <div class="text-[10px] uppercase tracking-wider text-slate-400" x-text="lang === 'en' ? 'Maturity' : 'Maturità'"></div>
                     <div class="text-lg font-mono text-cyan-300 mt-1" x-text="latestDiagnostic.payload?.maturity?.level || 'n/a'"></div>
                   </div>
                   <div class="bg-slate-950/50 border border-slate-800 rounded p-3">
@@ -2188,7 +2188,7 @@
                     <div class="text-lg font-mono text-amber-300 mt-1" x-text="latestDiagnostic.payload?.maturity?.no_delta_count ?? 0"></div>
                   </div>
                   <div class="bg-slate-950/50 border border-slate-800 rounded p-3">
-                    <div class="text-[10px] uppercase tracking-wider text-slate-400">Claim pubblico</div>
+                    <div class="text-[10px] uppercase tracking-wider text-slate-400" x-text="lang === 'en' ? 'Public claim' : 'Claim pubblico'"></div>
                     <div class="text-lg font-mono mt-1" :class="latestDiagnostic.payload?.boundary?.public_claim ? 'text-rose-300' : 'text-slate-300'" x-text="latestDiagnostic.payload?.boundary?.public_claim ? 'true' : 'false'"></div>
                   </div>
                 </div>
@@ -2357,7 +2357,7 @@
                   </button>
                 </template>
                 <template x-if="filteredReports().length === 0">
-                  <div class="px-3 py-3 text-xs text-slate-300 italic">Nessun report con questo filtro.</div>
+                  <div class="px-3 py-3 text-xs text-slate-300 italic" x-text="lang === 'en' ? 'No reports match this filter.' : 'Nessun report con questo filtro.'"></div>
                 </template>
               </div>
             </div>
@@ -2699,11 +2699,11 @@
                     <!-- Applicazioni candidate per questa scoperta -->
                     <template x-if="(applicazioniSsp.candidates || []).filter(a => a.cycle_ts === s.cycle_ts).length > 0">
                       <div class="ml-4 mt-2 pt-2 border-t border-slate-800 space-y-1">
-                        <div class="text-xs text-slate-300 uppercase tracking-wider">Applicazioni candidate (eligible)</div>
+                        <div class="text-xs text-slate-300 uppercase tracking-wider" x-text="lang === 'en' ? 'Candidate applications (eligible)' : 'Applicazioni candidate (eligible)'"></div>
                         <template x-for="a in applicazioniSsp.candidates.filter(c => c.cycle_ts === s.cycle_ts)" :key="a.name + a.type">
                           <div class="text-xs text-slate-400 flex items-center gap-2 cursor-pointer hover:text-cyan-400 transition group"
                                @click.stop="openCandidateModale(a)"
-                               title="Click per dettagli + azioni">
+                               :title="lang === 'en' ? 'Click for details + actions' : 'Click per dettagli + azioni'">
                             <span class="font-mono" x-text="a.type"></span>
                             <span x-text="a.name"></span>
                             <span class="text-slate-400">·</span>
@@ -2720,7 +2720,7 @@
                         <button @click="excludedExpanded[s.cycle_ts] = !excludedExpanded[s.cycle_ts]"
                                 class="text-xs text-slate-300 uppercase tracking-wider flex items-center gap-1 hover:text-slate-300 transition">
                           <span x-text="excludedExpanded[s.cycle_ts] ? '▾' : '▸'"></span>
-                          <span>Findings non applicativi</span>
+                          <span x-text="lang === 'en' ? 'Non-application findings' : 'Findings non applicativi'"></span>
                           <span class="font-mono text-slate-400 normal-case" x-text="`(${(applicazioniSsp.review_required || []).filter(r => r.cycle_ts === s.cycle_ts).length} review · ${(applicazioniSsp.non_application || []).filter(n => n.cycle_ts === s.cycle_ts).length} skip)`"></span>
                         </button>
                         <div x-show="excludedExpanded[s.cycle_ts]" x-cloak class="space-y-1 mt-1">
@@ -2898,22 +2898,22 @@
                   <div class="cycle-column">
                     <div class="cycle-node cyan">
                       <div class="eyebrow">01 · seed</div>
-                      <div class="title">Intento in movimento</div>
-                      <div class="body">Il seme porta dominio, tensioni, assiomi locali e vincoli. Non prescrive il risultato: prepara il campo.</div>
+                      <div class="title" x-text="lang === 'en' ? 'Intent in motion' : 'Intento in movimento'"></div>
+                      <div class="body" x-text="lang === 'en' ? 'The seed carries domain, tensions, local axioms and constraints. It does not prescribe the result: it prepares the field.' : 'Il seme porta dominio, tensioni, assiomi locali e vincoli. Non prescrive il risultato: prepara il campo.'"></div>
                     </div>
                     <div class="cycle-node purple">
                       <div class="eyebrow">02 · campo</div>
-                      <div class="title">Osservazione situata</div>
-                      <div class="body">Report, dati, graph, diagnostiche e artifact entrano come superficie osservabile, non come verità già accettata.</div>
+                      <div class="title" x-text="lang === 'en' ? 'Situated observation' : 'Osservazione situata'"></div>
+                      <div class="body" x-text="lang === 'en' ? 'Reports, data, graph, diagnostics and artifacts enter as observable surface, not as truth already accepted.' : 'Report, dati, graph, diagnostiche e artifact entrano come superficie osservabile, non come verità già accettata.'"></div>
                     </div>
                     <div class="cycle-node amber">
                       <div class="eyebrow">03 · agent</div>
-                      <div class="title">Ipotesi falsificabile</div>
-                      <div class="body">L’agente produce un claim operativo, con baseline o null espliciti e una traccia runtime del modo in cui ha ciclato.</div>
+                      <div class="title" x-text="lang === 'en' ? 'Falsifiable hypothesis' : 'Ipotesi falsificabile'"></div>
+                      <div class="body" x-text="lang === 'en' ? 'The agent produces an operative claim, with explicit baseline or null and a runtime trace of how it cycled.' : 'L’agente produce un claim operativo, con baseline o null espliciti e una traccia runtime del modo in cui ha ciclato.'"></div>
                     </div>
                   </div>
 
-                  <div class="cycle-core" aria-label="Diagramma del ciclo Lab">
+                  <div class="cycle-core" :aria-label="lang === 'en' ? 'Lab cycle diagram' : 'Diagramma del ciclo Lab'">
                     <svg viewBox="0 0 520 360" role="img">
                       <defs>
                         <marker id="cycleArrow" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
@@ -2939,23 +2939,23 @@
 
                       <g>
                         <circle cx="102" cy="180" r="30" fill="rgba(34,211,238,0.22)" stroke="#22d3ee" stroke-width="2"></circle>
-                        <text x="102" y="176" text-anchor="middle" fill="#f0f0f5" font-size="12" font-weight="700">Campo</text>
-                        <text x="102" y="193" text-anchor="middle" fill="#cdd0de" font-size="9">osserva</text>
+                        <text x="102" y="176" text-anchor="middle" fill="#f0f0f5" font-size="12" font-weight="700" x-text="lang === 'en' ? 'Field' : 'Campo'"></text>
+                        <text x="102" y="193" text-anchor="middle" fill="#cdd0de" font-size="9" x-text="lang === 'en' ? 'observes' : 'osserva'"></text>
                       </g>
                       <g>
                         <circle cx="260" cy="68" r="30" fill="rgba(251,191,36,0.18)" stroke="#fbbf24" stroke-width="2"></circle>
-                        <text x="260" y="64" text-anchor="middle" fill="#f0f0f5" font-size="12" font-weight="700">Agente</text>
-                        <text x="260" y="81" text-anchor="middle" fill="#cdd0de" font-size="9">propone</text>
+                        <text x="260" y="64" text-anchor="middle" fill="#f0f0f5" font-size="12" font-weight="700" x-text="lang === 'en' ? 'Agent' : 'Agente'"></text>
+                        <text x="260" y="81" text-anchor="middle" fill="#cdd0de" font-size="9" x-text="lang === 'en' ? 'proposes' : 'propone'"></text>
                       </g>
                       <g>
                         <circle cx="418" cy="180" r="30" fill="rgba(251,113,133,0.16)" stroke="#fb7185" stroke-width="2"></circle>
                         <text x="418" y="176" text-anchor="middle" fill="#f0f0f5" font-size="12" font-weight="700">Falsifier</text>
-                        <text x="418" y="193" text-anchor="middle" fill="#cdd0de" font-size="9">attacca</text>
+                        <text x="418" y="193" text-anchor="middle" fill="#cdd0de" font-size="9" x-text="lang === 'en' ? 'attacks' : 'attacca'"></text>
                       </g>
                       <g>
                         <circle cx="260" cy="292" r="30" fill="rgba(52,211,153,0.18)" stroke="#34d399" stroke-width="2"></circle>
-                        <text x="260" y="288" text-anchor="middle" fill="#f0f0f5" font-size="12" font-weight="700">Deposito</text>
-                        <text x="260" y="305" text-anchor="middle" fill="#cdd0de" font-size="9">conserva</text>
+                        <text x="260" y="288" text-anchor="middle" fill="#f0f0f5" font-size="12" font-weight="700" x-text="lang === 'en' ? 'Deposit' : 'Deposito'"></text>
+                        <text x="260" y="305" text-anchor="middle" fill="#cdd0de" font-size="9" x-text="lang === 'en' ? 'preserves' : 'conserva'"></text>
                       </g>
 
                       <path d="M128 164 C170 116 202 86 232 72" fill="none" stroke="#a78bfa" stroke-width="1.8" marker-end="url(#cycleArrow)" opacity="0.85"></path>
@@ -2973,18 +2973,18 @@
                   <div class="cycle-column">
                     <div class="cycle-node rose">
                       <div class="eyebrow">04 · counter-pole</div>
-                      <div class="title">Falsificazione</div>
-                      <div class="body">Un polo separato cerca hard-zero, bias, edge case, continuità assiomatica e ri-scoperta.</div>
+                      <div class="title" x-text="lang === 'en' ? 'Falsification' : 'Falsificazione'"></div>
+                      <div class="body" x-text="lang === 'en' ? 'A separate pole searches for hard-zero, bias, edge cases, axiomatic continuity and re-discovery.' : 'Un polo separato cerca hard-zero, bias, edge case, continuità assiomatica e ri-scoperta.'"></div>
                     </div>
                     <div class="cycle-node green">
                       <div class="eyebrow">05 · deposito</div>
-                      <div class="title">Artifact e grafo</div>
-                      <div class="body">Solo ciò che resta leggibile entra in report, value artifact, graph, bicono, cimitero o pipeline prodotti.</div>
+                      <div class="title" x-text="lang === 'en' ? 'Artifact and graph' : 'Artifact e grafo'"></div>
+                      <div class="body" x-text="lang === 'en' ? 'Only what remains readable enters reports, value artifacts, graph, bicone, cemetery or product pipeline.' : 'Solo ciò che resta leggibile entra in report, value artifact, graph, bicono, cimitero o pipeline prodotti.'"></div>
                     </div>
                     <div class="cycle-node cyan">
                       <div class="eyebrow">06 · ritorno</div>
-                      <div class="title">Auto-affinamento</div>
-                      <div class="body">Il ciclo successivo eredita vincoli, errori, runtime e direzione aggiornata senza dipendere da una prescrizione esterna.</div>
+                      <div class="title" x-text="lang === 'en' ? 'Self-refinement' : 'Auto-affinamento'"></div>
+                      <div class="body" x-text="lang === 'en' ? 'The next cycle inherits constraints, errors, runtime and updated direction without depending on an external prescription.' : 'Il ciclo successivo eredita vincoli, errori, runtime e direzione aggiornata senza dipendere da una prescrizione esterna.'"></div>
                     </div>
                   </div>
                 </div>
@@ -2992,19 +2992,19 @@
 
               <div class="cycle-metric-row">
                 <div class="cycle-metric">
-                  <div class="k">cicli</div>
+                  <div class="k" x-text="t('dash.stats.cicli', 'cicli')"></div>
                   <div class="v" x-text="campoStats().cicli"></div>
                 </div>
                 <div class="cycle-metric">
-                  <div class="k">scoperte</div>
+                  <div class="k" x-text="t('dash.stats.scoperte', 'scoperte')"></div>
                   <div class="v text-purple-300" x-text="campoStats().scoperte"></div>
                 </div>
                 <div class="cycle-metric">
-                  <div class="k">prodotti</div>
+                  <div class="k" x-text="t('dash.stats.prodotti', 'prodotti')"></div>
                   <div class="v text-green-300" x-text="campoStats().prodotti"></div>
                 </div>
                 <div class="cycle-metric">
-                  <div class="k">filtro</div>
+                  <div class="k" x-text="lang === 'en' ? 'filter' : 'filtro'"></div>
                   <div class="v text-amber-300" x-text="cimiteroCount()"></div>
                 </div>
               </div>
@@ -3493,14 +3493,14 @@
       <template x-if="sidebarTipSide === 'left'">
         <div>
           <h5 data-i18n="dash.tip.campoH5">Campo</h5>
-          <div class="stat-row flex justify-between"><span>teorie</span><span class="font-mono text-cyan-400" x-text="campoStats().teorie"></span></div>
-          <div class="stat-row flex justify-between"><span>ponti</span><span class="font-mono text-cyan-400" x-text="campoStats().ponti"></span></div>
-          <div class="stat-row flex justify-between"><span>vuoti</span><span class="font-mono text-cyan-400" x-text="campoStats().vuoti"></span></div>
-          <div class="stat-row flex justify-between"><span>scoperte</span><span class="font-mono text-cyan-400" x-text="campoStats().scoperte"></span></div>
-          <div class="stat-row flex justify-between"><span>applicazioni</span><span class="font-mono text-cyan-400" x-text="campoStats().applicazioni"></span></div>
-          <div class="stat-row flex justify-between"><span>prodotti</span><span class="font-mono text-cyan-400" x-text="campoStats().prodotti"></span></div>
-          <div class="stat-row flex justify-between"><span>cicli</span><span class="font-mono text-cyan-400" x-text="campoStats().cicli"></span></div>
-          <div class="stat-row flex justify-between mt-2 pt-2 border-t border-slate-700"><span class="text-slate-300">oggi</span><span class="font-mono text-green-400" x-text="freshnessStats().today"></span></div>
+          <div class="stat-row flex justify-between"><span x-text="t('dash.stats.teorie', 'teorie')"></span><span class="font-mono text-cyan-400" x-text="campoStats().teorie"></span></div>
+          <div class="stat-row flex justify-between"><span x-text="t('dash.stats.ponti', 'ponti')"></span><span class="font-mono text-cyan-400" x-text="campoStats().ponti"></span></div>
+          <div class="stat-row flex justify-between"><span x-text="t('dash.stats.vuoti', 'vuoti')"></span><span class="font-mono text-cyan-400" x-text="campoStats().vuoti"></span></div>
+          <div class="stat-row flex justify-between"><span x-text="t('dash.stats.scoperte', 'scoperte')"></span><span class="font-mono text-cyan-400" x-text="campoStats().scoperte"></span></div>
+          <div class="stat-row flex justify-between"><span x-text="t('dash.stats.applicazioni', 'applicazioni')"></span><span class="font-mono text-cyan-400" x-text="campoStats().applicazioni"></span></div>
+          <div class="stat-row flex justify-between"><span x-text="t('dash.stats.prodotti', 'prodotti')"></span><span class="font-mono text-cyan-400" x-text="campoStats().prodotti"></span></div>
+          <div class="stat-row flex justify-between"><span x-text="t('dash.stats.cicli', 'cicli')"></span><span class="font-mono text-cyan-400" x-text="campoStats().cicli"></span></div>
+          <div class="stat-row flex justify-between mt-2 pt-2 border-t border-slate-700"><span class="text-slate-300" x-text="t('dash.stats.oggi', 'oggi')"></span><span class="font-mono text-green-400" x-text="freshnessStats().today"></span></div>
           <div class="text-[10px] text-slate-300 italic mt-2" data-i18n="dash.sb.tipExpand">click per espandere</div>
         </div>
       </template>
@@ -3509,11 +3509,11 @@
           <h5 data-i18n="dash.sb.dettaglioH3">Dettaglio</h5>
           <template x-if="activeTab === 'info'">
             <div>
-              <div class="stat-row flex justify-between"><span>Campo</span><span class="text-cyan-300">risultante</span></div>
-              <div class="stat-row flex justify-between"><span>Grafo</span><span class="text-cyan-300">relazioni</span></div>
-              <div class="stat-row flex justify-between"><span>Bicono</span><span class="text-purple-300">poli</span></div>
-              <div class="stat-row flex justify-between"><span>Agente</span><span class="text-purple-300">verdict</span></div>
-              <div class="stat-row flex justify-between"><span>Prodotti</span><span class="text-green-300">output</span></div>
+              <div class="stat-row flex justify-between"><span x-text="lang === 'en' ? 'Field' : 'Campo'"></span><span class="text-cyan-300" x-text="lang === 'en' ? 'resultant' : 'risultante'"></span></div>
+              <div class="stat-row flex justify-between"><span x-text="lang === 'en' ? 'Graph' : 'Grafo'"></span><span class="text-cyan-300" x-text="lang === 'en' ? 'relations' : 'relazioni'"></span></div>
+              <div class="stat-row flex justify-between"><span>Bicono</span><span class="text-purple-300" x-text="lang === 'en' ? 'poles' : 'poli'"></span></div>
+              <div class="stat-row flex justify-between"><span x-text="lang === 'en' ? 'Agent' : 'Agente'"></span><span class="text-purple-300">verdict</span></div>
+              <div class="stat-row flex justify-between"><span x-text="lang === 'en' ? 'Products' : 'Prodotti'"></span><span class="text-green-300">output</span></div>
             </div>
           </template>
           <template x-if="activeTab !== 'info'">
