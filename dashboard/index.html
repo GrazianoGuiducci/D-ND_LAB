@@ -1855,6 +1855,29 @@
                         <div class="text-xs text-slate-400 mt-2" x-text="bitcoinPolicySimulatorEvidence()"></div>
                       </button>
                     </template>
+                    <template x-if="bitcoinPolicySimulatorArtifact()">
+                      <section class="border border-emerald-500/60 rounded-md p-3 bg-emerald-950/10">
+                        <div class="flex items-start justify-between gap-2">
+                          <div>
+                            <div class="text-[10px] uppercase tracking-wider text-emerald-200" x-text="lang === 'en' ? 'Value lens' : 'Lente valore'"></div>
+                            <div class="text-sm text-slate-100 mt-1" x-text="bitcoinPolicyValueLensSummary()"></div>
+                          </div>
+                          <button @click="selectBitcoinPolicySimulatorLens(bitcoinPolicyValueLensPrimaryCase())"
+                                  class="text-[10px] font-mono px-2 py-1 rounded border border-emerald-500/70 text-emerald-100 hover:border-emerald-200 cursor-pointer"
+                                  x-text="lang === 'en' ? 'case' : 'caso'"></button>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 mt-3">
+                          <template x-for="row in bitcoinPolicyValueLensRows()" :key="row.label">
+                            <button @click="selectBitcoinPolicySimulatorLens(row.point || null)"
+                                    class="text-left border border-slate-800 hover:border-emerald-600 rounded p-2 bg-slate-950/50 transition min-h-[70px]">
+                              <div class="text-[10px] uppercase tracking-wider text-slate-400" x-text="row.label"></div>
+                              <div class="text-sm font-mono mt-1" :class="row.tone" x-text="row.value"></div>
+                              <div class="text-[10px] text-slate-500 mt-1 line-clamp-1" x-text="row.note"></div>
+                            </button>
+                          </template>
+                        </div>
+                      </section>
+                    </template>
                     <div class="grid grid-cols-2 gap-2">
                       <template x-for="row in bitcoinPolicySimulatorStatRows()" :key="'primary-' + row.label">
                         <button @click="selectBitcoinPolicySimulatorLens()"
@@ -5812,6 +5835,112 @@
           return `There is some structure against random matched zones (${Number.isFinite(randomDelta) ? randomDelta : 'n/a'}), but the strict control is stronger (${Number.isFinite(strictDelta) ? strictDelta : 'n/a'}). Redesign the policy contract before extending it.`;
         }
         return `C'e un po' di struttura contro random matched (${Number.isFinite(randomDelta) ? randomDelta : 'n/a'}), ma il controllo stretto e piu forte (${Number.isFinite(strictDelta) ? strictDelta : 'n/a'}). Prima di estendere va ridisegnato il contratto della policy.`;
+      },
+
+      bitcoinPolicyValueLensPoints() {
+        return this.bitcoinPolicySimulatorChartPoints()
+          .map((point) => ({
+            ...point,
+            forward: Number(point.forward_return_pct),
+            up: Number(point.forward_max_up_pct),
+            down: Number(point.forward_max_down_pct),
+          }))
+          .filter(point => Number.isFinite(point.forward) && Number.isFinite(point.up) && Number.isFinite(point.down));
+      },
+
+      bitcoinPolicyValueLensStats() {
+        const points = this.bitcoinPolicyValueLensPoints();
+        const normal = this.bitcoinPolicySimulatorPayload()?.normal_chart_comparison || {};
+        const baseline = Number(normal.rolling_baseline?.median_forward_return_pct);
+        if (!points.length) {
+          return { points, baseline, positive: 0, useful: 0, fragile: 0, ambiguous: 0, best: null, worst: null, primary: null };
+        }
+        const positivePoints = points.filter(point => point.forward > 0);
+        const usefulPoints = Number.isFinite(baseline)
+          ? points.filter(point => point.forward > baseline)
+          : positivePoints;
+        const fragilePoints = points.filter(point => point.down <= -8);
+        const ambiguousPoints = points.filter(point => point.up >= 5 && point.down <= -5);
+        const best = [...points].sort((a, b) => b.forward - a.forward)[0] || null;
+        const worst = [...points].sort((a, b) => a.forward - b.forward)[0] || null;
+        const primary = usefulPoints.length ? best : worst;
+        return {
+          points,
+          baseline,
+          positive: positivePoints.length,
+          useful: usefulPoints.length,
+          fragile: fragilePoints.length,
+          ambiguous: ambiguousPoints.length,
+          best,
+          worst,
+          primary,
+        };
+      },
+
+      bitcoinPolicyValueLensSummary() {
+        const stats = this.bitcoinPolicyValueLensStats();
+        const total = stats.points.length;
+        if (!total) return this.lang === 'en' ? 'No event windows available.' : 'Nessuna finestra evento disponibile.';
+        const usefulPct = Math.round((stats.useful / total) * 100);
+        const fragilePct = Math.round((stats.fragile / total) * 100);
+        if (this.lang === 'en') {
+          return `${stats.useful}/${total} event windows beat the normal median (${usefulPct}%). Fragile cases: ${stats.fragile} (${fragilePct}%).`;
+        }
+        return `${stats.useful}/${total} finestre evento battono la mediana normale (${usefulPct}%). Casi fragili: ${stats.fragile} (${fragilePct}%).`;
+      },
+
+      bitcoinPolicyValueLensRows() {
+        const stats = this.bitcoinPolicyValueLensStats();
+        const total = stats.points.length || 1;
+        const pct = (value) => `${Math.round((value / total) * 100)}%`;
+        return [
+          {
+            label: this.lang === 'en' ? 'value' : 'valore',
+            value: pct(stats.useful),
+            note: `${stats.useful}/${stats.points.length || 0} > normal`,
+            tone: stats.useful >= total / 2 ? 'text-emerald-300' : 'text-amber-300',
+            point: stats.best,
+          },
+          {
+            label: this.lang === 'en' ? 'best case' : 'caso migliore',
+            value: stats.best ? `${stats.best.forward}%` : 'n/a',
+            note: stats.best ? `${stats.best.date} · ${stats.best.relation || 'event'}` : '',
+            tone: 'text-emerald-300',
+            point: stats.best,
+          },
+          {
+            label: this.lang === 'en' ? 'risk' : 'rischio',
+            value: stats.worst ? `${stats.worst.forward}%` : 'n/a',
+            note: stats.worst ? `${stats.worst.date} · down ${stats.worst.down}%` : '',
+            tone: 'text-rose-300',
+            point: stats.worst,
+          },
+          {
+            label: this.lang === 'en' ? 'fragile' : 'fragili',
+            value: pct(stats.fragile),
+            note: this.lang === 'en' ? 'max down <= -8%' : 'max giu <= -8%',
+            tone: stats.fragile ? 'text-amber-300' : 'text-emerald-300',
+            point: stats.worst,
+          },
+          {
+            label: this.lang === 'en' ? 'ambiguous' : 'ambigui',
+            value: pct(stats.ambiguous),
+            note: this.lang === 'en' ? 'wide up/down path' : 'percorso ampio su/giu',
+            tone: stats.ambiguous ? 'text-purple-300' : 'text-slate-300',
+            point: stats.primary,
+          },
+          {
+            label: this.lang === 'en' ? 'positive' : 'positivi',
+            value: pct(stats.positive),
+            note: `${stats.positive}/${stats.points.length || 0} forward > 0`,
+            tone: stats.positive >= total / 2 ? 'text-emerald-300' : 'text-amber-300',
+            point: stats.best,
+          },
+        ];
+      },
+
+      bitcoinPolicyValueLensPrimaryCase() {
+        return this.bitcoinPolicyValueLensStats().primary;
       },
 
       bitcoinPolicySimulatorChartPoints() {
