@@ -1825,8 +1825,8 @@
                 </div>
                 <div class="grid xl:grid-cols-[minmax(0,1fr)_320px] gap-4 items-stretch">
                   <button @click="selectBitcoinPolicySimulatorLens()"
-                          class="text-left rounded-md border border-slate-800 bg-slate-950/70 p-3 min-h-[420px] overflow-hidden hover:border-cyan-600 transition cursor-pointer">
-                    <svg viewBox="0 0 720 300" preserveAspectRatio="none" class="w-full h-[420px] block">
+                          class="text-left rounded-md border border-slate-800 bg-slate-950/70 p-3 min-h-[360px] overflow-hidden hover:border-cyan-600 transition cursor-pointer">
+                    <svg viewBox="0 0 720 300" preserveAspectRatio="none" class="w-full h-[360px] block">
                       <line x1="48" y1="30" x2="48" y2="218" stroke="#334155" stroke-width="1"></line>
                       <line x1="48" y1="218" x2="696" y2="218" stroke="#334155" stroke-width="1"></line>
                       <line x1="48" y1="77" x2="696" y2="77" stroke="#1f2937" stroke-width="1"></line>
@@ -6841,24 +6841,46 @@
         const range = high > low ? high - low : 1;
         const left = 58, right = 688, top = 30, bottom = 218;
         const step = candles.length > 1 ? (right - left) / (candles.length - 1) : 0;
-        const byDate = new Map(candles.map((c, i) => [c.date, { candle: c, index: i }]));
         const y = (value) => bottom - ((Number(value) - low) / range) * (bottom - top);
-        return points.map((point) => {
-          const match = byDate.get(point.date) || candles
+        const buckets = new Map();
+        points.forEach((point) => {
+          const match = candles
             .map((c, i) => ({ candle: c, index: i }))
             .find(item => point.date >= (item.candle.startDate || item.candle.date) && point.date <= (item.candle.endDate || item.candle.date));
-          if (!match) return '';
+          if (!match) return;
           const close = Number(point.close ?? match.candle.close);
-          if (!Number.isFinite(close)) return '';
-          const x = left + match.index * step;
+          if (!Number.isFinite(close)) return;
+          const key = String(match.index);
+          if (!buckets.has(key)) {
+            buckets.set(key, {
+              candle: match.candle,
+              index: match.index,
+              count: 0,
+              closed: 0,
+              open: 0,
+              closeValues: [],
+            });
+          }
+          const bucket = buckets.get(key);
+          bucket.count += 1;
+          if (point.policy_closed) bucket.closed += 1;
+          else bucket.open += 1;
+          bucket.closeValues.push(close);
+        });
+        return [...buckets.values()].map((bucket) => {
+          const x = left + bucket.index * step;
+          const close = bucket.closeValues.reduce((sum, value) => sum + value, 0) / bucket.closeValues.length;
           const cy = Math.max(top, Math.min(bottom, y(close)));
-          const closed = !!point.policy_closed;
-          const stroke = closed ? '#34d399' : '#fbbf24';
-          const fill = closed ? '#10b981' : '#f59e0b';
-          const opacity = closed ? '0.76' : '0.9';
+          const mostlyClosed = bucket.closed >= bucket.open;
+          const stroke = mostlyClosed ? '#34d399' : '#fbbf24';
+          const fill = mostlyClosed ? '#10b981' : '#f59e0b';
+          const r = Math.min(7, 3.2 + Math.max(0, bucket.count - 1) * 0.7);
+          const lineTop = this.btcChartTimeframe === '1D' ? Math.max(top, cy - 28) : Math.max(top, cy - 14);
+          const lineBottom = this.btcChartTimeframe === '1D' ? Math.min(bottom, cy + 28) : Math.min(bottom, cy + 14);
           return [
-            `<line x1="${x.toFixed(1)}" x2="${x.toFixed(1)}" y1="${top}" y2="${bottom}" stroke="${stroke}" stroke-width="1.2" opacity="${opacity}" stroke-dasharray="${closed ? '2 5' : '5 4'}"></line>`,
-            `<circle cx="${x.toFixed(1)}" cy="${cy.toFixed(1)}" r="${closed ? 3.1 : 4}" fill="${fill}" stroke="#020617" stroke-width="1.4" opacity="0.96"></circle>`,
+            `<line x1="${x.toFixed(1)}" x2="${x.toFixed(1)}" y1="${lineTop.toFixed(1)}" y2="${lineBottom.toFixed(1)}" stroke="${stroke}" stroke-width="1.4" opacity="0.72" stroke-dasharray="${mostlyClosed ? '2 4' : '4 3'}"></line>`,
+            `<circle cx="${x.toFixed(1)}" cy="${cy.toFixed(1)}" r="${r.toFixed(1)}" fill="${fill}" stroke="#020617" stroke-width="1.6" opacity="0.96"></circle>`,
+            bucket.count > 1 ? `<text x="${(x + 7).toFixed(1)}" y="${(cy - 7).toFixed(1)}" fill="#e2e8f0" font-size="9" font-family="monospace">${bucket.count}</text>` : '',
           ].join('');
         }).join('');
       },
