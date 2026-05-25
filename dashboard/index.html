@@ -542,20 +542,33 @@
        e funge anche da trigger di drag-to-reopen. */
     .resize-handle {
       position: absolute; top: 0; bottom: 0; width: 24px;
-      cursor: col-resize; user-select: none; z-index: 5;
+      cursor: col-resize; user-select: none; z-index: 80;
       display: flex; align-items: center; justify-content: center;
-      background: linear-gradient(90deg, transparent, rgb(34 211 238 / .08), transparent);
+      background: rgb(34 211 238 / .10);
       touch-action: none;
       transition: background 120ms ease;
+    }
+    .resize-handle::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      width: 6px;
+      transform: translateX(-50%);
+      border-radius: 999px;
+      background: rgb(34 211 238 / .78);
+      box-shadow: 0 0 0 1px rgb(2 6 23 / .75), 0 0 18px rgb(34 211 238 / .42);
+      pointer-events: none;
     }
     .resize-handle:hover { background: rgba(34,211,238,.18); }
     .resize-handle.active { background: rgba(34,211,238,.28); }
     .resize-handle .rz-line {
-      width: 3px; height: 100%;
-      background: rgb(34 211 238 / 0.72);
+      width: 6px; height: 100%;
+      background: rgb(34 211 238 / 0.88);
       border-radius: 999px;
       transition: all 120ms ease;
-      box-shadow: 0 0 10px rgb(34 211 238 / 0.24);
+      box-shadow: 0 0 14px rgb(34 211 238 / 0.38);
     }
     .resize-handle:hover .rz-line,
     .resize-handle.active .rz-line {
@@ -1850,7 +1863,7 @@
                 </div>
                 <div class="space-y-3">
                   <button @click="selectBitcoinPolicySimulatorLens()"
-                          class="text-left rounded-md border border-slate-800 bg-slate-950/60 p-3 min-h-[360px] overflow-hidden hover:border-slate-600 transition cursor-pointer">
+                          class="w-full block text-left rounded-md border border-slate-800 bg-slate-950/60 p-3 min-h-[360px] overflow-hidden hover:border-slate-600 transition cursor-pointer">
                     <svg viewBox="0 0 720 300" preserveAspectRatio="none" class="w-full h-[360px] block">
                       <line x1="48" y1="30" x2="48" y2="218" stroke="#334155" stroke-width="1"></line>
                       <line x1="48" y1="218" x2="696" y2="218" stroke="#334155" stroke-width="1"></line>
