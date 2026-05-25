@@ -675,6 +675,9 @@
     /* Collapsed: full-height clickable area per riaprire (operatore:
        "aprirsi quando chiuse con click su tutta l'altezza") */
     .lab-sidebar.collapsed {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
       padding: 12px 0;
       overflow: hidden;
       cursor: pointer;
@@ -698,8 +701,8 @@
       text-transform: uppercase;
       font-family: 'JetBrains Mono', ui-monospace, monospace;
       color: rgb(var(--site-text-muted));
-      margin: 27px auto 0;
-      width: 24px;
+      margin: 32px auto 0;
+      width: auto;
       text-align: center;
       user-select: none;
     }
