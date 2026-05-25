@@ -1805,6 +1805,12 @@
                       : 'Andamento daily BTC normale con finestre evento del simulatore sovrapposte, per leggere distanza ed errore rispetto allo storico.'"></p>
                   </div>
                   <div class="flex gap-1 flex-wrap">
+                    <template x-for="tf in btcChartTimeframeOptions()" :key="'primary-tf-' + tf.id">
+                      <button @click="btcChartTimeframe = tf.id"
+                              class="px-2 py-1 rounded text-[11px] font-mono border transition cursor-pointer"
+                              :class="btcChartTimeframe === tf.id ? 'border-emerald-400 bg-emerald-950/30 text-emerald-100' : 'border-slate-700 bg-slate-900 text-slate-300 hover:border-emerald-700'"
+                              x-text="tf.label"></button>
+                    </template>
                     <template x-for="opt in btcSeriesOptions()" :key="'primary-' + opt.provider">
                       <button @click="btcChartProvider = opt.provider"
                               class="px-2 py-1 rounded text-[11px] font-mono border transition cursor-pointer"
@@ -1868,6 +1874,7 @@
                         <div class="rounded border border-emerald-700/50 px-2 py-1 text-emerald-200" x-text="lang === 'en' ? 'green: closed' : 'verde: chiuse'"></div>
                         <div class="rounded border border-amber-700/50 px-2 py-1 text-amber-200" x-text="lang === 'en' ? 'amber: open' : 'ambra: aperte'"></div>
                       </div>
+                      <div class="mt-2 text-[11px] text-slate-400" x-text="btcChartTimeframeNote()"></div>
                     </div>
                     <button @click="btcAdvancedOpen = !btcAdvancedOpen"
                             class="text-left border border-slate-800 hover:border-cyan-700 rounded p-3 bg-slate-950/50 transition">
@@ -2228,6 +2235,12 @@
                       : 'Candele daily lette dagli artifact del Lab. Serve a osservare il contesto prima di testare POC/FVG/timeframe.'"></p>
                   </div>
                   <div class="flex gap-1 flex-wrap">
+                    <template x-for="tf in btcChartTimeframeOptions()" :key="'chart-tf-' + tf.id">
+                      <button @click="btcChartTimeframe = tf.id"
+                              class="px-2 py-1 rounded text-[11px] font-mono border transition cursor-pointer"
+                              :class="btcChartTimeframe === tf.id ? 'border-emerald-400 bg-emerald-950/30 text-emerald-100' : 'border-slate-700 bg-slate-900 text-slate-300 hover:border-emerald-700'"
+                              x-text="tf.label"></button>
+                    </template>
                     <template x-for="opt in btcSeriesOptions()" :key="opt.provider">
                       <button @click="btcChartProvider = opt.provider"
                               class="px-2 py-1 rounded text-[11px] font-mono border transition cursor-pointer"
@@ -2281,6 +2294,12 @@
                         <p class="text-xs text-slate-400 mt-1" x-text="btcChartStats().windowLabel"></p>
                       </div>
                       <div class="flex items-center gap-2 flex-wrap justify-end">
+                        <template x-for="tf in btcChartTimeframeOptions()" :key="'fs-tf-' + tf.id">
+                          <button @click="btcChartTimeframe = tf.id"
+                                  class="px-2 py-1 rounded text-[11px] font-mono border transition cursor-pointer"
+                                  :class="btcChartTimeframe === tf.id ? 'border-emerald-400 bg-emerald-950/30 text-emerald-100' : 'border-slate-700 bg-slate-900 text-slate-300 hover:border-emerald-700'"
+                                  x-text="tf.label"></button>
+                        </template>
                         <template x-for="opt in btcSeriesOptions()" :key="'fs-' + opt.provider">
                           <button @click="btcChartProvider = opt.provider"
                                   class="px-2 py-1 rounded text-[11px] font-mono border transition cursor-pointer"
@@ -4122,6 +4141,7 @@
       latestDiagnostic: { available: false },
       latestValueArtifacts: { available: false, artifacts: [] },
       btcChartProvider: 'bitstamp',
+      btcChartTimeframe: '1D',
       btcChartFullscreen: false,
       btcAdvancedOpen: false,
       labUseAccepted: false,
@@ -6492,11 +6512,81 @@
         return series.find(s => s.provider === this.btcChartProvider) || series[0];
       },
 
-      btcSelectedCandles() {
+      btcChartTimeframeOptions() {
+        return [
+          { id: '1D', label: '1D' },
+          { id: '1W', label: '1W' },
+          { id: '1M', label: '1M' },
+        ];
+      },
+
+      btcRawSelectedCandles() {
         const candles = this.btcSelectedSeries()?.candles || [];
         return Array.isArray(candles)
           ? candles.filter(c => ['open', 'high', 'low', 'close'].every(k => Number.isFinite(Number(c[k]))))
           : [];
+      },
+
+      btcSelectedCandles() {
+        const candles = this.btcRawSelectedCandles();
+        if (this.btcChartTimeframe === '1W') return this.btcAggregateCandles(candles, 'week');
+        if (this.btcChartTimeframe === '1M') return this.btcAggregateCandles(candles, 'month');
+        return candles.map(c => ({ ...c, startDate: c.date, endDate: c.date, sourceCount: 1 }));
+      },
+
+      btcAggregateCandles(candles, mode) {
+        const groups = [];
+        const byKey = new Map();
+        candles.forEach((c) => {
+          const key = mode === 'month' ? String(c.date || '').slice(0, 7) : this.btcWeekKey(c.date);
+          if (!key) return;
+          if (!byKey.has(key)) {
+            const bucket = [];
+            byKey.set(key, bucket);
+            groups.push(bucket);
+          }
+          byKey.get(key).push(c);
+        });
+        return groups.map((bucket) => {
+          const first = bucket[0];
+          const last = bucket[bucket.length - 1];
+          const volume = bucket.reduce((sum, c) => sum + (Number(c.volume) || 0), 0);
+          return {
+            date: first.date,
+            startDate: first.date,
+            endDate: last.date,
+            open: Number(first.open),
+            high: Math.max(...bucket.map(c => Number(c.high))),
+            low: Math.min(...bucket.map(c => Number(c.low))),
+            close: Number(last.close),
+            volume,
+            sourceCount: bucket.length,
+          };
+        });
+      },
+
+      btcWeekKey(dateText) {
+        const date = new Date(`${dateText}T00:00:00Z`);
+        if (Number.isNaN(date.getTime())) return '';
+        const day = date.getUTCDay() || 7;
+        date.setUTCDate(date.getUTCDate() - day + 1);
+        return date.toISOString().slice(0, 10);
+      },
+
+      btcChartTimeframeNote() {
+        if (this.btcChartTimeframe === '1D') {
+          return this.lang === 'en'
+            ? '1D uses native daily candles.'
+            : '1D usa candele daily native.';
+        }
+        if (this.btcChartTimeframe === '1W') {
+          return this.lang === 'en'
+            ? '1W is aggregated from daily candles; intraday data is not inferred.'
+            : '1W e aggregato dalle daily; nessun dato intraday viene inferito.';
+        }
+        return this.lang === 'en'
+          ? '1M is aggregated from daily candles; minute/hour views need native intraday feeds.'
+          : '1M e aggregato dalle daily; minuto/ore richiedono feed intraday nativi.';
       },
 
       btcPriceLabel(value) {
@@ -6529,7 +6619,7 @@
           latest,
           highLabel: `high ${this.btcPriceLabel(high)}`,
           lowLabel: `low ${this.btcPriceLabel(low)}`,
-          windowLabel: `${series?.provider || 'feed'} · ${candles[0]?.date || '?'} -> ${latest?.date || '?'}`,
+          windowLabel: `${series?.provider || 'feed'} · ${this.btcChartTimeframe} · ${candles[0]?.startDate || candles[0]?.date || '?'} -> ${latest?.endDate || latest?.date || '?'}`,
         };
       },
 
@@ -6625,7 +6715,9 @@
         const byDate = new Map(candles.map((c, i) => [c.date, { candle: c, index: i }]));
         const y = (value) => bottom - ((Number(value) - low) / range) * (bottom - top);
         return points.map((point) => {
-          const match = byDate.get(point.date);
+          const match = byDate.get(point.date) || candles
+            .map((c, i) => ({ candle: c, index: i }))
+            .find(item => point.date >= (item.candle.startDate || item.candle.date) && point.date <= (item.candle.endDate || item.candle.date));
           if (!match) return '';
           const close = Number(point.close ?? match.candle.close);
           if (!Number.isFinite(close)) return '';
