@@ -130,8 +130,9 @@ This writes `dndlab.bitcoin.policy_simulator.v1`. v0 starts from the LVN /
 Volume Profile proxy and measures a declared historical zone-closure policy
 against adjacent, opposite-distance, shuffled-volume, deterministic random
 matched and strict union controls. It also reports walk-forward stability,
-parameter sensitivity and a Lab-value score. The score is research usefulness,
-not PnL alone: a stable negative edge is useful evidence for
+parameter sensitivity, a Lab-value score and a normal-chart comparison against
+ordinary BTC daily forward returns over the same horizon. The score is research
+usefulness, not PnL alone: a stable negative edge is useful evidence for
 redesign/falsification and is labelled `decision=redesign`. The simulator is
 manual-only and is not part of value refresh, pre-cycle hooks, cron or
 UI-specific handling.

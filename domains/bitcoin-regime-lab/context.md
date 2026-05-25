@@ -139,6 +139,9 @@ Human method intake:
   underperformance versus controls is useful evidence for redesign/falsification.
   Useful negative evidence should be labelled as redesign, not as a positive
   method edge.
+  The artifact should show how event windows behave against the ordinary BTC
+  daily chart path, so a human can compare method structure with normal chart
+  movement instead of reading isolated closure counts.
   Do not wire the simulator into refresh hooks, cron or cycle reading until the
   first manual artifact is inspected.
 

@@ -48,6 +48,7 @@ strict union controls.
 - `summary`
 - `card`
 - `metrics`
+- `normal_chart_comparison`
 - `lab_value`
 - `walk_forward`
 - `relation_slices`
@@ -89,6 +90,19 @@ falsified rather than promoted.
 When the evidence is useful but negative against the strict control, the card
 uses `decision=redesign` and `research_decision=redesign`. This keeps useful
 negative evidence distinct from both a weak result and a positive method edge.
+
+## Normal Chart Comparison
+
+The simulator also compares event windows with the ordinary BTC daily chart
+path over the same forward horizon. The artifact includes:
+
+- full-window BTC return over the available median daily chart;
+- rolling forward-return baseline over all daily windows;
+- event-window forward returns;
+- median event return versus rolling median;
+- closed versus unclosed event forward returns;
+- compact `chart_points` with date, close, LVN zone, relation and forward
+  movement fields for overlay/review.
 
 ## Integration Boundary
 

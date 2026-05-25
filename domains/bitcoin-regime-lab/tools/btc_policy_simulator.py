@@ -20,7 +20,7 @@ from typing import Any
 from btc_volume_profile_lvn_proxy import _median_daily_candles, _zone_closed, build_lvn_proxy
 
 
-VERSION = "0.1.1"
+VERSION = "0.1.2"
 DOMAIN_DIR = Path(__file__).resolve().parents[1]
 REPO_ROOT = DOMAIN_DIR.parents[1]
 DATA_ROOT = Path(os.environ.get("LAB_DATA_DIR", REPO_ROOT / "data")).resolve()
@@ -76,6 +76,12 @@ def _delta(rows: list[dict[str, Any]], control_key: str = "strict_control_closed
     if policy is None or strict is None:
         return None
     return policy - strict
+
+
+def _pct_change(start: float, end: float) -> float | None:
+    if start == 0.0:
+        return None
+    return ((end - start) / start) * 100.0
 
 
 def _stable_seed(*parts: Any) -> int:
@@ -136,13 +142,25 @@ def _policy_events(
         )
         zone = event.get("lvn_zone") or {}
         bars = event.get("lvn_bars_to_close")
+        event_close = float(event.get("event_close") or 0.0)
+        future_close = float(future[-1]["close"]) if future else None
+        future_high = max(float(candle["high"]) for candle in future) if future else None
+        future_low = min(float(candle["low"]) for candle in future) if future else None
         rows.append({
             "event_date": event.get("event_date"),
-            "event_close": event.get("event_close"),
+            "event_close": event_close,
             "relation": zone.get("relation"),
             "distance_pct": zone.get("distance_pct"),
+            "lvn_zone": {
+                "lower": zone.get("lower"),
+                "upper": zone.get("upper"),
+            },
             "policy_closed": bool(event.get("lvn_closed")),
             "bars_to_close": bars if isinstance(bars, int) else None,
+            "forward_close": _round(future_close, 2),
+            "forward_return_pct": _round(_pct_change(event_close, future_close), 4) if future_close is not None else None,
+            "forward_max_up_pct": _round(_pct_change(event_close, future_high), 4) if future_high is not None else None,
+            "forward_max_down_pct": _round(_pct_change(event_close, future_low), 4) if future_low is not None else None,
             "adjacent_control_closed": bool(event.get("adjacent_control_closed")),
             "opposite_control_closed": bool(event.get("opposite_control_closed")),
             "shuffled_volume_control_closed": bool(event.get("shuffled_volume_control_closed")),
@@ -152,6 +170,90 @@ def _policy_events(
             "random_matched_controls": len(matched_fills),
         })
     return rows
+
+
+def _rolling_forward_returns(
+    candles: list[dict[str, Any]],
+    *,
+    forward_window: int,
+    exclude_latest_event: bool,
+) -> list[dict[str, Any]]:
+    end = len(candles) - forward_window
+    rows = []
+    for index in range(0, max(end, 0)):
+        if exclude_latest_event and index == end - 1:
+            continue
+        start_close = float(candles[index]["close"])
+        future = candles[index + 1:index + 1 + forward_window]
+        if not future:
+            continue
+        future_close = float(future[-1]["close"])
+        future_high = max(float(candle["high"]) for candle in future)
+        future_low = min(float(candle["low"]) for candle in future)
+        rows.append({
+            "event_date": candles[index]["date"],
+            "event_close": _round(start_close, 2),
+            "forward_close": _round(future_close, 2),
+            "forward_return_pct": _round(_pct_change(start_close, future_close), 4),
+            "forward_max_up_pct": _round(_pct_change(start_close, future_high), 4),
+            "forward_max_down_pct": _round(_pct_change(start_close, future_low), 4),
+        })
+    return rows
+
+
+def _normal_chart_comparison(
+    candles: list[dict[str, Any]],
+    events: list[dict[str, Any]],
+    *,
+    forward_window: int,
+    exclude_latest_event: bool,
+) -> dict[str, Any]:
+    rolling = _rolling_forward_returns(candles, forward_window=forward_window, exclude_latest_event=exclude_latest_event)
+    rolling_returns = [float(row["forward_return_pct"]) for row in rolling if row.get("forward_return_pct") is not None]
+    event_returns = [float(row["forward_return_pct"]) for row in events if row.get("forward_return_pct") is not None]
+    closed_returns = [float(row["forward_return_pct"]) for row in events if row.get("policy_closed") and row.get("forward_return_pct") is not None]
+    unclosed_returns = [float(row["forward_return_pct"]) for row in events if not row.get("policy_closed") and row.get("forward_return_pct") is not None]
+    first_close = float(candles[0]["close"]) if candles else None
+    last_close = float(candles[-1]["close"]) if candles else None
+    return {
+        "normal_chart_window": {
+            "first_date": candles[0]["date"] if candles else None,
+            "last_date": candles[-1]["date"] if candles else None,
+            "days": len(candles),
+            "first_close": _round(first_close, 2),
+            "last_close": _round(last_close, 2),
+            "full_window_return_pct": _round(_pct_change(first_close, last_close), 4) if first_close is not None and last_close is not None else None,
+        },
+        "rolling_baseline": {
+            "windows": len(rolling_returns),
+            "forward_window_days": forward_window,
+            "mean_forward_return_pct": _round(_mean(rolling_returns), 4),
+            "median_forward_return_pct": _round(_median(rolling_returns), 4),
+            "positive_forward_windows": sum(1 for value in rolling_returns if value > 0),
+        },
+        "event_windows": {
+            "events": len(event_returns),
+            "mean_forward_return_pct": _round(_mean(event_returns), 4),
+            "median_forward_return_pct": _round(_median(event_returns), 4),
+            "delta_vs_rolling_median_pct": _round((_median(event_returns) or 0.0) - (_median(rolling_returns) or 0.0), 4),
+            "closed_event_median_forward_return_pct": _round(_median(closed_returns), 4),
+            "unclosed_event_median_forward_return_pct": _round(_median(unclosed_returns), 4),
+        },
+        "chart_points": [
+            {
+                "date": row.get("event_date"),
+                "close": row.get("event_close"),
+                "relation": row.get("relation"),
+                "lvn_lower": (row.get("lvn_zone") or {}).get("lower"),
+                "lvn_upper": (row.get("lvn_zone") or {}).get("upper"),
+                "policy_closed": row.get("policy_closed"),
+                "forward_return_pct": row.get("forward_return_pct"),
+                "forward_max_up_pct": row.get("forward_max_up_pct"),
+                "forward_max_down_pct": row.get("forward_max_down_pct"),
+            }
+            for row in events
+        ],
+    }
 
 
 def _split_walk_forward(events: list[dict[str, Any]], folds: int = 3) -> list[dict[str, Any]]:
@@ -324,6 +426,12 @@ def build_policy_simulator(
     random_matched_rate = _mean(random_rates)
     delta_vs_random_matched = (policy_rate - random_matched_rate) if policy_rate is not None and random_matched_rate is not None else None
     closed_bars = [float(e["bars_to_close"]) for e in events if e.get("bars_to_close") is not None]
+    normal_chart = _normal_chart_comparison(
+        candles,
+        events,
+        forward_window=forward_window,
+        exclude_latest_event=exclude_latest_event,
+    )
     walk_forward = _split_walk_forward(events)
     fold_deltas = [float(row["delta_vs_strict_control"]) for row in walk_forward if row.get("delta_vs_strict_control") is not None]
     sensitivity = _sensitivity_grid(input_path, random_controls=random_controls, exclude_latest_event=exclude_latest_event)
@@ -414,6 +522,7 @@ def build_policy_simulator(
             "instrument": "BTC Lab policy research simulator",
             "purpose": "measure whether a declared method policy produces research value against controls and parameter perturbations",
             "not_primary_metric": "PnL alone",
+            "normal_chart_comparison": "compare event windows with the ordinary BTC daily chart path over the same forward horizon",
         },
         "policy_contract": primary_contract,
         "summary": {
@@ -433,6 +542,8 @@ def build_policy_simulator(
                 f"{len(events)} closed-data events; policy closure {_round(policy_rate)}; "
                 f"strict control {_round(strict_rate)}; delta {_round(delta_vs_strict)}; "
                 f"random matched control {_round(random_matched_rate)}; "
+                f"event median forward return {normal_chart['event_windows']['median_forward_return_pct']}% vs "
+                f"normal rolling median {normal_chart['rolling_baseline']['median_forward_return_pct']}%; "
                 f"lab value score {score['lab_value_score']}."
             ),
             "interpretation": "Negative or positive separation from controls is useful when stable: it tells the Lab whether the method carries structure or should be redesigned.",
@@ -454,6 +565,7 @@ def build_policy_simulator(
             "open_candle_exclusion_passed": exclude_latest_event,
             "latest_common_date": latest_common_date,
         },
+        "normal_chart_comparison": normal_chart,
         "lab_value": score,
         "walk_forward": walk_forward,
         "relation_slices": _relation_slices(events),
