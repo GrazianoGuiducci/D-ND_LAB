@@ -507,14 +507,22 @@
       display: grid;
       grid-template-columns:
         minmax(200px, var(--sb-left-w, 260px))
-        minmax(600px, 1fr)
+        16px
+        minmax(0, 1fr)
+        16px
         minmax(200px, var(--sb-right-w, 320px));
-      gap: 16px;
-      align-items: start;
+      gap: 0;
+      align-items: stretch;
     }
-    .lab-grid.sidebar-left-closed { grid-template-columns: 40px minmax(600px, 1fr) minmax(200px, var(--sb-right-w, 320px)); }
-    .lab-grid.sidebar-right-closed { grid-template-columns: minmax(200px, var(--sb-left-w, 260px)) minmax(600px, 1fr) 40px; }
-    .lab-grid.sidebar-left-closed.sidebar-right-closed { grid-template-columns: 40px minmax(600px, 1fr) 40px; }
+    .lab-grid.sidebar-left-closed {
+      grid-template-columns: 44px 16px minmax(0, 1fr) 16px minmax(200px, var(--sb-right-w, 320px));
+    }
+    .lab-grid.sidebar-right-closed {
+      grid-template-columns: minmax(200px, var(--sb-left-w, 260px)) 16px minmax(0, 1fr) 16px 44px;
+    }
+    .lab-grid.sidebar-left-closed.sidebar-right-closed {
+      grid-template-columns: 44px 16px minmax(0, 1fr) 16px 44px;
+    }
 
     /* AGENTE single-column layout (operatore: "spostiamo come nell'immagine 3").
        Selector + viewer stack vertical. Selector flex-shrink 0,
@@ -533,82 +541,53 @@
       scrollbar-width: thin;
     }
 
-    /* v4.1+ — Resize handles port-fedele dal sito (Shell3Col s3c-resizer).
-       24px hit area, rail visibile sempre, grip leggibile anche senza hover.
+    /* v4.1+ — Resize handles portati dal sito (Shell3Col s3c-resizer).
+       Colonna autonoma da 16px tra sidebar e contenuto, non overlay.
        Auto close/reopen logic: drag verso il centro su closed riapre dopo
        threshold; drag oltre l'open verso il bordo collassa.
-
-       In closed state (sidebar 40px), il resize handle e' DENTRO il gutter
-       e funge anche da trigger di drag-to-reopen. */
+       In closed state resta afferrabile nel layout, come nel Lab originale. */
     .resize-handle {
-      position: absolute; top: 0; bottom: 0; width: 24px;
+      position: sticky;
+      top: 12px;
+      width: 16px;
+      height: calc(100vh - 80px);
       cursor: col-resize; user-select: none; z-index: 80;
       display: flex; align-items: center; justify-content: center;
-      background: rgb(34 211 238 / .10);
+      background: transparent;
       touch-action: none;
       transition: background 120ms ease;
     }
-    .resize-handle::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      left: 50%;
-      width: 6px;
-      transform: translateX(-50%);
-      border-radius: 999px;
-      background: rgb(34 211 238 / .78);
-      box-shadow: 0 0 0 1px rgb(2 6 23 / .75), 0 0 18px rgb(34 211 238 / .42);
-      pointer-events: none;
-    }
-    .resize-handle:hover { background: rgba(34,211,238,.18); }
-    .resize-handle.active { background: rgba(34,211,238,.28); }
+    .resize-handle:hover { background: rgb(6 58 78 / 0.35); }
     .resize-handle .rz-line {
-      width: 6px; height: 100%;
-      background: rgb(34 211 238 / 0.88);
-      border-radius: 999px;
+      width: 2px; height: 100%;
+      background: rgb(255 255 255 / 0.12);
       transition: all 120ms ease;
-      box-shadow: 0 0 14px rgb(34 211 238 / 0.38);
     }
     .resize-handle:hover .rz-line,
     .resize-handle.active .rz-line {
-      background: #22d3ee;
-      height: 100%;
-      box-shadow: 0 0 10px rgb(34 211 238 / 0.55);
+      background: rgb(34 211 238);
+      box-shadow: 0 0 10px rgb(34 211 238 / 0.32);
     }
     .resize-handle .rz-grip {
       position: absolute; top: 50%; left: 50%;
       transform: translate(-50%, -50%);
-      width: 28px; height: 46px;
+      width: 22px; height: 40px;
       border-radius: 9999px;
-      background: rgb(15 23 42 / .92);
-      border: 1px solid rgb(34 211 238 / 0.55);
-      display: none; align-items: center; justify-content: center; gap: 2px;
-      opacity: .72; pointer-events: none;
+      background: rgb(34 34 44);
+      border: 1px solid rgb(255 255 255 / 0.22);
+      display: flex; align-items: center; justify-content: center; gap: 2px;
+      opacity: 0; pointer-events: none;
       transition: opacity 220ms ease;
-      box-shadow: 0 4px 14px rgb(0 0 0 / 0.45), 0 0 16px rgb(34 211 238 / .14);
+      box-shadow: 0 4px 14px rgb(0 0 0 / 0.4);
     }
     .resize-handle:hover .rz-grip,
     .resize-handle.active .rz-grip { opacity: 1; }
     .resize-handle .rz-grip::before,
     .resize-handle .rz-grip::after {
       content: ''; width: 2px; height: 16px;
-      background: rgb(var(--site-text-subtle)); border-radius: 1px;
+      background: rgb(var(--site-text-muted)); border-radius: 1px;
     }
-    .lab-sidebar-left  .resize-handle { right: 0; }
-    .lab-sidebar-right .resize-handle { left: 0; }
     @media (max-width: 1064px) { .resize-handle { display: none; } }
-
-    .lab-sidebar-left {
-      padding-right: 30px;
-      box-shadow: inset -6px 0 0 rgb(34 211 238 / .68);
-    }
-    .lab-sidebar-right {
-      padding-left: 30px;
-      box-shadow: inset 6px 0 0 rgb(34 211 238 / .68);
-    }
-    .lab-sidebar-left .sidebar-toggle { right: 22px; }
-    .lab-sidebar-right .sidebar-toggle { left: 22px; }
 
     .btc-chart-frame {
       display: block;
@@ -696,7 +675,7 @@
     /* Collapsed: full-height clickable area per riaprire (operatore:
        "aprirsi quando chiuse con click su tutta l'altezza") */
     .lab-sidebar.collapsed {
-      padding: 8px 4px;
+      padding: 12px 0;
       overflow: hidden;
       cursor: pointer;
     }
@@ -719,16 +698,42 @@
       text-transform: uppercase;
       font-family: 'JetBrains Mono', ui-monospace, monospace;
       color: rgb(var(--site-text-muted));
-      margin: 24px auto 0;
+      margin: 12px auto 0;
       width: 24px;
       text-align: center;
       user-select: none;
     }
     .lab-sidebar:not(.collapsed) .sb-title-vertical { display: none; }
-    .sidebar-toggle { position: absolute; top: 8px; background: none; border: 0; color: rgb(154 160 178); cursor: pointer; font-size: 12px; padding: 2px 6px; line-height: 1; }
-    .lab-sidebar-left .sidebar-toggle { right: 6px; }
-    .lab-sidebar-right .sidebar-toggle { left: 6px; }
-    .sidebar-toggle:hover { color: #cbd5e1; }
+    .sidebar-toggle {
+      position: absolute;
+      top: 10px;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: 1px solid rgb(255 255 255 / 0.12);
+      border-radius: 0.375rem;
+      color: rgb(var(--site-text-muted));
+      cursor: pointer;
+      font-size: 12px;
+      padding: 0;
+      line-height: 1;
+      transition: all 180ms ease;
+    }
+    .lab-sidebar-left .sidebar-toggle { right: 10px; }
+    .lab-sidebar-right .sidebar-toggle { left: 10px; }
+    .sidebar-toggle:hover {
+      background: rgb(30 41 59);
+      color: rgb(103 232 249);
+      border-color: rgb(34 211 238 / 0.5);
+    }
+    .lab-sidebar.collapsed .sidebar-toggle {
+      left: 50%;
+      right: auto;
+      transform: translateX(-50%);
+    }
     .stat-row { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1px solid rgb(var(--neon-cyan) / 0.24); padding: 4px 0; font-size: 13px; }
     .stat-row .stat-num { font-family: ui-monospace, monospace; color: rgb(34 211 238); font-size: 13px; }
     .legend-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
@@ -1588,10 +1593,6 @@
         <button @click="sidebarLeftOpen = !sidebarLeftOpen" class="sidebar-toggle" :title="sidebarLeftOpen ? 'Collassa' : 'Espandi'">
           <span x-text="sidebarLeftOpen ? '◂' : '▸'"></span>
         </button>
-        <div class="resize-handle" @pointerdown="startResize($event, 'left')" data-tip="Trascina per ridimensionare · verso il centro per riaprire">
-          <div class="rz-line"></div>
-          <div class="rz-grip"></div>
-        </div>
         <!-- v#8 — title verticale visible solo quando collapsed -->
         <div class="sb-title-vertical" data-i18n="dash.sb.campoVertical">CAMPO</div>
         <!-- Su mobile, il toggle desktop e' nascosto e si usa questo close X -->
@@ -1691,6 +1692,15 @@
           <p class="text-[10px] text-slate-300 mt-2 leading-relaxed" data-i18n="dash.sb.collaudo">Il lab e' in collaudo. Per provarlo o adattarlo a un dominio specifico, scrivi.</p>
         </div>
       </aside>
+
+      <div class="resize-handle"
+           role="separator"
+           aria-orientation="vertical"
+           aria-label="Ridimensiona Campo"
+           @pointerdown="startResize($event, 'left')">
+        <div class="rz-line"></div>
+        <div class="rz-grip"></div>
+      </div>
 
       <!-- ============ CONTENT (center) — tab panes ============ -->
       <section class="lab-content">
@@ -3356,6 +3366,15 @@
 
       </section>
 
+      <div class="resize-handle"
+           role="separator"
+           aria-orientation="vertical"
+           aria-label="Ridimensiona Dettaglio"
+           @pointerdown="startResize($event, 'right')">
+        <div class="rz-line"></div>
+        <div class="rz-grip"></div>
+      </div>
+
       <!-- ============ SIDEBAR DETTAGLIO (right) ============ -->
       <aside class="lab-sidebar lab-sidebar-right"
              :class="!sidebarRightOpen && 'collapsed'"
@@ -3365,10 +3384,6 @@
         <button @click="sidebarRightOpen = !sidebarRightOpen" class="sidebar-toggle" :title="sidebarRightOpen ? '▸' : '◂'">
           <span x-text="sidebarRightOpen ? '▸' : '◂'"></span>
         </button>
-        <div class="resize-handle" @pointerdown="startResize($event, 'right')" data-tip="Trascina per ridimensionare · verso il centro per riaprire">
-          <div class="rz-line"></div>
-          <div class="rz-grip"></div>
-        </div>
         <!-- v#8 — title verticale visible solo quando collapsed -->
         <div class="sb-title-vertical" data-i18n="dash.sb.dettaglio">DETTAGLIO</div>
         <div class="flex items-center justify-between mb-2" style="margin-top:-4px">
@@ -4479,7 +4494,7 @@
 
       startResize(ev, side) {
         ev.preventDefault();
-        try { ev.target.setPointerCapture?.(ev.pointerId); } catch (e) {}
+        try { ev.currentTarget.setPointerCapture?.(ev.pointerId); } catch (e) {}
         const isOpen = side === 'left' ? this.sidebarLeftOpen : this.sidebarRightOpen;
         const currentW = isOpen
           ? (side === 'left' ? this.sidebarLeftWidth : this.sidebarRightWidth)
