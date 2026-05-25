@@ -137,6 +137,8 @@ Human method intake:
   declared historical method policies against controls, walk-forward splits and
   parameter perturbations. Lab value can be positive or negative: stable
   underperformance versus controls is useful evidence for redesign/falsification.
+  Useful negative evidence should be labelled as redesign, not as a positive
+  method edge.
   Do not wire the simulator into refresh hooks, cron or cycle reading until the
   first manual artifact is inspected.
 

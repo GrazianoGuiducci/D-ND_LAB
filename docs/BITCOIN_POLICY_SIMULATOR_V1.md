@@ -33,7 +33,8 @@ btc_policy_simulator_v0.lvn_close_policy
 The policy builds a daily OHLCV Volume Profile proxy from prior candles,
 selects the nearest LVN zone to the event close, then measures whether the zone
 is closed inside a declared forward window. It compares that policy with
-adjacent, opposite-distance, shuffled-volume and strict union controls.
+adjacent, opposite-distance, shuffled-volume, deterministic random matched and
+strict union controls.
 
 ## Required Artifact Fields
 
@@ -63,7 +64,8 @@ adjacent, opposite-distance, shuffled-volume and strict union controls.
   "no_lookahead": true,
   "simulated_policy_declared": true,
   "historical_result": true,
-  "research_metric": true
+  "research_metric": true,
+  "deterministic_random_matched_controls": true
 }
 ```
 
@@ -83,6 +85,10 @@ candle can refresh without creating new closed evidence.
 A negative edge can still have high Lab value if it is stable, because it tells
 the Lab that the current method-policy contract should be redesigned or
 falsified rather than promoted.
+
+When the evidence is useful but negative against the strict control, the card
+uses `decision=redesign` and `research_decision=redesign`. This keeps useful
+negative evidence distinct from both a weak result and a positive method edge.
 
 ## Integration Boundary
 

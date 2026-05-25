@@ -8,17 +8,19 @@ adds value metrics, walk-forward stability and parameter sensitivity.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
+import random
 import statistics
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from btc_volume_profile_lvn_proxy import build_lvn_proxy
+from btc_volume_profile_lvn_proxy import _median_daily_candles, _zone_closed, build_lvn_proxy
 
 
-VERSION = "0.1.0"
+VERSION = "0.1.1"
 DOMAIN_DIR = Path(__file__).resolve().parents[1]
 REPO_ROOT = DOMAIN_DIR.parents[1]
 DATA_ROOT = Path(os.environ.get("LAB_DATA_DIR", REPO_ROOT / "data")).resolve()
@@ -68,22 +70,70 @@ def _stdev(values: list[float]) -> float:
     return float(statistics.pstdev(values))
 
 
-def _delta(rows: list[dict[str, Any]]) -> float | None:
+def _delta(rows: list[dict[str, Any]], control_key: str = "strict_control_closed") -> float | None:
     policy = _rate(rows, "policy_closed")
-    strict = _rate(rows, "strict_control_closed")
+    strict = _rate(rows, control_key)
     if policy is None or strict is None:
         return None
     return policy - strict
 
 
-def _policy_events(proxy: dict[str, Any], *, exclude_latest_event: bool) -> list[dict[str, Any]]:
+def _stable_seed(*parts: Any) -> int:
+    text = "|".join(str(part) for part in parts)
+    digest = hashlib.sha256(text.encode("utf-8")).hexdigest()
+    return int(digest[:16], 16)
+
+
+def _matched_random_zones(event: dict[str, Any], *, count: int) -> list[dict[str, float]]:
+    zone = event.get("lvn_zone") or {}
+    event_close = float(event.get("event_close") or 0.0)
+    lower = float(zone.get("lower") or 0.0)
+    upper = float(zone.get("upper") or 0.0)
+    if event_close <= 0.0 or upper <= lower:
+        return []
+
+    width = upper - lower
+    midpoint = (lower + upper) / 2.0
+    distance = abs(event_close - midpoint) or width
+    rng = random.Random(_stable_seed("btc_policy_simulator_v0", event.get("event_date"), event_close, lower, upper))
+    zones = []
+    for _ in range(count):
+        side = -1 if rng.random() < 0.5 else 1
+        jitter = rng.uniform(-0.5, 0.5) * width
+        random_mid = max(event_close + side * max(width / 2.0, distance + jitter), width / 2.0)
+        zones.append({
+            "lower": random_mid - width / 2.0,
+            "upper": random_mid + width / 2.0,
+            "width": width,
+        })
+    return zones
+
+
+def _policy_events(
+    proxy: dict[str, Any],
+    *,
+    candles: list[dict[str, Any]],
+    forward_window: int,
+    closure_rule: str,
+    random_controls: int,
+    exclude_latest_event: bool,
+) -> list[dict[str, Any]]:
     raw_events = list(proxy.get("events") or [])
     if exclude_latest_event and raw_events:
         latest_event_date = max(str(event.get("event_date") or "") for event in raw_events)
         raw_events = [event for event in raw_events if str(event.get("event_date") or "") != latest_event_date]
 
+    candle_index = {str(candle.get("date")): index for index, candle in enumerate(candles)}
     rows = []
     for event in raw_events:
+        index = candle_index.get(str(event.get("event_date")))
+        future = candles[index + 1:index + 1 + forward_window] if index is not None else []
+        matched_zones = _matched_random_zones(event, count=random_controls) if future else []
+        matched_fills = [_zone_closed(future, zone, closure_rule) for zone in matched_zones]
+        random_matched_rate = (
+            sum(1 for fill in matched_fills if fill.get("closed")) / len(matched_fills)
+            if matched_fills else None
+        )
         zone = event.get("lvn_zone") or {}
         bars = event.get("lvn_bars_to_close")
         rows.append({
@@ -97,6 +147,9 @@ def _policy_events(proxy: dict[str, Any], *, exclude_latest_event: bool) -> list
             "opposite_control_closed": bool(event.get("opposite_control_closed")),
             "shuffled_volume_control_closed": bool(event.get("shuffled_volume_control_closed")),
             "strict_control_closed": bool(event.get("strict_control_closed")),
+            "random_matched_control_rate": _round(random_matched_rate),
+            "random_matched_control_closed": bool(random_matched_rate is not None and random_matched_rate >= 0.5),
+            "random_matched_controls": len(matched_fills),
         })
     return rows
 
@@ -143,7 +196,9 @@ def _relation_slices(events: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return out
 
 
-def _sensitivity_grid(input_path: Path, *, exclude_latest_event: bool) -> list[dict[str, Any]]:
+def _sensitivity_grid(input_path: Path, *, random_controls: int, exclude_latest_event: bool) -> list[dict[str, Any]]:
+    exchange = _read_json(input_path)
+    candles = _median_daily_candles(exchange)
     rows = []
     for window_days in (30, 45, 60):
         for bins in (24, 36, 48):
@@ -156,7 +211,19 @@ def _sensitivity_grid(input_path: Path, *, exclude_latest_event: bool) -> list[d
                     stride=3,
                     closure_rule="close",
                 )
-                events = _policy_events(proxy, exclude_latest_event=exclude_latest_event)
+                events = _policy_events(
+                    proxy,
+                    candles=candles,
+                    forward_window=forward_window,
+                    closure_rule="close",
+                    random_controls=random_controls,
+                    exclude_latest_event=exclude_latest_event,
+                )
+                random_rates = [
+                    float(event["random_matched_control_rate"])
+                    for event in events
+                    if event.get("random_matched_control_rate") is not None
+                ]
                 rows.append({
                     "window_days": window_days,
                     "bins": bins,
@@ -165,6 +232,8 @@ def _sensitivity_grid(input_path: Path, *, exclude_latest_event: bool) -> list[d
                     "policy_closure_rate": _round(_rate(events, "policy_closed")),
                     "strict_control_rate": _round(_rate(events, "strict_control_closed")),
                     "delta_vs_strict_control": _round(_delta(events)),
+                    "random_matched_control_rate": _round(_mean(random_rates)),
+                    "delta_vs_random_matched_control": _round((_rate(events, "policy_closed") or 0.0) - (_mean(random_rates) or 0.0)),
                 })
     return rows
 
@@ -218,10 +287,12 @@ def build_policy_simulator(
     forward_window: int = 10,
     stride: int = 3,
     closure_rule: str = "close",
+    random_controls: int = 20,
     exclude_latest_event: bool = True,
 ) -> dict[str, Any]:
     exchange = _read_json(input_path)
     latest_common_date = (((exchange.get("metrics") or {}).get("latest_common_date")) or None)
+    candles = _median_daily_candles(exchange)
     base_proxy = build_lvn_proxy(
         input_path=input_path,
         bins=bins,
@@ -231,17 +302,31 @@ def build_policy_simulator(
         closure_rule=closure_rule,
     )
     previous_lvn_proxy = _read_json(LVN_PROXY_LATEST) if LVN_PROXY_LATEST.exists() else {}
-    events = _policy_events(base_proxy, exclude_latest_event=exclude_latest_event)
+    events = _policy_events(
+        base_proxy,
+        candles=candles,
+        forward_window=forward_window,
+        closure_rule=closure_rule,
+        random_controls=random_controls,
+        exclude_latest_event=exclude_latest_event,
+    )
     policy_rate = _rate(events, "policy_closed")
     strict_rate = _rate(events, "strict_control_closed")
     adjacent_rate = _rate(events, "adjacent_control_closed")
     opposite_rate = _rate(events, "opposite_control_closed")
     shuffled_rate = _rate(events, "shuffled_volume_control_closed")
     delta_vs_strict = _delta(events)
+    random_rates = [
+        float(event["random_matched_control_rate"])
+        for event in events
+        if event.get("random_matched_control_rate") is not None
+    ]
+    random_matched_rate = _mean(random_rates)
+    delta_vs_random_matched = (policy_rate - random_matched_rate) if policy_rate is not None and random_matched_rate is not None else None
     closed_bars = [float(e["bars_to_close"]) for e in events if e.get("bars_to_close") is not None]
     walk_forward = _split_walk_forward(events)
     fold_deltas = [float(row["delta_vs_strict_control"]) for row in walk_forward if row.get("delta_vs_strict_control") is not None]
-    sensitivity = _sensitivity_grid(input_path, exclude_latest_event=exclude_latest_event)
+    sensitivity = _sensitivity_grid(input_path, random_controls=random_controls, exclude_latest_event=exclude_latest_event)
     sensitivity_deltas = [float(row["delta_vs_strict_control"]) for row in sensitivity if row.get("delta_vs_strict_control") is not None]
     score = _score(
         event_count=len(events),
@@ -257,22 +342,30 @@ def build_policy_simulator(
     elif delta_vs_strict is not None and delta_vs_strict < -0.05:
         value_direction = "negative_vs_strict_control"
 
+    research_decision = "observe"
     if len(events) < 12:
         decision = "observe"
         verdict = "POLICY_SIMULATOR_DENOMINATOR_LOW"
     elif score["classification"] == "research_useful":
-        decision = "test"
         if value_direction == "positive_vs_strict_control":
+            decision = "test"
+            research_decision = "advance"
             verdict = "POLICY_SIMULATOR_RESEARCH_VALUE_HIGH_POSITIVE_EDGE"
         elif value_direction == "negative_vs_strict_control":
-            verdict = "POLICY_SIMULATOR_RESEARCH_VALUE_HIGH_NEGATIVE_EDGE"
+            decision = "redesign"
+            research_decision = "redesign"
+            verdict = "POLICY_SIMULATOR_RESEARCH_VALUE_HIGH_NEGATIVE_EDGE_REDESIGN"
         else:
+            decision = "watch"
+            research_decision = "watch"
             verdict = "POLICY_SIMULATOR_RESEARCH_VALUE_HIGH_NEUTRAL"
     elif score["classification"] == "research_watch":
         decision = "watch"
+        research_decision = "watch"
         verdict = "POLICY_SIMULATOR_RESEARCH_VALUE_WATCH"
     else:
         decision = "reject"
+        research_decision = "reject"
         verdict = "POLICY_SIMULATOR_RESEARCH_VALUE_WEAK"
 
     primary_contract = {
@@ -289,6 +382,7 @@ def build_policy_simulator(
             "profile_window_days": window_days,
             "bins": bins,
             "stride": stride,
+            "random_matched_controls_per_event": random_controls,
             "nearest_zone": "nearest LVN bin to event close",
         },
         "activation_rule": "event close has a nearest LVN zone built from prior profile window",
@@ -301,6 +395,7 @@ def build_policy_simulator(
             "adjacent equal-width zone",
             "opposite-distance zone",
             "shuffled-volume LVN proxy",
+            "deterministic random matched zones",
             "strict union of all controls",
         ],
         "no_lookahead": True,
@@ -326,15 +421,18 @@ def build_policy_simulator(
             "watch": 1 if decision == "watch" else 0,
             "test": 1 if decision == "test" else 0,
             "reject": 1 if decision == "reject" else 0,
+            "redesign": 1 if decision == "redesign" else 0,
         },
         "card": {
             "claim_id": "btc_policy_simulator_lvn_close_policy",
             "title": "BTC LVN policy simulator v0",
             "decision": decision,
+            "research_decision": research_decision,
             "verdict": verdict,
             "evidence": (
                 f"{len(events)} closed-data events; policy closure {_round(policy_rate)}; "
                 f"strict control {_round(strict_rate)}; delta {_round(delta_vs_strict)}; "
+                f"random matched control {_round(random_matched_rate)}; "
                 f"lab value score {score['lab_value_score']}."
             ),
             "interpretation": "Negative or positive separation from controls is useful when stable: it tells the Lab whether the method carries structure or should be redesigned.",
@@ -346,8 +444,11 @@ def build_policy_simulator(
             "adjacent_control_rate": _round(adjacent_rate),
             "opposite_control_rate": _round(opposite_rate),
             "shuffled_volume_control_rate": _round(shuffled_rate),
+            "random_matched_control_rate": _round(random_matched_rate),
             "strict_control_rate": _round(strict_rate),
             "delta_vs_strict_control": _round(delta_vs_strict),
+            "delta_vs_random_matched_control": _round(delta_vs_random_matched),
+            "random_matched_controls_per_event": random_controls,
             "median_bars_to_close": _round(_median(closed_bars), 2),
             "mean_bars_to_close": _round(_mean(closed_bars), 2),
             "open_candle_exclusion_passed": exclude_latest_event,
@@ -378,6 +479,7 @@ def build_policy_simulator(
             "simulated_policy_declared": True,
             "historical_result": True,
             "research_metric": True,
+            "deterministic_random_matched_controls": True,
         },
         "events": events,
     }
@@ -402,6 +504,7 @@ def main() -> int:
     parser.add_argument("--forward-window", type=int, default=10)
     parser.add_argument("--stride", type=int, default=3)
     parser.add_argument("--closure-rule", choices=["wick", "close"], default="close")
+    parser.add_argument("--random-controls", type=int, default=20)
     parser.add_argument("--include-latest-event", action="store_true")
     parser.add_argument("--write", action="store_true")
     parser.add_argument("--json", action="store_true")
@@ -414,6 +517,7 @@ def main() -> int:
         forward_window=args.forward_window,
         stride=args.stride,
         closure_rule=args.closure_rule,
+        random_controls=args.random_controls,
         exclude_latest_event=not args.include_latest_event,
     )
     if args.write:
