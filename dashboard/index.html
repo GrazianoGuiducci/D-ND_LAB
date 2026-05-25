@@ -1854,6 +1854,82 @@
               </section>
             </template>
 
+            <template x-if="activeDomain === 'bitcoin-regime-lab' && bitcoinPolicySimulatorArtifact()">
+              <section class="mt-4 border border-cyan-500/70 rounded-md p-4 bg-cyan-950/10 shadow-[0_0_18px_rgba(34,211,238,.12)]">
+                <div class="flex items-start justify-between gap-3 flex-wrap mb-3">
+                  <div>
+                    <h3 class="text-sm font-medium text-cyan-100" x-text="lang === 'en' ? 'BTC simulator vs normal chart' : 'Simulatore BTC vs grafico normale'"></h3>
+                    <p class="text-xs text-slate-300 mt-1" x-text="lang === 'en'
+                      ? 'Compares LVN event windows with the ordinary daily BTC chart path.'
+                      : 'Confronta le finestre evento LVN con il normale andamento daily BTC.'"></p>
+                  </div>
+                  <button @click="selectBitcoinPolicySimulatorLens()"
+                          class="text-[11px] font-mono px-2 py-1 rounded border border-cyan-400/80 text-cyan-100 hover:border-cyan-100 cursor-pointer"
+                          x-text="lang === 'en' ? 'open simulator' : 'apri simulatore'"></button>
+                </div>
+
+                <div class="grid xl:grid-cols-[minmax(0,1fr)_minmax(300px,.42fr)] gap-3">
+                  <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-3">
+                    <template x-for="row in bitcoinPolicySimulatorStatRows()" :key="row.label">
+                      <button @click="selectBitcoinPolicySimulatorLens()"
+                              class="text-left border border-slate-800 hover:border-cyan-600 rounded p-3 bg-slate-950/50 transition min-h-[92px]">
+                        <div class="text-[10px] uppercase tracking-wider text-slate-400" x-text="row.label"></div>
+                        <div class="text-lg font-mono mt-1" :class="row.tone" x-text="row.value"></div>
+                        <div class="text-[11px] text-slate-400 mt-1 line-clamp-2" x-text="row.note || ''"></div>
+                      </button>
+                    </template>
+                  </div>
+                  <button @click="selectBitcoinPolicySimulatorLens()"
+                          class="text-left border border-purple-600/70 rounded-md p-3 bg-purple-950/10 hover:border-purple-400 transition min-h-[160px]">
+                    <div class="flex items-center justify-between gap-2">
+                      <div class="text-[10px] uppercase tracking-wider text-purple-200" x-text="lang === 'en' ? 'Current reading' : 'Lettura corrente'"></div>
+                      <span class="text-[10px] font-mono px-2 py-1 rounded border"
+                            :class="bitcoinPolicySimulatorDecisionTone()"
+                            x-text="bitcoinPolicySimulatorDecisionLabel()"></span>
+                    </div>
+                    <div class="text-sm text-slate-100 mt-2" x-text="bitcoinPolicySimulatorShortRead()"></div>
+                    <div class="text-xs text-slate-400 mt-2" x-text="bitcoinPolicySimulatorEvidence()"></div>
+                  </button>
+                </div>
+
+                <div class="mt-3 grid lg:grid-cols-[minmax(0,1fr)_minmax(280px,.45fr)] gap-3">
+                  <div class="border border-slate-800 rounded-md bg-slate-950/35 p-3">
+                    <div class="flex items-center justify-between gap-2 mb-2">
+                      <div class="text-[10px] uppercase tracking-wider text-slate-400" x-text="lang === 'en' ? 'Event windows on chart' : 'Finestre evento sul grafico'"></div>
+                      <span class="text-[10px] text-slate-500 font-mono" x-text="bitcoinPolicySimulatorChartPoints().length + ' eventi'"></span>
+                    </div>
+                    <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-2">
+                      <template x-for="point in bitcoinPolicySimulatorChartPoints().slice(0, 6)" :key="point.date + '-' + point.relation">
+                        <button @click="selectBitcoinPolicySimulatorLens(point)"
+                                class="text-left border border-slate-800 hover:border-cyan-700 rounded p-2 bg-slate-950/50 transition min-h-[86px]">
+                          <div class="flex items-center justify-between gap-2">
+                            <span class="text-[10px] font-mono text-cyan-300" x-text="point.date"></span>
+                            <span class="text-[10px] uppercase" :class="point.policy_closed ? 'text-emerald-300' : 'text-amber-300'" x-text="point.policy_closed ? 'closed' : 'open'"></span>
+                          </div>
+                          <div class="text-sm text-slate-100 mt-1" x-text="`${btcPriceLabel(point.close)} · ${point.relation || 'n/a'}`"></div>
+                          <div class="text-xs text-slate-400 mt-1" x-text="bitcoinPolicySimulatorPointSummary(point)"></div>
+                        </button>
+                      </template>
+                    </div>
+                  </div>
+                  <div class="border border-slate-800 rounded-md bg-slate-950/35 p-3">
+                    <div class="text-[10px] uppercase tracking-wider text-slate-400" x-text="lang === 'en' ? 'What this means' : 'Cosa significa'"></div>
+                    <div class="text-sm text-slate-200 mt-2" x-text="bitcoinPolicySimulatorMeaning()"></div>
+                    <div class="mt-3 grid grid-cols-2 gap-2 text-xs">
+                      <div class="border border-slate-800 rounded p-2">
+                        <div class="text-slate-500 uppercase text-[10px]">random</div>
+                        <div class="font-mono text-emerald-300" x-text="bitcoinPolicyMetric('delta_vs_random_matched_control')"></div>
+                      </div>
+                      <div class="border border-slate-800 rounded p-2">
+                        <div class="text-slate-500 uppercase text-[10px]">strict</div>
+                        <div class="font-mono text-amber-300" x-text="bitcoinPolicyMetric('delta_vs_strict_control')"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            </template>
+
             <template x-if="activeDomain === 'bitcoin-regime-lab' && labThought?.available">
               <section class="mt-4 border border-emerald-400/70 rounded-md p-4 bg-emerald-950/10 shadow-[0_0_16px_rgba(16,185,129,.14)]">
                 <div class="flex items-start justify-between gap-3 flex-wrap mb-3">
@@ -5480,8 +5556,10 @@
       },
 
       latestValueArtifactCards() {
-        const cards = this.latestValueArtifact()?.payload?.cards;
-        return Array.isArray(cards) ? cards.slice(0, 3) : [];
+        const payload = this.latestValueArtifact()?.payload || {};
+        const cards = payload.cards;
+        if (Array.isArray(cards)) return cards.slice(0, 3);
+        return payload.card && typeof payload.card === 'object' ? [payload.card] : [];
       },
 
       latestValueArtifactSummaryRows() {
@@ -5535,6 +5613,110 @@
         if (Array.isArray(this.latestValueArtifacts?.artifacts)) all.push(...this.latestValueArtifacts.artifacts);
         return all.find(a => a?.schema === 'dndlab.bitcoin.daily_inefficiency.v1'
           || a?.payload?.schema === 'dndlab.bitcoin.daily_inefficiency.v1') || null;
+      },
+
+      bitcoinPolicySimulatorArtifact() {
+        const all = [];
+        if (this.latestValueArtifacts?.latest) all.push(this.latestValueArtifacts.latest);
+        if (Array.isArray(this.latestValueArtifacts?.artifacts)) all.push(...this.latestValueArtifacts.artifacts);
+        return all.find(a => a?.schema === 'dndlab.bitcoin.policy_simulator.v1'
+          || a?.payload?.schema === 'dndlab.bitcoin.policy_simulator.v1') || null;
+      },
+
+      bitcoinPolicySimulatorPayload() {
+        return this.bitcoinPolicySimulatorArtifact()?.payload || {};
+      },
+
+      bitcoinPolicyMetric(key) {
+        const value = this.bitcoinPolicySimulatorPayload()?.metrics?.[key];
+        if (value === null || value === undefined) return 'n/a';
+        return String(value);
+      },
+
+      bitcoinPolicySimulatorDecisionLabel() {
+        const card = this.bitcoinPolicySimulatorPayload()?.card || {};
+        return card.decision || card.research_decision || 'n/a';
+      },
+
+      bitcoinPolicySimulatorDecisionTone() {
+        const label = String(this.bitcoinPolicySimulatorDecisionLabel()).toLowerCase();
+        if (label.includes('redesign')) return 'border-amber-500/70 text-amber-200';
+        if (label.includes('test') || label.includes('advance')) return 'border-emerald-500/70 text-emerald-200';
+        if (label.includes('reject')) return 'border-red-500/70 text-red-200';
+        return 'border-cyan-500/70 text-cyan-200';
+      },
+
+      bitcoinPolicySimulatorStatRows() {
+        const payload = this.bitcoinPolicySimulatorPayload();
+        const metrics = payload.metrics || {};
+        const normal = payload.normal_chart_comparison || {};
+        const chart = normal.normal_chart_window || {};
+        const rolling = normal.rolling_baseline || {};
+        const events = normal.event_windows || {};
+        return [
+          {
+            label: this.lang === 'en' ? 'BTC period' : 'periodo BTC',
+            value: `${chart.full_window_return_pct ?? 'n/a'}%`,
+            note: `${chart.first_date || '?'} -> ${chart.last_date || '?'}`,
+            tone: Number(chart.full_window_return_pct) < 0 ? 'text-amber-300' : 'text-emerald-300',
+          },
+          {
+            label: this.lang === 'en' ? 'normal 10d' : 'normale 10g',
+            value: `${rolling.median_forward_return_pct ?? 'n/a'}%`,
+            note: `${rolling.windows ?? 0} rolling windows`,
+            tone: 'text-cyan-300',
+          },
+          {
+            label: this.lang === 'en' ? 'LVN events 10d' : 'eventi LVN 10g',
+            value: `${events.median_forward_return_pct ?? 'n/a'}%`,
+            note: this.lang === 'en' ? 'median event window' : 'mediana finestre evento',
+            tone: Number(events.delta_vs_rolling_median_pct) >= 0 ? 'text-emerald-300' : 'text-amber-300',
+          },
+          {
+            label: this.lang === 'en' ? 'vs normal' : 'vs normale',
+            value: `${events.delta_vs_rolling_median_pct ?? 'n/a'}%`,
+            note: `policy ${metrics.policy_closure_rate ?? 'n/a'} · strict ${metrics.strict_control_rate ?? 'n/a'}`,
+            tone: Number(events.delta_vs_rolling_median_pct) >= 0 ? 'text-emerald-300' : 'text-amber-300',
+          },
+        ];
+      },
+
+      bitcoinPolicySimulatorShortRead() {
+        const payload = this.bitcoinPolicySimulatorPayload();
+        const events = payload.normal_chart_comparison?.event_windows || {};
+        const metrics = payload.metrics || {};
+        if (this.lang === 'en') {
+          return `LVN event windows are ${events.delta_vs_rolling_median_pct ?? 'n/a'}% over the normal rolling median, but the closure policy is ${metrics.delta_vs_strict_control ?? 'n/a'} vs strict control.`;
+        }
+        return `Le finestre evento LVN sono ${events.delta_vs_rolling_median_pct ?? 'n/a'}% sopra la mediana rolling normale, ma la policy di chiusura e ${metrics.delta_vs_strict_control ?? 'n/a'} contro il controllo stretto.`;
+      },
+
+      bitcoinPolicySimulatorEvidence() {
+        return this.bitcoinPolicySimulatorPayload()?.card?.evidence || '';
+      },
+
+      bitcoinPolicySimulatorMeaning() {
+        const metrics = this.bitcoinPolicySimulatorPayload()?.metrics || {};
+        const randomDelta = Number(metrics.delta_vs_random_matched_control);
+        const strictDelta = Number(metrics.delta_vs_strict_control);
+        if (this.lang === 'en') {
+          return `There is some structure against random matched zones (${Number.isFinite(randomDelta) ? randomDelta : 'n/a'}), but the strict control is stronger (${Number.isFinite(strictDelta) ? strictDelta : 'n/a'}). Redesign the policy contract before extending it.`;
+        }
+        return `C'e un po' di struttura contro random matched (${Number.isFinite(randomDelta) ? randomDelta : 'n/a'}), ma il controllo stretto e piu forte (${Number.isFinite(strictDelta) ? strictDelta : 'n/a'}). Prima di estendere va ridisegnato il contratto della policy.`;
+      },
+
+      bitcoinPolicySimulatorChartPoints() {
+        const points = this.bitcoinPolicySimulatorPayload()?.normal_chart_comparison?.chart_points;
+        return Array.isArray(points) ? points : [];
+      },
+
+      bitcoinPolicySimulatorPointSummary(point) {
+        const ret = point?.forward_return_pct ?? 'n/a';
+        const up = point?.forward_max_up_pct ?? 'n/a';
+        const down = point?.forward_max_down_pct ?? 'n/a';
+        return this.lang === 'en'
+          ? `10d ${ret}% · max up ${up}% · max down ${down}%`
+          : `10g ${ret}% · max su ${up}% · max giu ${down}%`;
       },
 
       bitcoinDailyInefficiencyPayload() {
@@ -6008,6 +6190,73 @@
             payload.metrics?.denominator_ready === false ? 'denominator: low' : null,
           ].filter(Boolean).join(' · '),
           diagnostics: this.bitcoinDailyInefficiencyDiagnostics(selected, control),
+        };
+        this.activeTab = 'campo';
+      },
+
+      selectBitcoinPolicySimulatorLens(point = null) {
+        const artifact = this.bitcoinPolicySimulatorArtifact();
+        if (!artifact) return;
+        const payload = artifact.payload || {};
+        const card = payload.card || {};
+        const metrics = payload.metrics || {};
+        const normal = payload.normal_chart_comparison || {};
+        const chart = normal.normal_chart_window || {};
+        const events = normal.event_windows || {};
+        const selected = point || null;
+        this.selectedNode = null;
+        this.selectedScopertaSsp = null;
+        this.selectedProdottoSsp = null;
+        this.selectedCampoLens = {
+          type: 'campo',
+          category: 'btc-policy-simulator',
+          title: selected?.date
+            ? `BTC simulator · ${selected.date}`
+            : (card.title || (this.lang === 'en' ? 'BTC policy simulator' : 'Simulatore policy BTC')),
+          subtitle: card.decision || card.research_decision || 'simulator',
+          schema: payload.schema || artifact.schema || 'dndlab.bitcoin.policy_simulator.v1',
+          date: payload.generated_at || artifact.generated_at || artifact.mtime,
+          evidence: selected?.date
+            ? this.bitcoinPolicySimulatorPointSummary(selected)
+            : (card.evidence || this.bitcoinPolicySimulatorShortRead()),
+          boundary: this.lang === 'en'
+            ? 'Manual research artifact: compares method windows with the normal BTC daily chart path before any further integration.'
+            : 'Artifact manuale di ricerca: confronta le finestre metodo con il normale grafico daily BTC prima di qualunque integrazione ulteriore.',
+          meta: selected?.date
+            ? [
+                `close: ${this.btcPriceLabel(selected.close)}`,
+                `relation: ${selected.relation || 'n/a'}`,
+                `closed: ${selected.policy_closed ? 'yes' : 'no'}`,
+              ].join(' · ')
+            : [
+                `period: ${chart.first_date || '?'} -> ${chart.last_date || '?'}`,
+                `chart: ${chart.full_window_return_pct ?? 'n/a'}%`,
+                `event-vs-normal: ${events.delta_vs_rolling_median_pct ?? 'n/a'}%`,
+              ].join(' · '),
+          diagnostics: [
+            {
+              label: this.lang === 'en' ? 'Normal chart' : 'Grafico normale',
+              value: `${chart.full_window_return_pct ?? 'n/a'}%`,
+              note: `${chart.first_date || '?'} -> ${chart.last_date || '?'} · ${chart.days ?? 0} daily candles`,
+            },
+            {
+              label: this.lang === 'en' ? 'Event windows' : 'Finestre evento',
+              value: `${events.median_forward_return_pct ?? 'n/a'}%`,
+              note: this.lang === 'en'
+                ? `rolling median ${normal.rolling_baseline?.median_forward_return_pct ?? 'n/a'}%; delta ${events.delta_vs_rolling_median_pct ?? 'n/a'}%`
+                : `mediana rolling ${normal.rolling_baseline?.median_forward_return_pct ?? 'n/a'}%; delta ${events.delta_vs_rolling_median_pct ?? 'n/a'}%`,
+            },
+            {
+              label: 'Random matched',
+              value: `${metrics.delta_vs_random_matched_control ?? 'n/a'}`,
+              note: `policy ${metrics.policy_closure_rate ?? 'n/a'} vs random ${metrics.random_matched_control_rate ?? 'n/a'}`,
+            },
+            {
+              label: 'Strict control',
+              value: `${metrics.delta_vs_strict_control ?? 'n/a'}`,
+              note: `policy ${metrics.policy_closure_rate ?? 'n/a'} vs strict ${metrics.strict_control_rate ?? 'n/a'}`,
+            },
+          ],
         };
         this.activeTab = 'campo';
       },
