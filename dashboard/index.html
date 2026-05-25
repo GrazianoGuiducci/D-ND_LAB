@@ -1796,7 +1796,7 @@
             </template>
 
             <template x-if="activeDomain === 'bitcoin-regime-lab' && bitcoinOhlcvArtifact()">
-              <section class="mt-4 border border-cyan-500/80 rounded-md p-4 bg-slate-950/50 shadow-[0_0_20px_rgba(34,211,238,.14)]">
+              <section class="mt-4 border border-slate-800 rounded-md p-4 bg-slate-950/40">
                 <div class="flex items-start justify-between gap-3 flex-wrap mb-3">
                   <div>
                     <h3 class="text-base font-medium text-cyan-100" x-text="lang === 'en' ? 'BTC simulator chart' : 'Grafico simulatore BTC'"></h3>
@@ -1823,9 +1823,9 @@
                     </button>
                   </div>
                 </div>
-                <div class="grid xl:grid-cols-[minmax(0,1fr)_320px] gap-4 items-stretch">
+                <div class="space-y-3">
                   <button @click="selectBitcoinPolicySimulatorLens()"
-                          class="text-left rounded-md border border-slate-800 bg-slate-950/70 p-3 min-h-[360px] overflow-hidden hover:border-cyan-600 transition cursor-pointer">
+                          class="text-left rounded-md border border-slate-800 bg-slate-950/60 p-3 min-h-[360px] overflow-hidden hover:border-slate-600 transition cursor-pointer">
                     <svg viewBox="0 0 720 300" preserveAspectRatio="none" class="w-full h-[360px] block">
                       <line x1="48" y1="30" x2="48" y2="218" stroke="#334155" stroke-width="1"></line>
                       <line x1="48" y1="218" x2="696" y2="218" stroke="#334155" stroke-width="1"></line>
@@ -1841,10 +1841,10 @@
                       <text x="44" y="285" fill="#cdd0de" font-size="11" font-family="monospace" x-text="btcChartStats().windowLabel"></text>
                     </svg>
                   </button>
-                  <div class="grid gap-3 content-start">
+                  <div class="grid xl:grid-cols-[minmax(0,1fr)_minmax(360px,.72fr)] gap-3 items-start">
                     <template x-if="bitcoinPolicySimulatorArtifact()">
                       <button @click="selectBitcoinPolicySimulatorLens()"
-                              class="text-left border border-purple-600/70 rounded-md p-3 bg-purple-950/10 hover:border-purple-400 transition min-h-[150px]">
+                              class="text-left border border-slate-800/60 rounded-md p-3 bg-slate-950/45 hover:border-slate-600 transition min-h-[132px]">
                         <div class="flex items-center justify-between gap-2">
                           <div class="text-[10px] uppercase tracking-wider text-purple-200" x-text="lang === 'en' ? 'Simulator read' : 'Lettura simulatore'"></div>
                           <span class="text-[10px] font-mono px-2 py-1 rounded border"
@@ -1856,7 +1856,7 @@
                       </button>
                     </template>
                     <template x-if="bitcoinPolicySimulatorArtifact()">
-                      <section class="border border-emerald-500/60 rounded-md p-3 bg-emerald-950/10">
+                      <section class="border border-slate-800/60 rounded-md p-3 bg-slate-950/45">
                         <div class="flex items-start justify-between gap-2">
                           <div>
                             <div class="text-[10px] uppercase tracking-wider text-emerald-200" x-text="lang === 'en' ? 'Value lens' : 'Lente valore'"></div>
@@ -1869,7 +1869,7 @@
                         <div class="grid grid-cols-2 gap-2 mt-3">
                           <template x-for="row in bitcoinPolicyValueLensRows()" :key="row.label">
                             <button @click="selectBitcoinPolicySimulatorLens(row.point || null)"
-                                    class="text-left border border-slate-800 hover:border-emerald-600 rounded p-2 bg-slate-950/50 transition min-h-[70px]">
+                                    class="text-left border border-transparent hover:border-slate-700 rounded p-2 bg-slate-900/30 hover:bg-slate-900/50 transition min-h-[70px]">
                               <div class="text-[10px] uppercase tracking-wider text-slate-400" x-text="row.label"></div>
                               <div class="text-sm font-mono mt-1" :class="row.tone" x-text="row.value"></div>
                               <div class="text-[10px] text-slate-500 mt-1 line-clamp-1" x-text="row.note"></div>
@@ -1878,33 +1878,35 @@
                         </div>
                       </section>
                     </template>
-                    <div class="grid grid-cols-2 gap-2">
+                  </div>
+                  <div class="grid lg:grid-cols-[minmax(0,1fr)_280px] gap-3 items-start">
+                    <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-2">
                       <template x-for="row in bitcoinPolicySimulatorStatRows()" :key="'primary-' + row.label">
                         <button @click="selectBitcoinPolicySimulatorLens()"
-                                class="text-left border border-slate-800 hover:border-cyan-700 rounded p-3 bg-slate-950/50 transition min-h-[86px]">
+                                class="text-left border border-transparent hover:border-slate-700 rounded p-3 bg-slate-900/30 hover:bg-slate-900/50 transition min-h-[78px]">
                           <div class="text-[10px] uppercase tracking-wider text-slate-400" x-text="row.label"></div>
                           <div class="text-sm font-mono mt-1" :class="row.tone" x-text="row.value"></div>
                           <div class="text-[11px] text-slate-500 mt-1 line-clamp-1" x-text="row.note || ''"></div>
                         </button>
                       </template>
                     </div>
-                    <div class="border border-slate-800 rounded-md bg-slate-950/40 p-3">
+                    <div class="border border-slate-800/60 rounded-md bg-slate-950/35 p-3">
                       <div class="flex items-center justify-between gap-2">
                         <div class="text-[10px] uppercase tracking-wider text-slate-400" x-text="lang === 'en' ? 'Overlay' : 'Sovrapposizione'"></div>
                         <span class="text-[10px] font-mono text-cyan-300" x-text="bitcoinPolicySimulatorChartPoints().length + ' eventi'"></span>
                       </div>
                       <div class="mt-2 grid grid-cols-2 gap-2 text-[11px]">
-                        <div class="rounded border border-emerald-700/50 px-2 py-1 text-emerald-200" x-text="lang === 'en' ? 'green: closed' : 'verde: chiuse'"></div>
-                        <div class="rounded border border-amber-700/50 px-2 py-1 text-amber-200" x-text="lang === 'en' ? 'amber: open' : 'ambra: aperte'"></div>
+                        <div class="rounded bg-slate-900/45 px-2 py-1 text-emerald-200" x-text="lang === 'en' ? 'green: closed' : 'verde: chiuse'"></div>
+                        <div class="rounded bg-slate-900/45 px-2 py-1 text-amber-200" x-text="lang === 'en' ? 'amber: open' : 'ambra: aperte'"></div>
                       </div>
                       <div class="mt-2 text-[11px] text-slate-400" x-text="btcChartTimeframeNote()"></div>
                     </div>
-                    <button @click="btcAdvancedOpen = !btcAdvancedOpen"
-                            class="text-left border border-slate-800 hover:border-cyan-700 rounded p-3 bg-slate-950/50 transition">
-                      <div class="text-[10px] uppercase tracking-wider text-slate-400" x-text="lang === 'en' ? 'Diagnostics' : 'Diagnostica'"></div>
-                      <div class="text-sm text-cyan-200 mt-1" x-text="btcAdvancedOpen ? (lang === 'en' ? 'hide advanced sections' : 'nascondi sezioni avanzate') : (lang === 'en' ? 'show advanced sections' : 'mostra sezioni avanzate')"></div>
-                    </button>
                   </div>
+                  <button @click="btcAdvancedOpen = !btcAdvancedOpen"
+                          class="text-left border border-slate-800/60 hover:border-slate-600 rounded p-3 bg-slate-950/35 transition">
+                    <div class="text-[10px] uppercase tracking-wider text-slate-400" x-text="lang === 'en' ? 'Diagnostics' : 'Diagnostica'"></div>
+                    <div class="text-sm text-cyan-200 mt-1" x-text="btcAdvancedOpen ? (lang === 'en' ? 'hide advanced sections' : 'nascondi sezioni avanzate') : (lang === 'en' ? 'show advanced sections' : 'mostra sezioni avanzate')"></div>
+                  </button>
                 </div>
               </section>
             </template>
