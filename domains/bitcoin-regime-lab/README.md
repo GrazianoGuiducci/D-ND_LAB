@@ -118,6 +118,15 @@ This varies forward-window denominator, matched-null density and event
 thresholds. It tells the Lab whether the family is stable enough to keep as a
 watch/test/reject surface before any policy mutation.
 
+Predeclare the strict-close paper contract directly:
+
+```bash
+python3 domains/bitcoin-regime-lab/tools/btc_closed_daily_strict_close_contract.py --write --json
+```
+
+This freezes the selected `strict_close` axis as the next-cycle paper contract
+and records denominator/null admissibility without mutating method policy.
+
 Generate the exchange-native feed robustness card directly:
 
 ```bash

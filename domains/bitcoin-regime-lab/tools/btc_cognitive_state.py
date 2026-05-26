@@ -41,6 +41,7 @@ VALUE_INPUTS = {
     "zone_denominator_sensitivity": VALUE_DIR / "btc_zone_denominator_sensitivity_latest.json",
     "closed_daily_event_null": VALUE_DIR / "btc_closed_daily_event_null_latest.json",
     "closed_daily_event_null_pressure": VALUE_DIR / "btc_closed_daily_event_null_pressure_latest.json",
+    "closed_daily_strict_close_contract": VALUE_DIR / "btc_closed_daily_strict_close_contract_latest.json",
     "auto_ignite": VALUE_DIR / "btc_auto_ignite_latest.json",
     "lvn_proxy": VALUE_DIR / "btc_volume_profile_lvn_proxy_latest.json",
     "policy_simulator": VALUE_DIR / "btc_policy_simulator_latest.json",
@@ -381,6 +382,18 @@ def build_cognitive_state() -> dict[str, Any]:
             "best_edge_vs_matched_null_pct": event_null_pressure_result.get("best_edge_vs_matched_null_pct"),
             "next_test": event_null_pressure_result.get("next_test"),
         })
+    strict_close_contract = artifacts.get("closed_daily_strict_close_contract") or {}
+    strict_close_card = _first_card(strict_close_contract)
+    strict_close_data = strict_close_contract.get("data_card") if isinstance(strict_close_contract.get("data_card"), dict) else {}
+    if strict_close_contract:
+        current_learning.append({
+            "source": "btc_closed_daily_strict_close_contract",
+            "learned": strict_close_card.get("evidence") or "Strict-close is predeclared as a paper contract for the next closed-daily cycle.",
+            "decision": strict_close_card.get("decision"),
+            "paper_decision_admissible": strict_close_data.get("paper_decision_admissible"),
+            "policy_mutation_allowed": strict_close_data.get("policy_mutation_allowed"),
+            "next_test": strict_close_contract.get("next_test"),
+        })
 
     not_yet_closed = [
         "autonomous policy mutation contract after the next stable closed-data run",
@@ -544,6 +557,20 @@ def build_cognitive_state() -> dict[str, Any]:
                 else "Closed-daily event/null pressure artifact is not available in cognitive-state inputs."
             ),
             "boundary": "Cognitive readback only: pressure validates denominator/null admissibility, not advice or policy mutation.",
+        },
+        {
+            "claim_id": "btc_closed_daily_strict_close_contract_readback",
+            "title": "BTC strict-close contract readback",
+            "decision": strict_close_card.get("decision") or strict_close_contract.get("decision") or "watch",
+            "evidence": (
+                f"paper_admissible={strict_close_data.get('paper_decision_admissible')}; "
+                f"events={strict_close_data.get('events')} null_rows={strict_close_data.get('null_rows')}; "
+                f"edge={strict_close_data.get('edge_vs_matched_null_pct')} "
+                f"policy_mutation_allowed={strict_close_data.get('policy_mutation_allowed')}."
+                if strict_close_contract
+                else "Strict-close predeclared paper contract is not available in cognitive-state inputs."
+            ),
+            "boundary": "Cognitive readback only: strict-close is a predeclared paper contract, not advice or method-policy mutation.",
         },
     ]
     if mnemos and kairos and coherence:

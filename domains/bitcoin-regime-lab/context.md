@@ -271,6 +271,12 @@ forward window, matched-null density and event thresholds, then reports whether
 forward-10 and the matched-date null are admissible enough for watch/test/reject.
 It is still an evidence card only, not policy mutation.
 
+`btc_closed_daily_strict_close_contract.py` takes the current pressure result
+and predeclares the `strict_close` axis as a paper contract for the next
+closed-daily cycle when its denominator and matched-date null are readable. It
+records event count, null comparison, forward denominator, paper-decision
+admissibility and the non-admissible boundary for policy mutation.
+
 
 ## Skill retrieval
 

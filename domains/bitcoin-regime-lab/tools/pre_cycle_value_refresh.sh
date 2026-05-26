@@ -27,6 +27,7 @@ cd "$ROOT"
 "$PYTHON_BIN" domains/bitcoin-regime-lab/tools/btc_zone_denominator_sensitivity.py --write
 "$PYTHON_BIN" domains/bitcoin-regime-lab/tools/btc_closed_daily_event_null.py --write
 "$PYTHON_BIN" domains/bitcoin-regime-lab/tools/btc_closed_daily_event_null_pressure.py --write
+"$PYTHON_BIN" domains/bitcoin-regime-lab/tools/btc_closed_daily_strict_close_contract.py --write
 "$PYTHON_BIN" domains/bitcoin-regime-lab/tools/btc_auto_ignite.py --write
 "$PYTHON_BIN" domains/bitcoin-regime-lab/tools/btc_volume_profile_lvn_proxy.py --write
 "$PYTHON_BIN" domains/bitcoin-regime-lab/tools/btc_policy_simulator.py --write

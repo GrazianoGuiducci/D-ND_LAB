@@ -33,6 +33,7 @@ EXPECTED_LATEST = {
     "btc_zone_denominator_sensitivity_latest.json",
     "btc_closed_daily_event_null_latest.json",
     "btc_closed_daily_event_null_pressure_latest.json",
+    "btc_closed_daily_strict_close_contract_latest.json",
     "btc_auto_ignite_latest.json",
     "btc_volume_profile_lvn_proxy_latest.json",
     "btc_policy_simulator_latest.json",
@@ -251,6 +252,20 @@ def build_health() -> dict[str, Any]:
         failures.append({"check": "closed_daily_event_null_pressure_variants", "artifact": "btc_closed_daily_event_null_pressure_latest.json", "issue": str(len(pressure_variants))})
     if event_null_pressure.get("boundary", {}).get("real_order_execution") is not False:
         failures.append({"check": "closed_daily_event_null_pressure_boundary", "artifact": "btc_closed_daily_event_null_pressure_latest.json", "issue": "real_order_boundary_missing"})
+
+    strict_contract = _read_json(VALUE_DIR / "btc_closed_daily_strict_close_contract_latest.json")
+    strict_data = strict_contract.get("data_card") if isinstance(strict_contract.get("data_card"), dict) else {}
+    strict_checks = strict_contract.get("checks") if isinstance(strict_contract.get("checks"), list) else []
+    if not strict_data:
+        failures.append({"check": "closed_daily_strict_close_contract", "artifact": "btc_closed_daily_strict_close_contract_latest.json", "issue": "missing"})
+    if strict_data.get("paper_decision_admissible") is not True:
+        failures.append({"check": "closed_daily_strict_close_contract_admissibility", "artifact": "btc_closed_daily_strict_close_contract_latest.json", "issue": str(strict_data.get("paper_decision_admissible"))})
+    if strict_data.get("policy_mutation_allowed") is not False:
+        failures.append({"check": "closed_daily_strict_close_contract_policy_mutation", "artifact": "btc_closed_daily_strict_close_contract_latest.json", "issue": str(strict_data.get("policy_mutation_allowed"))})
+    if len(strict_checks) != 4 or any(row.get("passed") is not True for row in strict_checks if isinstance(row, dict)):
+        failures.append({"check": "closed_daily_strict_close_contract_checks", "artifact": "btc_closed_daily_strict_close_contract_latest.json", "issue": str(len(strict_checks))})
+    if strict_contract.get("boundary", {}).get("real_order_execution") is not False:
+        failures.append({"check": "closed_daily_strict_close_contract_boundary", "artifact": "btc_closed_daily_strict_close_contract_latest.json", "issue": "real_order_boundary_missing"})
 
     trace_sink = _read_json(VALUE_DIR / "btc_producer_trace_sink_latest.json")
     trace_summary = trace_sink.get("summary") if isinstance(trace_sink.get("summary"), dict) else {}

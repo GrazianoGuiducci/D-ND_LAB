@@ -154,6 +154,11 @@
       "boundary": "pressure-tests the closed-daily event/null family across forward denominators, matched-null density and event thresholds; public_claim=false; trading_signal=false; operational=false"
     },
     {
+      "name": "btc_closed_daily_strict_close_contract",
+      "path": "tools/btc_closed_daily_strict_close_contract.py",
+      "boundary": "predeclares the strict_close closed-daily event/null variant as a paper contract for next-cycle falsification; public_claim=false; trading_signal=false; operational=false; method_policy_mutation=false"
+    },
+    {
       "name": "btc_auto_ignite",
       "path": "tools/btc_auto_ignite.py",
       "boundary": "gathers BTC value artifacts and writes a provisional LVN/Volume Profile proxy contract with explicit assumptions and nulls; public_claim=false; trading_signal=false; operational=false"
