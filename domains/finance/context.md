@@ -302,6 +302,10 @@ python3 /opt/D-ND_LAB/domains/finance/tools/finance_transfer_diagnostic.py \
 ```
 
 Default asset: `SPY, QQQ, IWM, EFA, TLT, GLD, BTC-USD`.
+Quando il ciclo non deve ripetere una premessa esaurita, dichiara prima del
+run `--object`, `--mechanism`, `--falsifier` e `--stop-rule`: questi campi
+entrano in `design_contract` nel JSON/Markdown e rendono visibile perche' il
+test e' materiale nuovo invece di tuning retrospettivo.
 
 Trigger: invocalo quando il ciclo deve testare
 `REAL_MARKET_TRANSFER_DIAGNOSTIC` o quando un report cita transfer SPY/QQQ/BTC.

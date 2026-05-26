@@ -42,10 +42,18 @@ python3 domains/finance/assertions.py
 # 5. Operational health — readiness del fronte finance
 python3 domains/finance/tools/finance_operational_health.py --json
 
-# 6. Falsifier meta — template valido?
+# 6. Transfer diagnostic con design pre-dichiarato
+python3 domains/finance/tools/finance_transfer_diagnostic.py \
+  --object "non-SPY control basket freshness" \
+  --mechanism "test whether no-transfer constraint survives without SPY" \
+  --falsifier "any robust non-SPY pass triggers recurrence review" \
+  --stop-rule "do not promote; inspect classification only" \
+  --json
+
+# 7. Falsifier meta — template valido?
 python3 domains/meta-lab/tools/lab_template_validator.py --strict-m7 domains/finance
 
-# 7. Cycle agent autonomo (~5-15 min)
+# 8. Cycle agent autonomo (~5-15 min)
 bash tools/dnd-cycle.sh finance
 ```
 

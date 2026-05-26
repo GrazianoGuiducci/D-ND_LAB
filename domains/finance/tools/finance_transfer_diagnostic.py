@@ -183,6 +183,7 @@ def classify(rows: list[dict[str, Any]]) -> dict[str, Any]:
 
 def render_markdown(payload: dict[str, Any]) -> str:
     classification = payload["classification"]
+    design_contract = payload.get("design_contract") if isinstance(payload.get("design_contract"), dict) else {}
     lines = [
         "# Finance Transfer Diagnostic - Exact Window",
         "",
@@ -205,11 +206,25 @@ def render_markdown(payload: dict[str, Any]) -> str:
         "- Trading signal: `false`",
         "- Promotion requires recurrence and materially independent assets.",
         "",
+    ]
+    if any(design_contract.values()):
+        lines.extend(
+            [
+                "## Predeclared Design",
+                "",
+                f"- Object: {design_contract.get('object') or 'not declared'}",
+                f"- Mechanism: {design_contract.get('mechanism') or 'not declared'}",
+                f"- Falsifier: {design_contract.get('falsifier') or 'not declared'}",
+                f"- Stop rule: {design_contract.get('stop_rule') or 'not declared'}",
+                "",
+            ]
+        )
+    lines.extend([
         "## Exact-Window Table",
         "",
         "| Symbol | Actual dates | n | iid | z_iid | block5 | z_b5 | block21 | z_b21 | robust | RV | VaR95 |",
         "|---|---|---:|---|---:|---|---:|---|---:|---|---:|---:|",
-    ]
+    ])
     for r in payload["rows"]:
         if r.get("status") != "OK":
             lines.append(
@@ -280,6 +295,10 @@ def main() -> int:
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--shuffles", type=int, default=1024)
     parser.add_argument("--output-dir", type=Path, default=default_output_dir())
+    parser.add_argument("--object", default="", help="predeclared object for this diagnostic")
+    parser.add_argument("--mechanism", default="", help="predeclared mechanism that makes this run materially new")
+    parser.add_argument("--falsifier", default="", help="predeclared falsifier before seeing rows")
+    parser.add_argument("--stop-rule", default="", help="predeclared stop rule before seeing rows")
     parser.add_argument("--json", action="store_true", help="print payload JSON to stdout")
     args = parser.parse_args()
 
@@ -303,6 +322,12 @@ def main() -> int:
         "nulls": ["iid_shuffle", "block_permutation_5", "block_permutation_21"],
         "rows": rows,
         "classification": classify(rows),
+        "design_contract": {
+            "object": args.object,
+            "mechanism": args.mechanism,
+            "falsifier": args.falsifier,
+            "stop_rule": args.stop_rule,
+        },
         "boundary": {
             "operational": False,
             "public_claim": False,
