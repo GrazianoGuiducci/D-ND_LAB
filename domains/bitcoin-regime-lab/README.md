@@ -55,6 +55,16 @@ This exposes the exact self-adjustment contract for method/policy mutation.
 It does not apply mutation. Under an open daily candle it remains readable and
 binding, but reports `policy_mutation_allowed=false`.
 
+Build the BTC retention/regime selector directly:
+
+```bash
+python3 domains/bitcoin-regime-lab/tools/btc_retention_regime_selector.py --write --json
+```
+
+This reads Mnemos/Kairos, the daily gate, policy contract, paper ledger and
+trajectory state, then returns explicit `retain/decay/reject/watch` decisions.
+It applies no hard decay, no method-policy mutation and no orders.
+
 Generate the exchange-native feed robustness card directly:
 
 ```bash

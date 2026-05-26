@@ -233,6 +233,13 @@ readable but return `policy_mutation_allowed=false`; trajectory apply may still
 absorb structural Lab directions, but BTC method/policy mutation is blocked by
 the contract until the daily gate and evidence contract allow it.
 
+`btc_retention_regime_selector.py` reads Mnemos/Kairos, the daily gate, policy
+contract, paper ledger and trajectory state and returns explicit
+`retain/decay/reject/watch` decisions. It is the self-adjustment selector for
+memory/regime state: it may recommend what should be retained, watched, decayed
+or rejected, but it applies zero hard decay and zero method-policy mutation
+while the contract blocks mutation.
+
 
 ## Skill retrieval
 

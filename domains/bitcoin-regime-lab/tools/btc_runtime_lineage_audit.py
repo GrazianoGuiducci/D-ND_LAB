@@ -35,6 +35,7 @@ EXPECTED_OUTPUT_ARTIFACTS = {
         "btc_mnemos_memory_latest.json",
         "btc_kairos_phase_latest.json",
         "btc_coherence_check_latest.json",
+        "btc_retention_regime_selector_latest.json",
         "btc_cognitive_state_latest.json",
         "btc_producer_trace_sink_latest.json",
     )

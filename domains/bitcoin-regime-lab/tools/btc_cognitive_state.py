@@ -46,6 +46,7 @@ VALUE_INPUTS = {
     "mnemos_memory": VALUE_DIR / "btc_mnemos_memory_latest.json",
     "kairos_phase": VALUE_DIR / "btc_kairos_phase_latest.json",
     "coherence_check": VALUE_DIR / "btc_coherence_check_latest.json",
+    "retention_regime_selector": VALUE_DIR / "btc_retention_regime_selector_latest.json",
 }
 
 
@@ -309,6 +310,16 @@ def build_cognitive_state() -> dict[str, Any]:
             "learned": _first_card(coherence).get("evidence") or "Coherence artifact checks drift between boundary and artifacts.",
             "decision": _first_card(coherence).get("decision"),
         })
+    selector = artifacts.get("retention_regime_selector") or {}
+    selector_state = selector.get("selector") if isinstance(selector.get("selector"), dict) else {}
+    if selector:
+        current_learning.append({
+            "source": "btc_retention_regime_selector",
+            "learned": _first_card(selector).get("evidence") or "Retention/regime selector returns explicit retain/decay/reject/watch decisions.",
+            "decision": _first_card(selector).get("decision"),
+            "counts": selector_state.get("counts"),
+            "effects_applied": selector_state.get("effects_applied"),
+        })
 
     not_yet_closed = [
         "autonomous policy mutation contract after the next stable closed-data run",
@@ -390,6 +401,18 @@ def build_cognitive_state() -> dict[str, Any]:
                 else "Policy mutation contract artifact is not available in cognitive-state inputs."
             ),
             "boundary": "Cognitive readback only: policy mutation remains controlled by the contract artifact and daily gate.",
+        },
+        {
+            "claim_id": "btc_retention_regime_selector_readback",
+            "title": "BTC retention/regime selector readback",
+            "decision": "test" if selector else "watch",
+            "evidence": (
+                f"selector_counts={selector_state.get('counts')}; "
+                f"effects_applied={selector_state.get('effects_applied')}."
+                if selector
+                else "Retention/regime selector artifact is not available in cognitive-state inputs."
+            ),
+            "boundary": "Cognitive readback only: selector returns memory/regime decisions without hard decay or method-policy mutation.",
         },
     ]
     if mnemos and kairos and coherence:

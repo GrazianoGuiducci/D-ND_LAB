@@ -37,6 +37,7 @@ EXPECTED_LATEST = {
     "btc_mnemos_memory_latest.json",
     "btc_kairos_phase_latest.json",
     "btc_coherence_check_latest.json",
+    "btc_retention_regime_selector_latest.json",
     "btc_cognitive_state_latest.json",
     "btc_producer_trace_sink_latest.json",
 }
@@ -184,6 +185,19 @@ def build_health() -> dict[str, Any]:
         failures.append({"check": "mnemos_hard_decay_applied_count", "artifact": "btc_mnemos_memory_latest.json", "issue": str(hard_decay_applied)})
     if policy_mutation_applied != 0:
         failures.append({"check": "mnemos_policy_mutation_applied_count", "artifact": "btc_mnemos_memory_latest.json", "issue": str(policy_mutation_applied)})
+
+    selector = _read_json(VALUE_DIR / "btc_retention_regime_selector_latest.json")
+    selector_state = selector.get("selector") if isinstance(selector.get("selector"), dict) else {}
+    selector_effects = selector_state.get("effects_applied") if isinstance(selector_state.get("effects_applied"), dict) else {}
+    selector_counts = selector_state.get("counts") if isinstance(selector_state.get("counts"), dict) else {}
+    if not selector_state:
+        failures.append({"check": "retention_regime_selector", "artifact": "btc_retention_regime_selector_latest.json", "issue": "missing"})
+    if not selector_counts or not any(isinstance(selector_counts.get(key), int) for key in ("retain", "decay", "reject", "watch")):
+        failures.append({"check": "retention_regime_selector_counts", "artifact": "btc_retention_regime_selector_latest.json", "issue": "missing"})
+    if selector_effects.get("hard_decay_applied_count") != 0:
+        failures.append({"check": "retention_regime_selector_hard_decay", "artifact": "btc_retention_regime_selector_latest.json", "issue": str(selector_effects.get("hard_decay_applied_count"))})
+    if selector_effects.get("policy_mutation_applied_count") != 0:
+        failures.append({"check": "retention_regime_selector_policy_mutation", "artifact": "btc_retention_regime_selector_latest.json", "issue": str(selector_effects.get("policy_mutation_applied_count"))})
 
     trace_sink = _read_json(VALUE_DIR / "btc_producer_trace_sink_latest.json")
     trace_summary = trace_sink.get("summary") if isinstance(trace_sink.get("summary"), dict) else {}

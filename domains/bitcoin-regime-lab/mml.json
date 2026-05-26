@@ -169,6 +169,11 @@
       "boundary": "writes first-class Mnemos/Kairos/Coherence artifacts from local BTC value artifacts: retention/decay, phase selection and coherence checks; no data fetch and no cycle execution"
     },
     {
+      "name": "btc_retention_regime_selector",
+      "path": "tools/btc_retention_regime_selector.py",
+      "boundary": "reads Mnemos, Kairos, daily gate, policy contract, paper ledger and trajectory state; returns explicit retain/decay/reject/watch decisions without applying hard decay, method-policy mutation or orders"
+    },
+    {
       "name": "btc_cognitive_state",
       "path": "tools/btc_cognitive_state.py",
       "boundary": "reads current BTC Lab artifacts and writes the observable cognitive/autological state: learning, adjustment, layer gaps and next mutation; no data fetch and no cycle execution"
