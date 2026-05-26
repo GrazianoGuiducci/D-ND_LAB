@@ -2,7 +2,7 @@
 """Deterministic BTC operational health check.
 
 This is a maintenance guard for scheduled value refreshes. It does not fetch
-market data, run a cognitive cycle, mutate policy, or produce trading signals.
+market data, run a cognitive cycle, or execute real orders.
 """
 from __future__ import annotations
 
@@ -193,7 +193,7 @@ def build_health() -> dict[str, Any]:
         "closure_summary": closure_summary,
         "failures": failures,
         "warnings": warnings,
-        "boundary": "Operational health only: no market interpretation, no policy mutation, no trading signal.",
+        "boundary": "Operational health only: process guard; no real order execution or public advice.",
     }
 
 

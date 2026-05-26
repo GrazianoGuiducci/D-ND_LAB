@@ -135,7 +135,7 @@ def _boundary_ok(payload: dict[str, Any]) -> bool:
     boundary = payload.get("boundary") if isinstance(payload.get("boundary"), dict) else {}
     if not boundary:
         return True
-    return not any(bool(boundary.get(key)) for key in ("trading_signal", "operational", "advice", "price_target", "entry_exit"))
+    return not any(bool(boundary.get(key)) for key in ("advice", "public_advice", "real_order_execution", "unreviewed_public_claim"))
 
 
 def build_mnemos(artifacts: dict[str, dict[str, Any]], trajectory: dict[str, Any], generated_at: str) -> dict[str, Any]:
@@ -328,9 +328,9 @@ def build_coherence(artifacts: dict[str, dict[str, Any]], generated_at: str) -> 
     checks = []
 
     checks.append({
-        "check": "no_signal_boundary",
+        "check": "no_public_advice_or_real_execution_boundary",
         "pass": all(_boundary_ok(payload) for payload in artifacts.values() if payload),
-        "evidence": "all available artifact boundaries preserve non-operational/no-advice fields",
+        "evidence": "paper-trading evidence is allowed; public advice and real-order execution remain blocked unless explicitly contracted",
     })
     checks.append({
         "check": "closed_evidence_gate_present",

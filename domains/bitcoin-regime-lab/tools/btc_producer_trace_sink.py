@@ -2,7 +2,8 @@
 """First-class producer trace sink for BTC value artifacts.
 
 This artifact indexes the deterministic producers that feed the BTC Lab. It is
-process telemetry only: no market interpretation, no policy mutation, no signal.
+process telemetry: it may index paper-trading evidence, but it does not execute
+real orders or publish advice.
 """
 from __future__ import annotations
 
@@ -148,7 +149,7 @@ def build_artifact() -> dict[str, Any]:
                     f"{len(rows) - len(missing)}/{len(EXPECTED_UPSTREAM)} producers available; "
                     f"missing_lineage={len(missing_lineage)}; missing_stamped_outputs={len(missing_stamped)}."
                 ),
-                "boundary": "Producer trace sink only: process telemetry, no BTC interpretation, no policy mutation, no trading signal.",
+                "boundary": "Producer trace sink only: process telemetry; it indexes paper-trading evidence without executing real orders or publishing advice.",
             }
         ],
         "failures": {

@@ -12,8 +12,8 @@ from typing import Any
 
 LINEAGE_SCHEMA = "dndlab.bitcoin.runtime_lineage.v1"
 BOUNDARY = (
-    "Runtime lineage only: no market-data interpretation, no policy mutation, "
-    "no trading signal."
+    "Runtime lineage only: process provenance. Domain artifacts may contain "
+    "paper-trading evidence; lineage does not execute real orders or publish advice."
 )
 
 

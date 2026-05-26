@@ -2,7 +2,9 @@
 
 ## Intent in movement
 
-Monitor BTC regime hypotheses and falsify weak operational interpretations before they become operational claims, using timeframe, Volume Profile, POC/LVN/HVN, FVG, Kumo and feed robustness as observable method surfaces.
+Monitor BTC regime hypotheses and falsify weak operational interpretations
+before they become claims, using timeframe, Volume Profile, POC/LVN/HVN, FVG,
+Kumo, feed robustness and paper-trading outcomes as observable method surfaces.
 
 The intent lives in the cycle movement, not in a prescribed result. The first
 seed prepares the field; it does not authorize a public claim.
@@ -19,12 +21,18 @@ seed prepares the field; it does not authorize a public claim.
 - turn trader language into observable event schemas, data-cards, baseline/nulls and falsifiers
 - answer the optimal-timeframe question through a validation matrix instead of opinion
 - test POC/Naked POC, inefficiency/FVG/LVN/CME gap, trendline retest and Kumo gates against matched nulls
-- classify outputs as observe, watch, test or reject before any decision-support or signal-candidate promotion
+- classify outputs as observe, watch, test, reject or simulated-decision before
+  any promotion from hypothesis to method
+- use paper trading / live simulation as a valid measurement surface: if the
+  Lab cannot say what it would have done, it cannot measure whether a method
+  works
 - require feed robustness across Bitstamp, Binance, Coinbase and optional Kraken before accepting event labels
 
 ## Exclusions
 
-- buy/sell/entry/exit/price-target/profit/alpha/trading-signal language
+- real-money order execution unless explicitly configured and separately
+  authorized
+- public financial advice or presenting paper-trading output as instruction
 - manual chart annotations treated as evidence without mechanical definitions
 - external BTC method material treated as authority before observable/null/falsifier translation
 - current/open candle backtests unless explicitly declared as live-only observation
@@ -116,7 +124,9 @@ Starter falsifiers:
 - `manual_annotation_drift`
 - `fill_rate_without_denominator`
 - `volume_proxy_confusion`
-- `signal_language_before_promotion`
+- `simulation_reality_confusion`
+- `signal_without_ledger`
+- `signal_language_before_measurement`
 
 Domain-native UI modules:
 
@@ -157,8 +167,9 @@ Human method intake:
   testable surface, weekly/monthly are watch surfaces, intraday is blocked
   until native intraday OHLCV/feed robustness exists.
 - Next movement should expose one daily method specification or daily-computable
-  FVG/inefficiency candidate with matched null. Do not promote POC/FVG/MM52
-  language to target, entry, exit or signal.
+  FVG/inefficiency candidate with matched null. A paper signal is admissible
+  when it has explicit entry/exit/invalidation/cost assumptions and lands in a
+  simulation ledger; it is not admissible as public advice.
 - BTC policy simulator v1 is manual-only research infrastructure. It measures
   declared historical method policies against controls, walk-forward splits and
   parameter perturbations. Lab value can be positive or negative: stable
@@ -168,8 +179,30 @@ Human method intake:
   The artifact should show how event windows behave against the ordinary BTC
   daily chart path, so a human can compare method structure with normal chart
   movement instead of reading isolated closure counts.
-  In refresh hooks it remains artifact generation only: it does not execute
-  policy mutation, public claims or operational action.
+  In refresh hooks it remains artifact generation only: it may produce
+  paper-trading evidence, but does not execute real orders or public advice.
+
+## Trading-simulation frame
+
+Operator correction 2026-05-26: the BTC Lab must accept trading as the
+simulation frame. We are not trading with capital because that is not the
+current interest, but the Lab must behave as if it had to decide in order to
+measure whether something works.
+
+Therefore valid internal objects include:
+
+- paper buy/sell/hold decision;
+- entry, exit, invalidation and sizing assumptions;
+- fees, slippage, latency and execution model;
+- hit-rate, expectancy, drawdown, PnL and error versus baseline;
+- decision ledger and post-decision falsification.
+
+Invalid objects are:
+
+- unlogged signals;
+- paper results presented as public instruction;
+- real-money execution without an explicit separate runtime contract;
+- method promotion without baseline/null/falsifier and ledger evidence.
 
 
 ## Skill retrieval

@@ -19,10 +19,10 @@ python3 domains/bitcoin-regime-lab/tools/btc_market_card.py --write --json
 ```
 
 The artifact is written under `data/bitcoin-regime-lab/value/` and appears in
-Campo through `latest_value_artifacts`. It is an observe-only context card:
-price, 1d/7d/30d changes, realized-volatility proxy, source and retrieval
-timestamp. It is not a trading signal and does not authorize buy/sell/target
-language.
+Campo through `latest_value_artifacts`. It is a context card: price,
+1d/7d/30d changes, realized-volatility proxy, source and retrieval timestamp.
+Paper-trading decisions are valid Lab objects when they are logged in a
+simulation ledger; this card itself is not a decision ledger.
 
 Refresh all value-facing Bitcoin artifacts without running a cognitive cycle:
 
@@ -32,8 +32,8 @@ bash tools/bitcoin-refresh-value.sh
 
 This wrapper runs the market/feed cards, method/test artifacts, policy
 simulator, paper ledger, producer-lineage artifact, autological artifacts and
-cognitive state. It is safe for cron because it uses only public no-key APIs
-and writes only `data/bitcoin-regime-lab/value/*`.
+cognitive state. It is safe for cron because it uses only public no-key APIs,
+writes only `data/bitcoin-regime-lab/value/*`, and executes no real orders.
 
 Build the producer trace sink directly:
 
@@ -43,7 +43,7 @@ python3 domains/bitcoin-regime-lab/tools/btc_producer_trace_sink.py --write --js
 
 This indexes the BTC value-artifact producers, latest/stamped outputs,
 sessions, cycle/refresh refs and trace/log/report pointers. It is telemetry
-for process reliability, not BTC interpretation.
+for process reliability and can index paper-trading evidence.
 
 Generate the exchange-native feed robustness card directly:
 

@@ -167,7 +167,7 @@ def build_audit(cycle_ts: str) -> dict[str, Any]:
         "missing_expected_outputs": missing_expected_outputs,
         "unexpected_outputs": unexpected_outputs,
         "duplicate_cycle_bindings": duplicate_cycle_bindings,
-        "boundary": "Post-cycle provenance closure audit only: no market interpretation, no policy mutation, no trading signal.",
+        "boundary": "Post-cycle provenance closure audit only: process telemetry; no real order execution or public advice.",
         "interpretation": (
             "Use status=pass from a post_cycle audit as the closure contract. "
             "During an in-cycle/pre-report audit, missing report or cycle_trace "

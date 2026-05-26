@@ -40,6 +40,12 @@ trigger_cycle NON avvia processi: registra nel seed la continuità del
 NEXT_CYCLE così il ciclo successivo legge la traiettoria invece di dipendere
 da inferenza implicita sui log.
 
+BTC guarded autonomy: `bitcoin-regime-lab` può assorbire anche una direzione
+strutturale `medium` se health, closure e falsifier sono verdi e la direzione
+resta nel Lab. Il trading simulato e' un oggetto valido di apprendimento; la
+distinzione e' tra paper/live-sim misurabile e side effect esterni non
+verificati.
+
 Idempotente: marca executed=true dopo application. Re-runs non
 re-applicano la stessa entry.
 
@@ -137,6 +143,60 @@ def _is_eligible(entry: dict[str, Any]) -> tuple[bool, str]:
         return True, "eligible"
 
     return True, "eligible"
+
+
+def _read_json_file(path: Path) -> dict[str, Any]:
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+    return payload if isinstance(payload, dict) else {}
+
+
+def _btc_guarded_medium_eligible(domain: str, entry: dict[str, Any]) -> tuple[bool, str]:
+    """Narrow BTC self-step for medium-confidence structural directions.
+
+    This lets the next cycle read and work a Lab-evolution direction. Paper
+    trading is a valid measurement surface; any later real-money or public
+    side effect still has to appear as an artifact, pass the domain gates, and
+    be visible to falsifier/health/closure.
+    """
+    if domain != "bitcoin-regime-lab":
+        return False, ""
+    if entry.get("executed") is True or entry.get("confidence") != "medium":
+        return False, ""
+    action = entry.get("action") or {}
+    if not isinstance(action, dict) or action.get("type") != "modify_seme":
+        return False, ""
+    detail = action.get("detail") or {}
+    if not isinstance(detail, dict) or detail.get("field") != "direzione":
+        return False, ""
+    new_value = detail.get("new_value")
+    if not isinstance(new_value, str) or not new_value.strip():
+        return False, ""
+    direction = new_value.upper()
+    if "DAILY_GATE_HELD" not in direction and "FIRST_CLASS" not in direction:
+        return False, "BTC guarded medium requires DAILY_GATE_HELD or FIRST_CLASS direction"
+
+    data_dir = paths.domain_data_dir(domain)
+    health = _read_json_file(data_dir / "health" / "btc_operational_health_latest.json")
+    if health.get("status") != "pass":
+        return False, "BTC health not pass"
+    latest_cycle = health.get("latest_cycle_ref") or entry.get("cycle_ref")
+    if not isinstance(latest_cycle, str) or not latest_cycle:
+        return False, "missing latest cycle ref"
+    closure = _read_json_file(data_dir / "closure" / f"btc_runtime_lineage_closure_{latest_cycle}.json")
+    if closure.get("status") != "pass" or closure.get("phase") != "post_cycle":
+        return False, "latest closure not post_cycle/pass"
+    falsifier = _read_json_file(data_dir / "falsifier" / f"falsifier_{latest_cycle}.json")
+    flags = falsifier.get("flags")
+    if falsifier.get("coherent") is not True or not isinstance(flags, list) or flags:
+        return False, "latest falsifier not coherent zero-flag"
+    gate = _read_json_file(data_dir / "value" / "btc_daily_closed_evidence_gate_latest.json")
+    gate_state = gate.get("gate") if isinstance(gate.get("gate"), dict) else {}
+    if gate_state.get("mutation_allowed") is not False:
+        return False, "daily gate is not explicitly held"
+    return True, "BTC guarded medium structural self-step"
 
 
 def _trigger_cycle_direction(detail: dict[str, Any]) -> str:
@@ -345,6 +405,12 @@ def trajectory_apply(ctx: CycleContext) -> None:
         return
 
     eligible, reason = _is_eligible(entry)
+    guarded_medium = False
+    if not eligible:
+        guarded_medium, guarded_reason = _btc_guarded_medium_eligible(ctx.domain, entry)
+        if guarded_medium:
+            eligible = True
+            reason = guarded_reason
     if not eligible:
         write_trajectory_state(
             ctx.domain,
@@ -431,6 +497,7 @@ def trajectory_apply(ctx: CycleContext) -> None:
         log_entry_marked_executed=marked,
         action_type=action_type,
         confidence=entry.get("confidence"),
+        guarded_medium=guarded_medium,
     )
     write_trajectory_state(
         ctx.domain,
@@ -440,7 +507,7 @@ def trajectory_apply(ctx: CycleContext) -> None:
         entry={**entry, "executed": True},
         direction=new_direzione,
         reason=f"applied {action_type} from {cycle_ref}",
-        extra={"log_entry_marked_executed": marked},
+        extra={"log_entry_marked_executed": marked, "guarded_medium": guarded_medium, "eligibility_reason": reason},
     )
     logger.info(
         "trajectory_apply: APPLIED %s from %s — direzione → '%s...'",

@@ -2,9 +2,10 @@
 # bitcoin-refresh-value.sh — refresh value-facing Bitcoin artifacts only.
 #
 # This is intentionally not a cognitive Lab cycle. It runs no LLM and produces
-# no report, signal, target or advice. Use it before/alongside scheduled BTC
-# cycles so the dashboard and agent field can see fresh public data-card
-# context.
+# no report and executes no real orders. It may refresh paper-trading /
+# simulation evidence, but it does not publish advice or touch capital. Use it
+# before/alongside scheduled BTC cycles so the dashboard and agent field can see
+# fresh public data-card context.
 
 set -euo pipefail
 
