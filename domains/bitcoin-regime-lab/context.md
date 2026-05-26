@@ -277,6 +277,15 @@ closed-daily cycle when its denominator and matched-date null are readable. It
 records event count, null comparison, forward denominator, paper-decision
 admissibility and the non-admissible boundary for policy mutation.
 
+`btc_strict_close_paper_ledger.py` is the prepared ledger for that contract. It
+turns strict-close closed-daily events into simulated paper rows with
+paper long/short direction, event-close entry basis, forward-window exit basis,
+round-trip cost, net directional return and matched-date null comparison. It is
+not wired into scheduled refresh yet; after the night-run smoke passes, decide
+whether to wire it into refresh/health as the next strict-close paper-ledger
+contract step. It must not create public signals, advice, real orders or method
+policy mutation.
+
 
 ## Skill retrieval
 

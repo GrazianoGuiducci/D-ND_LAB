@@ -127,6 +127,17 @@ python3 domains/bitcoin-regime-lab/tools/btc_closed_daily_strict_close_contract.
 This freezes the selected `strict_close` axis as the next-cycle paper contract
 and records denominator/null admissibility without mutating method policy.
 
+Prepare the strict-close paper ledger directly:
+
+```bash
+python3 domains/bitcoin-regime-lab/tools/btc_strict_close_paper_ledger.py --json
+```
+
+This turns the predeclared strict-close closed-daily contract into simulated
+paper rows: paper long/short decision, entry/exit basis, round-trip cost,
+net directional return, matched-date null comparison and boundary readback. It
+is prepared but not wired into refresh until the night-run evidence is reviewed.
+
 Run the read-only night-run smoke guard:
 
 ```bash

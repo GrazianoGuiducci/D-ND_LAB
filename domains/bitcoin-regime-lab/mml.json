@@ -159,6 +159,11 @@
       "boundary": "predeclares the strict_close closed-daily event/null variant as a paper contract for next-cycle falsification; public_claim=false; trading_signal=false; operational=false; method_policy_mutation=false"
     },
     {
+      "name": "btc_strict_close_paper_ledger",
+      "path": "tools/btc_strict_close_paper_ledger.py",
+      "boundary": "prepared read-only ledger for the strict_close closed-daily paper contract; simulated decisions only; public_claim=false; trading_signal=false; operational=false; method_policy_mutation=false; not wired into refresh until night-run evidence is reviewed"
+    },
+    {
       "name": "btc_auto_ignite",
       "path": "tools/btc_auto_ignite.py",
       "boundary": "gathers BTC value artifacts and writes a provisional LVN/Volume Profile proxy contract with explicit assumptions and nulls; public_claim=false; trading_signal=false; operational=false"
