@@ -31,6 +31,7 @@ EXPECTED_OUTPUT_ARTIFACTS = {
         "btc_volume_profile_lvn_proxy_latest.json",
         "btc_policy_simulator_latest.json",
         "btc_paper_simulation_ledger_latest.json",
+        "btc_policy_mutation_contract_latest.json",
         "btc_mnemos_memory_latest.json",
         "btc_kairos_phase_latest.json",
         "btc_coherence_check_latest.json",

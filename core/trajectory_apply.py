@@ -199,6 +199,47 @@ def _btc_guarded_medium_eligible(domain: str, entry: dict[str, Any]) -> tuple[bo
     return True, "BTC guarded medium structural self-step"
 
 
+def _btc_entry_policy_class(entry: dict[str, Any]) -> str:
+    action = entry.get("action") or {}
+    detail = action.get("detail") if isinstance(action, dict) else {}
+    text = " ".join(
+        str(value)
+        for value in (
+            entry.get("decision"),
+            entry.get("reasoning"),
+            detail.get("new_value") if isinstance(detail, dict) else "",
+            detail.get("reason") if isinstance(detail, dict) else "",
+        )
+        if value
+    ).lower()
+    structural_tokens = ("contract", "first-class artifact", "first class artifact", "readable", "binding")
+    no_mutation_tokens = ("without applying", "no policy mutation", "mutation_allowed=false", "blocked")
+    if any(token in text for token in structural_tokens) and any(token in text for token in no_mutation_tokens):
+        return "structural_contract"
+    policy_tokens = ("method_policy_mutation", "policy mutation", "mutate policy", "mutazione policy", "reinterpret", "promote method", "method promotion")
+    if any(token in text for token in policy_tokens):
+        return "method_policy_mutation"
+    return "structural_seed_direction"
+
+
+def _btc_policy_contract_allows_entry(domain: str, entry: dict[str, Any]) -> tuple[bool, str]:
+    if domain != "bitcoin-regime-lab":
+        return True, "not BTC"
+    effect = _btc_entry_policy_class(entry)
+    if effect != "method_policy_mutation":
+        return True, f"BTC {effect} allowed"
+    data_dir = paths.domain_data_dir(domain)
+    payload = _read_json_file(data_dir / "value" / "btc_policy_mutation_contract_latest.json")
+    contract = payload.get("contract") if isinstance(payload.get("contract"), dict) else {}
+    if not contract:
+        return False, "BTC policy mutation contract missing"
+    allowed = contract.get("allowed_effects") if isinstance(contract.get("allowed_effects"), list) else []
+    blocked = contract.get("blocked_effects") if isinstance(contract.get("blocked_effects"), list) else []
+    if contract.get("policy_mutation_allowed") is True and "method_policy_mutation" in allowed:
+        return True, "BTC policy mutation contract allows method_policy_mutation"
+    return False, f"BTC policy mutation blocked by contract ({','.join(blocked) or 'no blocked_effects'})"
+
+
 def _trigger_cycle_direction(detail: dict[str, Any]) -> str:
     """Extract a concise continuation direction from trigger_cycle.detail.
 
@@ -432,6 +473,29 @@ def trajectory_apply(ctx: CycleContext) -> None:
             entry_confidence=entry.get("confidence"),
         )
         logger.info("trajectory_apply: SKIP — %s", reason)
+        return
+
+    contract_allowed, contract_reason = _btc_policy_contract_allows_entry(ctx.domain, entry)
+    if not contract_allowed:
+        write_trajectory_state(
+            ctx.domain,
+            status="blocked_by_policy_contract",
+            source="trajectory_apply",
+            cycle_ts=ctx.timestamp,
+            entry=entry,
+            reason=contract_reason,
+            extra={
+                "entry_executed": entry.get("executed"),
+                "entry_confidence": entry.get("confidence"),
+            },
+        )
+        ctx.metrics.setdefault("trajectory_apply", {}).update(
+            decision="SKIP_BLOCKED",
+            reason=contract_reason,
+            entry_cycle_ref=entry.get("cycle_ref"),
+            entry_confidence=entry.get("confidence"),
+        )
+        logger.info("trajectory_apply: SKIP_BLOCKED — %s", contract_reason)
         return
 
     satisfied, satisfied_reason = _post_cycle_closure_satisfies_entry(ctx.domain, entry)

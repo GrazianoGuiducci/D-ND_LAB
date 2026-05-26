@@ -154,6 +154,11 @@
       "boundary": "reads BTC policy simulator and writes a paper simulation ledger: simulated research decisions, outcomes, error against normal BTC baseline and next adjustment hints; no data fetch and no order execution"
     },
     {
+      "name": "btc_policy_mutation_contract",
+      "path": "tools/btc_policy_mutation_contract.py",
+      "boundary": "reads the daily gate, policy simulator, paper ledger and trajectory state; writes a first-class contract for BTC method/policy self-adjustment without applying mutation or executing orders"
+    },
+    {
       "name": "btc_daily_closed_evidence_gate",
       "path": "tools/btc_daily_closed_evidence_gate.py",
       "boundary": "reads BTC daily artifacts and writes a policy-mutation guard that separates closed daily evidence from current open-candle refresh noise; public_claim=false; trading_signal=false; operational=false"

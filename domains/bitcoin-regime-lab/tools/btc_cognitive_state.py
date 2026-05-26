@@ -41,6 +41,7 @@ VALUE_INPUTS = {
     "lvn_proxy": VALUE_DIR / "btc_volume_profile_lvn_proxy_latest.json",
     "policy_simulator": VALUE_DIR / "btc_policy_simulator_latest.json",
     "paper_simulation_ledger": VALUE_DIR / "btc_paper_simulation_ledger_latest.json",
+    "policy_mutation_contract": VALUE_DIR / "btc_policy_mutation_contract_latest.json",
     "daily_closed_evidence_gate": VALUE_DIR / "btc_daily_closed_evidence_gate_latest.json",
     "mnemos_memory": VALUE_DIR / "btc_mnemos_memory_latest.json",
     "kairos_phase": VALUE_DIR / "btc_kairos_phase_latest.json",
@@ -256,6 +257,17 @@ def build_cognitive_state() -> dict[str, Any]:
             "median_error_vs_baseline_pct": ledger_metrics.get("median_error_vs_baseline_pct"),
             "hit_rate_vs_baseline": ledger_metrics.get("hit_rate_vs_baseline"),
         })
+    policy_contract = artifacts.get("policy_mutation_contract") or {}
+    contract = policy_contract.get("contract") if isinstance(policy_contract.get("contract"), dict) else {}
+    if policy_contract:
+        current_learning.append({
+            "source": "btc_policy_mutation_contract",
+            "learned": _first_card(policy_contract).get("evidence") or "Policy mutation contract exposes allowed and blocked self-adjustment effects.",
+            "decision": _first_card(policy_contract).get("decision"),
+            "policy_mutation_allowed": contract.get("policy_mutation_allowed"),
+            "allowed_effects": contract.get("allowed_effects"),
+            "blocked_effects": contract.get("blocked_effects"),
+        })
     if trajectory:
         current_learning.append({
             "source": "trajectory_evaluator",
@@ -365,6 +377,19 @@ def build_cognitive_state() -> dict[str, Any]:
                 + "."
             ),
             "boundary": "can_adjust_now is scoped; it does not authorize method/policy mutation while mutation_allowed=false.",
+        },
+        {
+            "claim_id": "btc_policy_mutation_contract_readback",
+            "title": "BTC policy mutation contract readback",
+            "decision": "test" if contract else "watch",
+            "evidence": (
+                f"policy_mutation_allowed={contract.get('policy_mutation_allowed')}; "
+                f"allowed_effects={','.join(contract.get('allowed_effects') or [])}; "
+                f"blocked_effects={','.join(contract.get('blocked_effects') or [])}."
+                if contract
+                else "Policy mutation contract artifact is not available in cognitive-state inputs."
+            ),
+            "boundary": "Cognitive readback only: policy mutation remains controlled by the contract artifact and daily gate.",
         },
     ]
     if mnemos and kairos and coherence:

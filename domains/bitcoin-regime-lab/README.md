@@ -45,6 +45,16 @@ This indexes the BTC value-artifact producers, latest/stamped outputs,
 sessions, cycle/refresh refs and trace/log/report pointers. It is telemetry
 for process reliability and can index paper-trading evidence.
 
+Build the BTC policy-mutation contract directly:
+
+```bash
+python3 domains/bitcoin-regime-lab/tools/btc_policy_mutation_contract.py --write --json
+```
+
+This exposes the exact self-adjustment contract for method/policy mutation.
+It does not apply mutation. Under an open daily candle it remains readable and
+binding, but reports `policy_mutation_allowed=false`.
+
 Generate the exchange-native feed robustness card directly:
 
 ```bash

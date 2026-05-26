@@ -225,6 +225,14 @@ The cognitive-state artifact must expose `can_adjust_now_scopes`,
 `policy_mutation_allowed` and `typed_adjustment` so dashboard and health checks
 cannot confuse paper/live-sim measurement with method mutation.
 
+`btc_policy_mutation_contract.py` is the binding self-adjustment contract. It
+is regenerated before autology/cognitive state and lists prerequisites, blocked
+states, allowed evidence inputs, ledger requirements, baseline/null obligations
+and promotion/falsification outcomes. Under `HOLD_OPEN_DAILY_CANDLE` it must be
+readable but return `policy_mutation_allowed=false`; trajectory apply may still
+absorb structural Lab directions, but BTC method/policy mutation is blocked by
+the contract until the daily gate and evidence contract allow it.
+
 
 ## Skill retrieval
 

@@ -33,6 +33,7 @@ EXPECTED_LATEST = {
     "btc_volume_profile_lvn_proxy_latest.json",
     "btc_policy_simulator_latest.json",
     "btc_paper_simulation_ledger_latest.json",
+    "btc_policy_mutation_contract_latest.json",
     "btc_mnemos_memory_latest.json",
     "btc_kairos_phase_latest.json",
     "btc_coherence_check_latest.json",
@@ -153,6 +154,17 @@ def build_health() -> dict[str, Any]:
         failures.append({"check": "cognitive_policy_mutation_scope", "artifact": "btc_cognitive_state_latest.json", "issue": "open_daily_gate_without_policy_mutation_block"})
     if auto_adjustment.get("policy_mutation_allowed") and "method_policy_mutation" not in allowed_scopes:
         failures.append({"check": "cognitive_policy_mutation_scope", "artifact": "btc_cognitive_state_latest.json", "issue": "policy_mutation_allowed_without_scope"})
+
+    policy_contract = _read_json(VALUE_DIR / "btc_policy_mutation_contract_latest.json")
+    contract = policy_contract.get("contract") if isinstance(policy_contract.get("contract"), dict) else {}
+    if not contract:
+        failures.append({"check": "policy_mutation_contract", "artifact": "btc_policy_mutation_contract_latest.json", "issue": "missing"})
+    else:
+        contract_blocked = contract.get("blocked_effects") if isinstance(contract.get("blocked_effects"), list) else []
+        if daily_gate_state.get("mutation_allowed") is False and "method_policy_mutation" not in contract_blocked:
+            failures.append({"check": "policy_mutation_contract_gate", "artifact": "btc_policy_mutation_contract_latest.json", "issue": "open_daily_gate_without_policy_mutation_block"})
+        if contract.get("policy_mutation_allowed") and "method_policy_mutation" not in contract.get("allowed_effects", []):
+            failures.append({"check": "policy_mutation_contract_allowed_effect", "artifact": "btc_policy_mutation_contract_latest.json", "issue": "allowed_without_effect"})
 
     mnemos = _read_json(VALUE_DIR / "btc_mnemos_memory_latest.json")
     retention = mnemos.get("retention") if isinstance(mnemos.get("retention"), list) else []
