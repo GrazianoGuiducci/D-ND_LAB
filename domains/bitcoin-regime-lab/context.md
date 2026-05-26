@@ -204,6 +204,27 @@ Invalid objects are:
 - real-money execution without an explicit separate runtime contract;
 - method promotion without baseline/null/falsifier and ledger evidence.
 
+## Typed adjustment boundary
+
+`can_adjust_now` is a scoped signal, not a blanket authorization.
+
+Allowed under an open daily candle:
+
+- refresh/autology updates that write Lab artifacts;
+- paper decisions that are recorded in the paper-simulation ledger and attacked
+  by baseline/null/falsifier checks.
+
+Blocked while `mutation_allowed=false`:
+
+- method or policy mutation;
+- reinterpretation of LVN/FVG/timeframe evidence as if the current daily candle
+  were closed;
+- real-money execution without a separate explicit runtime contract.
+
+The cognitive-state artifact must expose `can_adjust_now_scopes`,
+`policy_mutation_allowed` and `typed_adjustment` so dashboard and health checks
+cannot confuse paper/live-sim measurement with method mutation.
+
 
 ## Skill retrieval
 

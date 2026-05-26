@@ -6180,6 +6180,8 @@
           active: 'attivo',
           partial: 'parziale',
           ready: 'pronto',
+          scoped: 'tipizzato',
+          'policy ready': 'policy pronta',
           watch: 'osservazione',
           redesign: 'ridisegno',
           REDESIGN: 'ridisegno',
@@ -6302,6 +6304,8 @@
         return [
           `schema: ${payload.schema || 'dndlab.bitcoin.cognitive_state.v1'}`,
           `summary: ${JSON.stringify(payload.summary || {})}`,
+          `adjustment_scopes: ${(adjustment.can_adjust_now_scopes || []).join(', ') || 'n/a'}`,
+          `policy_mutation_allowed: ${adjustment.policy_mutation_allowed === true ? 'true' : 'false'}`,
           `next_mutation: ${adjustment.next_mutation || 'n/a'}`,
           `adjustment_source: ${adjustment.adjustment_source || 'n/a'}`,
           ...cards.map(card => `card: ${card.title || card.claim_id || 'card'}\nevidence: ${card.evidence || ''}\nboundary: ${card.boundary || ''}`),
@@ -6358,6 +6362,8 @@
         const layers = Array.isArray(payload.layer_alignment) ? payload.layer_alignment : [];
         const gaps = layers.filter(layer => layer.state !== 'active');
         const adjustment = payload.auto_adjustment || {};
+        const allowedScopes = Array.isArray(adjustment.can_adjust_now_scopes) ? adjustment.can_adjust_now_scopes : [];
+        const policyMutationAllowed = adjustment.policy_mutation_allowed === true;
         return [
           {
             key: 'cycle',
@@ -6377,9 +6383,9 @@
             key: 'adjustment',
             label: this.lang === 'en' ? 'adjustment' : 'aggiustamento',
             value: this.lang === 'en'
-              ? (adjustment.can_adjust_now ? 'ready' : (adjustment.closed_loop_state || 'n/a'))
-              : this.bitcoinCognitiveStateLabel(adjustment.can_adjust_now ? 'ready' : (adjustment.closed_loop_state || 'n/a')),
-            note: this.bitcoinCognitiveStateLabel(adjustment.closed_loop_state || adjustment.current_mode || 'n/a'),
+              ? (policyMutationAllowed ? 'policy ready' : (allowedScopes.length ? 'scoped' : (adjustment.closed_loop_state || 'n/a')))
+              : this.bitcoinCognitiveStateLabel(policyMutationAllowed ? 'policy ready' : (allowedScopes.length ? 'scoped' : (adjustment.closed_loop_state || 'n/a'))),
+            note: allowedScopes.length ? allowedScopes.join(', ') : this.bitcoinCognitiveStateLabel(adjustment.closed_loop_state || adjustment.current_mode || 'n/a'),
             tone: adjustment.can_adjust_now ? 'text-amber-300' : 'text-slate-300',
           },
           {
@@ -7303,6 +7309,9 @@
         const learning = Array.isArray(payload.current_learning) ? payload.current_learning : [];
         const cards = Array.isArray(payload.cards) ? payload.cards : [];
         const primaryCard = cards[0] || {};
+        const allowedScopes = Array.isArray(adjustment.can_adjust_now_scopes) ? adjustment.can_adjust_now_scopes : [];
+        const typedAdjustment = adjustment.typed_adjustment || {};
+        const blockedScopes = Array.isArray(typedAdjustment.blocked_scopes) ? typedAdjustment.blocked_scopes : [];
         this.selectedNode = null;
         this.selectedScopertaSsp = null;
         this.selectedProdottoSsp = null;
@@ -7328,9 +7337,16 @@
           meta: [
             adjustment.current_mode ? `mode: ${adjustment.current_mode}` : null,
             adjustment.can_adjust_now !== undefined ? `can_adjust: ${adjustment.can_adjust_now ? 'yes' : 'no'}` : null,
+            allowedScopes.length ? `scopes: ${allowedScopes.join(', ')}` : null,
+            adjustment.policy_mutation_allowed !== undefined ? `policy_mutation: ${adjustment.policy_mutation_allowed ? 'yes' : 'no'}` : null,
             row?.key ? `focus: ${row.key}` : null,
           ].filter(Boolean).join(' · '),
           diagnostics: [
+            {
+              label: this.lang === 'en' ? 'Adjustment scope' : 'Scope aggiustamento',
+              value: allowedScopes.length ? allowedScopes.join(', ') : 'n/a',
+              note: blockedScopes.length ? `${this.lang === 'en' ? 'blocked' : 'bloccati'}: ${blockedScopes.join(', ')}` : '',
+            },
             {
               label: this.lang === 'en' ? 'Next adjustment' : 'Prossimo aggiustamento',
               value: this.bitcoinCognitiveStateText(adjustment.next_mutation || 'n/a'),

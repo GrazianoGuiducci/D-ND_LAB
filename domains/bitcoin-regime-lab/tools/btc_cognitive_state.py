@@ -151,6 +151,79 @@ def _layer_alignment(mml: dict[str, Any], artifacts: dict[str, dict[str, Any]]) 
     ]
 
 
+def _typed_adjustment_boundary(
+    *,
+    trajectory_decision: str,
+    trajectory: dict[str, Any],
+    simulator: dict[str, Any],
+    ledger: dict[str, Any],
+    closed_gate_state: dict[str, Any],
+) -> dict[str, Any]:
+    mutation_allowed = bool(closed_gate_state.get("mutation_allowed"))
+    gate_decision = closed_gate_state.get("decision") or "unknown"
+    trajectory_active = trajectory_decision in {"REDESIGN", "NEXT_CYCLE", "CRYSTALLIZE"}
+    simulator_available = bool(simulator)
+    ledger_available = bool(ledger)
+
+    scopes = [
+        {
+            "scope": "refresh_autology",
+            "allowed": True,
+            "authority": "value refresh, cognitive-state, coherence and health artifacts",
+            "side_effect": "writes Lab artifacts only",
+            "blocked_by": [],
+            "meaning": "The Lab may refresh observation, lineage, health and autological state while the daily candle is open.",
+        },
+        {
+            "scope": "paper_decision",
+            "allowed": bool(simulator_available and ledger_available),
+            "authority": "policy simulator plus paper-simulation ledger",
+            "side_effect": "simulated decision evidence only",
+            "blocked_by": [] if simulator_available and ledger_available else ["missing policy simulator or paper-simulation ledger"],
+            "meaning": "The Lab may behave as if it had to decide, record the simulated decision, and falsify it against baseline.",
+        },
+        {
+            "scope": "method_policy_mutation",
+            "allowed": bool(mutation_allowed and trajectory_active and ledger_available),
+            "authority": "closed-daily evidence gate plus trajectory plus ledger evidence",
+            "side_effect": "may change method/policy seed direction after closed-data evidence",
+            "blocked_by": [
+                reason
+                for reason in (
+                    None if mutation_allowed else f"daily gate {gate_decision} blocks current open-candle mutation",
+                    None if trajectory_active else f"trajectory decision {trajectory_decision} is not an adjustment decision",
+                    None if ledger_available else "paper-simulation ledger missing",
+                )
+                if reason
+            ],
+            "meaning": "This is the only scope that can reinterpret method/policy rules; it stays blocked when mutation_allowed=false.",
+        },
+        {
+            "scope": "real_execution",
+            "allowed": False,
+            "authority": "not configured in this Lab runtime",
+            "side_effect": "would place real orders",
+            "blocked_by": ["missing explicit separate execution runtime contract"],
+            "meaning": "Real-money execution is outside this Lab unless a separate runtime contract is explicitly configured and authorized.",
+        },
+    ]
+    allowed_scopes = [row["scope"] for row in scopes if row["allowed"]]
+    blocked_scopes = [row["scope"] for row in scopes if not row["allowed"]]
+    return {
+        "schema": "dndlab.bitcoin.typed_adjustment.v1",
+        "can_adjust_now": bool(allowed_scopes),
+        "can_adjust_now_meaning": "At least one typed scope is allowed; this never implies method_policy_mutation.",
+        "allowed_scopes": allowed_scopes,
+        "blocked_scopes": blocked_scopes,
+        "policy_mutation_allowed": "method_policy_mutation" in allowed_scopes,
+        "paper_decision_allowed": "paper_decision" in allowed_scopes,
+        "daily_gate_mutation_allowed": mutation_allowed,
+        "trajectory_decision": trajectory_decision,
+        "next_policy_candidate": trajectory.get("direction"),
+        "scopes": scopes,
+    }
+
+
 def build_cognitive_state() -> dict[str, Any]:
     seed = _read_json(SEED_PATH)
     lab_data = _read_json(LAB_DATA_PATH)
@@ -231,10 +304,32 @@ def build_cognitive_state() -> dict[str, Any]:
     if not ledger:
         not_yet_closed.insert(0, "paper-simulation ledger with simulated decisions, outcome, error and baseline")
 
+    typed_adjustment = _typed_adjustment_boundary(
+        trajectory_decision=trajectory_decision,
+        trajectory=trajectory,
+        simulator=simulator,
+        ledger=ledger,
+        closed_gate_state=closed_gate_state,
+    )
+    current_learning.append({
+        "source": "btc_typed_adjustment_boundary",
+        "learned": (
+            "Adjustment readiness is scoped: refresh/autology and paper decisions can proceed under the open-daily hold; "
+            "method/policy mutation requires the closed-daily gate."
+        ),
+        "decision": "test",
+        "allowed_scopes": typed_adjustment["allowed_scopes"],
+        "blocked_scopes": typed_adjustment["blocked_scopes"],
+    })
+
     auto_adjustment = {
         "current_mode": "research_autonomy_observable",
         "closed_loop_state": "partial",
-        "can_adjust_now": bool(trajectory_decision in {"REDESIGN", "NEXT_CYCLE", "CRYSTALLIZE"} or simulator),
+        "can_adjust_now": typed_adjustment["can_adjust_now"],
+        "can_adjust_now_meaning": typed_adjustment["can_adjust_now_meaning"],
+        "can_adjust_now_scopes": typed_adjustment["allowed_scopes"],
+        "policy_mutation_allowed": typed_adjustment["policy_mutation_allowed"],
+        "typed_adjustment": typed_adjustment,
         "adjustment_source": "trajectory_state + policy_simulator + paper_simulation_ledger + seed constraints" if ledger else "trajectory_state + policy_simulator + seed constraints",
         "next_mutation": (
             closed_gate_card.get("next_test")
@@ -257,6 +352,19 @@ def build_cognitive_state() -> dict[str, Any]:
                 f"{summary_counts['reject']}/{summary_counts['redesign']}."
             ),
             "boundary": "Cognitive-state artifact: learning, gaps and adjustment readiness. Paper simulation ledger: available." if ledger else "Cognitive-state artifact: learning, gaps and adjustment readiness. Paper simulation ledger: missing.",
+        },
+        {
+            "claim_id": "btc_typed_adjustment_boundary",
+            "title": "BTC typed adjustment boundary",
+            "decision": "test",
+            "evidence": (
+                "Allowed scopes: "
+                + ", ".join(typed_adjustment["allowed_scopes"])
+                + "; blocked scopes: "
+                + ", ".join(typed_adjustment["blocked_scopes"])
+                + "."
+            ),
+            "boundary": "can_adjust_now is scoped; it does not authorize method/policy mutation while mutation_allowed=false.",
         },
     ]
     if mnemos and kairos and coherence:

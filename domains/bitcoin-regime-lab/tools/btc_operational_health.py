@@ -137,6 +137,22 @@ def build_health() -> dict[str, Any]:
     }
     if "btc_policy_mutation_gap" not in card_ids:
         failures.append({"check": "cognitive_policy_gap_card", "artifact": "btc_cognitive_state_latest.json", "issue": "missing"})
+    if "btc_typed_adjustment_boundary" not in card_ids:
+        failures.append({"check": "cognitive_typed_adjustment_card", "artifact": "btc_cognitive_state_latest.json", "issue": "missing"})
+    auto_adjustment = cognitive.get("auto_adjustment") if isinstance(cognitive.get("auto_adjustment"), dict) else {}
+    typed_adjustment = auto_adjustment.get("typed_adjustment") if isinstance(auto_adjustment.get("typed_adjustment"), dict) else {}
+    allowed_scopes = typed_adjustment.get("allowed_scopes") if isinstance(typed_adjustment.get("allowed_scopes"), list) else []
+    blocked_scopes = typed_adjustment.get("blocked_scopes") if isinstance(typed_adjustment.get("blocked_scopes"), list) else []
+    if not typed_adjustment:
+        failures.append({"check": "cognitive_typed_adjustment", "artifact": "btc_cognitive_state_latest.json", "issue": "missing"})
+    if auto_adjustment.get("can_adjust_now") and not allowed_scopes:
+        failures.append({"check": "cognitive_adjustment_scope", "artifact": "btc_cognitive_state_latest.json", "issue": "can_adjust_now_without_allowed_scopes"})
+    daily_gate = _read_json(VALUE_DIR / "btc_daily_closed_evidence_gate_latest.json")
+    daily_gate_state = daily_gate.get("gate") if isinstance(daily_gate.get("gate"), dict) else {}
+    if daily_gate_state.get("mutation_allowed") is False and "method_policy_mutation" not in blocked_scopes:
+        failures.append({"check": "cognitive_policy_mutation_scope", "artifact": "btc_cognitive_state_latest.json", "issue": "open_daily_gate_without_policy_mutation_block"})
+    if auto_adjustment.get("policy_mutation_allowed") and "method_policy_mutation" not in allowed_scopes:
+        failures.append({"check": "cognitive_policy_mutation_scope", "artifact": "btc_cognitive_state_latest.json", "issue": "policy_mutation_allowed_without_scope"})
 
     mnemos = _read_json(VALUE_DIR / "btc_mnemos_memory_latest.json")
     retention = mnemos.get("retention") if isinstance(mnemos.get("retention"), list) else []
