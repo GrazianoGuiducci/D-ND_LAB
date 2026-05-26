@@ -6261,6 +6261,18 @@
             'L artifact kairos e disponibile.',
           'Coherence artifact checks drift between boundary and artifacts.':
             'L artifact di coerenza controlla lo scostamento tra confine e artifact.',
+          'event window beats the normal baseline without current fragility/control dominance':
+            'la finestra evento batte la baseline normale senza fragilità corrente o dominanza dei controlli',
+          'retain acceptance rule and retest on the next closed-data run':
+            'mantieni la regola di accettazione e ritesta al prossimo run su dati chiusi',
+          'event window is below normal, fragile or explained by stricter controls':
+            'la finestra evento è sotto il normale, fragile o spiegata da controlli più severi',
+          'tighten event filter or redesign the policy contract':
+            'restringi il filtro evento o ridisegna il contratto di policy',
+          'event window does not separate enough from normal BTC movement':
+            'la finestra evento non si separa abbastanza dal movimento normale di BTC',
+          'keep as watch and wait for cleaner closed-data evidence':
+            'mantieni in osservazione e attendi evidenza più pulita su dati chiusi',
           'veritas/aeternitas are represented by artifacts and veto checks, but not yet a unified numeric gate in every cycle':
             'veritas/aeternitas sono rappresentati da artifact e controlli di veto, ma non ancora da un gate numerico unificato in ogni ciclo',
           'trajectory exists; mnemos/kairos are still implicit in seed and trajectory artifacts':
@@ -7273,8 +7285,8 @@
             },
             {
               label: this.lang === 'en' ? 'Next adjustment' : 'Prossimo aggiustamento',
-              value: selected?.next_adjustment || card.interpretation || 'n/a',
-              note: selected?.lesson || card.boundary || '',
+              value: this.bitcoinCognitiveStateText(selected?.next_adjustment || card.interpretation || 'n/a'),
+              note: this.bitcoinCognitiveStateText(selected?.lesson || card.boundary || ''),
             },
           ],
         };
