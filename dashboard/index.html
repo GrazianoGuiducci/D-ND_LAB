@@ -3694,11 +3694,11 @@
               <div class="border-t border-slate-800 pt-3 text-[11px] space-y-2">
                 <div>
                   <div class="uppercase tracking-wider text-slate-500" x-text="t('dash.detail.evidence', 'Evidenza')"></div>
-                  <div class="text-slate-300 mt-0.5" x-text="selectedCampoLens.evidence"></div>
+                  <div class="text-slate-300 mt-0.5" x-text="localizedDetailText(selectedCampoLens.evidence)"></div>
                 </div>
                 <div>
                   <div class="uppercase tracking-wider text-slate-500" x-text="t('dash.detail.boundary', 'Limite operativo')"></div>
-                  <div class="text-amber-200 mt-0.5" x-text="selectedCampoLens.boundary"></div>
+                  <div class="text-amber-200 mt-0.5" x-text="localizedDetailText(selectedCampoLens.boundary)"></div>
                 </div>
                 <template x-if="selectedCampoLens.diagnostics && selectedCampoLens.diagnostics.length">
                   <div class="grid gap-2 pt-1">
@@ -3711,8 +3711,8 @@
                                   class="thia-ask-btn compact"
                                   x-text="t('dash.btc.askThia', 'chiedi THIA')"></button>
                         </div>
-                        <div class="text-slate-200 mt-0.5" x-text="row.value"></div>
-                        <div class="text-slate-400 mt-1 leading-relaxed" x-show="sourcePreview(row.note)" x-text="sourcePreview(row.note)"></div>
+                        <div class="text-slate-200 mt-0.5" x-text="localizedDetailText(row.value)"></div>
+                        <div class="text-slate-400 mt-1 leading-relaxed" x-show="localizedDetailText(row.note)" x-text="localizedDetailText(row.note)"></div>
                       </div>
                     </template>
                   </div>
@@ -6283,7 +6283,21 @@
 
       bitcoinCognitiveStateText(text) {
         const raw = String(text || '').trim();
-        if (this.lang === 'en' || !raw) return raw;
+        if (!raw) return raw;
+        const itToEn = {
+          'SOSPENSIONE': 'SUSPENSION',
+          'P5 (Autopoiesi): ciclo non ha prodotto tensioni nuove né cambiato direzione':
+            'P5 (Autopoiesis): the cycle produced no new tensions and did not change direction.',
+          'ciclo non ha prodotto tensioni nuove né cambiato direzione':
+            'the cycle produced no new tensions and did not change direction',
+        };
+        if (this.lang === 'en') {
+          if (itToEn[raw]) return itToEn[raw];
+          return raw
+            .replaceAll('SOSPENSIONE', 'SUSPENSION')
+            .replaceAll('Autopoiesi', 'Autopoiesis')
+            .replaceAll('ciclo non ha prodotto tensioni nuove né cambiato direzione', 'the cycle produced no new tensions and did not change direction');
+        }
         const exact = {
           'Refresh context may continue, but policy mutation must use the latest closed common date, not the current open daily candle.':
             'Il contesto live può continuare ad aggiornarsi, ma la mutazione della policy deve usare l’ultima data comune chiusa, non la candela daily aperta.',
@@ -6329,6 +6343,10 @@
             'Nessuna variante zona/denominatore batte il null severo; ora serve ridisegnare la sorgente evento o aggiungere una famiglia di null diversa.',
           'Stop trying minimal parametric salvages of daily_inefficiency on the current daily proxy. Next cycle should redesign around a new daily event/null family or a closed-daily conversion contract with explicit path-witness/producer-closure, matched null, denominator, and paper-simulation ledger before any policy mutation.':
             'Smettere di tentare piccoli salvataggi parametrici di daily_inefficiency sul proxy daily corrente. Il prossimo ciclo deve ridisegnare una nuova famiglia evento/null o un contratto di conversione daily chiuso con path-witness, producer closure, null matched, denominatore e ledger paper prima di ogni mutazione policy.',
+          'The report is internally coherent across the five requested lenses: hard-zero claims match exact zero/false fields, ratio comparisons are paired against matched strict controls, scope shifts are declared, no edge-case counterinstance is rounded away, and no discovery/NEW claim is asserted.':
+            'Il report è coerente sulle cinque lenti richieste: i claim hard-zero coincidono con campi zero/false, i confronti di rapporto sono accoppiati a controlli severi matched, gli shift di scope sono dichiarati, nessun edge case viene arrotondato via e non viene dichiarata alcuna discovery/NEW.',
+          'The concluded cycle was explicitly positioned as the next and likely final check after fill-rule sensitivity failed, moving from fill rule to zone/denominator/forward-window sensitivity for daily_inefficiency. The refiner reports the trajectory now points toward redesign/event-null family rather than continued parameter salvage, with no serious contradiction requiring operator review.':
+            'Il ciclo concluso era esplicitamente il prossimo, e probabilmente ultimo, controllo dopo il fallimento della sensibilità fill-rule: si è passati da fill rule a sensibilità zona/denominatore/finestra forward per daily_inefficiency. Il refiner indica che la traiettoria ora punta a ridisegno/famiglia event-null, non a ulteriore salvataggio parametrico, senza contraddizioni serie da revisione operatore.',
           'event window beats the normal baseline without current fragility/control dominance':
             'la finestra evento batte la baseline normale senza fragilità corrente o dominanza dei controlli',
           'retain acceptance rule and retest on the next closed-data run':
@@ -6989,6 +7007,12 @@
         return raw;
       },
 
+      localizedDetailText(text) {
+        const raw = String(text || '').trim();
+        if (!raw) return '';
+        return this.bitcoinCognitiveStateText(this.sourcePreview(raw));
+      },
+
       localizedLabThoughtText(text) {
         const raw = String(text || '').trim();
         if (!raw) return '';
@@ -7225,6 +7249,7 @@
         const aeternitas = quality.aeternitas || {};
         const falsifier = quality.falsifier || {};
         const trajectory = quality.trajectory || {};
+        const zoneResult = this.bitcoinZoneDenominatorSensitivityPayload()?.result || {};
         const rows = [];
         rows.push({
           label: this.t('dash.btc.daily.diag.nullControl', 'Null / controllo'),
@@ -7249,9 +7274,13 @@
           value: metrics.denominator_ready === true
             ? this.t('dash.btc.daily.value.ready', 'pronto')
             : this.t('dash.btc.daily.value.low', 'basso'),
-          note: this.lang === 'en'
-            ? `${metrics.zones_evaluable ?? 0} evaluable zones; next useful value: increase history/denominator before interpreting.`
-            : `${metrics.zones_evaluable ?? 0} zone valutabili; prossimo valore utile: aumentare storia/denominatore prima di interpretare.`,
+          note: zoneResult.verdict
+            ? (this.lang === 'en'
+              ? `${metrics.zones_evaluable ?? 0} evaluable zones; zone/denominator variants are ready but none beats strict null. Next: redesign event/null family.`
+              : `${metrics.zones_evaluable ?? 0} zone valutabili; varianti zona/denominatore pronte, ma nessuna batte il null severo. Prossimo: ridisegnare famiglia evento/null.`)
+            : (this.lang === 'en'
+              ? `${metrics.zones_evaluable ?? 0} evaluable zones; next useful value: increase history/denominator before interpreting.`
+              : `${metrics.zones_evaluable ?? 0} zone valutabili; prossimo valore utile: aumentare storia/denominatore prima di interpretare.`),
         });
         if (falsifier.coherent !== undefined) {
           rows.push({
@@ -7259,28 +7288,28 @@
             value: falsifier.coherent
               ? `${this.lang === 'en' ? 'coherent' : 'coerente'} · ${(falsifier.flags || []).length} flag`
               : `${this.lang === 'en' ? 'not coherent' : 'non coerente'} · ${(falsifier.flags || []).length} flag`,
-            note: falsifier.summary || '',
+            note: this.bitcoinCognitiveStateText(falsifier.summary || ''),
           });
         }
         if (veritas.rho !== undefined || veritas.decision_band) {
           rows.push({
             label: 'Veritas',
-            value: `${veritas.decision_band || 'n/a'}${veritas.rho !== undefined ? ` · rho ${veritas.rho}` : ''}`,
+            value: `${this.bitcoinCognitiveStateText(veritas.decision_band || 'n/a')}${veritas.rho !== undefined ? ` · rho ${veritas.rho}` : ''}`,
             note: veritas.cycle_ref ? `cycle ${veritas.cycle_ref}` : '',
           });
         }
         if (aeternitas.decision) {
           rows.push({
             label: 'Aeternitas',
-            value: aeternitas.decision,
-            note: aeternitas.reason || '',
+            value: this.bitcoinCognitiveStateText(aeternitas.decision),
+            note: this.bitcoinCognitiveStateText(aeternitas.reason || ''),
           });
         }
         if (trajectory.decision) {
           rows.push({
             label: this.t('dash.btc.daily.diag.trajectory', 'Traiettoria'),
             value: `${trajectory.decision}${trajectory.confidence ? ` · ${trajectory.confidence}` : ''}`,
-            note: trajectory.reason || '',
+            note: this.bitcoinCognitiveStateText(trajectory.reason || ''),
           });
         }
         if (selected?.zone_id && control) {
