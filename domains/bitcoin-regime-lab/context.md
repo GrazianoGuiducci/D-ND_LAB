@@ -261,6 +261,17 @@ deve avvenire nel pre-ciclo host-side tramite:
 domains/bitcoin-regime-lab/tools/pre_cycle_value_refresh.sh
 ```
 
+Standalone value refreshes end with:
+
+```bash
+python3 domains/bitcoin-regime-lab/tools/btc_operational_health.py --write
+```
+
+This guard checks that latest value artifacts remain refresh-bound
+(`cycle_ts=null`), the last cognitive cycle has a passing post-cycle closure
+audit, and the cognitive-state card no longer regresses to stale implicit
+Mnemos/Kairos/Coherence language.
+
 L'agente del ciclo **non deve rifare fetch di rete** come autorita' primaria:
 deve leggere gli artifact `*_latest.json` gia' scritti nel `LAB_DATA_DIR` del
 ciclo e, se servono controlli aggiuntivi, dichiararli come prossima ipotesi.
