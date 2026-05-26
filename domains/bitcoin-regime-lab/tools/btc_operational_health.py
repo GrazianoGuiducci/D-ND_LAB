@@ -29,6 +29,7 @@ EXPECTED_LATEST = {
     "btc_timeframe_matrix_latest.json",
     "btc_method_intake_latest.json",
     "btc_daily_inefficiency_latest.json",
+    "btc_fill_rule_sensitivity_latest.json",
     "btc_auto_ignite_latest.json",
     "btc_volume_profile_lvn_proxy_latest.json",
     "btc_policy_simulator_latest.json",
@@ -208,6 +209,16 @@ def build_health() -> dict[str, Any]:
         failures.append({"check": "daily_method_pressure_test", "artifact": "btc_daily_method_pressure_test_latest.json", "issue": ",".join(pressure_result.get("failed_checks") or [])})
     if pressure_result.get("policy_mutation_allowed") is True and daily_gate_state.get("mutation_allowed") is False:
         failures.append({"check": "daily_method_pressure_policy_gate", "artifact": "btc_daily_method_pressure_test_latest.json", "issue": "policy_allowed_while_daily_gate_blocks"})
+
+    sensitivity = _read_json(VALUE_DIR / "btc_fill_rule_sensitivity_latest.json")
+    sensitivity_result = sensitivity.get("result") if isinstance(sensitivity.get("result"), dict) else {}
+    sensitivity_rules = sensitivity.get("rules") if isinstance(sensitivity.get("rules"), list) else []
+    if not sensitivity_result:
+        failures.append({"check": "fill_rule_sensitivity", "artifact": "btc_fill_rule_sensitivity_latest.json", "issue": "missing"})
+    if len(sensitivity_rules) != 3:
+        failures.append({"check": "fill_rule_sensitivity_rules", "artifact": "btc_fill_rule_sensitivity_latest.json", "issue": str(len(sensitivity_rules))})
+    if any(row.get("decision") not in {"watch", "test"} for row in sensitivity_rules if isinstance(row, dict)):
+        failures.append({"check": "fill_rule_sensitivity_decisions", "artifact": "btc_fill_rule_sensitivity_latest.json", "issue": "unexpected_decision"})
 
     trace_sink = _read_json(VALUE_DIR / "btc_producer_trace_sink_latest.json")
     trace_summary = trace_sink.get("summary") if isinstance(trace_sink.get("summary"), dict) else {}

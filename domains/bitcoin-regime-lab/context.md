@@ -246,6 +246,12 @@ paper ledger. It should pass when the method is correctly held as watch under a
 strict null and open-daily mutation block; it must not turn paper/live-sim
 measurement into public advice or real execution.
 
+`btc_fill_rule_sensitivity.py` compares the current daily inefficiency deposit
+under wick, close and full-traversal fill rules. It is the first pressure on
+the fill-rule assumption: it reports whether the method is invariant, rule
+dependent, or has a rule-specific edge against strict null, without replacing
+active method policy.
+
 
 ## Skill retrieval
 

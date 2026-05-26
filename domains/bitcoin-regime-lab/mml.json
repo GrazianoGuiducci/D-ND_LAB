@@ -134,6 +134,11 @@
       "boundary": "consumes exchange OHLCV artifact and writes daily FVG/inefficiency proxy zones with matched adjacent controls; public_claim=false; trading_signal=false; operational=false"
     },
     {
+      "name": "btc_fill_rule_sensitivity",
+      "path": "tools/btc_fill_rule_sensitivity.py",
+      "boundary": "compares wick, close and full-traversal fill rules for the daily_inefficiency method without replacing active method policy; public_claim=false; trading_signal=false; operational=false"
+    },
+    {
       "name": "btc_auto_ignite",
       "path": "tools/btc_auto_ignite.py",
       "boundary": "gathers BTC value artifacts and writes a provisional LVN/Volume Profile proxy contract with explicit assumptions and nulls; public_claim=false; trading_signal=false; operational=false"

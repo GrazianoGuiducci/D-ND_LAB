@@ -75,6 +75,17 @@ This checks the current `daily_inefficiency` surface through the policy
 contract, retention/regime selector and paper ledger. It validates Lab behavior;
 it is not trading advice and does not mutate policy.
 
+Compare daily fill-rule sensitivity directly:
+
+```bash
+python3 domains/bitcoin-regime-lab/tools/btc_fill_rule_sensitivity.py --write --json
+```
+
+This runs the same daily inefficiency deposit through wick, close and
+full-traversal fill semantics. It helps decide whether the next useful pressure
+belongs to fill-rule semantics, zone construction or denominator. It does not
+replace active method policy.
+
 Generate the exchange-native feed robustness card directly:
 
 ```bash

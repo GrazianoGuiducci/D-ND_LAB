@@ -112,11 +112,17 @@ def _zone_fill(
         if rule == "close":
             probe = float(candle["close"])
             touched = lower <= probe <= upper
+        elif rule == "full_traversal":
+            probe = float(candle["low"] if direction == "bullish" else candle["high"])
+            touched = probe <= lower if direction == "bullish" else probe >= upper
         else:
             probe = float(candle["low"] if direction == "bullish" else candle["high"])
             touched = probe <= upper if direction == "bullish" else probe >= lower
 
-        if direction == "bullish":
+        if rule == "full_traversal":
+            fill_ratio = 1.0 if touched else 0.0
+            threshold_hit = touched
+        elif direction == "bullish":
             fill_ratio = max(0.0, min(1.0, (upper - probe) / width)) if width else 0.0
             threshold_hit = probe <= threshold_price
         else:
@@ -415,7 +421,7 @@ def main() -> int:
     parser.add_argument("--forward-window", type=int, default=10)
     parser.add_argument("--min-zone-width-pct", type=float, default=0.15)
     parser.add_argument("--fill-threshold", type=float, default=0.5)
-    parser.add_argument("--fill-rule", choices=["wick", "close"], default="wick")
+    parser.add_argument("--fill-rule", choices=["wick", "close", "full_traversal"], default="wick")
     parser.add_argument("--min-providers-per-day", type=int, default=2)
     parser.add_argument("--write", action="store_true", help="Write under data/bitcoin-regime-lab/value/")
     parser.add_argument("--json", action="store_true", help="Print JSON payload.")

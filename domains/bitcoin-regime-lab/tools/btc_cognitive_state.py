@@ -37,6 +37,7 @@ VALUE_INPUTS = {
     "timeframe_matrix": VALUE_DIR / "btc_timeframe_matrix_latest.json",
     "method_intake": VALUE_DIR / "btc_method_intake_latest.json",
     "daily_inefficiency": VALUE_DIR / "btc_daily_inefficiency_latest.json",
+    "fill_rule_sensitivity": VALUE_DIR / "btc_fill_rule_sensitivity_latest.json",
     "auto_ignite": VALUE_DIR / "btc_auto_ignite_latest.json",
     "lvn_proxy": VALUE_DIR / "btc_volume_profile_lvn_proxy_latest.json",
     "policy_simulator": VALUE_DIR / "btc_policy_simulator_latest.json",
@@ -332,6 +333,16 @@ def build_cognitive_state() -> dict[str, Any]:
             "passed_checks": pressure_result.get("passed_checks"),
             "total_checks": pressure_result.get("total_checks"),
         })
+    sensitivity = artifacts.get("fill_rule_sensitivity") or {}
+    sensitivity_result = sensitivity.get("result") if isinstance(sensitivity.get("result"), dict) else {}
+    if sensitivity:
+        current_learning.append({
+            "source": "btc_fill_rule_sensitivity",
+            "learned": _first_card(sensitivity).get("evidence") or "Fill-rule sensitivity compares wick, close and full-traversal semantics.",
+            "decision": _first_card(sensitivity).get("decision"),
+            "verdict": sensitivity_result.get("verdict"),
+            "next_test": sensitivity_result.get("next_test"),
+        })
 
     not_yet_closed = [
         "autonomous policy mutation contract after the next stable closed-data run",
@@ -439,6 +450,19 @@ def build_cognitive_state() -> dict[str, Any]:
                 else "Daily method pressure-test artifact is not available in cognitive-state inputs."
             ),
             "boundary": "Cognitive readback only: pressure test validates behavior, not market advice.",
+        },
+        {
+            "claim_id": "btc_fill_rule_sensitivity_readback",
+            "title": "BTC fill-rule sensitivity readback",
+            "decision": sensitivity_result.get("decision") or "watch",
+            "evidence": (
+                f"verdict={sensitivity_result.get('verdict')}; "
+                f"positive_rules={sensitivity_result.get('positive_rules')}; "
+                f"next={sensitivity_result.get('next_test')}."
+                if sensitivity
+                else "Fill-rule sensitivity artifact is not available in cognitive-state inputs."
+            ),
+            "boundary": "Cognitive readback only: fill-rule comparison does not replace method policy.",
         },
     ]
     if mnemos and kairos and coherence:

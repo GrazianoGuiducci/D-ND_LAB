@@ -35,6 +35,7 @@ echo "Python: $PYTHON_BIN"
 "$PYTHON_BIN" domains/bitcoin-regime-lab/tools/btc_timeframe_matrix.py --write
 "$PYTHON_BIN" domains/bitcoin-regime-lab/tools/btc_method_intake_card.py --write
 "$PYTHON_BIN" domains/bitcoin-regime-lab/tools/btc_daily_inefficiency_candidate.py --write
+"$PYTHON_BIN" domains/bitcoin-regime-lab/tools/btc_fill_rule_sensitivity.py --write
 "$PYTHON_BIN" domains/bitcoin-regime-lab/tools/btc_auto_ignite.py --write
 "$PYTHON_BIN" domains/bitcoin-regime-lab/tools/btc_volume_profile_lvn_proxy.py --write
 "$PYTHON_BIN" domains/bitcoin-regime-lab/tools/btc_policy_simulator.py --write
