@@ -38,6 +38,7 @@ VALUE_INPUTS = {
     "method_intake": VALUE_DIR / "btc_method_intake_latest.json",
     "daily_inefficiency": VALUE_DIR / "btc_daily_inefficiency_latest.json",
     "fill_rule_sensitivity": VALUE_DIR / "btc_fill_rule_sensitivity_latest.json",
+    "zone_denominator_sensitivity": VALUE_DIR / "btc_zone_denominator_sensitivity_latest.json",
     "auto_ignite": VALUE_DIR / "btc_auto_ignite_latest.json",
     "lvn_proxy": VALUE_DIR / "btc_volume_profile_lvn_proxy_latest.json",
     "policy_simulator": VALUE_DIR / "btc_policy_simulator_latest.json",
@@ -343,6 +344,16 @@ def build_cognitive_state() -> dict[str, Any]:
             "verdict": sensitivity_result.get("verdict"),
             "next_test": sensitivity_result.get("next_test"),
         })
+    zone_denominator = artifacts.get("zone_denominator_sensitivity") or {}
+    zone_denominator_result = zone_denominator.get("result") if isinstance(zone_denominator.get("result"), dict) else {}
+    if zone_denominator:
+        current_learning.append({
+            "source": "btc_zone_denominator_sensitivity",
+            "learned": _first_card(zone_denominator).get("evidence") or "Zone/denominator sensitivity compares width, horizon and fill-threshold variants.",
+            "decision": _first_card(zone_denominator).get("decision"),
+            "verdict": zone_denominator_result.get("verdict"),
+            "next_test": zone_denominator_result.get("next_test"),
+        })
 
     not_yet_closed = [
         "autonomous policy mutation contract after the next stable closed-data run",
@@ -463,6 +474,20 @@ def build_cognitive_state() -> dict[str, Any]:
                 else "Fill-rule sensitivity artifact is not available in cognitive-state inputs."
             ),
             "boundary": "Cognitive readback only: fill-rule comparison does not replace method policy.",
+        },
+        {
+            "claim_id": "btc_zone_denominator_sensitivity_readback",
+            "title": "BTC zone/denominator sensitivity readback",
+            "decision": zone_denominator_result.get("decision") or "watch",
+            "evidence": (
+                f"verdict={zone_denominator_result.get('verdict')}; "
+                f"best={zone_denominator_result.get('best_variant')} "
+                f"edge={zone_denominator_result.get('best_edge_vs_strict_null')}; "
+                f"positive={zone_denominator_result.get('positive_variants')}."
+                if zone_denominator
+                else "Zone/denominator sensitivity artifact is not available in cognitive-state inputs."
+            ),
+            "boundary": "Cognitive readback only: zone/denominator comparison does not replace method policy.",
         },
     ]
     if mnemos and kairos and coherence:

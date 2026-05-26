@@ -86,6 +86,17 @@ full-traversal fill semantics. It helps decide whether the next useful pressure
 belongs to fill-rule semantics, zone construction or denominator. It does not
 replace active method policy.
 
+Compare zone construction and denominator sensitivity directly:
+
+```bash
+python3 domains/bitcoin-regime-lab/tools/btc_zone_denominator_sensitivity.py --write --json
+```
+
+This runs baseline, narrow/wide zone-width, short/long denominator-horizon and
+shallow/deep fill-threshold variants against the same strict null. It identifies
+whether the next redesign has a promising axis before any method-policy
+mutation.
+
 Generate the exchange-native feed robustness card directly:
 
 ```bash

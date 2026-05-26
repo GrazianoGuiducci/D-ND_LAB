@@ -252,6 +252,12 @@ the fill-rule assumption: it reports whether the method is invariant, rule
 dependent, or has a rule-specific edge against strict null, without replacing
 active method policy.
 
+`btc_zone_denominator_sensitivity.py` compares the current daily inefficiency
+deposit across zone-width, forward-window denominator and fill-threshold
+variants. It is the next redesign pressure after fill-rule invariance: it
+reports whether any zone/denominator axis beats strict null before the Lab
+changes method policy.
+
 
 ## Skill retrieval
 

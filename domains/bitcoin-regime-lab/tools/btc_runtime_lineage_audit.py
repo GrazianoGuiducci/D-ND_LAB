@@ -28,6 +28,7 @@ EXPECTED_OUTPUT_ARTIFACTS = {
         "btc_method_intake_latest.json",
         "btc_daily_inefficiency_latest.json",
         "btc_fill_rule_sensitivity_latest.json",
+        "btc_zone_denominator_sensitivity_latest.json",
         "btc_auto_ignite_latest.json",
         "btc_volume_profile_lvn_proxy_latest.json",
         "btc_policy_simulator_latest.json",

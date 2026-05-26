@@ -30,6 +30,7 @@ EXPECTED_LATEST = {
     "btc_method_intake_latest.json",
     "btc_daily_inefficiency_latest.json",
     "btc_fill_rule_sensitivity_latest.json",
+    "btc_zone_denominator_sensitivity_latest.json",
     "btc_auto_ignite_latest.json",
     "btc_volume_profile_lvn_proxy_latest.json",
     "btc_policy_simulator_latest.json",
@@ -219,6 +220,16 @@ def build_health() -> dict[str, Any]:
         failures.append({"check": "fill_rule_sensitivity_rules", "artifact": "btc_fill_rule_sensitivity_latest.json", "issue": str(len(sensitivity_rules))})
     if any(row.get("decision") not in {"watch", "test"} for row in sensitivity_rules if isinstance(row, dict)):
         failures.append({"check": "fill_rule_sensitivity_decisions", "artifact": "btc_fill_rule_sensitivity_latest.json", "issue": "unexpected_decision"})
+
+    zone_denominator = _read_json(VALUE_DIR / "btc_zone_denominator_sensitivity_latest.json")
+    zone_denominator_result = zone_denominator.get("result") if isinstance(zone_denominator.get("result"), dict) else {}
+    zone_denominator_variants = zone_denominator.get("variants") if isinstance(zone_denominator.get("variants"), list) else []
+    if not zone_denominator_result:
+        failures.append({"check": "zone_denominator_sensitivity", "artifact": "btc_zone_denominator_sensitivity_latest.json", "issue": "missing"})
+    if len(zone_denominator_variants) != 7:
+        failures.append({"check": "zone_denominator_sensitivity_variants", "artifact": "btc_zone_denominator_sensitivity_latest.json", "issue": str(len(zone_denominator_variants))})
+    if any(row.get("decision") not in {"watch", "test"} for row in zone_denominator_variants if isinstance(row, dict)):
+        failures.append({"check": "zone_denominator_sensitivity_decisions", "artifact": "btc_zone_denominator_sensitivity_latest.json", "issue": "unexpected_decision"})
 
     trace_sink = _read_json(VALUE_DIR / "btc_producer_trace_sink_latest.json")
     trace_summary = trace_sink.get("summary") if isinstance(trace_sink.get("summary"), dict) else {}
