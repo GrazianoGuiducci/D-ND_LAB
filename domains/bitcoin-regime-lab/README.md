@@ -35,6 +35,16 @@ simulator, paper ledger, producer-lineage artifact, autological artifacts and
 cognitive state. It is safe for cron because it uses only public no-key APIs
 and writes only `data/bitcoin-regime-lab/value/*`.
 
+Build the producer trace sink directly:
+
+```bash
+python3 domains/bitcoin-regime-lab/tools/btc_producer_trace_sink.py --write --json
+```
+
+This indexes the BTC value-artifact producers, latest/stamped outputs,
+sessions, cycle/refresh refs and trace/log/report pointers. It is telemetry
+for process reliability, not BTC interpretation.
+
 Generate the exchange-native feed robustness card directly:
 
 ```bash

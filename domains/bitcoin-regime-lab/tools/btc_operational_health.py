@@ -37,6 +37,7 @@ EXPECTED_LATEST = {
     "btc_kairos_phase_latest.json",
     "btc_coherence_check_latest.json",
     "btc_cognitive_state_latest.json",
+    "btc_producer_trace_sink_latest.json",
 }
 STALE_COGNITIVE_PHRASES = (
     "mnemos/kairos/coherence are still implicit or partial",
@@ -156,13 +157,26 @@ def build_health() -> dict[str, Any]:
     if policy_mutation_applied != 0:
         failures.append({"check": "mnemos_policy_mutation_applied_count", "artifact": "btc_mnemos_memory_latest.json", "issue": str(policy_mutation_applied)})
 
+    trace_sink = _read_json(VALUE_DIR / "btc_producer_trace_sink_latest.json")
+    trace_summary = trace_sink.get("summary") if isinstance(trace_sink.get("summary"), dict) else {}
+    if trace_summary.get("missing_producers") != 0:
+        failures.append({"check": "producer_trace_sink_missing_producers", "artifact": "btc_producer_trace_sink_latest.json", "issue": str(trace_summary.get("missing_producers"))})
+    if trace_summary.get("missing_lineage") != 0:
+        failures.append({"check": "producer_trace_sink_missing_lineage", "artifact": "btc_producer_trace_sink_latest.json", "issue": str(trace_summary.get("missing_lineage"))})
+    if trace_summary.get("missing_stamped_outputs") != 0:
+        failures.append({"check": "producer_trace_sink_missing_stamped", "artifact": "btc_producer_trace_sink_latest.json", "issue": str(trace_summary.get("missing_stamped_outputs"))})
+
     cycle_ref = _latest_cycle_ref()
     closure = _latest_closure_for(cycle_ref)
     closure_summary = closure.get("summary") if isinstance(closure.get("summary"), dict) else {}
     if closure.get("status") != "pass" or closure.get("phase") != "post_cycle":
         failures.append({"check": "latest_cycle_closure", "artifact": str(cycle_ref), "issue": f"{closure.get('phase')}/{closure.get('status')}"})
-    elif closure_summary.get("value_artifacts_total") != len(EXPECTED_LATEST):
-        failures.append({"check": "latest_cycle_closure_count", "artifact": str(cycle_ref), "issue": str(closure_summary.get("value_artifacts_total"))})
+    elif closure_summary.get("value_artifacts_total") != closure_summary.get("expected_outputs_total"):
+        failures.append({
+            "check": "latest_cycle_closure_count",
+            "artifact": str(cycle_ref),
+            "issue": f"{closure_summary.get('value_artifacts_total')}/{closure_summary.get('expected_outputs_total')}",
+        })
 
     return {
         "schema": "dndlab.bitcoin.operational_health.v1",

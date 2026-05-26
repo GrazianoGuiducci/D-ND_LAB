@@ -239,6 +239,10 @@ Runtime lineage closure:
 
 - Value artifacts are born in the pre-cycle host-side refresh and may point to
   the active cycle's future report and cycle trace before those files exist.
+- `btc_producer_trace_sink.py` makes producer telemetry first-class: it indexes
+  the expected BTC value producers, their latest/stamped outputs, sessions,
+  cycle/refresh refs, input counts and trace/log/report refs. It is process
+  telemetry only, not BTC interpretation.
 - Standalone value refreshes are not cognitive cycles: their lineage uses
   `session=btc_value_refresh`, a `refresh_ts`, `cycle_ts=null`, and may keep
   only `last_cycle_ref` pointers for continuity.
@@ -279,7 +283,9 @@ This guard checks that latest value artifacts remain refresh-bound
 (`cycle_ts=null`), the last cognitive cycle has a passing post-cycle closure
 audit, and the cognitive-state card no longer regresses to stale implicit
 Mnemos/Kairos/Coherence language. It also fails if Mnemos lacks first-class
-decay classification or if hard decay / policy mutation counters are non-zero.
+decay classification, if hard decay / policy mutation counters are non-zero,
+or if the producer trace sink reports missing producers, lineage or stamped
+outputs.
 
 L'agente del ciclo **non deve rifare fetch di rete** come autorita' primaria:
 deve leggere gli artifact `*_latest.json` gia' scritti nel `LAB_DATA_DIR` del
