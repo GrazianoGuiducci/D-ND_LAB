@@ -239,12 +239,18 @@ Runtime lineage closure:
 
 - Value artifacts are born in the pre-cycle host-side refresh and may point to
   the active cycle's future report and cycle trace before those files exist.
+- Standalone value refreshes are not cognitive cycles: their lineage uses
+  `session=btc_value_refresh`, a `refresh_ts`, `cycle_ts=null`, and may keep
+  only `last_cycle_ref` pointers for continuity.
 - During an in-cycle/pre-report audit, missing `agent_<cycle>.md` or
   `cycle_trace_<cycle>.json` is `pending`, not proof that the cycle failed.
 - The closure authority is the deterministic post-cycle audit:
   `data/bitcoin-regime-lab/closure/btc_runtime_lineage_closure_<cycle>.json`.
 - A post-cycle audit with `status=pass` means current-cycle binding, raw log,
   report and cycle trace materialization are closed for the value artifacts.
+- If old standalone refresh artifacts accidentally reused a cycle timestamp,
+  closure audit groups by expected output artifact and ignores duplicate cycle
+  bindings after the first stamped artifact for that output.
 - Do not use filename globs alone for counts; use
   `runtime_lineage.cycle_ts` and `runtime_lineage.output_artifact_stamped`.
 

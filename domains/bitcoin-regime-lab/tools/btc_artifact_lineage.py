@@ -70,13 +70,17 @@ def _input_artifacts(payload: dict[str, Any], repo_root: Path) -> list[str]:
     return inputs
 
 
-def _cycle_ts(data_dir: Path) -> tuple[str | None, bool]:
+def _active_cycle_ts() -> str | None:
     active = os.environ.get("DND_LAB_ACTIVE_CYCLE_TS", "").strip()
     if re.fullmatch(r"\d{8}_\d{4,6}", active):
-        return active, True
+        return active
+    return None
+
+
+def _last_cycle_ts(data_dir: Path) -> str | None:
     trajectory = _read_json(data_dir / "trajectory_state.json")
     value = trajectory.get("cycle_ts") or trajectory.get("last_cycle_ts")
-    return (str(value), False) if value else (None, False)
+    return str(value) if value else None
 
 
 def _env_path(name: str, repo_root: Path) -> Path | None:
@@ -96,7 +100,10 @@ def _runtime_lineage(
     latest: Path,
     stamped: Path,
 ) -> dict[str, Any]:
-    cycle_ts, active_cycle = _cycle_ts(data_dir)
+    cycle_ts = _active_cycle_ts()
+    last_cycle_ts = _last_cycle_ts(data_dir)
+    session = os.environ.get("DND_LAB_LINEAGE_SESSION", "btc_value_refresh").strip() or "btc_value_refresh"
+    refresh_ts = os.environ.get("DND_LAB_VALUE_REFRESH_TS", "").strip()
     reports_dir = data_dir / "reports"
 
     trace = None
@@ -111,13 +118,8 @@ def _runtime_lineage(
         trace = _first_existing(trace_candidates)
         log = _env_path("DND_LAB_ACTIVE_CYCLE_LOG", repo_root) or _latest_match(data_dir, f"cycle_{cycle_ts}*.log")
         report = _first_existing([report_candidate])
-        if active_cycle:
-            trace = trace or trace_candidates[0]
-            report = report or report_candidate
-    if not active_cycle:
-        trace = trace or _latest_match(data_dir, "cycle_trace_*.json")
-        log = log or _latest_match(data_dir, "cycle_*.log")
-        report = report or _latest_match(reports_dir, "agent_*.md")
+        trace = trace or trace_candidates[0]
+        report = report or report_candidate
 
     lineage: dict[str, Any] = {
         "schema": LINEAGE_SCHEMA,
@@ -125,20 +127,33 @@ def _runtime_lineage(
         "tool_path": _repo_relative(tool_path, repo_root),
         "runtime": "python",
         "provider": "deterministic-python",
-        "session": "btc_value_refresh",
+        "session": session,
         "cycle_ts": cycle_ts,
+        "last_cycle_ref": last_cycle_ts,
         "input_artifacts": _input_artifacts(payload, repo_root),
         "output_artifact": _repo_relative(latest, repo_root),
         "output_artifact_stamped": _repo_relative(stamped, repo_root),
         "trajectory_state": _repo_relative(data_dir / "trajectory_state.json", repo_root),
         "boundary": BOUNDARY,
     }
+    if refresh_ts:
+        lineage["refresh_ts"] = refresh_ts
     if trace:
         lineage["raw_trace"] = _repo_relative(trace, repo_root)
     if log:
         lineage["raw_log"] = _repo_relative(log, repo_root)
     if report:
         lineage["report"] = _repo_relative(report, repo_root)
+    if not cycle_ts and last_cycle_ts:
+        last_trace = _latest_match(data_dir, f"cycle_trace_{last_cycle_ts}.json")
+        last_log = _latest_match(data_dir, f"cycle_{last_cycle_ts}*.log")
+        last_report = _first_existing([reports_dir / f"agent_{last_cycle_ts}.md"])
+        if last_trace:
+            lineage["last_cycle_trace"] = _repo_relative(last_trace, repo_root)
+        if last_log:
+            lineage["last_cycle_log"] = _repo_relative(last_log, repo_root)
+        if last_report:
+            lineage["last_cycle_report"] = _repo_relative(last_report, repo_root)
     return lineage
 
 

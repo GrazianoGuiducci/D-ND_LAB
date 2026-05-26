@@ -17,8 +17,14 @@ fi
 
 cd "$ROOT"
 
+export DND_LAB_LINEAGE_SESSION="btc_value_refresh"
+export DND_LAB_VALUE_REFRESH_TS="$(date -u +%Y%m%d_%H%M%S)"
+unset DND_LAB_ACTIVE_CYCLE_TS
+unset DND_LAB_ACTIVE_CYCLE_LOG
+
 echo "=== D-ND_LAB Bitcoin value refresh ==="
 echo "Started: $(date -Iseconds)"
+echo "Refresh ts: $DND_LAB_VALUE_REFRESH_TS"
 echo "Python: $PYTHON_BIN"
 
 "$PYTHON_BIN" domains/bitcoin-regime-lab/tools/btc_market_card.py --write

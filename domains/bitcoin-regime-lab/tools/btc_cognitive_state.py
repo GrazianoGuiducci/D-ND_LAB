@@ -101,8 +101,11 @@ def _artifact_digest(artifacts: dict[str, dict[str, Any]]) -> dict[str, Any]:
     return out
 
 
-def _layer_alignment(mml: dict[str, Any]) -> list[dict[str, Any]]:
+def _layer_alignment(mml: dict[str, Any], artifacts: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
     skills = mml.get("skills_attive") if isinstance(mml.get("skills_attive"), dict) else {}
+    mnemos = bool(artifacts.get("mnemos_memory"))
+    kairos = bool(artifacts.get("kairos_phase"))
+    coherence = bool(artifacts.get("coherence_check"))
 
     def names(layer: str) -> list[str]:
         entries = skills.get(layer)
@@ -128,8 +131,8 @@ def _layer_alignment(mml: dict[str, Any]) -> list[dict[str, Any]]:
             "layer": "processing",
             "active": sorted(set(names("processing_layer") + names("logic_layer"))),
             "expected_capabilities": ["autological observation", "trajectory decision", "mnemos retention", "kairos regime selection"],
-            "state": "partial",
-            "gap": "trajectory exists; mnemos/kairos are still implicit in seed and trajectory artifacts",
+            "state": "active" if mnemos and kairos else "partial",
+            "gap": "mnemos/kairos are first-class artifacts; policy mutation remains gated by closed-daily evidence" if mnemos and kairos else "trajectory exists; mnemos/kairos are still implicit in seed and trajectory artifacts",
         },
         {
             "layer": "research",
@@ -142,8 +145,8 @@ def _layer_alignment(mml: dict[str, Any]) -> list[dict[str, Any]]:
             "layer": "observation",
             "active": sorted(set(names("observation_layer") + names("interface_layer"))),
             "expected_capabilities": ["runtime trace", "dashboard artifact", "coherence/triage"],
-            "state": "partial",
-            "gap": "runtime awareness exists; coherence/triage are not yet automated as first-class artifacts",
+            "state": "active" if coherence else "partial",
+            "gap": "runtime awareness and coherence are first-class artifacts; triage/cascade remain later surfaces" if coherence else "runtime awareness exists; coherence/triage are not yet automated as first-class artifacts",
         },
     ]
 
@@ -255,14 +258,23 @@ def build_cognitive_state() -> dict[str, Any]:
             ),
             "boundary": "Cognitive-state artifact: learning, gaps and adjustment readiness. Paper simulation ledger: available." if ledger else "Cognitive-state artifact: learning, gaps and adjustment readiness. Paper simulation ledger: missing.",
         },
-        {
+    ]
+    if mnemos and kairos and coherence:
+        cards.append({
+            "claim_id": "btc_policy_mutation_gap",
+            "title": "BTC policy mutation gap",
+            "decision": "redesign",
+            "evidence": "Mnemos, Kairos and Coherence are first-class artifacts; the remaining gap is a closed-daily policy-mutation contract after stable reviewed data.",
+            "boundary": "No autonomous policy mutation is authorized while the daily closed-evidence gate blocks the current open candle.",
+        })
+    else:
+        cards.append({
             "claim_id": "btc_autological_gap",
             "title": "Autological closure gap",
             "decision": "redesign",
             "evidence": "BTC has falsifier, trajectory, seed updates and simulator, but mnemos/kairos/coherence are still implicit or partial.",
             "boundary": "Next implementation should make retention, regime selection and policy mutation first-class artifacts.",
-        },
-    ]
+        })
 
     return {
         "schema": "dndlab.bitcoin.cognitive_state.v1",
@@ -287,7 +299,7 @@ def build_cognitive_state() -> dict[str, Any]:
             {"stage": "cohere", "state": "active" if coherence else "partial", "evidence": "coherence artifact checks drift between gate, artifacts and boundary" if coherence else "coherence checks are not yet first-class"},
             {"stage": "propagate", "state": "partial", "evidence": "capability cascade exists as contract, not yet automatic cross-lab propagation"},
         ],
-        "layer_alignment": _layer_alignment(mml),
+        "layer_alignment": _layer_alignment(mml, artifacts),
         "artifact_digest": _artifact_digest(artifacts),
         "current_learning": current_learning,
         "auto_adjustment": auto_adjustment,

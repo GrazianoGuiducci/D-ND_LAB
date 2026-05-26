@@ -103,6 +103,7 @@ echo "$$ $(date -Iseconds)" 1>&9
 
 export DND_LAB_ACTIVE_CYCLE_TS="$CYCLE_TS"
 export DND_LAB_ACTIVE_CYCLE_LOG="$LOG_FILE"
+export DND_LAB_LINEAGE_SESSION="btc_cycle_pre_refresh"
 
 echo "=== D-ND_LAB cycle wrapper ===" | tee "$LOG_FILE"
 echo "Domain: $DOMAIN" | tee -a "$LOG_FILE"

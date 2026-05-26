@@ -73,7 +73,7 @@ def _latest_cycle_ts() -> str:
 
 
 def build_audit(cycle_ts: str) -> dict[str, Any]:
-    artifacts: list[dict[str, Any]] = []
+    rows_by_output: dict[str, list[dict[str, Any]]] = {}
     for path in sorted(VALUE_DIR.glob("btc_*.json")):
         payload = _read_json(path)
         lineage = payload.get("runtime_lineage")
@@ -85,11 +85,12 @@ def build_audit(cycle_ts: str) -> dict[str, Any]:
         raw_log = _path_from_lineage(lineage.get("raw_log"))
         report = _path_from_lineage(lineage.get("report"))
         inputs = lineage.get("input_artifacts")
-        artifacts.append({
+        row = {
             "file": _repo_relative(path),
             "schema": payload.get("schema"),
             "producer": lineage.get("producer"),
             "tool_path": lineage.get("tool_path"),
+            "session": lineage.get("session"),
             "input_artifacts_count": len(inputs) if isinstance(inputs, list) else 0,
             "output_artifact": lineage.get("output_artifact"),
             "output_artifact_stamped": lineage.get("output_artifact_stamped"),
@@ -99,7 +100,21 @@ def build_audit(cycle_ts: str) -> dict[str, Any]:
             "raw_log_exists": bool(raw_log and raw_log.exists()),
             "report": lineage.get("report"),
             "report_exists": bool(report and report.exists()),
-        })
+        }
+        rows_by_output.setdefault(str(row.get("output_artifact") or ""), []).append(row)
+
+    duplicate_cycle_bindings: list[dict[str, Any]] = []
+    artifacts: list[dict[str, Any]] = []
+    for output_artifact, rows in sorted(rows_by_output.items()):
+        sorted_rows = sorted(rows, key=lambda row: str(row.get("output_artifact_stamped") or row.get("file") or ""))
+        artifacts.append(sorted_rows[0])
+        for duplicate in sorted_rows[1:]:
+            duplicate_cycle_bindings.append({
+                "output_artifact": output_artifact,
+                "ignored_file": duplicate.get("file"),
+                "kept_file": sorted_rows[0].get("file"),
+                "reason": "duplicate cycle binding ignored for closure audit; standalone refreshes must not create cycle_ts bindings",
+            })
 
     total = len(artifacts)
     lineage_required_ok = sum(
@@ -119,6 +134,7 @@ def build_audit(cycle_ts: str) -> dict[str, Any]:
         "raw_log_exists": sum(1 for row in artifacts if row["raw_log_exists"]),
         "report_exists": sum(1 for row in artifacts if row["report_exists"]),
         "input_artifacts_nonempty": sum(1 for row in artifacts if row["input_artifacts_count"] > 0),
+        "duplicate_cycle_bindings_ignored": len(duplicate_cycle_bindings),
     }
     observed_outputs = {
         str(row.get("output_artifact"))
@@ -149,6 +165,7 @@ def build_audit(cycle_ts: str) -> dict[str, Any]:
         "summary": summary,
         "missing_expected_outputs": missing_expected_outputs,
         "unexpected_outputs": unexpected_outputs,
+        "duplicate_cycle_bindings": duplicate_cycle_bindings,
         "boundary": "Post-cycle provenance closure audit only: no market interpretation, no policy mutation, no trading signal.",
         "interpretation": (
             "Use status=pass from a post_cycle audit as the closure contract. "

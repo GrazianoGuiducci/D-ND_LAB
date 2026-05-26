@@ -399,6 +399,7 @@ def _closure_audit_section(closure_dir: Path, n: int = 2) -> str | None:
             "raw_log_exists",
             "report_exists",
             "input_artifacts_nonempty",
+            "duplicate_cycle_bindings_ignored",
         ):
             if key in summary:
                 parts.append(f"  - {key}: {summary[key]}")
