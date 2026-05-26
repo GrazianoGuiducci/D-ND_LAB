@@ -148,6 +148,7 @@ Health guard operativo:
 
 ```bash
 python3 domains/finance/tools/finance_operational_health.py --json
+python3 domains/finance/tools/finance_operational_health.py --write --json
 ```
 
 Il guard non lancia ciclo e non produce claim di mercato. Controlla che il
@@ -155,6 +156,9 @@ transfer diagnostic reale piu' recente sia leggibile, con data-card e confine
 `operational=false/public_claim=false/trading_signal=false`; verifica la
 precondizione `score_min=0.55`, assertions 5/5, MML/config e trajectory. Un
 `no_transfer_delta` resta una constraint negativa utile, non un errore.
+Con `--write` salva la health completa in `data/finance/health/` e una card
+compatta in `data/finance/value/finance_operational_health_latest.json`, cosi'
+la dashboard puo' leggerla dal canale value gia' esistente.
 
 ## Architettura cognitiva (MML)
 

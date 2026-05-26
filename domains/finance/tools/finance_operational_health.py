@@ -22,6 +22,7 @@ REPO_ROOT = DOMAIN_DIR.parents[1]
 DATA_DIR = REPO_ROOT / "data" / DOMAIN
 DIAGNOSTICS_DIR = DATA_DIR / "diagnostics"
 HEALTH_DIR = DATA_DIR / "health"
+VALUE_DIR = DATA_DIR / "value"
 PRECONDITION_CONTRACT = DOMAIN_DIR / "precondition_contract.json"
 CONFIG = DOMAIN_DIR / "config.json"
 MML = DOMAIN_DIR / "mml.json"
@@ -209,13 +210,79 @@ def build_health(*, run_assertions: bool = True) -> dict[str, Any]:
 
 def write_health(payload: dict[str, Any]) -> dict[str, str]:
     HEALTH_DIR.mkdir(parents=True, exist_ok=True)
+    VALUE_DIR.mkdir(parents=True, exist_ok=True)
     stamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
     stamped = HEALTH_DIR / f"finance_operational_health_{stamp}.json"
     latest = HEALTH_DIR / "finance_operational_health_latest.json"
     text = json.dumps(payload, indent=2, ensure_ascii=False, sort_keys=True) + "\n"
     stamped.write_text(text, encoding="utf-8")
     latest.write_text(text, encoding="utf-8")
-    return {"stamped": str(stamped), "latest": str(latest)}
+
+    value_payload = build_value_artifact(payload)
+    value_text = json.dumps(value_payload, indent=2, ensure_ascii=False, sort_keys=True) + "\n"
+    value_stamped = VALUE_DIR / f"finance_operational_health_{stamp}.json"
+    value_latest = VALUE_DIR / "finance_operational_health_latest.json"
+    value_stamped.write_text(value_text, encoding="utf-8")
+    value_latest.write_text(value_text, encoding="utf-8")
+    return {
+        "stamped": str(stamped),
+        "latest": str(latest),
+        "value_stamped": str(value_stamped),
+        "value_latest": str(value_latest),
+    }
+
+
+def build_value_artifact(payload: dict[str, Any]) -> dict[str, Any]:
+    summary = payload.get("summary") if isinstance(payload.get("summary"), dict) else {}
+    warnings = payload.get("warnings") if isinstance(payload.get("warnings"), list) else []
+    failures = payload.get("failures") if isinstance(payload.get("failures"), list) else []
+    status = str(payload.get("status") or "unknown")
+    latest_label = summary.get("latest_transfer_label") or "unknown"
+    trajectory_decision = summary.get("trajectory_decision") or "unknown"
+    trajectory_confidence = summary.get("trajectory_confidence") or "unknown"
+    checks = summary.get("checks")
+    failure_count = summary.get("failures")
+    warning_count = summary.get("warnings")
+    card = {
+        "claim_id": "finance_operational_health",
+        "title": "Finance operational health",
+        "claim": "The Finance Lab has enough local substrate to attempt the next supervised real-market transfer diagnostic step.",
+        "decision": "watch" if status == "pass" else "repair",
+        "verdict": f"FINANCE_HEALTH_{status.upper()}",
+        "evidence": f"{checks} checks; {failure_count} failures; {warning_count} warnings; latest transfer label {latest_label}.",
+        "baseline": "Required files, MML movements, precondition contract, latest diagnostics, recurrence diagnostic and assertions are checked before a new cycle.",
+        "null": "A pass does not promote a finance claim: it only says the operational surface is coherent enough to continue.",
+        "falsifier": "Any missing required file, disabled required movement, broken no-advice boundary, invalid latest diagnostic or assertion failure returns fail.",
+        "boundary": payload.get("boundary"),
+        "next_test": "Run a supervised finance transfer diagnostic only if the next object/mechanism is materially new and predeclared.",
+    }
+    return {
+        "schema": "dndlab.finance.operational_health.value.v1",
+        "generated_at": payload.get("generated_at"),
+        "domain": DOMAIN,
+        "summary": {
+            "status": status,
+            "checks": checks,
+            "failures": failure_count,
+            "warnings": warning_count,
+            "latest_transfer_label": latest_label,
+            "transfer_ok_rows": summary.get("transfer_ok_rows"),
+            "trajectory_decision": trajectory_decision,
+            "trajectory_confidence": trajectory_confidence,
+            "trading_signal": False,
+            "operational": False,
+        },
+        "cards": [card],
+        "warnings": warnings[:5],
+        "failures": failures[:5],
+        "boundary": payload.get("boundary"),
+        "source": {
+            "tool": _repo_path(Path(__file__)),
+            "health_schema": payload.get("schema"),
+            "latest_transfer_diagnostic": summary.get("latest_transfer_diagnostic"),
+            "latest_recurrence_diagnostic": summary.get("latest_recurrence_diagnostic"),
+        },
+    }
 
 
 def main() -> int:

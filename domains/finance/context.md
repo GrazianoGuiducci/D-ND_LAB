@@ -263,6 +263,7 @@ Comando:
 
 ```bash
 python3 /opt/D-ND_LAB/domains/finance/tools/finance_operational_health.py --json
+python3 /opt/D-ND_LAB/domains/finance/tools/finance_operational_health.py --write --json
 ```
 
 Trigger: invocalo prima di un cycle finance supervisionato, prima di trattare
@@ -270,7 +271,10 @@ Finance come riferimento per il meta-lab, o dopo modifiche a transfer
 diagnostic / market data / precondition contract.
 
 Output: JSON `dndlab.finance.operational_health.v1` con `status`,
-`checks`, `failures`, `warnings` e `summary`. Deve passare quando:
+`checks`, `failures`, `warnings` e `summary`. Con `--write` salva anche una
+card compatta `dndlab.finance.operational_health.value.v1` in
+`data/finance/value/finance_operational_health_latest.json`, letta dalla
+superficie `latest_value_artifacts` senza nuovo endpoint. Deve passare quando:
 
 - il transfer diagnostic reale piu' recente e' presente e ha data-card per le
   righe valutabili;
