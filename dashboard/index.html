@@ -3260,8 +3260,8 @@
                     <span x-text="campoStats().cicli"></span>
                     <span x-text="lang === 'en' ? 'cycles' : 'cicli'"></span>
                     ·
-                    <span x-text="cimiteroCount()"></span>
-                    <span x-text="lang === 'en' ? 'filtered' : 'filtrati'"></span>
+                    <span x-text="activeDomain === 'bitcoin-regime-lab' ? btcValueArtifactCount() : cimiteroCount()"></span>
+                    <span x-text="activeDomain === 'bitcoin-regime-lab' ? (lang === 'en' ? 'value artifacts' : 'artifact valore') : (lang === 'en' ? 'filtered' : 'filtrati')"></span>
                   </div>
                 </div>
               </div>
@@ -3391,15 +3391,15 @@
                   <div class="v" x-text="campoStats().cicli"></div>
                 </div>
                 <div class="cycle-metric">
-                  <div class="k" x-text="t('dash.stats.scoperte', 'scoperte')"></div>
-                  <div class="v text-purple-300" x-text="campoStats().scoperte"></div>
+                  <div class="k" x-text="activeDomain === 'bitcoin-regime-lab' ? (lang === 'en' ? 'artifact' : 'artifact') : t('dash.stats.scoperte', 'scoperte')"></div>
+                  <div class="v text-purple-300" x-text="activeDomain === 'bitcoin-regime-lab' ? btcValueArtifactCount() : campoStats().scoperte"></div>
                 </div>
                 <div class="cycle-metric">
-                  <div class="k" x-text="t('dash.stats.prodotti', 'prodotti')"></div>
-                  <div class="v text-green-300" x-text="campoStats().prodotti"></div>
+                  <div class="k" x-text="activeDomain === 'bitcoin-regime-lab' ? (lang === 'en' ? 'pressure' : 'pressione') : t('dash.stats.prodotti', 'prodotti')"></div>
+                  <div class="v text-green-300" x-text="activeDomain === 'bitcoin-regime-lab' ? btcPressureStatusLabel() : campoStats().prodotti"></div>
                 </div>
                 <div class="cycle-metric">
-                  <div class="k" x-text="lang === 'en' ? 'filter' : 'filtro'"></div>
+                  <div class="k" x-text="activeDomain === 'bitcoin-regime-lab' ? (lang === 'en' ? 'held' : 'in attesa') : (lang === 'en' ? 'filter' : 'filtro')"></div>
                   <div class="v text-amber-300" x-text="cimiteroCount()"></div>
                 </div>
               </div>
@@ -3453,15 +3453,15 @@
 
                   <div class="rounded bg-slate-950/35 p-3">
                     <div class="text-[10px] uppercase tracking-wider text-amber-200"
-                         x-text="lang === 'en' ? 'Remaining gap' : 'Lacuna restante'"></div>
+                         x-text="lang === 'en' ? 'Next useful pressure' : 'Prossima pressione utile'"></div>
                     <div class="text-sm text-slate-100 mt-2"
                          x-text="lang === 'en'
-                           ? 'The next value artifact is a paper simulation ledger: simulated decisions, outcome, error and comparison against baseline.'
-                           : 'Il prossimo artifact di valore è un ledger di simulazione: decisioni simulate, outcome, errore e confronto con baseline.'"></div>
+                           ? 'Do not add another structural layer now. Keep testing which assumption daily_inefficiency still relies on: zone construction, fill rule, denominator, or ledger interpretation.'
+                           : 'Non aggiungere un altro strato strutturale ora. Continua a testare quale assunzione daily_inefficiency dà ancora per scontata: costruzione zona, fill rule, denominatore o lettura del ledger.'"></div>
                     <div class="text-xs text-slate-500 mt-2"
                          x-text="lang === 'en'
-                           ? 'This is the bridge from research artifacts to measuring how much the Lab is wrong against the normal chart.'
-                           : 'È il ponte tra artifact di ricerca e misura di quanto il Lab sbaglia rispetto al grafico normale.'"></div>
+                           ? 'Paper/live-sim remains a measurement surface: simulated decisions, errors and baseline comparison.'
+                           : 'Paper/live-sim resta superficie di misura: decisioni simulate, errori e confronto baseline.'"></div>
                   </div>
                 </div>
               </section>
@@ -3634,7 +3634,9 @@
                   <a href="https://github.com/GrazianoGuiducci/D-ND_LAB" target="_blank"
                      class="text-cyan-400 hover:underline">D-ND_LAB</a>
                 </div>
-                <div>D-ND: <span class="font-mono">f(x)=1+1/x · det(M)=-1</span></div>
+                <div x-text="activeDomain === 'bitcoin-regime-lab'
+                  ? (lang === 'en' ? 'BTC Lab: paper/live-sim measurement, simulated decisions and baseline.' : 'BTC Lab: misura paper/live-sim, decisioni simulate e baseline.')
+                  : 'D-ND: f(x)=1+1/x · det(M)=-1'"></div>
                 <div>Dashboard: <span class="font-mono" x-text="health.version || '?'"></span></div>
               </div>
             </div>
@@ -6006,6 +6008,10 @@
           'dndlab.bitcoin.mnemos_memory.v1': 'BTC Mnemos memory',
           'dndlab.bitcoin.kairos_phase.v1': 'BTC Kairos phase',
           'dndlab.bitcoin.coherence_check.v1': 'BTC coherence check',
+          'dndlab.bitcoin.producer_trace_sink.v1': 'BTC producer trace sink',
+          'dndlab.bitcoin.policy_mutation_contract.v1': 'BTC policy mutation contract',
+          'dndlab.bitcoin.retention_regime_selector.v1': 'BTC retention regime selector',
+          'dndlab.bitcoin.daily_method_pressure_test.v1': 'BTC daily method pressure test',
         };
         if (map[schema]) return map[schema];
         if (!schema) return 'n/a';
@@ -6413,26 +6419,38 @@
         return payload.card || {};
       },
 
+      btcValueArtifactCount() {
+        const seen = new Set();
+        if (this.latestValueArtifacts?.latest) {
+          const latest = this.latestValueArtifacts.latest;
+          seen.add(latest.schema || latest.payload?.schema || latest.filename || 'latest');
+        }
+        if (Array.isArray(this.latestValueArtifacts?.artifacts)) {
+          this.latestValueArtifacts.artifacts.forEach((artifact) => {
+            seen.add(artifact.schema || artifact.payload?.schema || artifact.filename || String(seen.size));
+          });
+        }
+        return seen.size;
+      },
+
+      btcPressurePayload() {
+        return this.btcValueArtifactBySchema('dndlab.bitcoin.daily_method_pressure_test.v1')?.payload || {};
+      },
+
+      btcPressureStatusLabel() {
+        const result = this.btcPressurePayload()?.result || {};
+        if (!result.total_checks) return this.lang === 'en' ? 'pending' : 'in attesa';
+        return `${result.passed_checks ?? 0}/${result.total_checks}`;
+      },
+
       btcInfoLogicRows() {
         const gate = this.btcValueArtifactBySchema('dndlab.bitcoin.daily_closed_evidence_gate.v1')?.payload?.gate || {};
-        const simulator = this.bitcoinPolicySimulatorPayload();
-        const metrics = simulator.metrics || {};
-        const ledger = this.bitcoinPaperLedgerPayload();
-        const ledgerMetrics = ledger.metrics || {};
-        const cognitive = this.bitcoinCognitiveStatePayload();
-        const learning = Array.isArray(cognitive.current_learning) ? cognitive.current_learning.length : 0;
+        const contract = this.btcValueArtifactBySchema('dndlab.bitcoin.policy_mutation_contract.v1')?.payload?.contract || {};
+        const selector = this.btcValueArtifactBySchema('dndlab.bitcoin.retention_regime_selector.v1')?.payload?.selector || {};
+        const selectorCounts = selector.counts || {};
+        const pressure = this.btcPressurePayload();
+        const pressureResult = pressure.result || {};
         return [
-          {
-            key: 'chart',
-            label: this.lang === 'en' ? 'primary surface' : 'superficie primaria',
-            title: this.lang === 'en' ? 'Simulator chart' : 'Grafico simulatore',
-            body: this.lang === 'en'
-              ? 'Read normal BTC path first, then event windows and value lens.'
-              : 'Prima leggi l’andamento BTC normale, poi finestre evento e lente valore.',
-            meta: `${metrics.event_count ?? 0} events`,
-            tone: 'text-cyan-300',
-            action: () => this.setActiveTab('campo'),
-          },
           {
             key: 'gate',
             label: this.lang === 'en' ? 'mutation gate' : 'gate mutazione',
@@ -6445,30 +6463,39 @@
             action: () => this.selectValueArtifactLensForSchema('dndlab.bitcoin.daily_closed_evidence_gate.v1'),
           },
           {
-            key: 'cognition',
-            label: this.lang === 'en' ? 'cognitive state' : 'stato cognitivo',
-            title: this.lang === 'en' ? 'Learning loop visible' : 'Loop di apprendimento visibile',
+            key: 'pressure',
+            label: this.lang === 'en' ? 'daily method' : 'metodo daily',
+            title: pressureResult.verdict || (this.lang === 'en' ? 'Pressure test pending' : 'Pressure test in attesa'),
             body: this.lang === 'en'
-              ? 'The Lab exposes learning, adjustment and remaining gaps as artifacts.'
-              : 'Il Lab espone apprendimento, aggiustamento e lacune come artifact.',
-            meta: `${learning} learning inputs`,
-            tone: 'text-purple-300',
-            action: () => this.selectBitcoinCognitiveStateLens(),
+              ? 'daily_inefficiency is checked through strict null, selector, policy contract and paper ledger.'
+              : 'daily_inefficiency passa da null stretto, selector, contratto policy e ledger paper.',
+            meta: pressureResult.total_checks ? `${pressureResult.passed_checks}/${pressureResult.total_checks} check · selector ${pressureResult.selector_decision || 'n/a'}` : 'pressure_test: missing',
+            tone: pressureResult.passed ? 'text-emerald-300' : 'text-amber-300',
+            action: () => this.selectValueArtifactLensForSchema('dndlab.bitcoin.daily_method_pressure_test.v1'),
           },
           {
-            key: 'ledger',
-            label: this.lang === 'en' ? 'paper ledger' : 'ledger simulazione',
-            title: ledger.schema
-              ? (this.lang === 'en' ? 'Decision error visible' : 'Errore decisionale visibile')
-              : (this.lang === 'en' ? 'Paper ledger missing' : 'Ledger simulazione assente'),
+            key: 'selector',
+            label: this.lang === 'en' ? 'retention selector' : 'selector memoria',
+            title: this.lang === 'en' ? 'Retain / watch / decay / reject' : 'Retain / watch / decay / reject',
             body: this.lang === 'en'
-              ? 'Simulated decisions are compared with the normal BTC baseline before the Lab adjusts a policy.'
-              : 'Le decisioni simulate vengono confrontate con la baseline BTC normale prima di aggiustare una policy.',
-            meta: ledger.schema
-              ? `${ledgerMetrics.rows ?? 0} rows · median ${ledgerMetrics.median_error_vs_baseline_pct ?? 'n/a'}%`
-              : 'paper_simulation_ledger: missing',
-            tone: ledger.schema ? 'text-emerald-300' : 'text-rose-300',
-            action: ledger.schema ? () => this.selectBitcoinPaperLedgerLens() : null,
+              ? 'Memory/regime state stays explicit without hard decay or method-policy mutation.'
+              : 'Memoria/regime resta esplicita senza hard decay o mutazione metodo-policy.',
+            meta: `retain ${selectorCounts.retain ?? 0} · watch ${selectorCounts.watch ?? 0} · decay ${selectorCounts.decay ?? 0}`,
+            tone: 'text-cyan-300',
+            action: () => this.selectValueArtifactLensForSchema('dndlab.bitcoin.retention_regime_selector.v1'),
+          },
+          {
+            key: 'contract',
+            label: this.lang === 'en' ? 'policy contract' : 'contratto policy',
+            title: contract.policy_mutation_allowed
+              ? (this.lang === 'en' ? 'Policy mutation review ready' : 'Mutazione policy valutabile')
+              : (this.lang === 'en' ? 'Policy mutation blocked' : 'Mutazione policy bloccata'),
+            body: this.lang === 'en'
+              ? 'The Lab may refresh and simulate decisions, but method-policy mutation needs the contract to allow it.'
+              : 'Il Lab può aggiornare e simulare decisioni, ma la mutazione metodo-policy serve contratto aperto.',
+            meta: `allowed: ${(contract.allowed_effects || []).join(', ') || 'n/a'}`,
+            tone: contract.policy_mutation_allowed ? 'text-emerald-300' : 'text-amber-300',
+            action: () => this.selectValueArtifactLensForSchema('dndlab.bitcoin.policy_mutation_contract.v1'),
           },
         ];
       },
