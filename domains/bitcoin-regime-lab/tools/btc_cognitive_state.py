@@ -15,6 +15,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from btc_artifact_lineage import write_json_artifact
+
 
 VERSION = "0.1.0"
 DOMAIN = "bitcoin-regime-lab"
@@ -299,14 +301,14 @@ def build_cognitive_state() -> dict[str, Any]:
 
 
 def write_artifact(payload: dict[str, Any]) -> dict[str, str]:
-    VALUE_DIR.mkdir(parents=True, exist_ok=True)
-    latest = VALUE_DIR / "btc_cognitive_state_latest.json"
-    stamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
-    stamped = VALUE_DIR / f"btc_cognitive_state_{stamp}.json"
-    text = json.dumps(payload, indent=2, ensure_ascii=False)
-    latest.write_text(text + "\n", encoding="utf-8")
-    stamped.write_text(text + "\n", encoding="utf-8")
-    return {"latest": str(latest), "stamped": str(stamped)}
+    return write_json_artifact(
+        payload=payload,
+        value_dir=VALUE_DIR,
+        data_dir=DATA_DIR,
+        repo_root=REPO_ROOT,
+        tool_path=Path(__file__),
+        artifact_prefix="btc_cognitive_state",
+    )
 
 
 def main() -> int:

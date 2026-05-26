@@ -1,0 +1,151 @@
+#!/usr/bin/env python3
+"""Shared BTC value artifact writer with runtime lineage metadata."""
+from __future__ import annotations
+
+import json
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any
+
+
+LINEAGE_SCHEMA = "dndlab.bitcoin.runtime_lineage.v1"
+BOUNDARY = (
+    "Runtime lineage only: no market-data interpretation, no policy mutation, "
+    "no trading signal."
+)
+
+
+def _read_json(path: Path) -> dict[str, Any]:
+    if not path.exists():
+        return {}
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+    return payload if isinstance(payload, dict) else {}
+
+
+def _repo_relative(path: Path, repo_root: Path) -> str:
+    try:
+        return str(path.resolve().relative_to(repo_root.resolve()))
+    except ValueError:
+        return str(path)
+
+
+def _first_existing(paths: list[Path]) -> Path | None:
+    for path in paths:
+        if path.exists():
+            return path
+    return None
+
+
+def _latest_match(directory: Path, pattern: str) -> Path | None:
+    matches = sorted(directory.glob(pattern))
+    return matches[-1] if matches else None
+
+
+def _input_artifacts(payload: dict[str, Any], repo_root: Path) -> list[str]:
+    values: list[Any] = []
+    for key in ("input_artifacts", "input_paths", "source_artifacts"):
+        raw = payload.get(key)
+        if isinstance(raw, list):
+            values.extend(raw)
+        elif isinstance(raw, dict):
+            values.extend(raw.values())
+        elif isinstance(raw, str):
+            values.append(raw)
+
+    inputs: list[str] = []
+    seen: set[str] = set()
+    for value in values:
+        if not isinstance(value, str) or not value:
+            continue
+        path = Path(value)
+        normalized = _repo_relative(path, repo_root) if path.is_absolute() else value
+        if normalized not in seen:
+            inputs.append(normalized)
+            seen.add(normalized)
+    return inputs
+
+
+def _cycle_ts(data_dir: Path) -> str | None:
+    trajectory = _read_json(data_dir / "trajectory_state.json")
+    value = trajectory.get("cycle_ts") or trajectory.get("last_cycle_ts")
+    return str(value) if value else None
+
+
+def _runtime_lineage(
+    *,
+    payload: dict[str, Any],
+    tool_path: Path,
+    repo_root: Path,
+    data_dir: Path,
+    latest: Path,
+    stamped: Path,
+) -> dict[str, Any]:
+    cycle_ts = _cycle_ts(data_dir)
+    reports_dir = data_dir / "reports"
+
+    trace = None
+    log = None
+    report = None
+    if cycle_ts:
+        trace = _first_existing([
+            data_dir / f"cycle_trace_{cycle_ts}.json",
+            data_dir / "artifacts" / cycle_ts / "cycle_trace.json",
+        ])
+        log = _latest_match(data_dir, f"cycle_{cycle_ts}*.log")
+        report = _first_existing([reports_dir / f"agent_{cycle_ts}.md"])
+    trace = trace or _latest_match(data_dir, "cycle_trace_*.json")
+    log = log or _latest_match(data_dir, "cycle_*.log")
+    report = report or _latest_match(reports_dir, "agent_*.md")
+
+    lineage: dict[str, Any] = {
+        "schema": LINEAGE_SCHEMA,
+        "producer": tool_path.name,
+        "tool_path": _repo_relative(tool_path, repo_root),
+        "runtime": "python",
+        "provider": "deterministic-python",
+        "session": "btc_value_refresh",
+        "cycle_ts": cycle_ts,
+        "input_artifacts": _input_artifacts(payload, repo_root),
+        "output_artifact": _repo_relative(latest, repo_root),
+        "output_artifact_stamped": _repo_relative(stamped, repo_root),
+        "trajectory_state": _repo_relative(data_dir / "trajectory_state.json", repo_root),
+        "boundary": BOUNDARY,
+    }
+    if trace:
+        lineage["raw_trace"] = _repo_relative(trace, repo_root)
+    if log:
+        lineage["raw_log"] = _repo_relative(log, repo_root)
+    if report:
+        lineage["report"] = _repo_relative(report, repo_root)
+    return lineage
+
+
+def write_json_artifact(
+    *,
+    payload: dict[str, Any],
+    value_dir: Path,
+    data_dir: Path,
+    repo_root: Path,
+    tool_path: Path,
+    artifact_prefix: str,
+) -> dict[str, str]:
+    value_dir.mkdir(parents=True, exist_ok=True)
+    latest = value_dir / f"{artifact_prefix}_latest.json"
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+    stamped = value_dir / f"{artifact_prefix}_{stamp}.json"
+
+    payload["runtime_lineage"] = _runtime_lineage(
+        payload=payload,
+        tool_path=tool_path,
+        repo_root=repo_root,
+        data_dir=data_dir,
+        latest=latest,
+        stamped=stamped,
+    )
+    text = json.dumps(payload, indent=2, ensure_ascii=False)
+    latest.write_text(text + "\n", encoding="utf-8")
+    stamped.write_text(text + "\n", encoding="utf-8")
+    return {"latest": str(latest), "stamped": str(stamped)}
