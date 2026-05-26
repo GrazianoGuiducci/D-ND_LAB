@@ -31,6 +31,7 @@ EXPECTED_LATEST = {
     "btc_daily_inefficiency_latest.json",
     "btc_fill_rule_sensitivity_latest.json",
     "btc_zone_denominator_sensitivity_latest.json",
+    "btc_closed_daily_event_null_latest.json",
     "btc_auto_ignite_latest.json",
     "btc_volume_profile_lvn_proxy_latest.json",
     "btc_policy_simulator_latest.json",
@@ -230,6 +231,15 @@ def build_health() -> dict[str, Any]:
         failures.append({"check": "zone_denominator_sensitivity_variants", "artifact": "btc_zone_denominator_sensitivity_latest.json", "issue": str(len(zone_denominator_variants))})
     if any(row.get("decision") not in {"watch", "test"} for row in zone_denominator_variants if isinstance(row, dict)):
         failures.append({"check": "zone_denominator_sensitivity_decisions", "artifact": "btc_zone_denominator_sensitivity_latest.json", "issue": "unexpected_decision"})
+
+    event_null = _read_json(VALUE_DIR / "btc_closed_daily_event_null_latest.json")
+    event_null_metrics = event_null.get("metrics") if isinstance(event_null.get("metrics"), dict) else {}
+    if not event_null_metrics:
+        failures.append({"check": "closed_daily_event_null", "artifact": "btc_closed_daily_event_null_latest.json", "issue": "missing"})
+    elif event_null.get("decision") not in {"observe", "watch", "test", "redesign"}:
+        failures.append({"check": "closed_daily_event_null_decision", "artifact": "btc_closed_daily_event_null_latest.json", "issue": str(event_null.get("decision"))})
+    if event_null.get("boundary", {}).get("real_order_execution") is not False:
+        failures.append({"check": "closed_daily_event_null_boundary", "artifact": "btc_closed_daily_event_null_latest.json", "issue": "real_order_boundary_missing"})
 
     trace_sink = _read_json(VALUE_DIR / "btc_producer_trace_sink_latest.json")
     trace_summary = trace_sink.get("summary") if isinstance(trace_sink.get("summary"), dict) else {}

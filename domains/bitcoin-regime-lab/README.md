@@ -97,6 +97,17 @@ shallow/deep fill-threshold variants against the same strict null. It identifies
 whether the next redesign has a promising axis before any method-policy
 mutation.
 
+Build the redesigned closed-daily event/null family directly:
+
+```bash
+python3 domains/bitcoin-regime-lab/tools/btc_closed_daily_event_null.py --write --json
+```
+
+This tests range-expansion candles with directional close-location against a
+deterministic matched-date null. It is the next functional substrate after the
+daily FVG/inefficiency proxy failed strict-null pressure; it remains paper/lab
+measurement only and does not create entries, exits, advice or real orders.
+
 Generate the exchange-native feed robustness card directly:
 
 ```bash

@@ -258,6 +258,13 @@ variants. It is the next redesign pressure after fill-rule invariance: it
 reports whether any zone/denominator axis beats strict null before the Lab
 changes method policy.
 
+`btc_closed_daily_event_null.py` is the first redesigned event/null family after
+the current daily inefficiency proxy failed strict-null and parameter pressure.
+It uses only closed daily candles, declares range-expansion + directional
+close-location events, and compares their forward directional return against a
+deterministic matched-date null. It is paper/lab measurement: no entries, exits,
+targets, advice, real orders or method-policy mutation.
+
 
 ## Skill retrieval
 

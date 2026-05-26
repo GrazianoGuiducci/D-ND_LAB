@@ -144,6 +144,11 @@
       "boundary": "compares daily_inefficiency zone width, denominator horizon and fill-threshold variants without replacing active method policy; public_claim=false; trading_signal=false; operational=false"
     },
     {
+      "name": "btc_closed_daily_event_null",
+      "path": "tools/btc_closed_daily_event_null.py",
+      "boundary": "tests a redesigned closed-daily event/null family based on range expansion and directional close-location against deterministic matched-date nulls; public_claim=false; trading_signal=false; operational=false"
+    },
+    {
       "name": "btc_auto_ignite",
       "path": "tools/btc_auto_ignite.py",
       "boundary": "gathers BTC value artifacts and writes a provisional LVN/Volume Profile proxy contract with explicit assumptions and nulls; public_claim=false; trading_signal=false; operational=false"

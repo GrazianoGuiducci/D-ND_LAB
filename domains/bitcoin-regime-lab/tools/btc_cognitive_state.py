@@ -39,6 +39,7 @@ VALUE_INPUTS = {
     "daily_inefficiency": VALUE_DIR / "btc_daily_inefficiency_latest.json",
     "fill_rule_sensitivity": VALUE_DIR / "btc_fill_rule_sensitivity_latest.json",
     "zone_denominator_sensitivity": VALUE_DIR / "btc_zone_denominator_sensitivity_latest.json",
+    "closed_daily_event_null": VALUE_DIR / "btc_closed_daily_event_null_latest.json",
     "auto_ignite": VALUE_DIR / "btc_auto_ignite_latest.json",
     "lvn_proxy": VALUE_DIR / "btc_volume_profile_lvn_proxy_latest.json",
     "policy_simulator": VALUE_DIR / "btc_policy_simulator_latest.json",
@@ -354,6 +355,18 @@ def build_cognitive_state() -> dict[str, Any]:
             "verdict": zone_denominator_result.get("verdict"),
             "next_test": zone_denominator_result.get("next_test"),
         })
+    event_null = artifacts.get("closed_daily_event_null") or {}
+    event_null_card = _first_card(event_null)
+    event_null_metrics = event_null.get("metrics") if isinstance(event_null.get("metrics"), dict) else {}
+    if event_null:
+        current_learning.append({
+            "source": "btc_closed_daily_event_null",
+            "learned": event_null_card.get("evidence") or "Closed-daily event/null family compares range-expansion events against deterministic matched-date nulls.",
+            "decision": event_null_card.get("decision"),
+            "verdict": event_null.get("verdict"),
+            "edge_vs_matched_null_pct": event_null_metrics.get("edge_vs_matched_null_pct"),
+            "next_test": event_null.get("next_test"),
+        })
 
     not_yet_closed = [
         "autonomous policy mutation contract after the next stable closed-data run",
@@ -488,6 +501,20 @@ def build_cognitive_state() -> dict[str, Any]:
                 else "Zone/denominator sensitivity artifact is not available in cognitive-state inputs."
             ),
             "boundary": "Cognitive readback only: zone/denominator comparison does not replace method policy.",
+        },
+        {
+            "claim_id": "btc_closed_daily_event_null_readback",
+            "title": "BTC closed-daily event/null readback",
+            "decision": event_null_card.get("decision") or event_null.get("decision") or "watch",
+            "evidence": (
+                f"verdict={event_null.get('verdict')}; "
+                f"events={event_null_metrics.get('events')} null_rows={event_null_metrics.get('null_rows')}; "
+                f"edge={event_null_metrics.get('edge_vs_matched_null_pct')} "
+                f"p_proxy={event_null_metrics.get('matched_null_p_proxy')}."
+                if event_null
+                else "Closed-daily event/null artifact is not available in cognitive-state inputs."
+            ),
+            "boundary": "Cognitive readback only: event/null comparison is paper measurement, not method-policy mutation or advice.",
         },
     ]
     if mnemos and kairos and coherence:
