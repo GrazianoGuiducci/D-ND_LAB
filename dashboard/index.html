@@ -2328,6 +2328,42 @@
               </section>
             </template>
 
+            <template x-if="activeDomain === 'bitcoin-regime-lab' && bitcoinZoneDenominatorSensitivityArtifact()">
+              <section class="mt-4 border rounded-md p-4 quiet-section">
+                <div class="flex items-start justify-between gap-3 flex-wrap mb-3">
+                  <div>
+                    <h3 class="text-sm font-medium text-rose-100" x-text="lang === 'en' ? 'BTC method pressure map' : 'Mappa pressione metodo BTC'"></h3>
+                    <p class="text-xs text-slate-300 mt-1"
+                       x-text="lang === 'en'
+                         ? 'Shows which daily_inefficiency assumptions have already failed against strict null before the next redesign.'
+                         : 'Mostra quali assunzioni di daily_inefficiency sono gia cadute contro il null severo prima del prossimo ridisegno.'"></p>
+                  </div>
+                  <button @click="selectBitcoinZoneDenominatorSensitivityLens()"
+                          class="text-[11px] font-mono px-2 py-1 rounded border quiet-action cursor-pointer"
+                          x-text="lang === 'en' ? 'open pressure' : 'apri pressione'"></button>
+                </div>
+                <div class="grid xl:grid-cols-[minmax(0,1fr)_minmax(280px,.55fr)] gap-3">
+                  <div class="grid md:grid-cols-3 gap-2">
+                    <template x-for="row in bitcoinMethodPressureRows()" :key="row.key">
+                      <button @click="row.action && row.action()"
+                              class="text-left rounded border p-3 transition cursor-pointer min-h-[116px] quiet-surface">
+                        <div class="text-[10px] uppercase tracking-wider text-slate-400" x-text="row.label"></div>
+                        <div class="text-xs font-mono mt-1 leading-relaxed break-all" :class="row.tone" x-text="row.value"></div>
+                        <div class="text-xs text-slate-300 mt-2 leading-relaxed line-clamp-3" x-text="row.note"></div>
+                      </button>
+                    </template>
+                  </div>
+                  <button @click="selectBitcoinCognitiveStateLens()"
+                          class="text-left rounded border p-3 transition cursor-pointer quiet-surface">
+                    <div class="text-[10px] uppercase tracking-wider text-amber-200" x-text="lang === 'en' ? 'Redesign now points here' : 'Il ridisegno punta qui'"></div>
+                    <div class="text-sm text-slate-100 mt-2 leading-relaxed" x-text="btcInfoNextPressureTitle()"></div>
+                    <div class="text-xs text-slate-300 mt-2 leading-relaxed" x-text="btcInfoNextPressureBody()"></div>
+                    <div class="text-[10px] font-mono text-slate-500 mt-3 line-clamp-2" x-text="btcInfoNextPressureMeta()"></div>
+                  </button>
+                </div>
+              </section>
+            </template>
+
             <template x-if="bitcoinMethodIntakeArtifact()">
               <section class="mt-4 border rounded-md p-4 quiet-section">
                 <div class="flex items-start justify-between gap-3 flex-wrap mb-3">
@@ -3455,13 +3491,11 @@
                     <div class="text-[10px] uppercase tracking-wider text-amber-200"
                          x-text="lang === 'en' ? 'Next useful pressure' : 'Prossima pressione utile'"></div>
                     <div class="text-sm text-slate-100 mt-2"
-                         x-text="lang === 'en'
-                           ? 'Do not add another structural layer now. Keep testing which assumption daily_inefficiency still relies on: zone construction, fill rule, denominator, or ledger interpretation.'
-                           : 'Non aggiungere un altro strato strutturale ora. Continua a testare quale assunzione daily_inefficiency dà ancora per scontata: costruzione zona, fill rule, denominatore o lettura del ledger.'"></div>
+                         x-text="btcInfoNextPressureTitle()"></div>
                     <div class="text-xs text-slate-500 mt-2"
-                         x-text="lang === 'en'
-                           ? 'Paper/live-sim remains a measurement surface: simulated decisions, errors and baseline comparison.'
-                           : 'Paper/live-sim resta superficie di misura: decisioni simulate, errori e confronto baseline.'"></div>
+                         x-text="btcInfoNextPressureBody()"></div>
+                    <div class="text-[10px] font-mono text-slate-500 mt-3 line-clamp-2"
+                         x-text="btcInfoNextPressureMeta()"></div>
                   </div>
                 </div>
               </section>
@@ -6086,6 +6120,22 @@
           || a?.payload?.schema === 'dndlab.bitcoin.daily_inefficiency.v1') || null;
       },
 
+      bitcoinFillRuleSensitivityArtifact() {
+        return this.btcValueArtifactBySchema('dndlab.bitcoin.fill_rule_sensitivity.v1');
+      },
+
+      bitcoinFillRuleSensitivityPayload() {
+        return this.bitcoinFillRuleSensitivityArtifact()?.payload || {};
+      },
+
+      bitcoinZoneDenominatorSensitivityArtifact() {
+        return this.btcValueArtifactBySchema('dndlab.bitcoin.zone_denominator_sensitivity.v1');
+      },
+
+      bitcoinZoneDenominatorSensitivityPayload() {
+        return this.bitcoinZoneDenominatorSensitivityArtifact()?.payload || {};
+      },
+
       bitcoinPolicySimulatorArtifact() {
         const all = [];
         if (this.latestValueArtifacts?.latest) all.push(this.latestValueArtifacts.latest);
@@ -6225,6 +6275,8 @@
           btc_mnemos_memory: 'memoria mnemos BTC',
           btc_kairos_phase: 'fase kairos BTC',
           btc_coherence_check: 'controllo coerenza BTC',
+          btc_fill_rule_sensitivity: 'sensibilità fill-rule BTC',
+          btc_zone_denominator_sensitivity: 'sensibilità zona/denominatore BTC',
         };
         return map[raw] || raw || 'fonte';
       },
@@ -6271,6 +6323,12 @@
             'L artifact kairos e disponibile.',
           'Coherence artifact checks drift between boundary and artifacts.':
             'L artifact di coerenza controlla lo scostamento tra confine e artifact.',
+          'The fill rule is not the active source of edge; inspect zone construction or denominator next.':
+            'La regola di fill non è la fonte attiva dell edge; controllare costruzione zona o denominatore.',
+          'No tested zone/denominator variant beats strict null; redesign event source or add a different null family next.':
+            'Nessuna variante zona/denominatore batte il null severo; ora serve ridisegnare la sorgente evento o aggiungere una famiglia di null diversa.',
+          'Stop trying minimal parametric salvages of daily_inefficiency on the current daily proxy. Next cycle should redesign around a new daily event/null family or a closed-daily conversion contract with explicit path-witness/producer-closure, matched null, denominator, and paper-simulation ledger before any policy mutation.':
+            'Smettere di tentare piccoli salvataggi parametrici di daily_inefficiency sul proxy daily corrente. Il prossimo ciclo deve ridisegnare una nuova famiglia evento/null o un contratto di conversione daily chiuso con path-witness, producer closure, null matched, denominatore e ledger paper prima di ogni mutazione policy.',
           'event window beats the normal baseline without current fragility/control dominance':
             'la finestra evento batte la baseline normale senza fragilità corrente o dominanza dei controlli',
           'retain acceptance rule and retest on the next closed-data run':
@@ -6443,6 +6501,87 @@
         const result = this.btcPressurePayload()?.result || {};
         if (!result.total_checks) return this.lang === 'en' ? 'pending' : 'in attesa';
         return `${result.passed_checks ?? 0}/${result.total_checks}`;
+      },
+
+      bitcoinMethodPressureRows() {
+        const daily = this.bitcoinDailyInefficiencyArtifact()?.payload || {};
+        const dailyMetrics = daily.metrics || {};
+        const fill = this.bitcoinFillRuleSensitivityPayload();
+        const fillResult = fill.result || {};
+        const zone = this.bitcoinZoneDenominatorSensitivityPayload();
+        const zoneResult = zone.result || {};
+        return [
+          {
+            key: 'daily',
+            label: this.lang === 'en' ? 'daily proxy' : 'proxy daily',
+            value: daily.cards?.[0]?.verdict || 'n/a',
+            note: this.lang === 'en'
+              ? `fill ${dailyMetrics.zone_fill_rate ?? 'n/a'} vs strict ${dailyMetrics.strict_control_fill_rate ?? 'n/a'}`
+              : `fill ${dailyMetrics.zone_fill_rate ?? 'n/a'} vs severo ${dailyMetrics.strict_control_fill_rate ?? 'n/a'}`,
+            tone: 'text-amber-300',
+            action: () => this.selectBitcoinDailyInefficiencyLens(),
+          },
+          {
+            key: 'fill',
+            label: this.lang === 'en' ? 'fill rule' : 'regola fill',
+            value: fillResult.verdict || 'n/a',
+            note: this.lang === 'en'
+              ? `${fillResult.ready_rules?.length ?? 0} rules checked; positive ${fillResult.positive_rules?.length ?? 0}`
+              : `${fillResult.ready_rules?.length ?? 0} regole controllate; positive ${fillResult.positive_rules?.length ?? 0}`,
+            tone: (fillResult.positive_rules || []).length ? 'text-emerald-300' : 'text-amber-300',
+            action: () => this.selectValueArtifactLensForSchema('dndlab.bitcoin.fill_rule_sensitivity.v1'),
+          },
+          {
+            key: 'zone_denominator',
+            label: this.lang === 'en' ? 'zone / denominator' : 'zona / denominatore',
+            value: zoneResult.verdict || 'n/a',
+            note: this.lang === 'en'
+              ? `best ${zoneResult.best_variant || 'n/a'} · edge ${zoneResult.best_edge_vs_strict_null ?? 'n/a'}`
+              : `migliore ${zoneResult.best_variant || 'n/a'} · edge ${zoneResult.best_edge_vs_strict_null ?? 'n/a'}`,
+            tone: (zoneResult.positive_variants || []).length ? 'text-emerald-300' : 'text-rose-300',
+            action: () => this.selectBitcoinZoneDenominatorSensitivityLens(),
+          },
+        ];
+      },
+
+      btcLatestTrajectoryLearning() {
+        const learning = this.bitcoinCognitiveStatePayload()?.current_learning;
+        if (!Array.isArray(learning)) return null;
+        return [...learning].reverse().find(item => item?.source === 'trajectory_evaluator') || null;
+      },
+
+      btcInfoNextPressureTitle() {
+        const trajectory = this.btcLatestTrajectoryLearning();
+        const zone = this.bitcoinZoneDenominatorSensitivityPayload()?.result || {};
+        const text = trajectory?.next_direction || trajectory?.learned || zone.next_test || '';
+        if (text) return this.lang === 'en' ? text : this.bitcoinCognitiveStateText(text);
+        return this.lang === 'en'
+          ? 'Redesign the next event/null family before method-policy mutation.'
+          : 'Ridisegnare la prossima famiglia evento/null prima della mutazione metodo-policy.';
+      },
+
+      btcInfoNextPressureBody() {
+        const zone = this.bitcoinZoneDenominatorSensitivityPayload()?.result || {};
+        const fill = this.bitcoinFillRuleSensitivityPayload()?.result || {};
+        if (zone.verdict || fill.verdict) {
+          return this.lang === 'en'
+            ? `Fill rule: ${fill.verdict || 'n/a'}; zone/denominator: ${zone.verdict || 'n/a'}. Parametric salvage did not beat strict null.`
+            : `Fill rule: ${fill.verdict || 'n/d'}; zona/denominatore: ${zone.verdict || 'n/d'}. Il salvataggio parametrico non ha battuto il null severo.`;
+        }
+        return this.lang === 'en'
+          ? 'Paper/live-sim remains a measurement surface: simulated decisions, errors and baseline comparison.'
+          : 'Paper/live-sim resta superficie di misura: decisioni simulate, errori e confronto baseline.';
+      },
+
+      btcInfoNextPressureMeta() {
+        const trajectory = this.btcLatestTrajectoryLearning();
+        const zone = this.bitcoinZoneDenominatorSensitivityPayload()?.result || {};
+        return [
+          trajectory?.decision ? `trajectory ${trajectory.decision}` : null,
+          zone.best_variant ? `best ${zone.best_variant}` : null,
+          zone.best_edge_vs_strict_null !== undefined ? `edge ${zone.best_edge_vs_strict_null}` : null,
+          Array.isArray(zone.positive_variants) ? `positive ${zone.positive_variants.length}` : null,
+        ].filter(Boolean).join(' · ') || 'trajectory/artifacts pending';
       },
 
       btcInfoLogicRows() {
@@ -7401,6 +7540,61 @@
         this.activeTab = 'campo';
       },
 
+      selectBitcoinZoneDenominatorSensitivityLens(variant = null) {
+        const artifact = this.bitcoinZoneDenominatorSensitivityArtifact();
+        if (!artifact) return;
+        const payload = artifact.payload || {};
+        const result = payload.result || {};
+        const variants = Array.isArray(payload.variants) ? payload.variants : [];
+        const selected = variant || variants.find(row => row.variant === result.best_variant) || variants[0] || {};
+        this.selectedNode = null;
+        this.selectedScopertaSsp = null;
+        this.selectedProdottoSsp = null;
+        this.selectedCampoLens = {
+          type: 'campo',
+          category: 'btc-zone-denominator-sensitivity',
+          title: selected.variant
+            ? `${this.lang === 'en' ? 'BTC zone/denominator' : 'Zona/denominatore BTC'} · ${selected.variant}`
+            : (this.lang === 'en' ? 'BTC zone/denominator sensitivity' : 'Sensibilità zona/denominatore BTC'),
+          subtitle: result.verdict || payload.verdict || 'watch',
+          schema: payload.schema || artifact.schema || 'dndlab.bitcoin.zone_denominator_sensitivity.v1',
+          date: payload.generated_at || artifact.generated_at || artifact.mtime,
+          evidence: selected.variant
+            ? [
+                `axis: ${selected.axis || 'n/a'}`,
+                `denom: ${selected.zones_evaluable ?? 'n/a'}`,
+                `edge: ${selected.edge_vs_strict_null ?? 'n/a'}`,
+              ].join(' · ')
+            : (payload.cards?.[0]?.evidence || result.next_test || 'Sensitivity artifact not summarized.'),
+          boundary: this.lang === 'en'
+            ? 'Method sensitivity only: it compares parameter variants without replacing active method policy.'
+            : 'Solo sensibilità metodo: confronta varianti parametriche senza sostituire la policy metodo attiva.',
+          meta: [
+            `best: ${result.best_variant || 'n/a'}`,
+            `positive: ${(result.positive_variants || []).length}`,
+            `ready: ${(result.ready_variants || []).length}`,
+          ].join(' · '),
+          diagnostics: [
+            {
+              label: this.lang === 'en' ? 'Result' : 'Risultato',
+              value: result.verdict || 'n/a',
+              note: this.bitcoinCognitiveStateText(result.next_test || ''),
+            },
+            {
+              label: this.lang === 'en' ? 'Best variant' : 'Variante migliore',
+              value: result.best_variant || 'n/a',
+              note: `axis ${result.best_axis || 'n/a'} · edge ${result.best_edge_vs_strict_null ?? 'n/a'}`,
+            },
+            ...variants.slice(0, 5).map(row => ({
+              label: row.variant || 'variant',
+              value: `${row.edge_vs_strict_null ?? 'n/a'}`,
+              note: `${row.axis || 'axis'} · denom ${row.zones_evaluable ?? 'n/a'} · strict ${row.strict_control_fill_rate ?? 'n/a'}`,
+            })),
+          ],
+        };
+        this.activeTab = 'campo';
+      },
+
       refreshSelectedCampoLensForLanguage() {
         const lens = this.selectedCampoLens;
         if (!lens) return;
@@ -7428,6 +7622,10 @@
         }
         if (category === 'daily-inefficiency' || schema === 'dndlab.bitcoin.daily_inefficiency.v1') {
           this.selectBitcoinDailyInefficiencyLens();
+          return;
+        }
+        if (category === 'btc-zone-denominator-sensitivity' || schema === 'dndlab.bitcoin.zone_denominator_sensitivity.v1') {
+          this.selectBitcoinZoneDenominatorSensitivityLens();
           return;
         }
         if (lens.kind === 'artifact' && schema) {
