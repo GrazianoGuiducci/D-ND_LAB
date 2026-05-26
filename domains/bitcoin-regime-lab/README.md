@@ -108,6 +108,16 @@ deterministic matched-date null. It is the next functional substrate after the
 daily FVG/inefficiency proxy failed strict-null pressure; it remains paper/lab
 measurement only and does not create entries, exits, advice or real orders.
 
+Pressure-test that event/null family directly:
+
+```bash
+python3 domains/bitcoin-regime-lab/tools/btc_closed_daily_event_null_pressure.py --write --json
+```
+
+This varies forward-window denominator, matched-null density and event
+thresholds. It tells the Lab whether the family is stable enough to keep as a
+watch/test/reject surface before any policy mutation.
+
 Generate the exchange-native feed robustness card directly:
 
 ```bash

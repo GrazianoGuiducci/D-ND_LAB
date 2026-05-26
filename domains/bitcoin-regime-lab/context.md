@@ -265,6 +265,12 @@ close-location events, and compares their forward directional return against a
 deterministic matched-date null. It is paper/lab measurement: no entries, exits,
 targets, advice, real orders or method-policy mutation.
 
+`btc_closed_daily_event_null_pressure.py` decides whether that event/null family
+has enough denominator and null stability to keep testing. It varies the
+forward window, matched-null density and event thresholds, then reports whether
+forward-10 and the matched-date null are admissible enough for watch/test/reject.
+It is still an evidence card only, not policy mutation.
+
 
 ## Skill retrieval
 

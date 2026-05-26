@@ -36,6 +36,7 @@ EXPECTED_UPSTREAM = {
     "btc_fill_rule_sensitivity_latest.json",
     "btc_zone_denominator_sensitivity_latest.json",
     "btc_closed_daily_event_null_latest.json",
+    "btc_closed_daily_event_null_pressure_latest.json",
     "btc_auto_ignite_latest.json",
     "btc_volume_profile_lvn_proxy_latest.json",
     "btc_policy_simulator_latest.json",

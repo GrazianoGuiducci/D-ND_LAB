@@ -32,6 +32,7 @@ EXPECTED_LATEST = {
     "btc_fill_rule_sensitivity_latest.json",
     "btc_zone_denominator_sensitivity_latest.json",
     "btc_closed_daily_event_null_latest.json",
+    "btc_closed_daily_event_null_pressure_latest.json",
     "btc_auto_ignite_latest.json",
     "btc_volume_profile_lvn_proxy_latest.json",
     "btc_policy_simulator_latest.json",
@@ -240,6 +241,16 @@ def build_health() -> dict[str, Any]:
         failures.append({"check": "closed_daily_event_null_decision", "artifact": "btc_closed_daily_event_null_latest.json", "issue": str(event_null.get("decision"))})
     if event_null.get("boundary", {}).get("real_order_execution") is not False:
         failures.append({"check": "closed_daily_event_null_boundary", "artifact": "btc_closed_daily_event_null_latest.json", "issue": "real_order_boundary_missing"})
+
+    event_null_pressure = _read_json(VALUE_DIR / "btc_closed_daily_event_null_pressure_latest.json")
+    pressure_result = event_null_pressure.get("result") if isinstance(event_null_pressure.get("result"), dict) else {}
+    pressure_variants = event_null_pressure.get("variants") if isinstance(event_null_pressure.get("variants"), list) else []
+    if not pressure_result:
+        failures.append({"check": "closed_daily_event_null_pressure", "artifact": "btc_closed_daily_event_null_pressure_latest.json", "issue": "missing"})
+    if len(pressure_variants) != 9:
+        failures.append({"check": "closed_daily_event_null_pressure_variants", "artifact": "btc_closed_daily_event_null_pressure_latest.json", "issue": str(len(pressure_variants))})
+    if event_null_pressure.get("boundary", {}).get("real_order_execution") is not False:
+        failures.append({"check": "closed_daily_event_null_pressure_boundary", "artifact": "btc_closed_daily_event_null_pressure_latest.json", "issue": "real_order_boundary_missing"})
 
     trace_sink = _read_json(VALUE_DIR / "btc_producer_trace_sink_latest.json")
     trace_summary = trace_sink.get("summary") if isinstance(trace_sink.get("summary"), dict) else {}
