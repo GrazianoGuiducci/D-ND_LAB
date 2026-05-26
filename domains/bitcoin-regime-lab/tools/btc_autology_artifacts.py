@@ -91,6 +91,46 @@ def _artifact_row(name: str, payload: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _decay_contract(row: dict[str, Any], action: str, gate_state: dict[str, Any]) -> dict[str, Any]:
+    source = str(row.get("source") or "")
+    next_allowed = gate_state.get("next_allowed_daily_date")
+    latest_closed = gate_state.get("latest_closed_common_date")
+    if action == "retain_as_guard":
+        return {
+            "decay_state": "guard_active",
+            "trigger": "new_closed_daily_evidence_or_gate_repair",
+            "review_horizon": next_allowed or "next_closed_daily",
+            "demotion_rule": "keep as guard while mutation_allowed=false; review when closed daily evidence advances",
+        }
+    if action == "retain_for_next_closed_review":
+        return {
+            "decay_state": "review_at_next_closed_daily",
+            "trigger": "mutation_allowed_true_with_new_closed_common_date",
+            "review_horizon": next_allowed or "next_closed_daily",
+            "demotion_rule": "demote to watch if next closed review does not produce a null-beating test object",
+        }
+    if action == "retain_for_redesign":
+        return {
+            "decay_state": "redesign_memory",
+            "trigger": "next_closed_review_or_method_contract_written",
+            "review_horizon": f"after_closed_date_{latest_closed}" if latest_closed else "next_closed_review",
+            "demotion_rule": "archive as negative evidence after it is consumed by a first-class method/decay contract",
+        }
+    if source == "exchange_ohlcv":
+        return {
+            "decay_state": "refresh_context",
+            "trigger": "next_value_refresh",
+            "review_horizon": "hourly_refresh",
+            "demotion_rule": "replace with fresher feed agreement context; keep stamped artifact for audit only",
+        }
+    return {
+        "decay_state": "watch_context",
+        "trigger": "next_closed_daily_without_new_use",
+        "review_horizon": next_allowed or "next_closed_daily",
+        "demotion_rule": "demote to context archive if not used by a test, guard, or redesign contract",
+    }
+
+
 def _boundary_ok(payload: dict[str, Any]) -> bool:
     boundary = payload.get("boundary") if isinstance(payload.get("boundary"), dict) else {}
     if not boundary:
@@ -99,6 +139,8 @@ def _boundary_ok(payload: dict[str, Any]) -> bool:
 
 
 def build_mnemos(artifacts: dict[str, dict[str, Any]], trajectory: dict[str, Any], generated_at: str) -> dict[str, Any]:
+    gate = artifacts.get("daily_closed_evidence_gate") or {}
+    gate_state = gate.get("gate") if isinstance(gate.get("gate"), dict) else {}
     rows = [_artifact_row(name, payload) for name, payload in artifacts.items() if payload]
     retention = []
     for row in rows:
@@ -116,14 +158,29 @@ def build_mnemos(artifacts: dict[str, dict[str, Any]], trajectory: dict[str, Any
         else:
             action = "retain_watch"
             reason = "watch artifact preserves context without promotion"
-        retention.append({**row, "retention_action": action, "reason": reason})
+        retention.append({
+            **row,
+            "retention_action": action,
+            "reason": reason,
+            "decay_contract": _decay_contract(row, action, gate_state),
+        })
+
+    decay_classified = sum(1 for row in retention if all((row.get("decay_contract") or {}).get(key) for key in ("decay_state", "trigger", "review_horizon", "demotion_rule")))
+    decay_unclassified = len(retention) - decay_classified
+    mutation_allowed = bool(gate_state.get("mutation_allowed"))
+    mutation_effects = {
+        "hard_decay_applied_count": 0,
+        "policy_mutation_applied_count": 0,
+        "mutation_allowed": mutation_allowed,
+        "boundary": "Explicit zero-effect counters: Mnemos classifies decay/review memory but does not apply hard decay or policy mutation.",
+    }
 
     cards = [
         {
             "claim_id": "btc_mnemos_retention_state",
             "title": "BTC Mnemos retention state",
             "decision": "watch",
-            "evidence": f"{len(retention)} artifacts retained; trajectory={trajectory.get('decision') or 'pending'}.",
+            "evidence": f"{len(retention)} artifacts retained; decay classified {decay_classified}/{len(retention)}; trajectory={trajectory.get('decision') or 'pending'}.",
             "boundary": "Mnemos decides retention/decay/redesign memory only; it does not promote market action.",
         }
     ]
@@ -135,6 +192,17 @@ def build_mnemos(artifacts: dict[str, dict[str, Any]], trajectory: dict[str, Any
         "intent": "Make retention, decay and redesign memory explicit for BTC Lab.",
         "input_artifacts": {name: str(path) for name, path in INPUTS.items()},
         "retention": retention,
+        "decay_contract": {
+            "schema": "dndlab.bitcoin.decay_contract.v0",
+            "classified": decay_classified,
+            "unclassified": decay_unclassified,
+            "null_beaten": bool(retention and decay_unclassified == 0),
+            "hard_decay_applied_count": mutation_effects["hard_decay_applied_count"],
+            "policy_mutation_applied_count": mutation_effects["policy_mutation_applied_count"],
+            "required_fields": ["decay_state", "trigger", "review_horizon", "demotion_rule"],
+            "boundary": "Decay contract classifies Lab memory only; it does not mutate BTC policy while the daily gate blocks mutation.",
+        },
+        "mutation_effects": mutation_effects,
         "trajectory": {
             "decision": trajectory.get("decision"),
             "direction": trajectory.get("direction"),
@@ -146,6 +214,8 @@ def build_mnemos(artifacts: dict[str, dict[str, Any]], trajectory: dict[str, Any
             "test": 0,
             "reject": 0,
             "redesign": sum(1 for row in retention if row["retention_action"] == "retain_for_redesign"),
+            "decay_classified": decay_classified,
+            "decay_unclassified": decay_unclassified,
             "trading_signal": False,
         },
         "cards": cards,
@@ -243,6 +313,18 @@ def build_coherence(artifacts: dict[str, dict[str, Any]], generated_at: str) -> 
     cutoff = gate_state.get("latest_closed_common_date")
     daily = artifacts.get("daily_inefficiency") or {}
     lvn = artifacts.get("lvn_proxy") or {}
+    mnemos = artifacts.get("mnemos_memory") or {}
+    retention = mnemos.get("retention") if isinstance(mnemos.get("retention"), list) else []
+    decay_contract = mnemos.get("decay_contract") if isinstance(mnemos.get("decay_contract"), dict) else {}
+    mutation_effects = mnemos.get("mutation_effects") if isinstance(mnemos.get("mutation_effects"), dict) else {}
+    hard_decay_applied = int(mutation_effects.get("hard_decay_applied_count") or decay_contract.get("hard_decay_applied_count") or 0)
+    policy_mutation_applied = int(mutation_effects.get("policy_mutation_applied_count") or decay_contract.get("policy_mutation_applied_count") or 0)
+    decay_rows_classified = [
+        row
+        for row in retention
+        if isinstance(row, dict)
+        and all((row.get("decay_contract") or {}).get(key) for key in ("decay_state", "trigger", "review_horizon", "demotion_rule"))
+    ]
     checks = []
 
     checks.append({
@@ -269,6 +351,16 @@ def build_coherence(artifacts: dict[str, dict[str, Any]], generated_at: str) -> 
         "check": "policy_simulator_declared_manual",
         "pass": bool((artifacts.get("policy_simulator") or {}).get("policy_contract")),
         "evidence": "policy simulator remains a declared research artifact, not a refresh-side execution rule",
+    })
+    checks.append({
+        "check": "mnemos_decay_contract_classified",
+        "pass": bool(retention and len(decay_rows_classified) == len(retention)),
+        "evidence": f"decay_classified={len(decay_rows_classified)}/{len(retention)}",
+    })
+    checks.append({
+        "check": "no_hard_decay_or_policy_mutation_while_gate_blocked",
+        "pass": bool(gate_state.get("mutation_allowed") or (hard_decay_applied == 0 and policy_mutation_applied == 0)),
+        "evidence": f"mutation_allowed={bool(gate_state.get('mutation_allowed'))}; hard_decay_applied_count={hard_decay_applied}; policy_mutation_applied_count={policy_mutation_applied}",
     })
 
     failed = [row for row in checks if not row["pass"]]
@@ -314,10 +406,12 @@ def build_all() -> dict[str, dict[str, Any]]:
     generated_at = _utc_now()
     artifacts = {name: _read_json(path) for name, path in INPUTS.items()}
     trajectory = _read_json(TRAJECTORY_PATH)
+    mnemos = build_mnemos(artifacts, trajectory, generated_at)
+    artifacts_with_mnemos = {**artifacts, "mnemos_memory": mnemos}
     return {
-        "mnemos_memory": build_mnemos(artifacts, trajectory, generated_at),
+        "mnemos_memory": mnemos,
         "kairos_phase": build_kairos(artifacts, trajectory, generated_at),
-        "coherence_check": build_coherence(artifacts, generated_at),
+        "coherence_check": build_coherence(artifacts_with_mnemos, generated_at),
     }
 
 

@@ -248,6 +248,14 @@ Runtime lineage closure:
   `data/bitcoin-regime-lab/closure/btc_runtime_lineage_closure_<cycle>.json`.
 - A post-cycle audit with `status=pass` means current-cycle binding, raw log,
   report and cycle trace materialization are closed for the value artifacts.
+- Reports must cite stamped closure artifacts for historical claims. Do not use
+  `btc_runtime_lineage_closure_latest.json` as evidence for a previous cycle,
+  because the post-cycle hook advances it to the current cycle.
+- Evidence authority has two explicit layers: stamped artifacts kept by the
+  post-cycle closure audit are authoritative for current-cycle binding claims;
+  `*_latest.json` artifacts are authoritative only for current readback after a
+  declared refresh or rerun. If a report uses both, it must state which layer
+  supports each numeric claim.
 - If old standalone refresh artifacts accidentally reused a cycle timestamp,
   closure audit groups by expected output artifact and ignores duplicate cycle
   bindings after the first stamped artifact for that output.
@@ -270,7 +278,8 @@ python3 domains/bitcoin-regime-lab/tools/btc_operational_health.py --write
 This guard checks that latest value artifacts remain refresh-bound
 (`cycle_ts=null`), the last cognitive cycle has a passing post-cycle closure
 audit, and the cognitive-state card no longer regresses to stale implicit
-Mnemos/Kairos/Coherence language.
+Mnemos/Kairos/Coherence language. It also fails if Mnemos lacks first-class
+decay classification or if hard decay / policy mutation counters are non-zero.
 
 L'agente del ciclo **non deve rifare fetch di rete** come autorita' primaria:
 deve leggere gli artifact `*_latest.json` gia' scritti nel `LAB_DATA_DIR` del

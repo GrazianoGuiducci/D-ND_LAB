@@ -137,6 +137,25 @@ def build_health() -> dict[str, Any]:
     if "btc_policy_mutation_gap" not in card_ids:
         failures.append({"check": "cognitive_policy_gap_card", "artifact": "btc_cognitive_state_latest.json", "issue": "missing"})
 
+    mnemos = _read_json(VALUE_DIR / "btc_mnemos_memory_latest.json")
+    retention = mnemos.get("retention") if isinstance(mnemos.get("retention"), list) else []
+    decay_classified = [
+        row
+        for row in retention
+        if isinstance(row, dict)
+        and all((row.get("decay_contract") or {}).get(key) for key in ("decay_state", "trigger", "review_horizon", "demotion_rule"))
+    ]
+    if not retention or len(decay_classified) != len(retention):
+        failures.append({"check": "mnemos_decay_contract", "artifact": "btc_mnemos_memory_latest.json", "issue": f"{len(decay_classified)}/{len(retention)}"})
+    decay_contract = mnemos.get("decay_contract") if isinstance(mnemos.get("decay_contract"), dict) else {}
+    mutation_effects = mnemos.get("mutation_effects") if isinstance(mnemos.get("mutation_effects"), dict) else {}
+    hard_decay_applied = mutation_effects.get("hard_decay_applied_count", decay_contract.get("hard_decay_applied_count"))
+    policy_mutation_applied = mutation_effects.get("policy_mutation_applied_count", decay_contract.get("policy_mutation_applied_count"))
+    if hard_decay_applied != 0:
+        failures.append({"check": "mnemos_hard_decay_applied_count", "artifact": "btc_mnemos_memory_latest.json", "issue": str(hard_decay_applied)})
+    if policy_mutation_applied != 0:
+        failures.append({"check": "mnemos_policy_mutation_applied_count", "artifact": "btc_mnemos_memory_latest.json", "issue": str(policy_mutation_applied)})
+
     cycle_ref = _latest_cycle_ref()
     closure = _latest_closure_for(cycle_ref)
     closure_summary = closure.get("summary") if isinstance(closure.get("summary"), dict) else {}

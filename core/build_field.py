@@ -372,7 +372,7 @@ def _closure_audit_section(closure_dir: Path, n: int = 2) -> str | None:
     if not closure_dir.exists():
         return None
     files = sorted(
-        closure_dir.glob("*_closure_*.json"),
+        (path for path in closure_dir.glob("*_closure_*.json") if not path.name.endswith("_latest.json")),
         key=lambda p: p.stat().st_mtime,
         reverse=True,
     )[:n]
@@ -409,8 +409,25 @@ def _closure_audit_section(closure_dir: Path, n: int = 2) -> str | None:
         unexpected = payload.get("unexpected_outputs")
         if isinstance(unexpected, list) and unexpected:
             parts.append(f"  - unexpected_outputs: {', '.join(str(item) for item in unexpected[:5])}")
+        duplicates = payload.get("duplicate_cycle_bindings")
+        if isinstance(duplicates, list) and duplicates:
+            parts.append("  - duplicate_cycle_bindings:")
+            for item in duplicates[:5]:
+                if not isinstance(item, dict):
+                    continue
+                parts.append(
+                    "    - "
+                    f"kept `{Path(str(item.get('kept_file', '?'))).name}`; "
+                    f"ignored `{Path(str(item.get('ignored_file', '?'))).name}`"
+                )
     parts.append("")
-    parts.append("Treat post-cycle `status=pass` as the closure source. In-cycle audits may be `pending` until report and cycle_trace are materialized.\n")
+    parts.append(
+        "Evidence authority: use stamped pre-cycle artifacts kept by the post-cycle closure audit "
+        "for current-cycle binding claims; use `*_latest.json` only for current readback after a "
+        "declared refresh/rerun. If both appear, state the layer explicitly. Treat post-cycle "
+        "`status=pass` as the closure source. In-cycle audits may be `pending` until report and "
+        "cycle_trace are materialized.\n"
+    )
     return "\n".join(parts)
 
 
