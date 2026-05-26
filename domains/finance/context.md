@@ -253,6 +253,35 @@ Se `next_cycle_policy` e' `CRYSTALLIZE_PROMOTION_BOUNDARY`, non serve un altro
 cycle immediato sullo stesso gate: prima rendi esplicita la soglia nella UI,
 nel contratto e nelle note operative, mantenendo visibili le eccezioni.
 
+### finance_operational_health
+
+Descrizione: guard finance-native per capire se il fronte e' pronto prima di
+nuovi cycle o integrazioni dashboard. Non esegue detector, non fetch-a dati,
+non lancia cicli e non produce claim di mercato.
+
+Comando:
+
+```bash
+python3 /opt/D-ND_LAB/domains/finance/tools/finance_operational_health.py --json
+```
+
+Trigger: invocalo prima di un cycle finance supervisionato, prima di trattare
+Finance come riferimento per il meta-lab, o dopo modifiche a transfer
+diagnostic / market data / precondition contract.
+
+Output: JSON `dndlab.finance.operational_health.v1` con `status`,
+`checks`, `failures`, `warnings` e `summary`. Deve passare quando:
+
+- il transfer diagnostic reale piu' recente e' presente e ha data-card per le
+  righe valutabili;
+- il confine resta `operational=false`, `public_claim=false`,
+  `trading_signal=false`;
+- la precondizione `matched_filter_score_at_candidate_split >= 0.55` e'
+  cristallizzata;
+- assertions finance sono 5/5 PASS;
+- il trajectory pending low-confidence viene trattato come warning, non come
+  autorita' forte.
+
 ### finance_transfer_diagnostic
 
 Descrizione: genera un artefatto macchina per il transfer real-market su una

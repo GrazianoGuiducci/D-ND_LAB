@@ -39,10 +39,13 @@ python3 domains/finance/tools/finance_diagnostic_report.py
 # 4. Assertions del lab — invarianti numerici D-ND
 python3 domains/finance/assertions.py
 
-# 5. Falsifier meta — template valido?
+# 5. Operational health — readiness del fronte finance
+python3 domains/finance/tools/finance_operational_health.py --json
+
+# 6. Falsifier meta — template valido?
 python3 domains/meta-lab/tools/lab_template_validator.py --strict-m7 domains/finance
 
-# 6. Cycle agent autonomo (~5-15 min)
+# 7. Cycle agent autonomo (~5-15 min)
 bash tools/dnd-cycle.sh finance
 ```
 
@@ -69,6 +72,9 @@ domains/finance/
     ├── market_data.py          acquisizione dati + cache + data card
     ├── lag_memory_precondition.py
     │                           precondition audit prima di nuovi repair block21
+    ├── finance_operational_health.py
+    │                           guard read-only per transfer diagnostic, boundary,
+    │                           precondition, assertions e trajectory
     └── finance_diagnostic_report.py
                                 report interno value-facing, no claim operativo
 ```
@@ -137,6 +143,18 @@ Il tool non produce claim di mercato: valida se una precondizione locale del
 detector lag-memory e' abbastanza selettiva da autorizzare promozione
 sintetica. La precondizione selezionata e la cristallizzazione corrente vivono
 in `precondition_contract.json`.
+
+Health guard operativo:
+
+```bash
+python3 domains/finance/tools/finance_operational_health.py --json
+```
+
+Il guard non lancia ciclo e non produce claim di mercato. Controlla che il
+transfer diagnostic reale piu' recente sia leggibile, con data-card e confine
+`operational=false/public_claim=false/trading_signal=false`; verifica la
+precondizione `score_min=0.55`, assertions 5/5, MML/config e trajectory. Un
+`no_transfer_delta` resta una constraint negativa utile, non un errore.
 
 ## Architettura cognitiva (MML)
 

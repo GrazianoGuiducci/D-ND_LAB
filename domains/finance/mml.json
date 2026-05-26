@@ -139,7 +139,7 @@
         "trigger": "after data-source or tool changes",
         "rationale": "Controlla che API, fallback e tool restino eseguibili out-of-box.",
         "category": "maintenance",
-        "output_contract": "repo/runtime/data health con deviazioni esplicite",
+        "output_contract": "repo/runtime/data health con deviazioni esplicite; finance_operational_health.py e' il guard locale prima di nuovi cycle o integrazioni dashboard",
         "contamination_risk": "medio; audit cross-repo va ristretto al perimetro finance quando serve"
       }
     ],
