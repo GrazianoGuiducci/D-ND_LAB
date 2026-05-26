@@ -7,7 +7,7 @@ Status: reference candidate only. Run strict M1-M8 before install.
 Intent:
 
 ```text
-Monitor BTC regime hypotheses and falsify weak operational interpretations before they become operational claims, starting from Alipio's timeframe question and derived POC/Kumo/feed-robustness method candidates.
+Monitor BTC regime hypotheses and falsify weak operational interpretations before they become operational claims, using timeframe, Volume Profile, POC/LVN/HVN, FVG, Kumo and feed robustness as observable method surfaces.
 ```
 
 ## First Value Artifact
@@ -30,10 +30,10 @@ Refresh all value-facing Bitcoin artifacts without running a cognitive cycle:
 bash tools/bitcoin-refresh-value.sh
 ```
 
-This wrapper runs the market context card and the exchange-native OHLCV
-robustness card, then builds the first falsifiable hypothesis card. It is safe
-for cron because it uses only public no-key APIs and writes only
-`data/bitcoin-regime-lab/value/*`.
+This wrapper runs the market/feed cards, method/test artifacts, policy
+simulator, paper ledger, producer-lineage artifact, autological artifacts and
+cognitive state. It is safe for cron because it uses only public no-key APIs
+and writes only `data/bitcoin-regime-lab/value/*`.
 
 Generate the exchange-native feed robustness card directly:
 
@@ -69,7 +69,7 @@ daily, 4h, 1h, 45m, 30m, 15m, 10m, 5m and 1m are classified as `testable`,
 `watch` or `blocked` from current artifacts. It does not emit a trading signal;
 it selects the next admissible test surface.
 
-Build the Alipio/Rea method-intake cards directly:
+Build the BTC method-intake cards directly:
 
 ```bash
 python3 domains/bitcoin-regime-lab/tools/btc_method_intake_card.py --write --json
@@ -77,7 +77,7 @@ python3 domains/bitcoin-regime-lab/tools/btc_method_intake_card.py --write --jso
 
 This turns POC, LVN/Volume Profile voids, inefficiency, trendline, MM52 and
 timeframe language into missing definitions, THIA questions, data requirements
-and null/falsifier contracts. The default focus is now the Alipio-derived
+and null/falsifier contracts. The default focus is now the
 `volume_profile_lvn_void` card. It is not a signal tool.
 
 Build the first daily-computable inefficiency candidate directly:
@@ -98,7 +98,7 @@ python3 domains/bitcoin-regime-lab/tools/btc_auto_ignite.py --write --json
 ```
 
 This gathers the current BTC value artifacts, generates explicit provisional
-assumptions for the Alipio-derived LVN/Volume Profile method and writes
+assumptions for the LVN/Volume Profile method and writes
 `dndlab.bitcoin.auto_ignite.v1`. The artifact includes a daily OHLCV
 Volume Profile proxy, nearest LVN zones, baseline/null plan and simulator
 candidate scope. It does not run a cognitive cycle and does not produce a
@@ -133,6 +133,46 @@ matched and strict union controls. It also reports walk-forward stability,
 parameter sensitivity, a Lab-value score and a normal-chart comparison against
 ordinary BTC daily forward returns over the same horizon. The score is research
 usefulness, not PnL alone: a stable negative edge is useful evidence for
-redesign/falsification and is labelled `decision=redesign`. The simulator is
-manual-only and is not part of value refresh, pre-cycle hooks, cron or
-UI-specific handling.
+redesign/falsification and is labelled `decision=redesign`. In refresh hooks it
+remains artifact generation only: it does not execute policy mutation, public
+claims or operational action.
+
+Build the daily closed-evidence gate:
+
+```bash
+python3 domains/bitcoin-regime-lab/tools/btc_daily_closed_evidence_gate.py --write --json
+```
+
+This writes `dndlab.bitcoin.daily_closed_evidence_gate.v1`. It separates the
+current UTC daily candle from the latest fully closed common provider date.
+The Lab may keep refreshing live context, but policy mutation or
+LVN/FVG/timeframe reinterpretation must read the latest closed common date,
+not the current open daily candle.
+
+Build the first-class autological artifacts:
+
+```bash
+python3 domains/bitcoin-regime-lab/tools/btc_autology_artifacts.py --write --json
+```
+
+This writes three value artifacts:
+
+- `dndlab.bitcoin.mnemos_memory.v1`: what the Lab retains, decays or sends to
+  redesign.
+- `dndlab.bitcoin.kairos_phase.v1`: the current admissible Lab phase/action.
+- `dndlab.bitcoin.coherence_check.v1`: drift checks between gate, artifacts
+  and no-operational boundary.
+
+The tool reads local artifacts only. It does not fetch market data and does not
+run a cognitive cycle.
+
+Build the current cognitive/autological state:
+
+```bash
+python3 domains/bitcoin-regime-lab/tools/btc_cognitive_state.py --write --json
+```
+
+This writes `dndlab.bitcoin.cognitive_state.v1`. It does not fetch market data
+and does not run a cycle. It reads the current seed, trajectory, MML and value
+artifacts to show how the Lab is learning, where it is redesigning itself, and
+which cognitive layers are still partial.

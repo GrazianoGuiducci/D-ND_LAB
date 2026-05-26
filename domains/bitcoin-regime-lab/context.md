@@ -2,7 +2,7 @@
 
 ## Intent in movement
 
-Monitor BTC regime hypotheses and falsify weak operational interpretations before they become operational claims, starting from Alipio's timeframe question and derived POC/Kumo/feed-robustness method candidates.
+Monitor BTC regime hypotheses and falsify weak operational interpretations before they become operational claims, using timeframe, Volume Profile, POC/LVN/HVN, FVG, Kumo and feed robustness as observable method surfaces.
 
 The intent lives in the cycle movement, not in a prescribed result. The first
 seed prepares the field; it does not authorize a public claim.
@@ -26,7 +26,7 @@ seed prepares the field; it does not authorize a public claim.
 
 - buy/sell/entry/exit/price-target/profit/alpha/trading-signal language
 - manual chart annotations treated as evidence without mechanical definitions
-- Massimo Rea or Alipio methods treated as authority before observable/null/falsifier translation
+- external BTC method material treated as authority before observable/null/falsifier translation
 - current/open candle backtests unless explicitly declared as live-only observation
 - single-exchange wick or volume-profile result promoted without feed robustness
 
@@ -36,6 +36,32 @@ The lab moves through seed -> tension -> field -> agent -> baseline/null ->
 falsifier -> report -> seed_integrator -> trajectory. Each cycle must make its
 runtime trace visible. A finding is not promoted because it is interesting; it
 is promoted only after the falsifier and baseline/null contract survive.
+
+## Cognitive/autological process
+
+The Bitcoin Lab must expose how it thinks, not only what it measured.
+
+Minimum cognitive loop:
+
+1. intent becomes a field of observable BTC objects;
+2. the field becomes a test contract with data, baseline and null;
+3. the test is attacked by controls and falsifier;
+4. the result becomes learning: advance, watch, redesign, reject or retain;
+5. the next cycle reads that learning before changing policy or seed;
+6. reusable capability is marked as cascade candidate, not silently promoted.
+
+The active BTC implementation is partial but now explicit:
+
+- `falsifier` is the current veritas-like gate;
+- `trajectory_state.json` is the current kairos-like movement decision;
+- `seed.json` and `seed_archive/` are the current mnemos-like memory substrate;
+- `btc_policy_simulator.py` is the current research simulator for method
+  behavior versus the ordinary BTC chart path;
+- `btc_cognitive_state.py` is the observability artifact that shows the loop,
+  the gaps and the next mutation without running a cognitive cycle.
+
+Next structural closure: make retention/decay, regime selection and policy
+mutation first-class artifacts instead of leaving them implicit in reports.
 
 ## Baseline and null
 
@@ -118,12 +144,12 @@ Adaptation questions:
 - `What should a human observer see in the dashboard after one useful cycle?`
 - `Which volume-profile source and binning rule are acceptable for a first POC/LVN cycle?`
 - `How is an inefficiency considered filled, partially filled or invalidated?`
-- `Which Alipio/Massimo Rea method should be translated first into observable, null and falsifier?`
+- `Which BTC method surface should be translated first into observable, null and falsifier?`
 
 Human method intake:
 
-- Use `docs/BITCOIN_ALIPIO_METHOD_INTAKE_20260518.md` before accepting
-  Alipio/Rea-derived methods into a cycle.
+- Use the BTC method-intake source note before accepting
+  BTC method material into a cycle.
 - Treat screenshots and video-derived notes as method cards, not evidence.
 - Ask for exact profile window, binning, tolerance, fill rule, trendline
   construction, MM52 definition and invalidation rule.
@@ -142,8 +168,8 @@ Human method intake:
   The artifact should show how event windows behave against the ordinary BTC
   daily chart path, so a human can compare method structure with normal chart
   movement instead of reading isolated closure counts.
-  Do not wire the simulator into refresh hooks, cron or cycle reading until the
-  first manual artifact is inspected.
+  In refresh hooks it remains artifact generation only: it does not execute
+  policy mutation, public claims or operational action.
 
 
 ## Skill retrieval
@@ -246,7 +272,7 @@ ciclo puo' definire un solo osservabile meccanico POC/FVG/timeframe con null
 matched. Se fallisce, il Lab deve riparare feed/sorgenti prima di interpretare.
 In entrambi i casi `trading_signal=false`.
 
-La domanda di Alipio sul "time free/timeframe ottimale" entra come matrice di
+La domanda sul timeframe ottimale entra come matrice di
 ammissibilita', non come risposta opinabile:
 
 ```bash
@@ -268,7 +294,7 @@ puo' ammettere il daily come primo test e bloccare intraday finche' non
 esistono OHLCV native con baseline/null. Questo e' valore per l'utente: sapere
 cosa puo' essere guardato ora, cosa resta in watch e cosa non va interpretato.
 
-Il ponte operativo con Alipio/THIA e' una scheda metodo, non un segnale:
+Il ponte operativo con THIA e' una scheda metodo, non un segnale:
 
 ```bash
 python3 domains/bitcoin-regime-lab/tools/btc_method_intake_card.py --write --json
@@ -278,12 +304,12 @@ Output atteso: JSON `dndlab.bitcoin.method_intake.v1` scritto in
 `data/bitcoin-regime-lab/value/`. Consuma, se presenti, field gate e timeframe
 matrix; poi produce card per POC/Volume Profile, POC sotto, chiusura
 inefficienza, LVN/Volume Profile void, trendline+POC, MM52 e timeframe. Dopo
-l'intake Alipio 2026-05-24, il focus default e' `volume_profile_lvn_void`.
+l'intake metodo BTC 2026-05-24, il focus default e' `volume_profile_lvn_void`.
 Ogni card espone definizioni mancanti, dati richiesti, null/falsifier, domande
-che THIA deve fare ad Alipio e boundary `trading_signal=false`.
+che THIA deve chiarire e boundary `trading_signal=false`.
 
-Questa scheda e' il modo corretto per far parlare THIA con Alipio: raccoglie
-definizioni e critica utile, ma non modifica il seed e non promuove target.
+Questa scheda e' il modo corretto per far raccogliere a THIA definizioni e
+critica utile, ma non modifica il seed e non promuove target.
 
 Autoaccensione BTC: il sistema puo' generare una specifica provvisoria quando i
 parametri umani mancano, ma deve dichiarare le assunzioni e chiamare proxy cio'
@@ -334,3 +360,54 @@ costruisce una serie daily median across feed, rileva un proxy FVG a tre
 candele, valuta fill su finestra forward dichiarata e confronta ogni zona con
 un controllo adiacente di pari ampiezza. Il boundary resta
 `trading_signal=false`, `advice=false`, `price_target=false`.
+
+Gate evidenza daily chiusa:
+
+```bash
+python3 domains/bitcoin-regime-lab/tools/btc_daily_closed_evidence_gate.py --write --json
+```
+
+Output atteso: JSON `dndlab.bitcoin.daily_closed_evidence_gate.v1` scritto in
+`data/bitcoin-regime-lab/value/`. Il gate legge il feed daily e distingue:
+
+- `latest_common_date`: ultima data comune vista dai provider;
+- `open_daily_date`: data daily corrente se coincide con oggi UTC;
+- `latest_closed_common_date`: ultima data comune strettamente precedente a
+  oggi UTC;
+- `mutation_allowed`: vero solo quando la nuova evidenza e' chiusa e non
+  dipende dalla candela daily aperta.
+
+Questo e' il primo blocco di auto-aggiustamento: il Lab puo' aggiornare il
+contesto live, ma non puo' reinterpretare policy LVN/FVG/timeframe usando
+rumore di candela daily aperta.
+
+Artifact autologici first-class:
+
+```bash
+python3 domains/bitcoin-regime-lab/tools/btc_autology_artifacts.py --write --json
+```
+
+Output atteso:
+
+- `dndlab.bitcoin.mnemos_memory.v1`: decide cosa resta in memoria, cosa decade
+  e cosa va a redesign;
+- `dndlab.bitcoin.kairos_phase.v1`: sceglie la fase corrente del Lab
+  (`observe_context_do_not_mutate`, redesign, review, watch);
+- `dndlab.bitcoin.coherence_check.v1`: verifica coerenza tra gate daily chiuso,
+  cutoff usato da FVG/LVN, boundary no-operational e simulatore.
+
+Questi artifact chiudono il primo gap del processo cognitivo: memoria,
+selezione fase e coerenza non sono piu' solo implicite in seed/trajectory, ma
+sono leggibili da UI, cron e prossime istanze.
+
+Stato cognitivo osservabile del Lab:
+
+```bash
+python3 domains/bitcoin-regime-lab/tools/btc_cognitive_state.py --write --json
+```
+
+Output atteso: JSON `dndlab.bitcoin.cognitive_state.v1` scritto in
+`data/bitcoin-regime-lab/value/`. Legge seed, trajectory, MML e artifact BTC
+correnti, poi espone ciclo cognitivo, layer attivi/parziali, apprendimento,
+auto-aggiustamento, gap di chiusura autologica e prossima mutazione. Non usa
+rete e non lancia un ciclo cognitivo.

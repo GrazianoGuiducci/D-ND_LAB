@@ -2032,6 +2032,59 @@
                       </div>
                     </section>
                   </template>
+                  <template x-if="bitcoinPaperLedgerArtifact()">
+                    <section class="rounded-md border border-slate-800/60 bg-slate-950/30 p-3">
+                      <div class="flex items-start justify-between gap-3 flex-wrap">
+                        <div class="min-w-0 max-w-3xl">
+                          <div class="text-[10px] uppercase tracking-wider text-emerald-200" x-text="lang === 'en' ? 'Paper simulation ledger' : 'Ledger simulazione'"></div>
+                          <div class="text-sm text-slate-100 mt-1 leading-relaxed" x-text="bitcoinPaperLedgerSummary()"></div>
+                          <div class="text-xs text-slate-400 mt-2 leading-relaxed line-clamp-2" x-text="bitcoinPaperLedgerCard().evidence || ''"></div>
+                        </div>
+                        <button @click="selectBitcoinPaperLedgerLens()"
+                                class="text-[10px] font-mono px-2 py-1 rounded border quiet-action cursor-pointer"
+                                x-text="lang === 'en' ? 'ledger' : 'ledger'"></button>
+                      </div>
+                      <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-2 mt-3">
+                        <template x-for="row in bitcoinPaperLedgerMetricRows()" :key="row.key">
+                          <button @click="selectBitcoinPaperLedgerLens(row.point || null)"
+                                  class="text-left rounded bg-slate-950/45 hover:bg-slate-950/70 active:bg-slate-950/90 transition p-2 min-h-[62px] cursor-pointer">
+                            <div class="text-[10px] uppercase tracking-wider text-slate-500" x-text="row.label"></div>
+                            <div class="text-sm font-mono mt-1" :class="row.tone" x-text="row.value"></div>
+                            <div class="text-[10px] text-slate-500 mt-1 line-clamp-1" x-text="row.note"></div>
+                          </button>
+                        </template>
+                      </div>
+                    </section>
+                  </template>
+                  <template x-if="bitcoinCognitiveStateArtifact()">
+                    <section class="rounded-md border border-slate-800/60 bg-slate-950/30 p-3">
+                      <div class="flex items-start justify-between gap-3 flex-wrap">
+                        <div class="min-w-0 max-w-3xl">
+                          <div class="text-[10px] uppercase tracking-wider text-cyan-200" x-text="lang === 'en' ? 'Lab cognition' : 'Processo cognitivo'"></div>
+                          <div class="text-sm text-slate-100 mt-1 leading-relaxed" x-text="bitcoinCognitiveStateSummary()"></div>
+                          <div class="text-xs text-slate-400 mt-2 leading-relaxed line-clamp-2" x-text="bitcoinCognitiveStateNextMove()"></div>
+                        </div>
+                        <div class="flex items-center gap-1">
+                          <button @click="askThiaTranslateBitcoinCognitiveState()"
+                                  class="thia-ask-btn text-[10px] font-mono"
+                                  x-text="lang === 'en' ? 'translate' : 'traduci'"></button>
+                          <button @click="selectBitcoinCognitiveStateLens()"
+                                  class="text-[10px] font-mono px-2 py-1 rounded border quiet-action cursor-pointer"
+                                  x-text="lang === 'en' ? 'state' : 'stato'"></button>
+                        </div>
+                      </div>
+                      <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-2 mt-3">
+                        <template x-for="row in bitcoinCognitiveStateRows()" :key="row.key">
+                          <button @click="selectBitcoinCognitiveStateLens(row)"
+                                  class="text-left rounded bg-slate-950/45 hover:bg-slate-950/70 active:bg-slate-950/90 transition p-2 min-h-[62px] cursor-pointer">
+                            <div class="text-[10px] uppercase tracking-wider text-slate-500" x-text="row.label"></div>
+                            <div class="text-sm font-mono mt-1" :class="row.tone" x-text="row.value"></div>
+                            <div class="text-[10px] text-slate-500 mt-1 line-clamp-1" x-text="row.note"></div>
+                          </button>
+                        </template>
+                      </div>
+                    </section>
+                  </template>
                   <button @click="btcAdvancedOpen = !btcAdvancedOpen"
                           class="text-left border border-slate-800/60 hover:border-slate-600 rounded p-3 bg-slate-950/35 transition">
                     <div class="text-[10px] uppercase tracking-wider text-slate-400" x-text="lang === 'en' ? 'Diagnostics' : 'Diagnostica'"></div>
@@ -3189,6 +3242,10 @@
               <p class="text-xs text-slate-300 mt-1" data-i18n="dash.info.subtitle">Dove sei, cosa puoi leggere, come contribuire al ciclo successivo.</p>
             </div>
 
+            <template x-if="contextIntro.intro">
+              <div class="info-context-intro markdown text-sm text-slate-200" x-html="renderContextIntro(contextIntro.intro)"></div>
+            </template>
+
             <section class="lab-cycle-map">
               <div class="relative flex items-start justify-between gap-4 flex-wrap mb-4">
                 <div>
@@ -3348,12 +3405,70 @@
               </div>
             </section>
 
-            <template x-if="contextIntro.intro">
-              <div class="info-context-intro markdown text-sm text-slate-200" x-html="renderContextIntro(contextIntro.intro)"></div>
+            <template x-if="activeDomain === 'bitcoin-regime-lab'">
+              <section class="border border-slate-800/70 rounded-md bg-slate-950/30 p-4 space-y-4">
+                <div class="flex items-start justify-between gap-3 flex-wrap">
+                  <div>
+                    <div class="text-[10px] uppercase tracking-[0.16em] text-cyan-300 font-mono"
+                         x-text="lang === 'en' ? 'Bitcoin Regime Lab' : 'Bitcoin Regime Lab'"></div>
+                    <h3 class="text-base font-medium text-slate-100 mt-1"
+                        x-text="lang === 'en' ? 'How to read the current Lab' : 'Come leggere il Lab attuale'"></h3>
+                    <p class="text-xs text-slate-400 mt-1 max-w-4xl"
+                       x-text="lang === 'en'
+                         ? 'Campo is now graph-first: normal BTC chart, simulator windows, cognitive state and autological gates explain what the Lab can or cannot mutate.'
+                         : 'Campo ora parte dal grafico: andamento BTC normale, finestre del simulatore, stato cognitivo e gate autologici spiegano cosa il Lab può o non può mutare.'"></p>
+                  </div>
+                  <button @click="setActiveTab('campo')"
+                          class="text-[11px] font-mono px-2 py-1 rounded border quiet-action cursor-pointer"
+                          x-text="lang === 'en' ? 'open Field' : 'apri Campo'"></button>
+                </div>
+
+                <div class="grid lg:grid-cols-4 gap-3">
+                  <template x-for="row in btcInfoLogicRows()" :key="row.key">
+                    <button @click="row.action && row.action()"
+                            class="text-left rounded bg-slate-950/45 hover:bg-slate-950/70 active:bg-slate-950/90 transition p-3 min-h-[118px] cursor-pointer">
+                      <div class="text-[10px] uppercase tracking-wider text-slate-500" x-text="row.label"></div>
+                      <div class="text-sm font-medium mt-1" :class="row.tone" x-text="row.title"></div>
+                      <div class="text-xs text-slate-400 mt-2 leading-relaxed" x-text="row.body"></div>
+                      <div class="text-[10px] font-mono text-slate-500 mt-2 line-clamp-1" x-text="row.meta"></div>
+                    </button>
+                  </template>
+                </div>
+
+                <div class="grid lg:grid-cols-[minmax(0,1fr)_minmax(280px,.7fr)] gap-3">
+                  <div class="rounded bg-slate-950/35 p-3">
+                    <div class="text-[10px] uppercase tracking-wider text-emerald-200"
+                         x-text="lang === 'en' ? 'Autological state' : 'Stato autologico'"></div>
+                    <div class="grid sm:grid-cols-3 gap-2 mt-3">
+                      <template x-for="row in btcInfoAutologyRows()" :key="row.schema">
+                        <button @click="selectValueArtifactLensForSchema(row.schema)"
+                                class="text-left rounded bg-slate-950/55 hover:bg-slate-950/80 transition p-2 min-h-[74px] cursor-pointer">
+                          <div class="text-[10px] uppercase tracking-wider text-slate-500" x-text="row.label"></div>
+                          <div class="text-sm font-mono mt-1" :class="row.tone" x-text="row.value"></div>
+                          <div class="text-[10px] text-slate-500 mt-1 line-clamp-1" x-text="row.note"></div>
+                        </button>
+                      </template>
+                    </div>
+                  </div>
+
+                  <div class="rounded bg-slate-950/35 p-3">
+                    <div class="text-[10px] uppercase tracking-wider text-amber-200"
+                         x-text="lang === 'en' ? 'Remaining gap' : 'Lacuna restante'"></div>
+                    <div class="text-sm text-slate-100 mt-2"
+                         x-text="lang === 'en'
+                           ? 'The next value artifact is a paper simulation ledger: simulated decisions, outcome, error and comparison against baseline.'
+                           : 'Il prossimo artifact di valore è un ledger di simulazione: decisioni simulate, outcome, errore e confronto con baseline.'"></div>
+                    <div class="text-xs text-slate-500 mt-2"
+                         x-text="lang === 'en'
+                           ? 'This is the bridge from research artifacts to measuring how much the Lab is wrong against the normal chart.'
+                           : 'È il ponte tra artifact di ricerca e misura di quanto il Lab sbaglia rispetto al grafico normale.'"></div>
+                  </div>
+                </div>
+              </section>
             </template>
 
             <!-- Pipeline SSP — sezione dedicata, descrive il flusso scoperta → prodotto -->
-            <div id="info-ssp" class="border-t border-slate-800 pt-4">
+            <div id="info-ssp" x-show="activeDomain !== 'bitcoin-regime-lab'" class="border-t border-slate-800 pt-4">
               <h3 class="text-sm font-medium text-purple-300 mb-2" data-i18n="dash.info.pipelineSSP">Pipeline SSP — Scoperte / Soluzioni / Prodotti</h3>
               <p class="text-xs text-slate-400 mb-3" data-i18n="dash.info.ssp.intro">
                 Ogni cycle del lab non si ferma al report. Attraversa una pipeline a 4 stage che porta da scoperta scientifica a prodotto verificato empiricamente, in autonomia.
@@ -4464,6 +4579,7 @@
           try {
             this.domains = await fetch('/api/domains').then(r => r.json());
           } catch (_) { /* noop */ }
+          this.refreshSelectedCampoLensForLanguage();
           if (this.activeTab === 'grafo') {
             this.$nextTick(() => this.renderGraph());
           }
@@ -5728,6 +5844,7 @@
       },
 
       domainIntentTitle() {
+        if (this.activeDomain === 'bitcoin-regime-lab') return this.lang === 'en' ? 'BTC Lab: chart, simulator, learning loop' : 'BTC Lab: grafico, simulatore, ciclo di apprendimento';
         if (this.activeDomain === 'research-radar') return this.lang === 'en' ? 'Research Radar: from emerging claim to verifiable roadmap' : 'Research Radar: da claim emergente a roadmap verificabile';
         if (this.activeDomain === 'finance') return this.lang === 'en' ? 'Finance: separate useful regime from false operational signal' : 'Finance: distinguere regime utile da falso segnale operativo';
         if (this.activeDomain === 'physics') return this.lang === 'en' ? 'Physics: only falsifiable physical bridges survive' : 'Physics: far sopravvivere solo ponti fisici falsificabili';
@@ -5735,6 +5852,11 @@
       },
 
       domainIntentIntro() {
+        if (this.activeDomain === 'bitcoin-regime-lab') {
+          return this.lang === 'en'
+            ? 'The Lab reads BTC market context, method surfaces and simulator outcomes as one cycle: what is visible now, what changed, where the model is wrong, and what must be adjusted next.'
+            : 'Il Lab legge contesto BTC, superfici metodo e risultati del simulatore come un ciclo: cosa si vede ora, cosa cambia, dove il modello sbaglia e cosa va aggiustato dopo.';
+        }
         if (this.activeDomain === 'research-radar') {
           return this.lang === 'en'
             ? 'This Lab watches public research and technology claims, requires source and data-card, then decides whether the claim should be tested, watched, rejected or promoted into a roadmap.'
@@ -5757,6 +5879,14 @@
 
       domainIntentInput() {
         const isEn = this.lang === 'en';
+        if (this.activeDomain === 'bitcoin-regime-lab') {
+          return {
+            label: isEn ? 'input' : 'cosa consuma',
+            headline: isEn ? 'BTC feeds and method surfaces' : 'Feed BTC e superfici metodo',
+            copy: isEn ? 'Reads exchange candles, timeframe matrix, Volume Profile/LVN/FVG candidates, simulator output and cognitive-state artifacts.' : 'Legge candele exchange, matrice timeframe, candidati Volume Profile/LVN/FVG, output del simulatore e artifact di stato cognitivo.',
+            meta: this.btcChartStats().windowLabel || this.latestValueArtifact()?.filename || 'BTC artifacts',
+          };
+        }
         if (this.activeDomain === 'research-radar') {
           return {
             label: isEn ? 'input' : 'cosa consuma',
@@ -5783,6 +5913,14 @@
 
       domainIntentTest() {
         const isEn = this.lang === 'en';
+        if (this.activeDomain === 'bitcoin-regime-lab') {
+          return {
+            label: isEn ? 'control' : 'come decide',
+            headline: isEn ? 'Simulator plus controls' : 'Simulatore e controlli',
+            copy: isEn ? 'Compares event windows with the normal BTC path, random matched controls, strict controls and closed-candle gates.' : 'Confronta finestre evento con andamento BTC normale, controlli random matched, controlli stretti e gate su candele chiuse.',
+            meta: this.bitcoinPolicySimulatorDecisionLabel(),
+          };
+        }
         if (this.activeDomain === 'research-radar') {
           return {
             label: isEn ? 'falsifier' : 'come decide',
@@ -5811,6 +5949,14 @@
 
       domainIntentOutput() {
         const isEn = this.lang === 'en';
+        if (this.activeDomain === 'bitcoin-regime-lab') {
+          return {
+            label: isEn ? 'output' : 'cosa produce',
+            headline: isEn ? 'Reading, redesign, next test' : 'Lettura, ridisegno, prossimo test',
+            copy: isEn ? 'Produces chart readings, value-lens metrics, method cards, cognitive state and the next adjustment contract.' : 'Produce letture del grafico, metriche della lente valore, schede metodo, stato cognitivo e contratto del prossimo aggiustamento.',
+            meta: this.bitcoinCognitiveStateSummary(),
+          };
+        }
         if (this.activeDomain === 'research-radar') {
           return {
             label: isEn ? 'output' : 'cosa produce',
@@ -5854,6 +6000,12 @@
           'dndlab.bitcoin.daily_inefficiency.v1': 'Daily inefficiency',
           'dndlab.bitcoin.method_intake.v1': 'Method intake',
           'dndlab.bitcoin.timeframe_matrix.v1': 'Timeframe matrix',
+          'dndlab.bitcoin.cognitive_state.v1': 'BTC cognitive state',
+          'dndlab.bitcoin.paper_simulation_ledger.v1': 'BTC paper simulation ledger',
+          'dndlab.bitcoin.daily_closed_evidence_gate.v1': 'Daily closed evidence gate',
+          'dndlab.bitcoin.mnemos_memory.v1': 'BTC Mnemos memory',
+          'dndlab.bitcoin.kairos_phase.v1': 'BTC Kairos phase',
+          'dndlab.bitcoin.coherence_check.v1': 'BTC coherence check',
         };
         if (map[schema]) return map[schema];
         if (!schema) return 'n/a';
@@ -5936,6 +6088,394 @@
 
       bitcoinPolicySimulatorPayload() {
         return this.bitcoinPolicySimulatorArtifact()?.payload || {};
+      },
+
+      bitcoinPaperLedgerArtifact() {
+        return this.btcValueArtifactBySchema('dndlab.bitcoin.paper_simulation_ledger.v1');
+      },
+
+      bitcoinPaperLedgerPayload() {
+        return this.bitcoinPaperLedgerArtifact()?.payload || {};
+      },
+
+      bitcoinPaperLedgerCard() {
+        return this.bitcoinPaperLedgerPayload()?.card || {};
+      },
+
+      bitcoinPaperLedgerRows() {
+        const rows = this.bitcoinPaperLedgerPayload()?.rows;
+        return Array.isArray(rows) ? rows : [];
+      },
+
+      bitcoinPaperLedgerSummary() {
+        const metrics = this.bitcoinPaperLedgerPayload()?.metrics || {};
+        const rows = metrics.rows ?? this.bitcoinPaperLedgerRows().length;
+        const median = metrics.median_error_vs_baseline_pct ?? 'n/a';
+        const accept = metrics.candidate_accept ?? 0;
+        const reject = metrics.candidate_reject ?? 0;
+        const watch = metrics.ambiguous_watch ?? 0;
+        return this.lang === 'en'
+          ? `${rows} simulated rows; median error vs normal baseline ${median}%. Accept/reject/watch ${accept}/${reject}/${watch}.`
+          : `${rows} righe simulate; errore mediano verso baseline normale ${median}%. Accetta/scarta/osserva ${accept}/${reject}/${watch}.`;
+      },
+
+      bitcoinPaperLedgerMetricRows() {
+        const metrics = this.bitcoinPaperLedgerPayload()?.metrics || {};
+        const best = metrics.best_event || null;
+        const worst = metrics.worst_event || null;
+        const rows = this.bitcoinPaperLedgerRows();
+        const byDate = (event) => rows.find(row => row.event_date === event?.event_date) || null;
+        return [
+          {
+            key: 'hit_rate',
+            label: this.lang === 'en' ? 'hit rate' : 'hit rate',
+            value: metrics.hit_rate_vs_baseline !== undefined ? `${Math.round(Number(metrics.hit_rate_vs_baseline) * 100)}%` : 'n/a',
+            note: this.lang === 'en' ? 'above normal baseline' : 'sopra baseline normale',
+            tone: Number(metrics.hit_rate_vs_baseline) >= 0.5 ? 'text-emerald-300' : 'text-amber-300',
+            point: null,
+          },
+          {
+            key: 'median_error',
+            label: this.lang === 'en' ? 'median error' : 'errore mediano',
+            value: `${metrics.median_error_vs_baseline_pct ?? 'n/a'}%`,
+            note: this.lang === 'en' ? 'vs normal BTC' : 'vs BTC normale',
+            tone: Number(metrics.median_error_vs_baseline_pct) >= 0 ? 'text-emerald-300' : 'text-rose-300',
+            point: null,
+          },
+          {
+            key: 'best',
+            label: this.lang === 'en' ? 'best row' : 'riga migliore',
+            value: `${best?.error_vs_baseline_pct ?? 'n/a'}%`,
+            note: best?.event_date || 'n/a',
+            tone: 'text-emerald-300',
+            point: byDate(best),
+          },
+          {
+            key: 'worst',
+            label: this.lang === 'en' ? 'worst row' : 'riga peggiore',
+            value: `${worst?.error_vs_baseline_pct ?? 'n/a'}%`,
+            note: worst?.event_date || 'n/a',
+            tone: 'text-rose-300',
+            point: byDate(worst),
+          },
+        ];
+      },
+
+      bitcoinCognitiveStateArtifact() {
+        const all = [];
+        if (this.latestValueArtifacts?.latest) all.push(this.latestValueArtifacts.latest);
+        if (Array.isArray(this.latestValueArtifacts?.artifacts)) all.push(...this.latestValueArtifacts.artifacts);
+        return all.find(a => a?.schema === 'dndlab.bitcoin.cognitive_state.v1'
+          || a?.payload?.schema === 'dndlab.bitcoin.cognitive_state.v1') || null;
+      },
+
+      bitcoinCognitiveStatePayload() {
+        return this.bitcoinCognitiveStateArtifact()?.payload || {};
+      },
+
+      bitcoinCognitiveStateLabel(value) {
+        const raw = String(value || '').trim();
+        if (this.lang === 'en') return raw || 'n/a';
+        const map = {
+          active: 'attivo',
+          partial: 'parziale',
+          ready: 'pronto',
+          watch: 'osservazione',
+          redesign: 'ridisegno',
+          REDESIGN: 'ridisegno',
+          HOLD_OPEN_DAILY_CANDLE: 'mantieni candela daily aperta fuori dalla mutazione',
+        };
+        return map[raw] || raw || 'n/d';
+      },
+
+      bitcoinCognitiveStageLabel(value) {
+        const raw = String(value || '').trim();
+        if (this.lang === 'en') return raw || 'stage';
+        const map = {
+          intent: 'intento',
+          field: 'campo',
+          test: 'test',
+          falsify: 'falsificazione',
+          learn: 'apprendimento',
+          adjust: 'aggiustamento',
+          cohere: 'coerenza',
+          propagate: 'propagazione',
+        };
+        return map[raw] || raw || 'stadio';
+      },
+
+      bitcoinCognitiveSourceLabel(value) {
+        const raw = String(value || '').trim();
+        if (this.lang === 'en') return raw || 'source';
+        const map = {
+          btc_policy_simulator: 'simulatore policy BTC',
+          btc_paper_simulation_ledger: 'ledger simulazione BTC',
+          trajectory_evaluator: 'valutatore traiettoria',
+          btc_daily_closed_evidence_gate: 'gate daily chiuso BTC',
+          btc_mnemos_memory: 'memoria mnemos BTC',
+          btc_kairos_phase: 'fase kairos BTC',
+          btc_coherence_check: 'controllo coerenza BTC',
+        };
+        return map[raw] || raw || 'fonte';
+      },
+
+      bitcoinCognitiveStateText(text) {
+        const raw = String(text || '').trim();
+        if (this.lang === 'en' || !raw) return raw;
+        const exact = {
+          'Refresh context may continue, but policy mutation must use the latest closed common date, not the current open daily candle.':
+            'Il contesto live può continuare ad aggiornarsi, ma la mutazione della policy deve usare l’ultima data comune chiusa, non la candela daily aperta.',
+          'trajectory_state + policy_simulator + seed constraints':
+            'trajectory state + simulatore policy + vincoli del seed',
+          'trajectory_state + policy_simulator + paper_simulation_ledger + seed constraints':
+            'trajectory state + simulatore policy + ledger simulazione + vincoli del seed',
+          'domain request is preserved in seed/context':
+            'la richiesta del dominio è preservata in seed e contesto',
+          'feed, timeframe and method artifacts are present when refreshed':
+            'feed, timeframe e artifact metodo sono presenti dopo il refresh',
+          'LVN/FVG/policy simulator artifacts define measurable objects':
+            'gli artifact LVN/FVG/simulatore policy definiscono oggetti misurabili',
+          'strict controls, random matched controls and trajectory decisions are recorded':
+            'controlli strict, controlli random matched e decisioni di traiettoria sono registrati',
+          'mnemos artifact records retention/redesign memory':
+            'l artifact mnemos registra memoria di ritenzione e ridisegno',
+          'kairos artifact selects current Lab phase/action':
+            'l artifact kairos seleziona fase e azione corrente del Lab',
+          'coherence artifact checks drift between gate, artifacts and boundary':
+            'l artifact di coerenza controlla lo scostamento tra gate, artifact e confine',
+          'capability cascade exists as contract, not yet automatic cross-lab propagation':
+            'la cascata di capacita esiste come contratto, non ancora come propagazione automatica tra Lab',
+          'Policy simulator measured method structure against controls and normal chart movement.':
+            'Il simulatore misura la struttura del metodo contro controlli e andamento normale del grafico.',
+          'Paper simulation ledger measures simulated decisions against the normal BTC baseline.':
+            'Il ledger di simulazione misura decisioni simulate contro la baseline BTC normale.',
+          'The ledger measures where simulated method decisions diverge from the normal BTC chart path.':
+            'Il ledger misura dove le decisioni simulate del metodo divergono dal normale percorso del grafico BTC.',
+          'Negative or positive separation from controls is useful when stable: it tells the Lab whether the method carries structure or should be redesigned.':
+            'La separazione positiva o negativa dai controlli e utile quando resta stabile: indica se il metodo porta struttura o va ridisegnato.',
+          'Daily evidence gate separates closed daily evidence from current open-candle refresh noise.':
+            'Il gate daily separa evidenza chiusa da rumore di refresh sulla candela ancora aperta.',
+          'Mnemos retention artifact is available.':
+            'L artifact mnemos e disponibile.',
+          'Kairos phase artifact is available.':
+            'L artifact kairos e disponibile.',
+          'Coherence artifact checks drift between boundary and artifacts.':
+            'L artifact di coerenza controlla lo scostamento tra confine e artifact.',
+          'veritas/aeternitas are represented by artifacts and veto checks, but not yet a unified numeric gate in every cycle':
+            'veritas/aeternitas sono rappresentati da artifact e controlli di veto, ma non ancora da un gate numerico unificato in ogni ciclo',
+          'trajectory exists; mnemos/kairos are still implicit in seed and trajectory artifacts':
+            'la traiettoria esiste; mnemos/kairos restano ancora parzialmente impliciti nel seed e negli artifact di traiettoria',
+          'policy simulator is manual-first; it is not yet closed into autonomous policy mutation':
+            'il simulatore policy e ancora manual-first; non e chiuso in mutazione autonoma della policy',
+          'runtime awareness exists; coherence/triage are not yet automated as first-class artifacts':
+            'la consapevolezza runtime esiste; coerenza/triage non sono ancora automatizzati come artifact di prima classe',
+        };
+        if (exact[raw]) return exact[raw];
+        if (raw.startsWith('The cycle established that the 02:23 refresh changed only the open 2026-05-25 daily candle')) {
+          return 'Il ciclo ha rilevato che il refresh 02:23 ha modificato solo la candela daily aperta 2026-05-25; eventi LVN, zone FVG, denominatori, classificazioni e matrice timeframe restano invariati. Il prossimo passo utile e dichiarare quando nuova evidenza daily chiusa puo riaprire la valutazione LVN/FVG/timeframe.';
+        }
+        if (raw.startsWith('BITCOIN_REGIME_LAB_DAILY_CLOSED_EVIDENCE_GATE:')) {
+          return 'Prima di reinterpretare LVN/FVG/timeframe, il Lab distingue evidenza daily chiusa da rumore della candela aperta, poi applica la regola al prossimo artifact daily chiuso o a un candidato FVG/inefficienza daily con null matched.';
+        }
+        return raw;
+      },
+
+      bitcoinCognitiveStateRawText() {
+        const payload = this.bitcoinCognitiveStatePayload();
+        const adjustment = payload.auto_adjustment || {};
+        const cycle = Array.isArray(payload.cognitive_cycle) ? payload.cognitive_cycle : [];
+        const learning = Array.isArray(payload.current_learning) ? payload.current_learning : [];
+        const layers = Array.isArray(payload.layer_alignment) ? payload.layer_alignment : [];
+        const cards = Array.isArray(payload.cards) ? payload.cards : [];
+        return [
+          `schema: ${payload.schema || 'dndlab.bitcoin.cognitive_state.v1'}`,
+          `summary: ${JSON.stringify(payload.summary || {})}`,
+          `next_mutation: ${adjustment.next_mutation || 'n/a'}`,
+          `adjustment_source: ${adjustment.adjustment_source || 'n/a'}`,
+          ...cards.map(card => `card: ${card.title || card.claim_id || 'card'}\nevidence: ${card.evidence || ''}\nboundary: ${card.boundary || ''}`),
+          ...cycle.map(step => `cycle.${step.stage || 'stage'}: ${step.state || 'n/a'}\n${step.evidence || ''}`),
+          ...learning.map(item => `learning.${item.source || 'source'}: ${item.decision || item.classification || 'n/a'}\n${item.learned || item.next_direction || ''}`),
+          ...layers.map(layer => `layer.${layer.layer || 'layer'}: ${layer.state || 'n/a'}\n${layer.gap || ''}`),
+        ].filter(Boolean).join('\n\n');
+      },
+
+      bitcoinCognitiveStateEvidence() {
+        const payload = this.bitcoinCognitiveStatePayload();
+        const summary = payload.summary || {};
+        const labData = payload.seed_state || {};
+        const learning = Array.isArray(payload.current_learning) ? payload.current_learning : [];
+        if (this.lang === 'en') {
+          return `Cycle count ${labData.piano ?? 'n/a'}; value artifacts observe/watch/test/reject/redesign = ${summary.observe ?? 0}/${summary.watch ?? 0}/${summary.test ?? 0}/${summary.reject ?? 0}/${summary.redesign ?? 0}; learning inputs ${learning.length}.`;
+        }
+        return `Cicli ${labData.piano ?? 'n/d'}; artifact valore observe/watch/test/reject/redesign = ${summary.observe ?? 0}/${summary.watch ?? 0}/${summary.test ?? 0}/${summary.reject ?? 0}/${summary.redesign ?? 0}; apprendimenti ${learning.length}.`;
+      },
+
+      bitcoinCognitiveStateSummary() {
+        const payload = this.bitcoinCognitiveStatePayload();
+        const cycle = Array.isArray(payload.cognitive_cycle) ? payload.cognitive_cycle : [];
+        const active = cycle.filter(step => step.state === 'active').length;
+        const partial = cycle.filter(step => step.state === 'partial').length;
+        const learning = Array.isArray(payload.current_learning) ? payload.current_learning : [];
+        const adjustment = payload.auto_adjustment || {};
+        const loopState = this.bitcoinCognitiveStateLabel(adjustment.closed_loop_state || payload.summary?.closed_loop_state || 'n/a');
+        if (this.lang === 'en') {
+          return `Loop ${loopState}: ${active}/${cycle.length || 0} stages active, ${partial} partial; ${learning.length} learning inputs are feeding the next adjustment.`;
+        }
+        return `Ciclo ${loopState}: ${active}/${cycle.length || 0} stadi attivi, ${partial} parziali; ${learning.length} apprendimenti alimentano il prossimo aggiustamento.`;
+      },
+
+      bitcoinCognitiveStateNextMove() {
+        const adjustment = this.bitcoinCognitiveStatePayload().auto_adjustment || {};
+        const next = adjustment.next_mutation || '';
+        if (!next) {
+          return this.lang === 'en'
+            ? 'No next mutation declared yet.'
+            : 'Nessuna prossima mutazione dichiarata.';
+        }
+        return this.lang === 'en'
+          ? `Next adjustment: ${next}`
+          : `Prossimo aggiustamento: ${this.bitcoinCognitiveStateText(next)}`;
+      },
+
+      bitcoinCognitiveStateRows() {
+        const payload = this.bitcoinCognitiveStatePayload();
+        const cycle = Array.isArray(payload.cognitive_cycle) ? payload.cognitive_cycle : [];
+        const active = cycle.filter(step => step.state === 'active').length;
+        const partial = cycle.filter(step => step.state === 'partial').length;
+        const learning = Array.isArray(payload.current_learning) ? payload.current_learning : [];
+        const layers = Array.isArray(payload.layer_alignment) ? payload.layer_alignment : [];
+        const gaps = layers.filter(layer => layer.state !== 'active');
+        const adjustment = payload.auto_adjustment || {};
+        return [
+          {
+            key: 'cycle',
+            label: this.lang === 'en' ? 'cycle' : 'ciclo',
+            value: `${active}/${cycle.length || 0}`,
+            note: this.lang === 'en' ? `${partial} partial stages` : `${partial} stadi parziali`,
+            tone: 'text-cyan-300',
+          },
+          {
+            key: 'learning',
+            label: this.lang === 'en' ? 'learning' : 'apprendimento',
+            value: String(learning.length),
+            note: this.bitcoinCognitiveSourceLabel(learning[0]?.source || (this.lang === 'en' ? 'no source' : 'nessuna fonte')),
+            tone: 'text-emerald-300',
+          },
+          {
+            key: 'adjustment',
+            label: this.lang === 'en' ? 'adjustment' : 'aggiustamento',
+            value: this.lang === 'en'
+              ? (adjustment.can_adjust_now ? 'ready' : (adjustment.closed_loop_state || 'n/a'))
+              : this.bitcoinCognitiveStateLabel(adjustment.can_adjust_now ? 'ready' : (adjustment.closed_loop_state || 'n/a')),
+            note: this.bitcoinCognitiveStateLabel(adjustment.closed_loop_state || adjustment.current_mode || 'n/a'),
+            tone: adjustment.can_adjust_now ? 'text-amber-300' : 'text-slate-300',
+          },
+          {
+            key: 'gaps',
+            label: this.lang === 'en' ? 'open gaps' : 'lacune aperte',
+            value: String(gaps.length),
+            note: gaps[0]?.layer || (this.lang === 'en' ? 'all active' : 'tutto attivo'),
+            tone: gaps.length ? 'text-purple-300' : 'text-emerald-300',
+          },
+        ];
+      },
+
+      btcValueArtifactBySchema(schema) {
+        const all = [];
+        if (this.latestValueArtifacts?.latest) all.push(this.latestValueArtifacts.latest);
+        if (Array.isArray(this.latestValueArtifacts?.artifacts)) all.push(...this.latestValueArtifacts.artifacts);
+        return all.find(a => a?.schema === schema || a?.payload?.schema === schema) || null;
+      },
+
+      btcArtifactCardForSchema(schema) {
+        const artifact = this.btcValueArtifactBySchema(schema);
+        const payload = artifact?.payload || {};
+        const cards = payload.cards;
+        if (Array.isArray(cards) && cards.length) return cards[0] || {};
+        return payload.card || {};
+      },
+
+      btcInfoLogicRows() {
+        const gate = this.btcValueArtifactBySchema('dndlab.bitcoin.daily_closed_evidence_gate.v1')?.payload?.gate || {};
+        const simulator = this.bitcoinPolicySimulatorPayload();
+        const metrics = simulator.metrics || {};
+        const ledger = this.bitcoinPaperLedgerPayload();
+        const ledgerMetrics = ledger.metrics || {};
+        const cognitive = this.bitcoinCognitiveStatePayload();
+        const learning = Array.isArray(cognitive.current_learning) ? cognitive.current_learning.length : 0;
+        return [
+          {
+            key: 'chart',
+            label: this.lang === 'en' ? 'primary surface' : 'superficie primaria',
+            title: this.lang === 'en' ? 'Simulator chart' : 'Grafico simulatore',
+            body: this.lang === 'en'
+              ? 'Read normal BTC path first, then event windows and value lens.'
+              : 'Prima leggi l’andamento BTC normale, poi finestre evento e lente valore.',
+            meta: `${metrics.event_count ?? 0} events`,
+            tone: 'text-cyan-300',
+            action: () => this.setActiveTab('campo'),
+          },
+          {
+            key: 'gate',
+            label: this.lang === 'en' ? 'mutation gate' : 'gate mutazione',
+            title: gate.decision || 'daily_closed_evidence_gate',
+            body: this.lang === 'en'
+              ? 'Live context can refresh; policy mutation uses closed daily evidence only.'
+              : 'Il contesto live può aggiornarsi; la mutazione usa solo evidenza daily chiusa.',
+            meta: `closed=${gate.latest_closed_common_date || 'n/a'} · open=${gate.open_daily_date || 'n/a'}`,
+            tone: gate.mutation_allowed ? 'text-emerald-300' : 'text-amber-300',
+            action: () => this.selectValueArtifactLensForSchema('dndlab.bitcoin.daily_closed_evidence_gate.v1'),
+          },
+          {
+            key: 'cognition',
+            label: this.lang === 'en' ? 'cognitive state' : 'stato cognitivo',
+            title: this.lang === 'en' ? 'Learning loop visible' : 'Loop di apprendimento visibile',
+            body: this.lang === 'en'
+              ? 'The Lab exposes learning, adjustment and remaining gaps as artifacts.'
+              : 'Il Lab espone apprendimento, aggiustamento e lacune come artifact.',
+            meta: `${learning} learning inputs`,
+            tone: 'text-purple-300',
+            action: () => this.selectBitcoinCognitiveStateLens(),
+          },
+          {
+            key: 'ledger',
+            label: this.lang === 'en' ? 'paper ledger' : 'ledger simulazione',
+            title: ledger.schema
+              ? (this.lang === 'en' ? 'Decision error visible' : 'Errore decisionale visibile')
+              : (this.lang === 'en' ? 'Paper ledger missing' : 'Ledger simulazione assente'),
+            body: this.lang === 'en'
+              ? 'Simulated decisions are compared with the normal BTC baseline before the Lab adjusts a policy.'
+              : 'Le decisioni simulate vengono confrontate con la baseline BTC normale prima di aggiustare una policy.',
+            meta: ledger.schema
+              ? `${ledgerMetrics.rows ?? 0} rows · median ${ledgerMetrics.median_error_vs_baseline_pct ?? 'n/a'}%`
+              : 'paper_simulation_ledger: missing',
+            tone: ledger.schema ? 'text-emerald-300' : 'text-rose-300',
+            action: ledger.schema ? () => this.selectBitcoinPaperLedgerLens() : null,
+          },
+        ];
+      },
+
+      btcInfoAutologyRows() {
+        const schemas = [
+          ['dndlab.bitcoin.mnemos_memory.v1', 'Mnemos'],
+          ['dndlab.bitcoin.kairos_phase.v1', 'Kairos'],
+          ['dndlab.bitcoin.coherence_check.v1', 'Coherence'],
+        ];
+        return schemas.map(([schema, label]) => {
+          const artifact = this.btcValueArtifactBySchema(schema);
+          const payload = artifact?.payload || {};
+          const card = this.btcArtifactCardForSchema(schema);
+          const summary = payload.summary || {};
+          const decision = card.decision || payload.phase?.recommended_action || 'n/a';
+          return {
+            schema,
+            label,
+            value: decision,
+            note: card.evidence || payload.phase?.current || artifact?.filename || 'n/a',
+            tone: /test|pass|coherence/i.test(decision + ' ' + card.verdict) ? 'text-emerald-300' : (/redesign|hold|watch|observe/i.test(decision + ' ' + card.verdict) ? 'text-amber-300' : 'text-cyan-300'),
+            summary,
+          };
+        });
       },
 
       bitcoinPolicyMetric(key) {
@@ -6260,12 +6800,6 @@
         const raw = String(text || '').trim();
         if (!raw) return '';
         if (this.lang === 'en') return raw;
-        const latinWords = (raw.match(/[A-Za-z]{3,}/g) || []).length;
-        const italianMarkers = /\b(non|che|con|per|prima|dopo|segnale|controllo|scheda|metodo|domanda|testo|fonte|dati)\b/i.test(raw);
-        const englishMarkers = /\b(the|this|must|can|before|after|source|claim|report|window|risk|definition|trendline|daily|intraday|feed|provider|evidence|control|method|target|advice)\b/i.test(raw);
-        if (englishMarkers && !italianMarkers && latinWords >= 3) {
-          return 'Testo sorgente in inglese; l originale resta invariato.';
-        }
         return raw;
       },
 
@@ -6678,13 +7212,180 @@
         this.activeTab = 'campo';
       },
 
+      selectBitcoinPaperLedgerLens(row = null) {
+        const artifact = this.bitcoinPaperLedgerArtifact();
+        if (!artifact) return;
+        const payload = artifact.payload || {};
+        const card = payload.card || {};
+        const metrics = payload.metrics || {};
+        const frame = payload.frame || {};
+        const selected = row || this.bitcoinPaperLedgerRows()[0] || null;
+        this.selectedNode = null;
+        this.selectedScopertaSsp = null;
+        this.selectedProdottoSsp = null;
+        this.selectedCampoLens = {
+          type: 'campo',
+          category: 'btc-paper-ledger',
+          title: selected?.event_date
+            ? `BTC paper ledger · ${selected.event_date}`
+            : (this.lang === 'en' ? 'BTC paper simulation ledger' : 'Ledger simulazione BTC'),
+          subtitle: selected?.decision || card.decision || 'paper-ledger',
+          schema: payload.schema || artifact.schema || 'dndlab.bitcoin.paper_simulation_ledger.v1',
+          date: payload.generated_at || artifact.generated_at || artifact.mtime,
+          evidence: selected
+            ? [
+                `decision: ${selected.decision || 'n/a'}`,
+                `outcome: ${selected.outcome || 'n/a'}`,
+                `error: ${selected.error_vs_baseline_pct ?? 'n/a'}%`,
+              ].join(' · ')
+            : (card.evidence || this.bitcoinPaperLedgerSummary()),
+          boundary: this.lang === 'en'
+            ? 'Paper simulation ledger: simulated decisions, outcome, error and baseline comparison.'
+            : 'Ledger di simulazione: decisioni simulate, outcome, errore e confronto con baseline.',
+          meta: selected
+            ? [
+                selected.relation || null,
+                selected.control_state ? `control: ${selected.control_state}` : null,
+                selected.confidence !== undefined ? `confidence: ${selected.confidence}` : null,
+              ].filter(Boolean).join(' · ')
+            : [
+                `${metrics.rows ?? 0} rows`,
+                `hit ${metrics.hit_rate_vs_baseline ?? 'n/a'}`,
+                `median error ${metrics.median_error_vs_baseline_pct ?? 'n/a'}%`,
+              ].join(' · '),
+          diagnostics: [
+            {
+              label: this.lang === 'en' ? 'Baseline' : 'Baseline',
+              value: `${frame.normal_baseline_return_pct ?? selected?.normal_baseline_return_pct ?? 'n/a'}%`,
+              note: this.lang === 'en' ? 'normal BTC rolling median' : 'mediana rolling BTC normale',
+            },
+            {
+              label: this.lang === 'en' ? 'Simulated return' : 'Ritorno simulato',
+              value: `${selected?.simulated_forward_return_pct ?? metrics.median_error_vs_baseline_pct ?? 'n/a'}%`,
+              note: selected?.event_date || card.verdict || 'ledger',
+            },
+            {
+              label: this.lang === 'en' ? 'Path risk' : 'Rischio percorso',
+              value: selected ? `${selected.forward_max_down_pct ?? 'n/a'}%` : `${metrics.fragile ?? 0} fragile`,
+              note: selected
+                ? `${this.lang === 'en' ? 'max up' : 'max su'} ${selected.forward_max_up_pct ?? 'n/a'}%`
+                : `${this.lang === 'en' ? 'false accept' : 'falsi accept'} ${metrics.false_accept ?? 0}`,
+            },
+            {
+              label: this.lang === 'en' ? 'Next adjustment' : 'Prossimo aggiustamento',
+              value: selected?.next_adjustment || card.interpretation || 'n/a',
+              note: selected?.lesson || card.boundary || '',
+            },
+          ],
+        };
+        this.activeTab = 'campo';
+      },
+
+      selectBitcoinCognitiveStateLens(row = null) {
+        const artifact = this.bitcoinCognitiveStateArtifact();
+        if (!artifact) return;
+        const payload = artifact.payload || {};
+        const adjustment = payload.auto_adjustment || {};
+        const cycle = Array.isArray(payload.cognitive_cycle) ? payload.cognitive_cycle : [];
+        const layers = Array.isArray(payload.layer_alignment) ? payload.layer_alignment : [];
+        const learning = Array.isArray(payload.current_learning) ? payload.current_learning : [];
+        const cards = Array.isArray(payload.cards) ? payload.cards : [];
+        const primaryCard = cards[0] || {};
+        this.selectedNode = null;
+        this.selectedScopertaSsp = null;
+        this.selectedProdottoSsp = null;
+        this.selectedCampoLens = {
+          type: 'campo',
+          category: 'btc-cognitive-state',
+          title: row?.label
+            ? `${this.lang === 'en' ? 'BTC Lab cognition' : 'Cognizione BTC Lab'} · ${row.label}`
+            : (this.lang === 'en' ? 'BTC Lab cognitive state' : 'Stato cognitivo BTC Lab'),
+          subtitle: this.bitcoinCognitiveStateLabel(adjustment.closed_loop_state || payload.summary?.closed_loop_state || primaryCard.decision || 'cognitive-state'),
+          schema: payload.schema || artifact.schema || 'dndlab.bitcoin.cognitive_state.v1',
+          date: payload.generated_at || artifact.generated_at || artifact.mtime,
+          evidence: this.lang === 'en'
+            ? (primaryCard.evidence || this.bitcoinCognitiveStateSummary())
+            : this.bitcoinCognitiveStateEvidence(),
+          boundary: this.lang === 'en'
+            ? (this.bitcoinPaperLedgerArtifact()
+              ? 'Cognitive-state artifact: learning, gaps and adjustment readiness. Paper simulation ledger: available.'
+              : 'Cognitive-state artifact: learning, gaps and adjustment readiness. Paper simulation ledger: missing.')
+            : (this.bitcoinPaperLedgerArtifact()
+              ? 'Artifact di stato cognitivo: apprendimento, lacune e prontezza di aggiustamento. Ledger simulazione: disponibile.'
+              : 'Artifact di stato cognitivo: apprendimento, lacune e prontezza di aggiustamento. Ledger simulazione: mancante.'),
+          meta: [
+            adjustment.current_mode ? `mode: ${adjustment.current_mode}` : null,
+            adjustment.can_adjust_now !== undefined ? `can_adjust: ${adjustment.can_adjust_now ? 'yes' : 'no'}` : null,
+            row?.key ? `focus: ${row.key}` : null,
+          ].filter(Boolean).join(' · '),
+          diagnostics: [
+            {
+              label: this.lang === 'en' ? 'Next adjustment' : 'Prossimo aggiustamento',
+              value: this.bitcoinCognitiveStateText(adjustment.next_mutation || 'n/a'),
+              note: this.bitcoinCognitiveStateText(adjustment.adjustment_source || 'trajectory + artifacts'),
+            },
+            ...cycle.slice(0, 4).map(step => ({
+              label: `${this.lang === 'en' ? 'Cycle' : 'Ciclo'} · ${this.bitcoinCognitiveStageLabel(step.stage || 'stage')}`,
+              value: this.bitcoinCognitiveStateLabel(step.state || 'n/a'),
+              note: this.bitcoinCognitiveStateText(step.evidence || ''),
+            })),
+            ...learning.slice(0, 2).map(item => ({
+              label: `${this.lang === 'en' ? 'Learning' : 'Apprendimento'} · ${this.bitcoinCognitiveSourceLabel(item.source || 'source')}`,
+              value: this.bitcoinCognitiveStateLabel(item.decision || item.classification || 'learned'),
+              note: this.bitcoinCognitiveStateText(item.learned || item.next_direction || ''),
+            })),
+            ...layers.filter(layer => layer.state !== 'active').slice(0, 2).map(layer => ({
+              label: `${this.lang === 'en' ? 'Open layer' : 'Layer aperto'} · ${layer.layer || 'layer'}`,
+              value: this.bitcoinCognitiveStateLabel(layer.state || 'partial'),
+              note: this.bitcoinCognitiveStateText(layer.gap || ''),
+            })),
+          ],
+        };
+        this.activeTab = 'campo';
+      },
+
+      refreshSelectedCampoLensForLanguage() {
+        const lens = this.selectedCampoLens;
+        if (!lens) return;
+        const category = lens.category || '';
+        const schema = lens.schema || '';
+        if (category === 'btc-paper-ledger' || schema === 'dndlab.bitcoin.paper_simulation_ledger.v1') {
+          this.selectBitcoinPaperLedgerLens();
+          return;
+        }
+        if (category === 'btc-cognitive-state' || schema === 'dndlab.bitcoin.cognitive_state.v1') {
+          this.selectBitcoinCognitiveStateLens();
+          return;
+        }
+        if (category === 'btc-policy-simulator' || schema === 'dndlab.bitcoin.policy_simulator.v1') {
+          this.selectBitcoinPolicySimulatorLens();
+          return;
+        }
+        if (category === 'method-intake' || schema === 'dndlab.bitcoin.method_intake.v1') {
+          this.selectBitcoinMethodLens();
+          return;
+        }
+        if (category === 'timeframe' || schema === 'dndlab.bitcoin.timeframe_matrix.v1') {
+          this.selectBitcoinTimeframeLens();
+          return;
+        }
+        if (category === 'daily-inefficiency' || schema === 'dndlab.bitcoin.daily_inefficiency.v1') {
+          this.selectBitcoinDailyInefficiencyLens();
+          return;
+        }
+        if (lens.kind === 'artifact' && schema) {
+          this.selectValueArtifactLensForSchema(schema);
+        }
+      },
+
       bitcoinMethodCards() {
         const cards = this.bitcoinMethodIntakeArtifact()?.payload?.cards;
         return Array.isArray(cards) ? cards : [];
       },
 
       bitcoinMethodQuestions() {
-        const questions = this.bitcoinMethodIntakeArtifact()?.payload?.thia_questions_for_alipio;
+        const methodPayload = this.bitcoinMethodIntakeArtifact()?.payload || {};
+        const questions = methodPayload.thia_questions_for_operator;
         return Array.isArray(questions) ? questions : [];
       },
 
@@ -7267,6 +7968,19 @@
         });
       },
 
+      askThiaTranslateBitcoinCognitiveState() {
+        this.askThiaTranslateText({
+          text: this.bitcoinCognitiveStateRawText(),
+          tab: 'campo',
+          element: this.lang === 'en' ? 'BTC cognitive state' : 'stato cognitivo BTC',
+          objectRef: {
+            schema: this.bitcoinCognitiveStateArtifact()?.schema || 'dndlab.bitcoin.cognitive_state.v1',
+            filename: this.bitcoinCognitiveStateArtifact()?.filename || '',
+            category: 'btc-cognitive-state',
+          },
+        });
+      },
+
       askThiaTranslateFalsifierFlag(flag, index = 0) {
         const f = flag || {};
         this.askThiaTranslateText({
@@ -7361,6 +8075,48 @@
           evidence,
           boundary,
         };
+      },
+
+      selectValueArtifactLensForSchema(schema) {
+        const artifact = this.btcValueArtifactBySchema(schema);
+        if (!artifact) return;
+        const payload = artifact.payload || {};
+        const cards = payload.cards;
+        const selected = (Array.isArray(cards) && cards[0]) || payload.card || {};
+        const summary = payload.summary && typeof payload.summary === 'object'
+          ? Object.entries(payload.summary).map(([key, value]) => `${key}: ${value}`).join(' · ')
+          : '';
+        this.selectedNode = null;
+        this.selectedScopertaSsp = null;
+        this.selectedProdottoSsp = null;
+        this.selectedCampoLens = {
+          kind: 'artifact',
+          title: selected.title || this.valueArtifactSchemaLabel(artifact),
+          body: `${this.valueArtifactSchemaLabel(artifact)} · ${artifact.filename || ''}`,
+          schema: artifact.schema || payload.schema || schema,
+          evidence: selected.evidence || payload.phase?.reason || summary || (this.lang === 'en' ? 'Evidence not summarized.' : 'Evidence non sintetizzata.'),
+          boundary: selected.boundary || (this.lang === 'en'
+            ? 'Lab state artifact: read it as context for the current cycle.'
+            : 'Artifact di stato del Lab: leggerlo come contesto del ciclo corrente.'),
+          diagnostics: [
+            payload.gate ? {
+              label: 'gate',
+              value: payload.gate.decision || 'n/a',
+              note: `closed=${payload.gate.latest_closed_common_date || 'n/a'} · open=${payload.gate.open_daily_date || 'n/a'}`,
+            } : null,
+            payload.phase ? {
+              label: 'phase',
+              value: payload.phase.current || 'n/a',
+              note: payload.phase.reason || '',
+            } : null,
+            Array.isArray(payload.checks) ? {
+              label: 'checks',
+              value: `${payload.checks.filter(row => row.pass).length}/${payload.checks.length}`,
+              note: (payload.failed_checks || []).map(row => row.check).join(', ') || 'all pass',
+            } : null,
+          ].filter(Boolean),
+        };
+        this.activeTab = 'campo';
       },
 
       financePromotionBoundary() {

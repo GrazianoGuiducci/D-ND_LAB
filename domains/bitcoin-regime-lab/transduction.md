@@ -13,7 +13,7 @@ preference or capsule-only archive as evidence. Exclusions:
 
 - buy/sell/entry/exit/price-target/profit/alpha/trading-signal language
 - manual chart annotations treated as evidence without mechanical definitions
-- Massimo Rea or Alipio methods treated as authority before observable/null/falsifier translation
+- external BTC method material treated as authority before observable/null/falsifier translation
 - current/open candle backtests unless explicitly declared as live-only observation
 - single-exchange wick or volume-profile result promoted without feed robustness
 
@@ -71,6 +71,30 @@ each path before promotion.
 Any reusable capability must be written as a propagation candidate, not as an
 automatic rule. Transfer to another Lab requires domain-native observables,
 baseline/null and UI lens.
+
+## cognitive_autology
+
+The generated BTC Lab must not stop at artifact production. It must make its
+own cognitive state inspectable:
+
+- what it observed;
+- what it tested;
+- what it falsified;
+- what it learned;
+- what it will adjust;
+- what remains missing before autonomous closure.
+
+Current mapping:
+
+- falsifier/baseline/null => `veritas`-like gate;
+- trajectory evaluator => `kairos`-like movement selection;
+- seed + seed archive => `mnemos`-like retention substrate;
+- simulator + normal-chart comparison => research value lens;
+- `btc_cognitive_state.py` => explicit state artifact for UI, THIA and next
+  operator review.
+
+This is still a partial closure. The next generator improvement should create
+mnemos/kairos/coherence artifacts automatically for any generated domain.
 
 
 ## possibility_inventory_json
@@ -222,7 +246,7 @@ Auto-generated availability map. These sources are possibilities, not automatic 
       "What should a human observer see in the dashboard after one useful cycle?",
       "Which volume-profile source and binning rule are acceptable for a first POC/LVN cycle?",
       "How is an inefficiency considered filled, partially filled or invalidated?",
-      "Which Alipio/Massimo Rea method should be translated first into observable, null and falsifier?"
+      "Which BTC method surface should be translated first into observable, null and falsifier?"
     ]
   }
 ]
@@ -261,7 +285,7 @@ Auto-generated from the domain request so the candidate preserves the question t
   "non_admissible": [
     "buy/sell/entry/exit/price-target/profit/alpha/trading-signal language",
     "manual chart annotations treated as evidence without mechanical definitions",
-    "Massimo Rea or Alipio methods treated as authority before observable/null/falsifier translation",
+    "external BTC method material treated as authority before observable/null/falsifier translation",
     "current/open candle backtests unless explicitly declared as live-only observation",
     "single-exchange wick or volume-profile result promoted without feed robustness"
   ],
@@ -306,4 +330,47 @@ Auto-generated propagation card. It is a candidate, not an automatic promotion r
     "next_question": "Which candidate capability should become a reusable preset only after another domain needs it?"
   }
 ]
+```
+
+## daily_closed_evidence_gate
+
+The BTC Lab must separate live refresh from closed evidence before any
+autonomous policy mutation.
+
+```json
+{
+  "schema": "dndlab.bitcoin.daily_closed_evidence_gate.v1",
+  "source": "btc_exchange_ohlcv_latest.json",
+  "rule": "current UTC daily candle can refresh context, but mutation/reinterpretation uses only latest_common_date < today_utc",
+  "blocks": [
+    "LVN/FVG/timeframe reinterpretation from open daily candle",
+    "policy mutation from partial daily close",
+    "false freshness promotion"
+  ],
+  "allows": [
+    "dashboard context refresh",
+    "closed daily evidence reuse",
+    "next closed-date mutation when provider denominator is sufficient"
+  ]
+}
+```
+
+## autology_artifacts
+
+The BTC Lab exposes memory, phase and coherence as first-class artifacts before
+attempting autonomous policy mutation.
+
+```json
+{
+  "tool": "btc_autology_artifacts.py",
+  "writes": [
+    "dndlab.bitcoin.mnemos_memory.v1",
+    "dndlab.bitcoin.kairos_phase.v1",
+    "dndlab.bitcoin.coherence_check.v1"
+  ],
+  "mnemos": "retain / decay / redesign memory from artifact evidence",
+  "kairos": "select current Lab phase/action from gate, simulator and trajectory",
+  "coherence": "check drift between closed-evidence cutoff, downstream artifacts and no-operational boundary",
+  "boundary": "no market data fetch, no cycle execution, no market action"
+}
 ```

@@ -1,7 +1,7 @@
 {
   "schema": "ui_contract.v1",
   "domain": "bitcoin-regime-lab",
-  "intent_movement": "Monitor BTC regime hypotheses and falsify weak operational interpretations before they become operational claims, starting from Alipio's timeframe question and derived POC/Kumo/feed-robustness method candidates.",
+  "intent_movement": "Monitor BTC regime hypotheses and falsify weak operational interpretations before they become operational claims, using timeframe, Volume Profile, POC/LVN/HVN, FVG, Kumo and feed robustness as observable method surfaces.",
   "frame": {
     "left": [
       {
@@ -17,12 +17,24 @@
       {
         "module": "RequestField",
         "purpose": "Intent, observables, baseline/null and first smoke."
+      },
+      {
+        "module": "CognitiveState",
+        "purpose": "Observable Lab process: learning, auto-adjustment, layer gaps and next mutation."
+      },
+      {
+        "module": "PaperSimulationLedger",
+        "purpose": "Simulated BTC decisions, outcomes and error against the normal BTC baseline."
       }
     ],
     "right": [
       {
         "module": "RuntimeDynamics",
         "purpose": "Cycle trace, skipped movements and accepted surface."
+      },
+      {
+        "module": "AutologicalLens",
+        "purpose": "Shows how falsifier, trajectory, seed memory and simulator compose into the Lab's self-adjustment loop."
       },
       {
         "module": "FalsifierPanel",
@@ -269,6 +281,23 @@
       ],
       "shows": "Daily-computable BTC inefficiency candidates after method intake and field admissibility.",
       "blocks": "Treating FVG zones as target, entry, exit, advice or trading signal."
+    },
+    {
+      "module": "AutologyArtifacts",
+      "placement": "center/right",
+      "observables": [
+        "mnemos_memory",
+        "kairos_phase",
+        "coherence_check",
+        "daily_closed_evidence_gate"
+      ],
+      "baseline_or_null": [
+        "closed_evidence_cutoff",
+        "no_operational_boundary",
+        "artifact_cutoff_alignment"
+      ],
+      "shows": "What the Lab retains, which phase is admissible now, and whether the current artifacts are coherent.",
+      "blocks": "Autonomous policy mutation from open-candle noise or incoherent artifact drift."
     }
   ],
   "domain_boundary": null,
@@ -282,7 +311,7 @@
   "forbidden_labels": [
     "buy/sell/entry/exit/price-target/profit/alpha/trading-signal language",
     "manual chart annotations treated as evidence without mechanical definitions",
-    "Massimo Rea or Alipio methods treated as authority before observable/null/falsifier translation",
+    "external BTC method material treated as authority before observable/null/falsifier translation",
     "current/open candle backtests unless explicitly declared as live-only observation",
     "single-exchange wick or volume-profile result promoted without feed robustness"
   ],

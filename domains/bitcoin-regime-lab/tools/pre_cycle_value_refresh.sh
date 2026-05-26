@@ -18,9 +18,14 @@ cd "$ROOT"
 
 "$PYTHON_BIN" domains/bitcoin-regime-lab/tools/btc_market_card.py --write
 "$PYTHON_BIN" domains/bitcoin-regime-lab/tools/btc_exchange_ohlcv.py --write
+"$PYTHON_BIN" domains/bitcoin-regime-lab/tools/btc_daily_closed_evidence_gate.py --write
 "$PYTHON_BIN" domains/bitcoin-regime-lab/tools/btc_first_hypothesis.py --write
 "$PYTHON_BIN" domains/bitcoin-regime-lab/tools/btc_timeframe_matrix.py --write
 "$PYTHON_BIN" domains/bitcoin-regime-lab/tools/btc_method_intake_card.py --write
 "$PYTHON_BIN" domains/bitcoin-regime-lab/tools/btc_daily_inefficiency_candidate.py --write
 "$PYTHON_BIN" domains/bitcoin-regime-lab/tools/btc_auto_ignite.py --write
 "$PYTHON_BIN" domains/bitcoin-regime-lab/tools/btc_volume_profile_lvn_proxy.py --write
+"$PYTHON_BIN" domains/bitcoin-regime-lab/tools/btc_policy_simulator.py --write
+"$PYTHON_BIN" domains/bitcoin-regime-lab/tools/btc_paper_simulation_ledger.py --write
+"$PYTHON_BIN" domains/bitcoin-regime-lab/tools/btc_autology_artifacts.py --write
+"$PYTHON_BIN" domains/bitcoin-regime-lab/tools/btc_cognitive_state.py --write

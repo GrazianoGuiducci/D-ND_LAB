@@ -25,6 +25,7 @@ DATA_DIR = DATA_ROOT / "bitcoin-regime-lab"
 VALUE_DIR = DATA_DIR / "value"
 EXCHANGE_LATEST = VALUE_DIR / "btc_exchange_ohlcv_latest.json"
 AUTO_IGNITE_LATEST = VALUE_DIR / "btc_auto_ignite_latest.json"
+CLOSED_GATE_LATEST = VALUE_DIR / "btc_daily_closed_evidence_gate_latest.json"
 
 
 def _utc_now() -> str:
@@ -42,6 +43,18 @@ def _read_json_optional(path: Path) -> dict[str, Any]:
         return _read_json(path)
     except Exception:
         return {}
+
+
+def _closed_evidence_gate() -> dict[str, Any]:
+    gate = _read_json_optional(CLOSED_GATE_LATEST)
+    state = gate.get("gate") if isinstance(gate.get("gate"), dict) else {}
+    return {
+        "available": bool(gate),
+        "decision": state.get("decision"),
+        "mutation_allowed": state.get("mutation_allowed"),
+        "latest_closed_common_date": state.get("latest_closed_common_date"),
+        "open_daily_date": state.get("open_daily_date"),
+    }
 
 
 def _median(values: list[float]) -> float:
@@ -204,7 +217,12 @@ def build_lvn_proxy(
 ) -> dict[str, Any]:
     exchange = _read_json(input_path)
     auto = _read_json_optional(AUTO_IGNITE_LATEST)
-    candles = _median_daily_candles(exchange)
+    closed_gate = _closed_evidence_gate()
+    closed_cutoff = closed_gate.get("latest_closed_common_date")
+    candles = [
+        c for c in _median_daily_candles(exchange)
+        if not closed_cutoff or str(c.get("date")) <= str(closed_cutoff)
+    ]
     events = []
     for event_index in range(window_days, max(window_days, len(candles) - forward_window), stride):
         history = candles[event_index - window_days:event_index]
@@ -296,6 +314,7 @@ def build_lvn_proxy(
             "forward_window_days": forward_window,
             "no_lookahead": True,
             "proxy_boundary": "daily OHLCV proxy; not TradingView tick/volume-at-price replay",
+            "closed_evidence_gate": closed_gate,
         },
         "summary": {
             "observe": 0,
@@ -320,6 +339,10 @@ def build_lvn_proxy(
             }
         ],
         "metrics": metrics,
+        "closed_evidence": {
+            "cutoff_date": closed_cutoff,
+            "candles_after_gate": len(candles),
+        },
         "events": events,
         "auto_ignite_context": {
             "decision": (auto.get("auto_spec") or {}).get("decision"),

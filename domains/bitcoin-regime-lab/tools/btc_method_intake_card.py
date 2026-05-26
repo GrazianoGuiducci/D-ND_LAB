@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""btc_method_intake_card.py - Alipio/Rea method-intake cards.
+"""btc_method_intake_card.py - BTC method-intake cards.
 
 This tool turns human BTC chart language into structured method cards. It does
 not calculate levels, targets or signals. Its job is to make missing
@@ -251,11 +251,11 @@ def build_method_intake(*, focus: str = "volume_profile_lvn_void") -> dict[str, 
         "schema": "dndlab.bitcoin.method_intake.v1",
         "generated_at": generated_at,
         "domain": "bitcoin-regime-lab",
-        "source_note": "Derived from Alipio visual notes and Massimo Rea method substrate; no raw images or transcripts included.",
+        "source_note": "Derived from operator-provided BTC method material; no raw images or transcripts included.",
         "input_artifacts": {
             "field": str(FIRST_HYPOTHESIS_LATEST),
             "timeframe": str(TIMEFRAME_LATEST),
-            "intake_doc": str(REPO_ROOT / "docs" / "BITCOIN_ALIPIO_METHOD_INTAKE_20260518.md"),
+            "intake_doc": "BTC method-intake source note",
         },
         "summary": {
             "observe": 1,
@@ -276,12 +276,12 @@ def build_method_intake(*, focus: str = "volume_profile_lvn_void") -> dict[str, 
         "field_state": field,
         "timeframe_state": timeframe,
         "unresolved_definitions": unresolved,
-        "thia_questions_for_alipio": thia_questions,
+        "thia_questions_for_operator": thia_questions,
         "recommended_next": {
             "method_id": focus_method["method_id"],
             "title": focus_method["title"],
             "why": (
-                "The latest Alipio material points to Volume Profile / low-volume "
+                "The latest BTC method material points to Volume Profile / low-volume "
                 "inefficiency language. The simple daily FVG proxy is not enough; "
                 "the next useful step is to specify the LVN/profile contract or "
                 "block it with explicit missing parameters."

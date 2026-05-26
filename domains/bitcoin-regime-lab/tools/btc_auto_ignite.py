@@ -3,7 +3,7 @@
 
 The tool does not trade, predict or run the cognitive cycle. It gathers the
 current value artifacts, creates explicit provisional assumptions for the
-Alipio LVN/Volume Profile method, builds a deterministic daily OHLCV proxy and
+LVN/Volume Profile method, builds a deterministic daily OHLCV proxy and
 writes the next observable contract for the Lab.
 """
 from __future__ import annotations
@@ -261,13 +261,13 @@ def build_auto_ignite(*, bins: int = 36, window_days: int = 180) -> dict[str, An
             },
             "inferred": {
                 "profile_window": f"last {len(candles)} median daily candles",
-                "selected_method": "LVN/Volume Profile proxy because latest Alipio material emphasizes low-volume inefficiency.",
+                "selected_method": "LVN/Volume Profile proxy because current BTC method material emphasizes low-volume inefficiency.",
             },
             "not_verified": [
                 "TradingView profile rows/bin setting",
                 "exact manual profile window from screenshot",
                 "true tick/volume-at-price data",
-                "Alipio fill/invalidation preference",
+                "fill/invalidation preference",
             ],
         },
         "volume_profile_proxy": {

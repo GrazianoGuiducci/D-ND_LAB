@@ -18,6 +18,40 @@
   },
   "domain_contracts": {},
   "skills_attive": {
+    "validation_layer": [
+      {
+        "name": "veritas-sys",
+        "use": "turn falsifier and baseline/null evidence into an explicit reality gate"
+      },
+      {
+        "name": "aeternitas-sys",
+        "use": "protect seed mutation before crystallization or policy promotion"
+      }
+    ],
+    "processing_layer": [
+      {
+        "name": "helix-sys",
+        "use": "plan-code-verify loop for reusable BTC measurements"
+      },
+      {
+        "name": "mnemos-sys",
+        "use": "decide what the Lab retains, decays or sends to redesign"
+      },
+      {
+        "name": "kairos-sys",
+        "use": "select advance, watch, redesign or reject from evidence friction"
+      }
+    ],
+    "observation_layer": [
+      {
+        "name": "coherence-sys",
+        "use": "check drift between intent, seed, artifacts, UI and simulator"
+      },
+      {
+        "name": "triage-sys",
+        "use": "rank next BTC Lab improvements by impact, cost and urgency"
+      }
+    ],
     "kernel_layer": [
       {
         "name": "cascata",
@@ -92,7 +126,7 @@
     {
       "name": "btc_method_intake_card",
       "path": "tools/btc_method_intake_card.py",
-      "boundary": "turns Alipio/Rea BTC method language into method cards, missing definitions, THIA questions and next-test contracts; public_claim=false; trading_signal=false; operational=false"
+      "boundary": "turns BTC method language into method cards, missing definitions, THIA questions and next-test contracts; public_claim=false; trading_signal=false; operational=false"
     },
     {
       "name": "btc_daily_inefficiency_candidate",
@@ -113,6 +147,26 @@
       "name": "btc_policy_simulator",
       "path": "tools/btc_policy_simulator.py",
       "boundary": "manual-only research simulator; measures declared BTC method policies against controls, walk-forward splits and parameter sensitivity before any cron/cycle/UI integration"
+    },
+    {
+      "name": "btc_paper_simulation_ledger",
+      "path": "tools/btc_paper_simulation_ledger.py",
+      "boundary": "reads BTC policy simulator and writes a paper simulation ledger: simulated research decisions, outcomes, error against normal BTC baseline and next adjustment hints; no data fetch and no order execution"
+    },
+    {
+      "name": "btc_daily_closed_evidence_gate",
+      "path": "tools/btc_daily_closed_evidence_gate.py",
+      "boundary": "reads BTC daily artifacts and writes a policy-mutation guard that separates closed daily evidence from current open-candle refresh noise; public_claim=false; trading_signal=false; operational=false"
+    },
+    {
+      "name": "btc_autology_artifacts",
+      "path": "tools/btc_autology_artifacts.py",
+      "boundary": "writes first-class Mnemos/Kairos/Coherence artifacts from local BTC value artifacts: retention/decay, phase selection and coherence checks; no data fetch and no cycle execution"
+    },
+    {
+      "name": "btc_cognitive_state",
+      "path": "tools/btc_cognitive_state.py",
+      "boundary": "reads current BTC Lab artifacts and writes the observable cognitive/autological state: learning, adjustment, layer gaps and next mutation; no data fetch and no cycle execution"
     }
   ]
 }

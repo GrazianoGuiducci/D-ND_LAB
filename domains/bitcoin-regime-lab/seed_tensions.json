@@ -6,7 +6,7 @@
     {
       "tipo": "task",
       "id": "BITCOIN_REGIME_LAB_REQUEST_TO_FIELD",
-      "claim": "The request must become an observable field before any report: Monitor BTC regime hypotheses and falsify weak operational interpretations before they become operational claims, starting from Alipio's timeframe question and derived POC/Kumo/feed-robustness method candidates.",
+      "claim": "The request must become an observable field before any report: monitor BTC regime hypotheses and falsify weak operational interpretations before they become operational claims, using timeframe, Volume Profile, POC/LVN/HVN, FVG, Kumo and feed robustness as observable method surfaces.",
       "intensita": 1.0,
       "porta": "domain_request",
       "condensato_ref": "A2,A8,A14,A15"

@@ -23,6 +23,7 @@ DATA_ROOT = Path(os.environ.get("LAB_DATA_DIR", REPO_ROOT / "data")).resolve()
 DATA_DIR = DATA_ROOT / "bitcoin-regime-lab"
 VALUE_DIR = DATA_DIR / "value"
 EXCHANGE_LATEST = VALUE_DIR / "btc_exchange_ohlcv_latest.json"
+CLOSED_GATE_LATEST = VALUE_DIR / "btc_daily_closed_evidence_gate_latest.json"
 
 
 def _utc_now() -> str:
@@ -33,6 +34,26 @@ def _read_json(path: Path) -> dict[str, Any]:
     if not path.exists():
         raise FileNotFoundError(f"missing required artifact: {path}")
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _read_json_optional(path: Path) -> dict[str, Any]:
+    try:
+        return _read_json(path)
+    except Exception:
+        return {}
+
+
+def _closed_evidence_gate() -> dict[str, Any]:
+    gate = _read_json_optional(CLOSED_GATE_LATEST)
+    state = gate.get("gate") if isinstance(gate.get("gate"), dict) else {}
+    cutoff = state.get("latest_closed_common_date")
+    return {
+        "available": bool(gate),
+        "decision": state.get("decision"),
+        "mutation_allowed": state.get("mutation_allowed"),
+        "latest_closed_common_date": cutoff,
+        "open_daily_date": state.get("open_daily_date"),
+    }
 
 
 def _median(values: list[float]) -> float:
@@ -140,10 +161,13 @@ def build_daily_inefficiency_candidate(
     min_providers_per_day: int = 2,
 ) -> dict[str, Any]:
     exchange = _read_json(input_path)
+    closed_gate = _closed_evidence_gate()
+    closed_cutoff = closed_gate.get("latest_closed_common_date")
     source_metrics = exchange.get("metrics") or {}
     candles = [
         c for c in _median_daily_candles(exchange)
         if int(c.get("providers") or 0) >= min_providers_per_day
+        and (not closed_cutoff or str(c.get("date")) <= str(closed_cutoff))
     ]
 
     zones: list[dict[str, Any]] = []
@@ -310,6 +334,7 @@ def build_daily_inefficiency_candidate(
             "minimum_zone_width_pct_of_close": min_zone_width_pct,
             "invalidation_rule": "unfilled after the forward window is classified as unfilled; incomplete forward window remains pending",
             "price_source": "median OHLC across available exchange-native daily feeds",
+            "closed_evidence_gate": closed_gate,
         },
         "summary": {
             "observe": 0,
@@ -343,6 +368,7 @@ def build_daily_inefficiency_candidate(
             "providers_ok": source_metrics.get("providers_ok"),
             "providers_error": source_metrics.get("providers_error"),
             "daily_candles": len(candles),
+            "closed_evidence_cutoff_date": closed_cutoff,
             "zones_total": len(zones),
             "zones_evaluable": len(evaluable_zones),
             "zones_pending": len(pending_zones),
