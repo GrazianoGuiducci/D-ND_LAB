@@ -65,6 +65,16 @@ This reads Mnemos/Kairos, the daily gate, policy contract, paper ledger and
 trajectory state, then returns explicit `retain/decay/reject/watch` decisions.
 It applies no hard decay, no method-policy mutation and no orders.
 
+Build the daily-method pressure test directly:
+
+```bash
+python3 domains/bitcoin-regime-lab/tools/btc_daily_method_pressure_test.py --write --json
+```
+
+This checks the current `daily_inefficiency` surface through the policy
+contract, retention/regime selector and paper ledger. It validates Lab behavior;
+it is not trading advice and does not mutate policy.
+
 Generate the exchange-native feed robustness card directly:
 
 ```bash

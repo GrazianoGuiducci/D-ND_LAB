@@ -42,6 +42,7 @@ EXPECTED_UPSTREAM = {
     "btc_kairos_phase_latest.json",
     "btc_coherence_check_latest.json",
     "btc_retention_regime_selector_latest.json",
+    "btc_daily_method_pressure_test_latest.json",
     "btc_cognitive_state_latest.json",
 }
 

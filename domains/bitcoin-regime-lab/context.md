@@ -240,6 +240,12 @@ memory/regime state: it may recommend what should be retained, watched, decayed
 or rejected, but it applies zero hard decay and zero method-policy mutation
 while the contract blocks mutation.
 
+`btc_daily_method_pressure_test.py` pressure-tests the concrete
+`daily_inefficiency` method surface through the policy contract, selector and
+paper ledger. It should pass when the method is correctly held as watch under a
+strict null and open-daily mutation block; it must not turn paper/live-sim
+measurement into public advice or real execution.
+
 
 ## Skill retrieval
 

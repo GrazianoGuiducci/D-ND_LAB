@@ -38,6 +38,7 @@ EXPECTED_LATEST = {
     "btc_kairos_phase_latest.json",
     "btc_coherence_check_latest.json",
     "btc_retention_regime_selector_latest.json",
+    "btc_daily_method_pressure_test_latest.json",
     "btc_cognitive_state_latest.json",
     "btc_producer_trace_sink_latest.json",
 }
@@ -198,6 +199,15 @@ def build_health() -> dict[str, Any]:
         failures.append({"check": "retention_regime_selector_hard_decay", "artifact": "btc_retention_regime_selector_latest.json", "issue": str(selector_effects.get("hard_decay_applied_count"))})
     if selector_effects.get("policy_mutation_applied_count") != 0:
         failures.append({"check": "retention_regime_selector_policy_mutation", "artifact": "btc_retention_regime_selector_latest.json", "issue": str(selector_effects.get("policy_mutation_applied_count"))})
+
+    pressure = _read_json(VALUE_DIR / "btc_daily_method_pressure_test_latest.json")
+    pressure_result = pressure.get("result") if isinstance(pressure.get("result"), dict) else {}
+    if not pressure_result:
+        failures.append({"check": "daily_method_pressure_test", "artifact": "btc_daily_method_pressure_test_latest.json", "issue": "missing"})
+    elif pressure_result.get("passed") is not True:
+        failures.append({"check": "daily_method_pressure_test", "artifact": "btc_daily_method_pressure_test_latest.json", "issue": ",".join(pressure_result.get("failed_checks") or [])})
+    if pressure_result.get("policy_mutation_allowed") is True and daily_gate_state.get("mutation_allowed") is False:
+        failures.append({"check": "daily_method_pressure_policy_gate", "artifact": "btc_daily_method_pressure_test_latest.json", "issue": "policy_allowed_while_daily_gate_blocks"})
 
     trace_sink = _read_json(VALUE_DIR / "btc_producer_trace_sink_latest.json")
     trace_summary = trace_sink.get("summary") if isinstance(trace_sink.get("summary"), dict) else {}

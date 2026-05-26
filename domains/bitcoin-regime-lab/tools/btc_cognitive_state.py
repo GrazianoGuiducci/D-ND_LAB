@@ -47,6 +47,7 @@ VALUE_INPUTS = {
     "kairos_phase": VALUE_DIR / "btc_kairos_phase_latest.json",
     "coherence_check": VALUE_DIR / "btc_coherence_check_latest.json",
     "retention_regime_selector": VALUE_DIR / "btc_retention_regime_selector_latest.json",
+    "daily_method_pressure_test": VALUE_DIR / "btc_daily_method_pressure_test_latest.json",
 }
 
 
@@ -320,6 +321,17 @@ def build_cognitive_state() -> dict[str, Any]:
             "counts": selector_state.get("counts"),
             "effects_applied": selector_state.get("effects_applied"),
         })
+    pressure = artifacts.get("daily_method_pressure_test") or {}
+    pressure_result = pressure.get("result") if isinstance(pressure.get("result"), dict) else {}
+    if pressure:
+        current_learning.append({
+            "source": "btc_daily_method_pressure_test",
+            "learned": _first_card(pressure).get("evidence") or "Daily method pressure test checks daily_inefficiency through contract, selector and ledger.",
+            "decision": _first_card(pressure).get("decision"),
+            "verdict": pressure_result.get("verdict"),
+            "passed_checks": pressure_result.get("passed_checks"),
+            "total_checks": pressure_result.get("total_checks"),
+        })
 
     not_yet_closed = [
         "autonomous policy mutation contract after the next stable closed-data run",
@@ -413,6 +425,20 @@ def build_cognitive_state() -> dict[str, Any]:
                 else "Retention/regime selector artifact is not available in cognitive-state inputs."
             ),
             "boundary": "Cognitive readback only: selector returns memory/regime decisions without hard decay or method-policy mutation.",
+        },
+        {
+            "claim_id": "btc_daily_method_pressure_test_readback",
+            "title": "BTC daily method pressure-test readback",
+            "decision": "test" if pressure_result.get("passed") is True else "watch",
+            "evidence": (
+                f"verdict={pressure_result.get('verdict')}; "
+                f"checks={pressure_result.get('passed_checks')}/{pressure_result.get('total_checks')}; "
+                f"selector={pressure_result.get('selector_decision')}; "
+                f"policy_mutation_allowed={pressure_result.get('policy_mutation_allowed')}."
+                if pressure
+                else "Daily method pressure-test artifact is not available in cognitive-state inputs."
+            ),
+            "boundary": "Cognitive readback only: pressure test validates behavior, not market advice.",
         },
     ]
     if mnemos and kairos and coherence:

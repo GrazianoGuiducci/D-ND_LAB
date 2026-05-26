@@ -42,6 +42,7 @@ echo "Python: $PYTHON_BIN"
 "$PYTHON_BIN" domains/bitcoin-regime-lab/tools/btc_policy_mutation_contract.py --write
 "$PYTHON_BIN" domains/bitcoin-regime-lab/tools/btc_autology_artifacts.py --write
 "$PYTHON_BIN" domains/bitcoin-regime-lab/tools/btc_retention_regime_selector.py --write
+"$PYTHON_BIN" domains/bitcoin-regime-lab/tools/btc_daily_method_pressure_test.py --write
 "$PYTHON_BIN" domains/bitcoin-regime-lab/tools/btc_cognitive_state.py --write
 "$PYTHON_BIN" domains/bitcoin-regime-lab/tools/btc_producer_trace_sink.py --write
 "$PYTHON_BIN" domains/bitcoin-regime-lab/tools/btc_operational_health.py --write
