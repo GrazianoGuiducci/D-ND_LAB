@@ -105,6 +105,11 @@ def build_field(ctx: CycleContext) -> None:
         parts.append(reports_md)
         sections_written.append("recent_reports")
 
+    closure_md = _closure_audit_section(paths.domain_data_dir(ctx.domain) / "closure")
+    if closure_md:
+        parts.append(closure_md)
+        sections_written.append("closure_audit")
+
     # 6b. Cimitero — claim falsificati di recente (universale, opzionale).
     # Domain-agnostic: legge cimitero.md dal folder del dominio se presente.
     # Operatore (29/04): "il demo e' generativo per altri tipi di lab.
@@ -359,6 +364,52 @@ def _recent_reports_section(reports_dir: Path, n: int = 3) -> str | None:
         parts.append("")
 
     parts.append("Do not repeat these experiments. Continue from where they arrived — the consecutio.\n")
+    return "\n".join(parts)
+
+
+def _closure_audit_section(closure_dir: Path, n: int = 2) -> str | None:
+    """Surface deterministic post-cycle closure audits in the next field."""
+    if not closure_dir.exists():
+        return None
+    files = sorted(
+        closure_dir.glob("*_closure_*.json"),
+        key=lambda p: p.stat().st_mtime,
+        reverse=True,
+    )[:n]
+    if not files:
+        return None
+
+    parts = ["## Recent deterministic closure audits"]
+    for path in files:
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        cycle_ts = payload.get("cycle_ts", "?")
+        phase = payload.get("phase", "?")
+        status = payload.get("status", "?")
+        summary = payload.get("summary") if isinstance(payload.get("summary"), dict) else {}
+        parts.append(f"- `{path.name}` cycle `{cycle_ts}` phase `{phase}` status `{status}`")
+        for key in (
+            "value_artifacts_total",
+            "expected_outputs_total",
+            "runtime_lineage_ok",
+            "cycle_binding_ok",
+            "raw_trace_exists",
+            "raw_log_exists",
+            "report_exists",
+            "input_artifacts_nonempty",
+        ):
+            if key in summary:
+                parts.append(f"  - {key}: {summary[key]}")
+        missing = payload.get("missing_expected_outputs")
+        if isinstance(missing, list) and missing:
+            parts.append(f"  - missing_expected_outputs: {', '.join(str(item) for item in missing[:5])}")
+        unexpected = payload.get("unexpected_outputs")
+        if isinstance(unexpected, list) and unexpected:
+            parts.append(f"  - unexpected_outputs: {', '.join(str(item) for item in unexpected[:5])}")
+    parts.append("")
+    parts.append("Treat post-cycle `status=pass` as the closure source. In-cycle audits may be `pending` until report and cycle_trace are materialized.\n")
     return "\n".join(parts)
 
 

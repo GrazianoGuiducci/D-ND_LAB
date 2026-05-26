@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+import os
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -68,10 +70,21 @@ def _input_artifacts(payload: dict[str, Any], repo_root: Path) -> list[str]:
     return inputs
 
 
-def _cycle_ts(data_dir: Path) -> str | None:
+def _cycle_ts(data_dir: Path) -> tuple[str | None, bool]:
+    active = os.environ.get("DND_LAB_ACTIVE_CYCLE_TS", "").strip()
+    if re.fullmatch(r"\d{8}_\d{4,6}", active):
+        return active, True
     trajectory = _read_json(data_dir / "trajectory_state.json")
     value = trajectory.get("cycle_ts") or trajectory.get("last_cycle_ts")
-    return str(value) if value else None
+    return (str(value), False) if value else (None, False)
+
+
+def _env_path(name: str, repo_root: Path) -> Path | None:
+    value = os.environ.get(name, "").strip()
+    if not value:
+        return None
+    path = Path(value)
+    return path if path.is_absolute() else repo_root / path
 
 
 def _runtime_lineage(
@@ -83,22 +96,28 @@ def _runtime_lineage(
     latest: Path,
     stamped: Path,
 ) -> dict[str, Any]:
-    cycle_ts = _cycle_ts(data_dir)
+    cycle_ts, active_cycle = _cycle_ts(data_dir)
     reports_dir = data_dir / "reports"
 
     trace = None
     log = None
     report = None
     if cycle_ts:
-        trace = _first_existing([
+        trace_candidates = [
             data_dir / f"cycle_trace_{cycle_ts}.json",
             data_dir / "artifacts" / cycle_ts / "cycle_trace.json",
-        ])
-        log = _latest_match(data_dir, f"cycle_{cycle_ts}*.log")
-        report = _first_existing([reports_dir / f"agent_{cycle_ts}.md"])
-    trace = trace or _latest_match(data_dir, "cycle_trace_*.json")
-    log = log or _latest_match(data_dir, "cycle_*.log")
-    report = report or _latest_match(reports_dir, "agent_*.md")
+        ]
+        report_candidate = reports_dir / f"agent_{cycle_ts}.md"
+        trace = _first_existing(trace_candidates)
+        log = _env_path("DND_LAB_ACTIVE_CYCLE_LOG", repo_root) or _latest_match(data_dir, f"cycle_{cycle_ts}*.log")
+        report = _first_existing([report_candidate])
+        if active_cycle:
+            trace = trace or trace_candidates[0]
+            report = report or report_candidate
+    if not active_cycle:
+        trace = trace or _latest_match(data_dir, "cycle_trace_*.json")
+        log = log or _latest_match(data_dir, "cycle_*.log")
+        report = report or _latest_match(reports_dir, "agent_*.md")
 
     lineage: dict[str, Any] = {
         "schema": LINEAGE_SCHEMA,

@@ -87,8 +87,10 @@ if [ ! -x "$PYTHON_BIN" ]; then
 fi
 LOG_DIR="data/$DOMAIN"
 mkdir -p "$LOG_DIR/reports"
+CYCLE_TS="$(date +%Y%m%d_%H%M)"
 LOG_FILE="$LOG_DIR/cycle_$(date +%Y%m%d_%H%M%S).log"
 PRE_CYCLE_HOOK="domains/$DOMAIN/tools/pre_cycle_value_refresh.sh"
+POST_CYCLE_HOOK="domains/$DOMAIN/tools/post_cycle_closure.sh"
 LOCK_DIR="$LAB_DATA_DIR/$DOMAIN/locks"
 LOCK_FILE="$LOCK_DIR/cycle.lock"
 mkdir -p "$LOCK_DIR"
@@ -99,8 +101,12 @@ if ! flock -n 9; then
 fi
 echo "$$ $(date -Iseconds)" 1>&9
 
+export DND_LAB_ACTIVE_CYCLE_TS="$CYCLE_TS"
+export DND_LAB_ACTIVE_CYCLE_LOG="$LOG_FILE"
+
 echo "=== D-ND_LAB cycle wrapper ===" | tee "$LOG_FILE"
 echo "Domain: $DOMAIN" | tee -a "$LOG_FILE"
+echo "Cycle ts: $DND_LAB_ACTIVE_CYCLE_TS" | tee -a "$LOG_FILE"
 echo "Provider chain: $LLM_PROVIDER_CHAIN" | tee -a "$LOG_FILE"
 echo "OpenRouter key set: $([ -n "${OPENROUTER_API_KEY:-}" ] && echo yes || echo NO)" | tee -a "$LOG_FILE"
 echo "Codex home: ${CODEX_HOME:-default}" | tee -a "$LOG_FILE"
@@ -116,3 +122,9 @@ if [ -x "$PRE_CYCLE_HOOK" ]; then
 fi
 
 "$PYTHON_BIN" -m core.cli run --domain "$DOMAIN" 2>&1 | tee -a "$LOG_FILE"
+
+if [ -x "$POST_CYCLE_HOOK" ]; then
+    echo "[post-cycle] running $POST_CYCLE_HOOK" | tee -a "$LOG_FILE"
+    "$POST_CYCLE_HOOK" 2>&1 | tee -a "$LOG_FILE"
+    echo "[post-cycle] completed" | tee -a "$LOG_FILE"
+fi

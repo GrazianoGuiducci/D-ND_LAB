@@ -271,6 +271,53 @@ def _mark_entry_executed(domain: str, entry_ts: str) -> bool:
         return False
 
 
+def _post_cycle_closure_satisfies_entry(domain: str, entry: dict[str, Any]) -> tuple[bool, str]:
+    """Return true when a post-cycle closure audit makes the trajectory obsolete.
+
+    BTC value artifacts are written before the current cycle trace exists, while
+    the deterministic closure audit runs after the trace is written. A
+    trajectory_evaluator entry created before that post-cycle audit can therefore
+    ask to fix raw_trace materialization even though the post-cycle audit has
+    already closed it.
+    """
+    if domain != "bitcoin-regime-lab":
+        return False, ""
+    text = " ".join(
+        str(value)
+        for value in (
+            entry.get("reasoning"),
+            ((entry.get("action") or {}).get("detail") or {}).get("new_value"),
+            ((entry.get("action") or {}).get("detail") or {}).get("reason"),
+        )
+        if value
+    ).lower()
+    if not any(token in text for token in ("raw_trace", "cycle_trace", "trace materialization")):
+        return False, ""
+
+    cycle_ref = entry.get("cycle_ref")
+    if not isinstance(cycle_ref, str) or not cycle_ref:
+        return False, ""
+    closure_path = paths.domain_data_dir(domain) / "closure" / f"btc_runtime_lineage_closure_{cycle_ref}.json"
+    if not closure_path.exists():
+        return False, ""
+    try:
+        payload = json.loads(closure_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return False, ""
+    summary = payload.get("summary") if isinstance(payload.get("summary"), dict) else {}
+    total = summary.get("value_artifacts_total")
+    if (
+        payload.get("phase") == "post_cycle"
+        and payload.get("status") == "pass"
+        and total
+        and summary.get("raw_trace_exists") == total
+        and summary.get("raw_log_exists") == total
+        and summary.get("report_exists") == total
+    ):
+        return True, f"post-cycle closure audit passed for {cycle_ref}"
+    return False, ""
+
+
 def trajectory_apply(ctx: CycleContext) -> None:
     """Movement: apply last log-only trajectory_evaluator decision if eligible.
 
@@ -319,6 +366,27 @@ def trajectory_apply(ctx: CycleContext) -> None:
             entry_confidence=entry.get("confidence"),
         )
         logger.info("trajectory_apply: SKIP — %s", reason)
+        return
+
+    satisfied, satisfied_reason = _post_cycle_closure_satisfies_entry(ctx.domain, entry)
+    if satisfied:
+        marked = _mark_entry_executed(ctx.domain, entry.get("ts", ""))
+        write_trajectory_state(
+            ctx.domain,
+            status="satisfied_by_post_cycle_closure",
+            source="trajectory_apply",
+            cycle_ts=ctx.timestamp,
+            entry={**entry, "executed": True},
+            reason=satisfied_reason,
+            extra={"log_entry_marked_executed": marked},
+        )
+        ctx.metrics.setdefault("trajectory_apply", {}).update(
+            decision="SKIP_SATISFIED",
+            reason=satisfied_reason,
+            entry_cycle_ref=entry.get("cycle_ref"),
+            log_entry_marked_executed=marked,
+        )
+        logger.info("trajectory_apply: SKIP_SATISFIED — %s", satisfied_reason)
         return
 
     # Apply

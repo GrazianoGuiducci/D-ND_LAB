@@ -39,6 +39,8 @@ from __future__ import annotations
 
 import json
 import logging
+import os
+import re
 import time
 import traceback
 from collections.abc import Callable
@@ -51,6 +53,13 @@ from core import config as cfg
 from core import paths
 
 logger = logging.getLogger(__name__)
+
+
+def _cycle_timestamp() -> str:
+    active = os.environ.get("DND_LAB_ACTIVE_CYCLE_TS", "").strip()
+    if re.fullmatch(r"\d{8}_\d{4,6}", active):
+        return active
+    return datetime.now(timezone.utc).strftime("%Y%m%d_%H%M")
 
 
 # ─── CycleContext ────────────────────────────────────────────────────
@@ -159,7 +168,7 @@ def run_cycle(domain: str) -> CycleContext:
     config = cfg.load_domain_config(domain)
     paths.ensure_domain_dirs(domain)
 
-    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M")
+    timestamp = _cycle_timestamp()
     data_dir = paths.domain_data_dir(domain)
 
     ctx = CycleContext(

@@ -235,6 +235,19 @@ Questo comando non invoca LLM, non scrive report agente e non autorizza target
 o segnali. Serve a tenere fresca la superficie `latest_value_artifacts` per UI,
 THIA e futuri cicli del Bitcoin Lab.
 
+Runtime lineage closure:
+
+- Value artifacts are born in the pre-cycle host-side refresh and may point to
+  the active cycle's future report and cycle trace before those files exist.
+- During an in-cycle/pre-report audit, missing `agent_<cycle>.md` or
+  `cycle_trace_<cycle>.json` is `pending`, not proof that the cycle failed.
+- The closure authority is the deterministic post-cycle audit:
+  `data/bitcoin-regime-lab/closure/btc_runtime_lineage_closure_<cycle>.json`.
+- A post-cycle audit with `status=pass` means current-cycle binding, raw log,
+  report and cycle trace materialization are closed for the value artifacts.
+- Do not use filename globs alone for counts; use
+  `runtime_lineage.cycle_ts` and `runtime_lineage.output_artifact_stamped`.
+
 Quando il ciclo viene lanciato da `tools/dnd-cycle.sh`, la raccolta dati BTC
 deve avvenire nel pre-ciclo host-side tramite:
 
