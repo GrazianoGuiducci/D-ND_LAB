@@ -127,6 +127,23 @@ python3 domains/bitcoin-regime-lab/tools/btc_closed_daily_strict_close_contract.
 This freezes the selected `strict_close` axis as the next-cycle paper contract
 and records denominator/null admissibility without mutating method policy.
 
+Run the read-only night-run smoke guard:
+
+```bash
+python3 domains/bitcoin-regime-lab/tools/btc_night_run_smoke.py --json --require-extra-cron
+```
+
+After scheduled runs, require new traces for a date:
+
+```bash
+python3 domains/bitcoin-regime-lab/tools/btc_night_run_smoke.py --json --date 20260527 --min-cycles-for-date 2 --after-cycle 20260526_1853
+```
+
+This checks operational health, latest artifact count, cycle trace, assertions,
+post-cycle closure, falsifier flags, the strict-close paper contract boundary
+and cron presence. It is read-only: no market fetch, no cognitive cycle, no
+orders and no public advice.
+
 Generate the exchange-native feed robustness card directly:
 
 ```bash

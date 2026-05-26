@@ -393,6 +393,24 @@ decay classification, if hard decay / policy mutation counters are non-zero,
 or if the producer trace sink reports missing producers, lineage or stamped
 outputs.
 
+Night-run smoke guard:
+
+```bash
+python3 domains/bitcoin-regime-lab/tools/btc_night_run_smoke.py --json --require-extra-cron
+```
+
+For the 2026-05-27 review after the canonical and temporary extra runs:
+
+```bash
+python3 domains/bitcoin-regime-lab/tools/btc_night_run_smoke.py --json --date 20260527 --min-cycles-for-date 2 --after-cycle 20260526_1853
+```
+
+This is a read-only runtime guard. It checks operational health, latest value
+artifact count, latest cycle trace, assertions, post-cycle closure, falsifier,
+strict-close paper-contract boundary and cron presence. It must not fetch
+market data, run a cycle, mutate method policy, execute real orders or publish
+advice.
+
 L'agente del ciclo **non deve rifare fetch di rete** come autorita' primaria:
 deve leggere gli artifact `*_latest.json` gia' scritti nel `LAB_DATA_DIR` del
 ciclo e, se servono controlli aggiuntivi, dichiararli come prossima ipotesi.
