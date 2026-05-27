@@ -37,6 +37,10 @@
         "purpose": "Mostra se cache, provider, data-card e freshness bastano allo stadio autonomo corrente."
       },
       {
+        "module": "ProviderCrosscheck",
+        "purpose": "Mostra accordo yfinance/Twelve Data prima di usare barre daily come substrato autonomo."
+      },
+      {
         "module": "DecisionBounds",
         "purpose": "Dichiara cosa non e' ammissibile con l'evidenza corrente e quale stadio autonomo resta chiuso."
       },
@@ -174,6 +178,20 @@
       "blocks": "Passare da daily diagnostic data a trading autonomo senza cross-provider, freshness e cost/slippage."
     },
     {
+      "module": "ProviderCrosscheck",
+      "placement": "right",
+      "observables": [
+        "symbols",
+        "common_dates",
+        "max_close_diff_bps",
+        "within_tolerance",
+        "review_required"
+      ],
+      "baseline_or_null": ["yfinance", "twelvedata"],
+      "shows": "Se due provider daily concordano abbastanza su close/date.",
+      "blocks": "Promuovere dati di un solo provider verso paper/live-sim."
+    },
+    {
       "module": "DecisionBounds",
       "placement": "right",
       "observables": [
@@ -304,6 +322,10 @@
     {
       "check": "data_intake_audit_visible",
       "expectation": "La vista finance mostra stage_fit, provider, freshness, warnings e miglioramenti dati prima di aprire paper/live-sim."
+    },
+    {
+      "check": "provider_crosscheck_visible",
+      "expectation": "La vista finance mostra accordo/disaccordo yfinance/Twelve Data prima di usare il dato come substrato autonomo."
     },
     {
       "check": "admin_run_bridge",

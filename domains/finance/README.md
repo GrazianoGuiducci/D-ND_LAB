@@ -51,7 +51,10 @@ python3 domains/finance/tools/finance_autonomy_opportunity_scout.py --json
 # 8. Data intake audit — efficienza dati per lo stadio corrente
 python3 domains/finance/tools/finance_data_intake_audit.py --json
 
-# 9. Transfer diagnostic con design pre-dichiarato
+# 9. Provider cross-check — yfinance vs Twelve Data
+python3 domains/finance/tools/finance_provider_crosscheck.py --symbols SPY,QQQ --json
+
+# 10. Transfer diagnostic con design pre-dichiarato
 python3 domains/finance/tools/finance_transfer_diagnostic.py \
   --object "non-SPY control basket freshness" \
   --mechanism "test whether no-transfer constraint survives without SPY" \
@@ -59,10 +62,10 @@ python3 domains/finance/tools/finance_transfer_diagnostic.py \
   --stop-rule "do not promote; inspect classification only" \
   --json
 
-# 10. Falsifier meta — template valido?
+# 11. Falsifier meta — template valido?
 python3 domains/meta-lab/tools/lab_template_validator.py --strict-m7 domains/finance
 
-# 11. Cycle agent autonomo (~5-15 min)
+# 12. Cycle agent autonomo (~5-15 min)
 bash tools/dnd-cycle.sh finance
 ```
 
@@ -104,6 +107,8 @@ domains/finance/
     │                           sceglie il prossimo ciclo d'indagine autonoma
     ├── finance_data_intake_audit.py
     │                           audit dati/cache/provider per stadio autonomia
+    ├── finance_provider_crosscheck.py
+    │                           confronto yfinance/Twelve Data su barre daily
     └── finance_diagnostic_report.py
                                 report interno value-facing, no claim operativo
 ```
@@ -181,6 +186,7 @@ python3 domains/finance/tools/finance_operational_health.py --write --json
 python3 domains/finance/tools/finance_autonomous_trading_contract.py --write --json
 python3 domains/finance/tools/finance_autonomy_opportunity_scout.py --write --json
 python3 domains/finance/tools/finance_data_intake_audit.py --write --json
+python3 domains/finance/tools/finance_provider_crosscheck.py --write --json
 ```
 
 Il guard non lancia ciclo e non produce claim di mercato. Controlla che il
@@ -210,6 +216,11 @@ corrente. Oggi il canale e' adeguato per discovery diagnostica daily, ma non
 ancora per paper/live-sim autonomo: servono almeno freshness manifest,
 cross-check multi-provider, contesto cost/slippage e feed/adapter piu' forte
 prima di simulare decisioni operative.
+
+`finance_provider_crosscheck.py` confronta yfinance e Twelve Data sulle stesse
+date daily. Usa `TWELVE_DATA_API_KEY`/`TWELVEDATA_API_KEY` se disponibili, o la
+configurazione locale `/opt/.env`; non stampa mai la chiave. Il cross-check
+misura prontezza dati, non produce trade.
 
 ## Architettura cognitiva (MML)
 

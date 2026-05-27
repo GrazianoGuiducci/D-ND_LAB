@@ -294,6 +294,12 @@
       "path": "tools/finance_data_intake_audit.py",
       "description": "Audits market-data cache/provider/data-card readiness for the current autonomy stage.",
       "executable_inline": true
+    },
+    {
+      "name": "finance_provider_crosscheck",
+      "path": "tools/finance_provider_crosscheck.py",
+      "description": "Cross-checks yfinance and Twelve Data daily bars before data can support autonomy stages.",
+      "executable_inline": true
     }
   ],
   "external_apis": [
@@ -303,6 +309,13 @@
       "auth_required": false,
       "purpose": "Fetch OHLCV-like chart data for equity, ETF and some FX symbols when yfinance-style data is needed.",
       "rate_limit_notes": "Unofficial public endpoint; use lightly and cache. Synthetic fallback is mandatory."
+    },
+    {
+      "name": "Twelve Data time_series API",
+      "base_url": "https://api.twelvedata.com/time_series",
+      "auth_required": true,
+      "purpose": "Second daily OHLCV provider for equity/ETF/FX cross-checks before paper/live-sim.",
+      "rate_limit_notes": "Requires API key in environment or /opt/.env; cache results and use lightly."
     },
     {
       "name": "FRED graph CSV",

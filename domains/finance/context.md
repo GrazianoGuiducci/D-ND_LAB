@@ -368,6 +368,28 @@ candidati diagnostici; non e' sufficiente per trading autonomo paper/live-sim.
 Prima di paper/live-sim servono freshness manifest, cross-check multi-provider,
 cost/slippage, calendar/gap guard e feed piu' forte per asset candidati.
 
+### finance_provider_crosscheck
+
+Descrizione: confronta yfinance e Twelve Data sulle stesse date daily per
+verificare che close/date siano coerenti prima di promuovere dati verso
+paper/live-sim. Fetch-a e cache-a dati, ma non esegue detector e non produce
+trade.
+
+Comando:
+
+```bash
+python3 /opt/D-ND_LAB/domains/finance/tools/finance_provider_crosscheck.py --symbols SPY,QQQ --json
+python3 /opt/D-ND_LAB/domains/finance/tools/finance_provider_crosscheck.py --write --json
+```
+
+Output: JSON `dndlab.finance.provider_crosscheck.value.v1` in
+`data/finance/value/finance_provider_crosscheck_latest.json` e copia audit in
+`data/finance/provider_crosscheck/`.
+
+Segreti: il provider Twelve Data legge `TWELVE_DATA_API_KEY` o
+`TWELVEDATA_API_KEY` da ambiente/`/opt/.env`. La chiave non va mai in output,
+Git, packet o chat.
+
 ### finance_transfer_diagnostic
 
 Descrizione: genera un artefatto macchina per il transfer real-market su una

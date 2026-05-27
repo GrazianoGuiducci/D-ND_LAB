@@ -3,8 +3,9 @@
 
 Provider abstraction (intent OpenBB): un singolo schema, N fonti dietro.
 Stocks via yfinance (Yahoo Finance, no auth, gestisce crumb internamente).
-Crypto via CoinGecko (free tier, no auth, JSON market_chart). Aggiungere
-un provider non tocca il consumer (exp_regime_shift, agent, falsifier).
+Twelve Data e' disponibile come secondo provider con API key esterna.
+Crypto via CoinGecko (free tier, no auth, JSON market_chart). Aggiungere un
+provider non tocca il consumer (exp_regime_shift, agent, falsifier).
 
 Storico decisione: la prima implementazione usava Stooq direct CSV (no
 auth, no deps). 2026-05-05: Stooq ha introdotto requirement apikey →
@@ -67,8 +68,44 @@ CACHE_DIR = DOMAIN_DIR.parent.parent / "data" / "finance" / "market_cache"
 DEFAULT_TTL_SEC = 86_400  # 1 day
 
 COINGECKO_BASE = "https://api.coingecko.com/api/v3"
+TWELVE_DATA_BASE = "https://api.twelvedata.com"
 
 UA = "D-ND-Lab/1.0 (research; +https://lab.d-nd.com)"
+
+
+def _read_opt_env_key(*names: str) -> str | None:
+    """Read API keys without exposing them.
+
+    Preferred shape is NAME=value in environment or /opt/.env. For the current
+    VPS operator file, the first non-empty non-assignment line may be a Twelve
+    Data key; only the Twelve Data provider uses that fallback.
+    """
+    for name in names:
+        value = os.environ.get(name)
+        if value:
+            return value.strip().strip('"').strip("'")
+    env_path = Path("/opt/.env")
+    if not env_path.exists():
+        return None
+    first_plain: str | None = None
+    previous_mentions_twelve = False
+    for raw in env_path.read_text(errors="replace").splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        if "=" in line:
+            key, value = line.split("=", 1)
+            if key.strip() in names:
+                return value.strip().strip('"').strip("'")
+        elif first_plain is None:
+            first_plain = line
+            previous_mentions_twelve = "twelve" in line.lower() or "twelvedata" in line.lower()
+        elif previous_mentions_twelve and line.replace("_", "").replace("-", "").isalnum() and len(line) >= 16:
+            if "TWELVE_DATA_API_KEY" in names or "TWELVEDATA_API_KEY" in names:
+                return line.strip().strip('"').strip("'")
+    if "TWELVE_DATA_API_KEY" in names or "TWELVEDATA_API_KEY" in names:
+        return first_plain
+    return None
 
 
 # ---------- cache ----------
@@ -289,6 +326,115 @@ def fetch_coingecko(coin_id: str, days: int = 365,
     return _arrayify(payload)
 
 
+# ---------- provider: Twelve Data (stocks/ETF/FX/crypto, API key) ----------
+
+def fetch_twelvedata(symbol: str, period: str = "1y", interval: str = "1d",
+                     ttl_sec: int = DEFAULT_TTL_SEC,
+                     start: str | None = None,
+                     end: str | None = None,
+                     outputsize: int | None = None) -> dict[str, Any]:
+    """Fetch OHLCV through Twelve Data `/time_series`.
+
+    Official interval names use `1day`, `1week`, `1month`, `1h`, etc. The
+    Finance Lab accepts `1d` as alias for compatibility with yfinance.
+    """
+    api_key = _read_opt_env_key("TWELVE_DATA_API_KEY", "TWELVEDATA_API_KEY")
+    if not api_key:
+        raise RuntimeError("Twelve Data API key not found in env or /opt/.env")
+
+    interval_map = {"1d": "1day", "1wk": "1week", "1mo": "1month"}
+    td_interval = interval_map.get(interval, interval)
+    cache_start = start or period
+    cache_end = end or "now"
+    cache_p = _cache_path("twelvedata", symbol, cache_start, cache_end, td_interval)
+    cached = _cache_load(cache_p, ttl_sec)
+    if cached is not None:
+        return _arrayify(cached)
+
+    if outputsize is None:
+        period_sizes = {
+            "1mo": 32,
+            "3mo": 95,
+            "6mo": 190,
+            "1y": 370,
+            "2y": 740,
+            "5y": 1850,
+            "10y": 3700,
+        }
+        outputsize = period_sizes.get(period, 370)
+    outputsize = max(1, min(int(outputsize), 5000))
+
+    params: dict[str, Any] = {
+        "symbol": symbol,
+        "interval": td_interval,
+        "apikey": api_key,
+        "format": "JSON",
+        "order": "asc",
+        "adjust": "all",
+    }
+    if start:
+        params["start_date"] = start
+    if end:
+        params["end_date"] = end
+    if not start and not end:
+        params["outputsize"] = outputsize
+
+    url = f"{TWELVE_DATA_BASE}/time_series"
+    with httpx.Client(timeout=30.0, headers={"User-Agent": UA}) as client:
+        r = client.get(url, params=params)
+        r.raise_for_status()
+        data = r.json()
+    if data.get("status") == "error":
+        raise RuntimeError(f"Twelve Data error for {symbol}: {data.get('message') or data}")
+    values = data.get("values") or []
+    if not values:
+        raise RuntimeError(f"Twelve Data empty result for {symbol}")
+
+    # `order=asc` should already sort oldest -> newest, but keep deterministic.
+    values = sorted(values, key=lambda row: str(row.get("datetime", "")))
+    dates = [str(row.get("datetime", ""))[:10] for row in values]
+    open_ = [float(row["open"]) for row in values]
+    high = [float(row["high"]) for row in values]
+    low = [float(row["low"]) for row in values]
+    close = [float(row["close"]) for row in values]
+    volume = [
+        float(row.get("volume") or 0.0)
+        for row in values
+    ] if any("volume" in row for row in values) else None
+    meta = data.get("meta") if isinstance(data.get("meta"), dict) else {}
+
+    payload = {
+        "symbol": symbol,
+        "provider": "twelvedata",
+        "interval": "1d" if td_interval == "1day" else td_interval,
+        "dates": dates,
+        "open": open_,
+        "high": high,
+        "low": low,
+        "close": close,
+        "volume": volume,
+        "data_card": _data_card(
+            provider="twelvedata",
+            symbol=str(meta.get("symbol") or symbol),
+            source_url=(
+                f"{url}?symbol={symbol}&interval={td_interval}"
+                f"&start_date={start or ''}&end_date={end or ''}&outputsize={outputsize}"
+            ),
+            license_str="Twelve Data API terms; API key external; verify redistribution rights",
+            dates=dates,
+            frequency="daily" if td_interval == "1day" else td_interval,
+        ),
+    }
+    payload["data_card"]["exchange"] = meta.get("exchange")
+    payload["data_card"]["mic_code"] = meta.get("mic_code")
+    payload["data_card"]["currency"] = meta.get("currency")
+    payload["data_card"]["asset_type"] = meta.get("type")
+    payload["data_card"]["adjustments"] = "adjust=all"
+
+    _cache_store(cache_p, payload)
+    return _arrayify(payload)
+
+
 # ---------- normalization (return numpy arrays + add returns) ----------
 
 def _arrayify(payload: dict[str, Any]) -> dict[str, Any]:
@@ -318,7 +464,15 @@ def fetch(provider: str, symbol: str, **kwargs: Any) -> dict[str, Any]:
         days = int(kwargs.get("days", 365))
         ttl = int(kwargs.get("ttl_sec", DEFAULT_TTL_SEC))
         return fetch_coingecko(symbol, days, ttl)
-    raise ValueError(f"Unknown provider: {provider}. Supported: yfinance, coingecko")
+    if provider == "twelvedata":
+        period = kwargs.get("period", "1y")
+        interval = kwargs.get("interval", "1d")
+        ttl = int(kwargs.get("ttl_sec", DEFAULT_TTL_SEC))
+        start = kwargs.get("start")
+        end = kwargs.get("end")
+        outputsize = kwargs.get("outputsize")
+        return fetch_twelvedata(symbol, period, interval, ttl, start=start, end=end, outputsize=outputsize)
+    raise ValueError(f"Unknown provider: {provider}. Supported: yfinance, coingecko, twelvedata")
 
 
 # ---------- CLI ----------
@@ -343,9 +497,9 @@ def _summarize(d: dict[str, Any]) -> dict[str, Any]:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("--provider", choices=["yfinance", "coingecko"], required=True)
+    ap.add_argument("--provider", choices=["yfinance", "coingecko", "twelvedata"], required=True)
     ap.add_argument("--symbol", required=True,
-                    help="SPY/QQQ/^GSPC for yfinance; bitcoin/ethereum for coingecko")
+                    help="SPY/QQQ/^GSPC for yfinance/twelvedata; bitcoin/ethereum for coingecko")
     ap.add_argument("--period", default="1y",
                     help="yfinance period: 1mo/3mo/6mo/1y/2y/5y/10y/max (yfinance only)")
     ap.add_argument("--start", help="yfinance explicit start date YYYY-MM-DD")
@@ -353,14 +507,17 @@ def main() -> int:
     ap.add_argument("--interval", default="1d",
                     help="yfinance interval: 1d/1wk/1mo/1h (yfinance only)")
     ap.add_argument("--days", type=int, default=365, help="coingecko only")
+    ap.add_argument("--outputsize", type=int, help="twelvedata only")
     ap.add_argument("--ttl", type=int, default=DEFAULT_TTL_SEC)
     ap.add_argument("--json", action="store_true", help="Print full payload as JSON")
     args = ap.parse_args()
 
     kwargs: dict[str, Any] = {"ttl_sec": args.ttl}
-    if args.provider == "yfinance":
+    if args.provider in {"yfinance", "twelvedata"}:
         kwargs["period"] = args.period
         kwargs["interval"] = args.interval
+        if args.outputsize:
+            kwargs["outputsize"] = args.outputsize
         if args.start or args.end:
             kwargs["start"] = args.start
             kwargs["end"] = args.end
