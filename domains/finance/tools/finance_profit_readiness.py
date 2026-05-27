@@ -106,13 +106,35 @@ def build_payload() -> dict[str, Any]:
             "detail_it": f"Cross-check provider: {provider_status}.",
             "detail_en": f"Provider cross-check: {provider_status}.",
         })
+    candidate_label = "/".join(candidates) if candidates else "i candidati"
+    local_phrase_it = (
+        f"{candidate_label} e' locale"
+        if len(candidates) == 1
+        else f"{candidate_label} sono locali"
+    )
+    local_phrase_en = (
+        f"{candidate_label} is local"
+        if len(candidates) == 1
+        else f"{candidate_label} are local"
+    )
+    rolling_fail_it = (
+        "non ha superato finestre rolling indipendenti"
+        if len(candidates) == 1
+        else "non hanno superato finestre rolling indipendenti"
+    )
+    rolling_fail_en = (
+        "it did not survive independent rolling windows"
+        if len(candidates) == 1
+        else "they did not survive independent rolling windows"
+    )
+
     if not recurring:
         blocks.append({
             "id": "recurrence_failed",
             "label_it": "Ricorrenza non dimostrata",
             "label_en": "Recurrence not proven",
-            "detail_it": "USO/EFA sono candidati locali: non hanno superato finestre rolling indipendenti.",
-            "detail_en": "USO/EFA are local candidates: they did not survive independent rolling windows.",
+            "detail_it": f"{local_phrase_it}: {rolling_fail_it}.",
+            "detail_en": f"{local_phrase_en}: {rolling_fail_en}.",
         })
     if not paper_allowed:
         blocks.extend([
@@ -161,8 +183,8 @@ def build_payload() -> dict[str, Any]:
         stage = "diagnostic_only"
 
     if status == "not_ready" and recurrence_label == "local_candidate_not_recurring":
-        plain_it = "Non pronto per profitto: USO/EFA sono locali, i provider concordano, ma la ricorrenza non regge; niente paper."
-        plain_en = "Not ready for profit: USO/EFA are local, providers agree, but recurrence fails; no paper."
+        plain_it = f"Non pronto per profitto: {local_phrase_it}, i provider concordano, ma la ricorrenza non regge; niente paper."
+        plain_en = f"Not ready for profit: {local_phrase_en}, providers agree, but recurrence fails; no paper."
         next_action = "auto_redesign_window_universe"
         next_it = "Ridisegnare automaticamente finestra/universo e rilanciare scout."
         next_en = "Automatically redesign window/universe and rerun the scout."

@@ -330,6 +330,12 @@
       "path": "tools/finance_profit_readiness.py",
       "description": "Aggregates Finance artifacts into a plain profit-readiness state, blocking reasons and next autonomous move.",
       "executable_inline": true
+    },
+    {
+      "name": "finance_window_universe_redesign",
+      "path": "tools/finance_window_universe_redesign.py",
+      "description": "Builds and optionally executes a materially changed scout plan after recurrence failure.",
+      "executable_inline": true
     }
   ],
   "external_apis": [

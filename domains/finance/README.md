@@ -200,6 +200,7 @@ python3 domains/finance/tools/finance_crypto_candidate_diagnostic.py --json
 python3 domains/finance/tools/finance_window_universe_scout.py --write --json
 python3 domains/finance/tools/finance_recurrence_validation_cycle.py --write --json
 python3 domains/finance/tools/finance_profit_readiness.py --write --json
+python3 domains/finance/tools/finance_window_universe_redesign.py --execute-scout --write --json
 ```
 
 Il guard non lancia ciclo e non produce claim di mercato. Controlla che il
@@ -269,6 +270,11 @@ operativa unica: pronto/non pronto per profit test, blocchi concreti,
 prossima mossa autonoma e confini paper/sandbox/reale. Non fetch-a dati e non
 piazza ordini; serve alla dashboard e al MetaLab per non confondere candidati
 locali con avvio profit.
+
+`finance_window_universe_redesign.py` legge il fallimento di ricorrenza e
+costruisce una nuova griglia scout materialmente diversa. Con `--execute-scout`
+rilancia direttamente `finance_window_universe_scout.py` usando la nuova
+griglia. Serve a evitare il loop su USO/EFA locali; resta diagnostico.
 
 ## Architettura cognitiva (MML)
 

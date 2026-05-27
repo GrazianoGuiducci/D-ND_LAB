@@ -76,6 +76,8 @@ def build_opportunities() -> dict[str, Any]:
     crypto_path = VALUE_DIR / "finance_crypto_candidate_diagnostic_latest.json"
     window_scout_path = VALUE_DIR / "finance_window_universe_scout_latest.json"
     recurrence_validation_path = VALUE_DIR / "finance_recurrence_validation_cycle_latest.json"
+    profit_readiness_path = VALUE_DIR / "finance_profit_readiness_latest.json"
+    redesign_path = VALUE_DIR / "finance_window_universe_redesign_latest.json"
     autonomy = load_json(autonomy_path) or {}
     health = load_json(health_path) or {}
     transfer = load_json(transfer_path) or {}
@@ -83,6 +85,8 @@ def build_opportunities() -> dict[str, Any]:
     crypto = load_json(crypto_path) or {}
     window_scout = load_json(window_scout_path) or {}
     recurrence_validation = load_json(recurrence_validation_path) or {}
+    profit_readiness = load_json(profit_readiness_path) or {}
+    redesign = load_json(redesign_path) or {}
 
     summary = autonomy.get("summary") if isinstance(autonomy.get("summary"), dict) else {}
     transfer_class = transfer.get("classification") if isinstance(transfer.get("classification"), dict) else {}
@@ -90,6 +94,8 @@ def build_opportunities() -> dict[str, Any]:
     crypto_summary = crypto.get("summary") if isinstance(crypto.get("summary"), dict) else {}
     window_scout_summary = window_scout.get("summary") if isinstance(window_scout.get("summary"), dict) else {}
     recurrence_validation_summary = recurrence_validation.get("summary") if isinstance(recurrence_validation.get("summary"), dict) else {}
+    profit_summary = profit_readiness.get("summary") if isinstance(profit_readiness.get("summary"), dict) else {}
+    redesign_summary = redesign.get("summary") if isinstance(redesign.get("summary"), dict) else {}
 
     stage = summary.get("current_stage") or "unknown"
     latest_transfer_label = summary.get("latest_transfer_label") or transfer_class.get("label") or "unknown"
@@ -98,12 +104,29 @@ def build_opportunities() -> dict[str, Any]:
     crypto_label = crypto_summary.get("crypto_label") or "unknown"
     crypto_robust = crypto_summary.get("robust_all_null_symbols") or []
     health_status = summary.get("operational_health") or (health.get("summary") or {}).get("status") or "unknown"
+    latest_scout_robust = int(window_scout_summary.get("robust_rows") or 0)
+    latest_scout_partial = int(window_scout_summary.get("partial_rows") or 0)
+    recurrence_validation_decision = recurrence_validation_summary.get("decision") or "unknown"
 
     opportunities = [
         {
+            "id": "window_universe_redesign",
+            "decision": "investigate",
+            "score": 0.93 if recurrence_validation_decision == "redesign_window_or_universe" and latest_scout_robust == 0 else 0.62,
+            "object": "redesign symbol/window/null family after local candidates fail recurrence",
+            "why": "Latest recurrence failed and the redesigned scout has no robust rows; the Lab needs a materially new scan before recurrence can run again.",
+            "cycle_shape": [
+                "accumulate failed local symbols",
+                "change universe or window family",
+                "run scout before spending cross-provider validation",
+                "only send robust rows to recurrence"
+            ],
+            "blocks": ["paper_live_sim", "broker_sandbox", "real_execution"],
+        },
+        {
             "id": "recurrence_window_validation",
-            "decision": "investigate" if robust_symbols and recurrence_label != "recurring_candidate" else "watch",
-            "score": 0.9 if robust_symbols and recurrence_label != "recurring_candidate" else 0.45,
+            "decision": "investigate" if robust_symbols and recurrence_label != "recurring_candidate" and latest_scout_robust > 0 else "watch",
+            "score": 0.9 if robust_symbols and recurrence_label != "recurring_candidate" and latest_scout_robust > 0 else 0.45,
             "object": "test robust scout/transfer candidates across adjacent windows before any paper ledger work",
             "why": "Robust local candidates exist, but recurrence is not established; paper/live-sim must wait.",
             "cycle_shape": [
@@ -188,7 +211,11 @@ def build_opportunities() -> dict[str, Any]:
         "recurrence_label": recurrence_label,
         "crypto_label": crypto_label,
         "recurrence_validation_label": recurrence_validation_summary.get("label") or "unknown",
-        "recurrence_validation_decision": recurrence_validation_summary.get("decision") or "unknown",
+        "recurrence_validation_decision": recurrence_validation_decision,
+        "profit_readiness_status": profit_summary.get("status") or "unknown",
+        "latest_redesign_mode": redesign_summary.get("mode") or "unknown",
+        "latest_scout_robust_rows": latest_scout_robust,
+        "latest_scout_partial_rows": latest_scout_partial,
         "crypto_robust_all_null_symbols": crypto_robust,
         "robust_all_null_symbols": robust_symbols,
         "selected_opportunity": selected["id"],
@@ -196,6 +223,7 @@ def build_opportunities() -> dict[str, Any]:
         "next_cycle_type": {
             "cross_asset_candidate_discovery": "candidate_discovery_cycle",
             "recurrence_window_validation": "recurrence_validation_cycle",
+            "window_universe_redesign": "window_universe_redesign_cycle",
             "paper_live_sim_schema_preparation": "paper_live_sim_design_cycle",
         }.get(selected["id"], "candidate_discovery_cycle"),
         "paper_live_sim_allowed": bool(summary.get("paper_live_sim_allowed")),
@@ -217,6 +245,8 @@ def build_opportunities() -> dict[str, Any]:
             "crypto_candidate_diagnostic": rel(crypto_path if crypto_path.exists() else None),
             "window_universe_scout": rel(window_scout_path if window_scout_path.exists() else None),
             "recurrence_validation_cycle": rel(recurrence_validation_path if recurrence_validation_path.exists() else None),
+            "profit_readiness": rel(profit_readiness_path if profit_readiness_path.exists() else None),
+            "window_universe_redesign": rel(redesign_path if redesign_path.exists() else None),
         },
         "latest_window_scout": window_scout_summary,
         "latest_recurrence_validation": recurrence_validation_summary,

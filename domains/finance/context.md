@@ -487,6 +487,24 @@ paper/sandbox/reale ammessi, candidati, blocchi, requisiti di profit-readiness
 e prossima mossa autonoma. La dashboard deve preferire questo readback per
 l'utente non esperto, lasciando gli artefatti granulari come dettaglio.
 
+### finance_window_universe_redesign
+
+Descrizione: ciclo di redesign dopo fallimento di ricorrenza. Legge
+`finance_profit_readiness_latest.json`, `finance_recurrence_validation_cycle_latest.json`
+e lo scout precedente, esclude/demote i candidati locali falliti e produce una
+nuova griglia simboli/finestre. Con `--execute-scout` esegue subito lo scout
+ridisegnato.
+
+Comando:
+
+```bash
+python3 /opt/D-ND_LAB/domains/finance/tools/finance_window_universe_redesign.py --execute-scout --write --json
+```
+
+Output: JSON `dndlab.finance.window_universe_redesign.value.v1` e, se
+eseguito, un nuovo `finance_window_universe_scout_latest.json`. Regola:
+redesign cambia solo l'indagine diagnostica; non apre paper/live-sim o ordini.
+
 ### finance_transfer_diagnostic
 
 Descrizione: genera un artefatto macchina per il transfer real-market su una
