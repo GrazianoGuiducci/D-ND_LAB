@@ -80,6 +80,7 @@ def build_opportunities() -> dict[str, Any]:
     redesign_path = VALUE_DIR / "finance_window_universe_redesign_latest.json"
     lag_review_path = VALUE_DIR / "finance_lag_memory_candidate_review_latest.json"
     pair_review_path = VALUE_DIR / "finance_pair_object_review_latest.json"
+    volatility_macro_path = VALUE_DIR / "finance_volatility_macro_object_review_latest.json"
     autonomy = load_json(autonomy_path) or {}
     health = load_json(health_path) or {}
     transfer = load_json(transfer_path) or {}
@@ -91,6 +92,7 @@ def build_opportunities() -> dict[str, Any]:
     redesign = load_json(redesign_path) or {}
     lag_review = load_json(lag_review_path) or {}
     pair_review = load_json(pair_review_path) or {}
+    volatility_macro = load_json(volatility_macro_path) or {}
 
     summary = autonomy.get("summary") if isinstance(autonomy.get("summary"), dict) else {}
     transfer_class = transfer.get("classification") if isinstance(transfer.get("classification"), dict) else {}
@@ -102,6 +104,7 @@ def build_opportunities() -> dict[str, Any]:
     redesign_summary = redesign.get("summary") if isinstance(redesign.get("summary"), dict) else {}
     lag_summary = lag_review.get("summary") if isinstance(lag_review.get("summary"), dict) else {}
     pair_summary = pair_review.get("summary") if isinstance(pair_review.get("summary"), dict) else {}
+    volatility_macro_summary = volatility_macro.get("summary") if isinstance(volatility_macro.get("summary"), dict) else {}
 
     stage = summary.get("current_stage") or "unknown"
     latest_transfer_label = summary.get("latest_transfer_label") or transfer_class.get("label") or "unknown"
@@ -115,16 +118,35 @@ def build_opportunities() -> dict[str, Any]:
     recurrence_validation_decision = recurrence_validation_summary.get("decision") or "unknown"
     lag_label = lag_summary.get("label") or "unknown"
     pair_label = pair_summary.get("label") or "unknown"
+    volatility_macro_label = volatility_macro_summary.get("label") or "unknown"
 
     opportunities = [
         {
+            "id": "external_macro_provider_or_pause",
+            "decision": "investigate" if volatility_macro_label == "no_volatility_macro_candidate" else "watch",
+            "score": 0.99 if volatility_macro_label == "no_volatility_macro_candidate" else 0.4,
+            "object": "add a genuinely new data source or pause the loop after price-derived object families fail",
+            "why": "Single assets, lag-memory, pair-relative and volatility/macro objects did not produce recurring candidates.",
+            "cycle_shape": [
+                "stop relaunching price-derived objects on the same evidence",
+                "choose an external macro/fundamental/options provider or mark no-current-edge",
+                "define new falsifier and data-card before any new scout",
+                "keep paper/live-sim closed until recurrence exists"
+            ],
+            "blocks": ["paper_live_sim", "broker_sandbox", "real_execution", "silent_repeat"],
+        },
+        {
             "id": "volatility_macro_object_review",
             "decision": "investigate",
-            "score": 0.98 if pair_label == "no_pair_candidate" else 0.57,
+            "score": (
+                0.98 if pair_label == "no_pair_candidate" and volatility_macro_label == "unknown"
+                else 0.97 if volatility_macro_label == "volatility_macro_local_only"
+                else 0.57
+            ),
             "object": "try volatility or macro-relative market objects after single, lag and pair objects fail",
-            "why": "Single-asset orientation, lag-memory partial review and pair-relative objects have not produced recurring candidates.",
+            "why": "Single-asset orientation, lag-memory partial review and pair-relative objects have not produced recurring candidates; if the volatility/macro review is local-only, redesign that object before paper.",
             "cycle_shape": [
-                "define volatility object, macro-relative object, or carry/rate relation",
+                "define or redesign volatility object, macro-relative object, or carry/rate relation",
                 "predeclare provider and null family",
                 "run scout with recurrence before paper design",
                 "stop if no recurring object appears"
@@ -254,6 +276,8 @@ def build_opportunities() -> dict[str, Any]:
         "lag_memory_review_decision": lag_summary.get("decision") or "unknown",
         "pair_object_review_label": pair_label,
         "pair_object_review_decision": pair_summary.get("decision") or "unknown",
+        "volatility_macro_review_label": volatility_macro_label,
+        "volatility_macro_review_decision": volatility_macro_summary.get("decision") or "unknown",
         "latest_scout_robust_rows": latest_scout_robust,
         "latest_scout_partial_rows": latest_scout_partial,
         "crypto_robust_all_null_symbols": crypto_robust,
@@ -266,6 +290,7 @@ def build_opportunities() -> dict[str, Any]:
             "window_universe_redesign": "window_universe_redesign_cycle",
             "market_object_mechanism_redesign": "market_object_mechanism_redesign_cycle",
             "volatility_macro_object_review": "volatility_macro_object_review_cycle",
+            "external_macro_provider_or_pause": "external_macro_provider_or_pause_cycle",
             "paper_live_sim_schema_preparation": "paper_live_sim_design_cycle",
         }.get(selected["id"], "candidate_discovery_cycle"),
         "paper_live_sim_allowed": bool(summary.get("paper_live_sim_allowed")),
@@ -291,6 +316,7 @@ def build_opportunities() -> dict[str, Any]:
             "window_universe_redesign": rel(redesign_path if redesign_path.exists() else None),
             "lag_memory_candidate_review": rel(lag_review_path if lag_review_path.exists() else None),
             "pair_object_review": rel(pair_review_path if pair_review_path.exists() else None),
+            "volatility_macro_object_review": rel(volatility_macro_path if volatility_macro_path.exists() else None),
         },
         "latest_window_scout": window_scout_summary,
         "latest_recurrence_validation": recurrence_validation_summary,

@@ -348,6 +348,12 @@
       "path": "tools/finance_pair_object_review.py",
       "description": "Tests relative-strength pair objects after single-asset mechanisms fail.",
       "executable_inline": true
+    },
+    {
+      "name": "finance_volatility_macro_object_review",
+      "path": "tools/finance_volatility_macro_object_review.py",
+      "description": "Tests realized-volatility and macro-volatility objects after single, lag and pair objects fail.",
+      "executable_inline": true
     }
   ],
   "external_apis": [

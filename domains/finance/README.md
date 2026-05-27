@@ -203,6 +203,7 @@ python3 domains/finance/tools/finance_profit_readiness.py --write --json
 python3 domains/finance/tools/finance_window_universe_redesign.py --execute-scout --write --json
 python3 domains/finance/tools/finance_lag_memory_candidate_review.py --write --json
 python3 domains/finance/tools/finance_pair_object_review.py --write --json
+python3 domains/finance/tools/finance_volatility_macro_object_review.py --write --json
 ```
 
 Il guard non lancia ciclo e non produce claim di mercato. Controlla che il
@@ -287,6 +288,12 @@ non continuare a spendere ricorrenza su parziali.
 asset testa spread/relative strength come `XLK/SPY`, `GLD/SPY`, `HYG/LQD` su
 finestre rolling. Se anche questo fallisce, il prossimo oggetto deve essere
 volatilita' o relazione macro, non un altro scan di ETF.
+
+`finance_volatility_macro_object_review.py` cambia ancora oggetto: testa
+realized-volatility e spread di volatilita' su finestre rolling. Se anche
+questa famiglia fallisce, il ciclo non deve rilanciare lo stesso deposito
+price-derived: serve un dataset/fonte esterna nuova oppure una dichiarazione
+esplicita di no-current-edge.
 
 ## Architettura cognitiva (MML)
 

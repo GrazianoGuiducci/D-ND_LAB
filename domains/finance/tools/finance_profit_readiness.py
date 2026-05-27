@@ -67,6 +67,7 @@ def build_payload() -> dict[str, Any]:
     health = summary("finance_operational_health_latest.json")
     lag_review = summary("finance_lag_memory_candidate_review_latest.json")
     pair_review = summary("finance_pair_object_review_latest.json")
+    volatility_macro_review = summary("finance_volatility_macro_object_review_latest.json")
 
     selected_rows = scout.get("selected_for_crosscheck")
     selected_symbols = [
@@ -92,6 +93,7 @@ def build_payload() -> dict[str, Any]:
     provider_status = str(candidate.get("provider_crosscheck_status") or "missing")
     lag_label = str(lag_review.get("label") or "missing")
     pair_label = str(pair_review.get("label") or "missing")
+    volatility_macro_label = str(volatility_macro_review.get("label") or "missing")
 
     blocks: list[dict[str, str]] = []
     if data_status not in {"pass", "warn"}:
@@ -188,6 +190,24 @@ def build_payload() -> dict[str, Any]:
             "detail_it": "Anche le relazioni/pair testate non hanno prodotto candidati ricorrenti.",
             "detail_en": "The tested pair/relative-strength objects also produced no recurring candidates.",
         })
+    if volatility_macro_label == "no_volatility_macro_candidate":
+        blocks.append({
+            "id": "volatility_macro_object_rejected",
+            "label_it": "Volatilita'/macro respinti",
+            "label_en": "Volatility/macro rejected",
+            "detail_it": "Anche gli oggetti volatilita' e macro-volatilita' testati non hanno prodotto candidati ricorrenti.",
+            "detail_en": "The tested volatility and macro-volatility objects also produced no recurring candidates.",
+        })
+    if volatility_macro_label == "volatility_macro_local_only":
+        local_objects = list_value(volatility_macro_review.get("local_objects"))
+        local_object_label = "/".join(local_objects) if local_objects else "volatility/macro"
+        blocks.append({
+            "id": "volatility_macro_local_only",
+            "label_it": "Volatilita'/macro solo locale",
+            "label_en": "Volatility/macro local only",
+            "detail_it": f"{local_object_label} appare solo in una finestra: indizio utile, non candidato paper.",
+            "detail_en": f"{local_object_label} appears in one window only: useful clue, not a paper candidate.",
+        })
 
     if real_allowed:
         status = "real_execution_ready"
@@ -202,7 +222,19 @@ def build_payload() -> dict[str, Any]:
         status = "not_ready"
         stage = "diagnostic_only"
 
-    if status == "not_ready" and pair_label == "no_pair_candidate":
+    if status == "not_ready" and volatility_macro_label == "volatility_macro_local_only":
+        plain_it = "Non pronto per profitto: la famiglia volatilita'/macro ha trovato solo un indizio locale, non una ricorrenza; niente paper."
+        plain_en = "Not ready for profit: the volatility/macro family found only a local clue, not recurrence; no paper."
+        next_action = "redesign_volatility_macro_object"
+        next_it = "Ridisegnare oggetto/finestra volatilita'-macro intorno all'indizio locale, poi richiedere ricorrenza."
+        next_en = "Redesign the volatility/macro object/window around the local clue, then require recurrence."
+    elif status == "not_ready" and volatility_macro_label == "no_volatility_macro_candidate":
+        plain_it = "Non pronto per profitto: singoli asset, lag-memory, pair/relative strength e volatilita'/macro non producono candidati ricorrenti; serve nuova fonte dati o pausa del ciclo."
+        plain_en = "Not ready for profit: single assets, lag-memory, pair/relative strength and volatility/macro produce no recurring candidates; a new data source or loop pause is needed."
+        next_action = "external_macro_or_new_data_source_review"
+        next_it = "Scegliere un dataset esterno/fondamentale/options o dichiarare no-current-edge invece di rilanciare lo stesso deposito."
+        next_en = "Choose an external/fundamental/options dataset or declare no-current-edge instead of relaunching the same evidence."
+    elif status == "not_ready" and pair_label == "no_pair_candidate":
         plain_it = "Non pronto per profitto: singoli asset, lag-memory e pair/relative strength non producono candidati ricorrenti; prossimo oggetto: volatilita' o macro-relazione."
         plain_en = "Not ready for profit: single assets, lag-memory and pair/relative strength produce no recurring candidates; next object: volatility or macro relation."
         next_action = "volatility_macro_object_review"
@@ -265,6 +297,7 @@ def build_payload() -> dict[str, Any]:
         "recurrence_label": recurrence_label,
         "lag_memory_review_label": lag_label,
         "pair_object_review_label": pair_label,
+        "volatility_macro_review_label": volatility_macro_label,
         "operational_health": health_status,
     }
     payload = {
@@ -282,6 +315,9 @@ def build_payload() -> dict[str, Any]:
             "candidate_discovery": rel(VALUE_DIR / "finance_candidate_discovery_cycle_latest.json"),
             "data_intake": rel(VALUE_DIR / "finance_data_intake_audit_latest.json"),
             "operational_health": rel(VALUE_DIR / "finance_operational_health_latest.json"),
+            "lag_memory_candidate_review": rel(VALUE_DIR / "finance_lag_memory_candidate_review_latest.json"),
+            "pair_object_review": rel(VALUE_DIR / "finance_pair_object_review_latest.json"),
+            "volatility_macro_object_review": rel(VALUE_DIR / "finance_volatility_macro_object_review_latest.json"),
         },
         "boundary": {
             "public_advice": False,

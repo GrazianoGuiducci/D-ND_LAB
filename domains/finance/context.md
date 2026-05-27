@@ -538,6 +538,24 @@ Output: JSON `dndlab.finance.pair_object_review.value.v1`. Se
 `label=no_pair_candidate`, il prossimo ciclo non deve rilanciare singoli asset
 o pair simili: va definito un oggetto volatilita' o macro-relative.
 
+### finance_volatility_macro_object_review
+
+Descrizione: review su oggetti realized-volatility e spread di volatilita'
+dopo il fallimento di asset singoli, lag-memory e pair/relative strength.
+Trasforma prezzi daily in serie di cambio-volatilita' o spread-volatilita' e
+le testa con null iid/block5/block21 su finestre rolling.
+
+Comando:
+
+```bash
+python3 /opt/D-ND_LAB/domains/finance/tools/finance_volatility_macro_object_review.py --write --json
+```
+
+Output: JSON `dndlab.finance.volatility_macro_object_review.value.v1`. Se
+`label=no_volatility_macro_candidate`, il deposito price-derived corrente e'
+falsificato per questa linea: il prossimo passo deve essere nuova fonte dati,
+nuovo oggetto non derivato dagli stessi prezzi o dichiarazione no-current-edge.
+
 ### finance_transfer_diagnostic
 
 Descrizione: genera un artefatto macchina per il transfer real-market su una
