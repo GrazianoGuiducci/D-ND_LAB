@@ -164,7 +164,16 @@ Il lab figlio acquisisce anche:
   movimento D-ND e' stato tradotto nel dominio senza trasferire contenuto
   improprio dal lab sorgente;
 - `ui_contract.json`: contratto macchina per popolare il template dashboard
-  a tre colonne con moduli comuni e domain-native.
+  a tre colonne con moduli comuni e domain-native. Deve includere anche
+  `tab_strategy`: quali tab servono al dominio, quando usarle, quali dati
+  leggono e quando non crearne una nuova per evitare duplicazione. La scelta
+  delle tab deriva dall'intento generato e dagli osservabili del dominio, non
+  dalla lista storica del dashboard.
+- `value_artifact_contract`: dentro `ui_contract.json`, dichiara come il Lab
+  figlio espone piccoli artefatti macchina in `data/<domain>/value/` leggibili
+  da `/api/domains/<domain>/latest_value_artifacts`. Ogni Lab nuovo deve poter
+  mostrare health/readback/diagnostic compatti prima di affidarsi alla prosa
+  del report.
 - `onboarding_contract.json` opzionale ma raccomandato: contratto macchina
   per i canali informativi del Lab, basato su
   `docs/templates/onboarding_contract.v1.json`.
@@ -297,6 +306,10 @@ Il lab figlio acquisisce anche:
    - `frame.left`: campo, stato, tensioni, filtri, alert;
    - `frame.center`: vista primaria del movimento domain-native;
    - `frame.right`: dettaglio, runtime, THIA/context assistant;
+   - `tab_strategy`: tab richieste dal dominio, con `purpose`, `use_when`,
+     `data_sources`, `selection_rule` e `anti_duplication_rule`;
+   - `value_artifact_contract`: directory `data/<domain>/value/`, endpoint
+     `latest_value_artifacts` e forma minima di card leggibile dalla dashboard;
    - `common_modules`: moduli comuni usati;
    - `domain_modules`: moduli specifici con osservabili e baseline/null;
    - `admin_actions`: azioni consentite e confini;
@@ -393,7 +406,7 @@ Il lab figlio acquisisce anche:
    - `_generated_by`: "meta-lab"
    - `_generated_at`: ISO timestamp
 
-11. **Verifica falsifier meta** — applica M1-M8 al template generato
+11. **Verifica falsifier meta** — applica M1-M9 al template generato
    (M6 = MML coherence, M7 = integrita' di transduzione). Se uno
    fallisce, riformula o dichiara dominio non di leva.
 
@@ -413,7 +426,7 @@ Il lab figlio acquisisce anche:
     - Naive baseline proposto
     - Skill subset attivate + rationale
     - External APIs dichiarate (no-auth dove possibile)
-    - Verifica M1-M8
+    - Verifica M1-M9
     - Verdict: TEMPLATE_VALID | TEMPLATE_NEEDS_REFINEMENT | DOMAIN_NOT_OF_LEVERAGE
 
 13. **Scrittura deterministica del template** — quando passi lo specs JSON a
@@ -584,7 +597,7 @@ Nota terminologica: `meta-lab` è il nome canonico attivo. `meta-prototyper`
 ## Confine epistemico (per te stesso)
 
 Sei un lab di funzione. Tutto ciò che produci passa dal tuo falsifier
-meta (M1-M8). Se non passa, va nel cimitero del meta-lab — utile come
+meta (M1-M9). Se non passa, va nel cimitero del meta-lab — utile come
 cristallizzazione su "domini che il sistema ha riconosciuto come non
 di leva". Niente risultato è negativo: o produce template, o produce
 sapere su domini.

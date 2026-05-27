@@ -1,4 +1,4 @@
-"""assertions.py — Meta-lab falsifier (M1-M8).
+"""assertions.py — Meta-lab falsifier (M1-M9).
 
 Il falsifier meta-lab non valuta findings scientifici. Valuta TEMPLATE
 di lab generati. Ogni assertion controlla una condizione strutturale:
@@ -52,7 +52,7 @@ def _lookup_template_under_test() -> Path | None:
         if p.exists():
             return p
     # Fallback: physics come ground truth — il meta-lab si auto-testa
-    # provando a falsificare physics esistente. Se M1-M8 non producono
+    # provando a falsificare physics esistente. Se M1-M9 non producono
     # FAIL su physics, le lenti sono calibrate correttamente.
     physics = _domains_root() / "physics"
     if physics.exists():
@@ -610,6 +610,85 @@ def _check_m8_skill_archive_retrieval(template_dir: Path) -> dict[str, Any]:
     }
 
 
+# ─── M9: Dashboard tab strategy + value readback ─────────────────
+
+def _check_m9_ui_tab_strategy(template_dir: Path) -> dict[str, Any]:
+    """Verifica che i nuovi template dichiarino quali tab servono al dominio
+    e come i value artifacts vengono letti dalla dashboard.
+
+    I domini legacy restano SKIP: M9 e' un gate per nuova generazione
+    Meta-lab, non un retrofit automatico su lab gia' installati.
+    """
+    legacy_names = {"physics", "editorial", "meta-lab", "finance", "bio-rhythms", "ops-decisions", "bitcoin-regime-lab"}
+    ui_file = template_dir / "ui_contract.json"
+    if not ui_file.exists():
+        if template_dir.name in legacy_names:
+            return {"id": "M9", "status": "SKIP", "detail": "ui_contract.json legacy assente", "metric": 0}
+        return {"id": "M9", "status": "FAIL", "detail": "ui_contract.json mancante", "metric": 0}
+    try:
+        ui = json.loads(ui_file.read_text())
+    except Exception as exc:
+        return {"id": "M9", "status": "FAIL", "detail": f"ui_contract parse error: {exc}", "metric": 0}
+
+    strategy = ui.get("tab_strategy")
+    value_contract = ui.get("value_artifact_contract")
+    if not isinstance(strategy, dict):
+        if template_dir.name in legacy_names:
+            return {"id": "M9", "status": "SKIP", "detail": "tab_strategy assente su dominio legacy", "metric": 0}
+        return {"id": "M9", "status": "FAIL", "detail": "ui_contract.tab_strategy mancante", "metric": 0}
+
+    tabs = strategy.get("tabs")
+    issues: list[str] = []
+    metric = 0
+    if isinstance(tabs, list) and len(tabs) >= 2:
+        metric += 1
+        ids = [str(tab.get("id") or "").strip() for tab in tabs if isinstance(tab, dict)]
+        if len(ids) == len(set(ids)) and all(ids):
+            metric += 1
+        else:
+            issues.append("tab ids mancanti o duplicati")
+        if strategy.get("primary_tab") in ids:
+            metric += 1
+        else:
+            issues.append("primary_tab non presente nei tabs")
+        if all(
+            isinstance(tab, dict)
+            and str(tab.get("purpose") or "").strip()
+            and str(tab.get("use_when") or "").strip()
+            and isinstance(tab.get("data_sources"), list)
+            and tab.get("data_sources")
+            for tab in tabs
+        ):
+            metric += 1
+        else:
+            issues.append("ogni tab deve avere purpose/use_when/data_sources")
+    else:
+        issues.append("tabs deve avere almeno 2 elementi")
+
+    if str(strategy.get("selection_rule") or "").strip():
+        metric += 1
+    else:
+        issues.append("selection_rule mancante")
+    if str(strategy.get("anti_duplication_rule") or "").strip():
+        metric += 1
+    else:
+        issues.append("anti_duplication_rule mancante")
+
+    if isinstance(value_contract, dict) and value_contract.get("required") is True:
+        endpoint = str(value_contract.get("latest_endpoint") or "")
+        directory = str(value_contract.get("directory") or "")
+        if "latest_value_artifacts" in endpoint and "/value/" in directory:
+            metric += 1
+        else:
+            issues.append("value_artifact_contract deve puntare a value/ e latest_value_artifacts")
+    else:
+        issues.append("value_artifact_contract required mancante")
+
+    if metric >= 7:
+        return {"id": "M9", "status": "PASS", "detail": "tab_strategy e value_artifact_contract presenti", "metric": metric}
+    return {"id": "M9", "status": "FAIL", "detail": f"UI tab strategy insufficiente: {issues}", "metric": metric}
+
+
 # ─── Verifica top-level (interfaccia standard) ───────────────────
 
 def verifica_asserzioni() -> list[dict[str, Any]]:
@@ -631,6 +710,7 @@ def verifica_asserzioni() -> list[dict[str, Any]]:
         _check_m6_mml_coherence(template_dir),
         _check_m7_transduction_integrity(template_dir),
         _check_m8_skill_archive_retrieval(template_dir),
+        _check_m9_ui_tab_strategy(template_dir),
     ]
 
 

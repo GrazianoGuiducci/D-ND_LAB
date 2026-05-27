@@ -1,7 +1,7 @@
 """domain_request_runner.py — isolated install-or-block runner for meta-lab requests.
 
 Consumes a `dndlab.domain_request.v1` file and produces an isolated candidate
-domain package plus strict M1-M8 validation, without writing into `domains/`.
+domain package plus strict M1-M9 validation, without writing into `domains/`.
 
 The runner is intentionally deterministic: it is the operational bridge the
 LLM/meta-lab cycle can call after it has captured a domain request. It does not
@@ -305,6 +305,92 @@ def _ui_language_contract(kind: str) -> dict[str, Any]:
             },
         }
     return {}
+
+
+def _ui_tab_strategy(slug: str, kind: str, intent: str, ui_language: dict[str, Any]) -> dict[str, Any]:
+    nav = ui_language.get("nav") if isinstance(ui_language.get("nav"), dict) else {}
+    nav_it = nav.get("it") if isinstance(nav.get("it"), dict) else {}
+    tabs = [
+        {
+            "id": "campo",
+            "label_it": "Campo",
+            "label_en": "Field",
+            "purpose": nav_it.get("campo") or f"Intento, stato e superficie accettata per {slug}.",
+            "data_sources": [f"data/{slug}/lab_data.json", f"data/{slug}/value/*.json"],
+            "use_when": "Sempre presente: e' la prima lettura del dominio.",
+        },
+        {
+            "id": "agente",
+            "label_it": "Agente",
+            "label_en": "Agent",
+            "purpose": nav_it.get("agente") or "Report, falsifier, trajectory, health e runtime readback.",
+            "data_sources": [f"data/{slug}/reports/", f"data/{slug}/falsifier/", f"data/{slug}/trajectory_state.json"],
+            "use_when": "Presente quando l'operatore deve ispezionare perche' l'ultimo ciclo si e' mosso.",
+        },
+        {
+            "id": "prodotti",
+            "label_it": "Prodotti",
+            "label_en": "Products",
+            "purpose": nav_it.get("prodotti") or "Finding, value artifacts, candidate e promotion gates.",
+            "data_sources": [f"data/{slug}/value/*.json", f"data/{slug}/published/", f"data/{slug}/promotions/"],
+            "use_when": "Presente solo quando il dominio produce artefatti value-facing o gate di promozione.",
+        },
+    ]
+    if kind in {"finance", "bitcoin-regime", "research", "research-radar"} or nav_it.get("grafo"):
+        tabs.insert(1, {
+            "id": "grafo",
+            "label_it": "Grafo",
+            "label_en": "Graph",
+            "purpose": nav_it.get("grafo") or "Relazioni tra ipotesi, fonti, baseline, null e vincoli.",
+            "data_sources": [f"data/{slug}/lab_graph.json", f"data/{slug}/cycle_trace_*.json"],
+            "use_when": "Presente quando relazioni, dipendenze o catene di evidenza sono centrali.",
+        })
+    if kind in {"finance", "bitcoin-regime"} or any(word in intent.lower() for word in ("trajectory", "ricorren", "regime", "cycle")):
+        tabs.insert(-1, {
+            "id": "tassonomia",
+            "label_it": nav_it.get("nav_tassonomia_label", "Traiettoria"),
+            "label_en": "Trajectory",
+            "purpose": nav_it.get("tassonomia") or "Sequenza dei cicli, ricorrenze e movimento del Lab.",
+            "data_sources": [f"data/{slug}/trajectory_log.jsonl", f"data/{slug}/trajectory_state.json", f"data/{slug}/cycle_trace_*.json"],
+            "use_when": "Presente quando il dominio richiede continuita', ricorrenza o evoluzione tra cicli.",
+        })
+    return {
+        "primary_tab": "campo",
+        "tabs": tabs,
+        "selection_rule": (
+            "Le tab sono scelte da intento, osservabili e sorgenti dati. Non "
+            "mostrare tab generiche senza domanda operatore distinta."
+        ),
+        "anti_duplication_rule": (
+            "Prima adatta campo/grafo/agente/tassonomia/prodotti. Aggiungi una "
+            "tab nuova solo se data source, uso decisionale e domanda sono distinti."
+        ),
+    }
+
+
+def _value_artifact_contract(slug: str) -> dict[str, Any]:
+    return {
+        "required": True,
+        "directory": f"data/{slug}/value/",
+        "latest_endpoint": f"/api/domains/{slug}/latest_value_artifacts",
+        "minimum_card_shape": {
+            "schema": f"dndlab.{slug}.<artifact>.v1",
+            "summary": {},
+            "cards": [
+                {
+                    "claim_id": "<stable-id>",
+                    "title": "<operator readable title>",
+                    "decision": "observe|watch|test|reject|redesign",
+                    "evidence": "<compact evidence>",
+                    "boundary": "<what this artifact does not authorize>",
+                }
+            ],
+        },
+        "reason": (
+            "Il Lab candidato deve esporre health/readback/diagnostic compatti "
+            "prima di affidarsi alla prosa del report."
+        ),
+    }
 
 
 def _preset_summary_md(preset: dict[str, Any] | None) -> str:
@@ -674,7 +760,7 @@ data/source cards and what is not admissible.
 ## E2E install/runtime
 
 The generated candidate must pass generator dry-run, isolated write, strict
-M1-M8 validator, and then a later cycle-to-UI check before public use.
+M1-M9 validator, and then a later cycle-to-UI check before public use.
 
 ## skill_retrieval
 
@@ -843,7 +929,7 @@ baseline/null and UI lens.
             "capability_id": "domain_request_to_installable_candidate",
             "source_domain": "meta-lab",
             "source_cycle": "domain_request_runner",
-            "new_affordance": "Convert a domain request into an isolated install-or-block candidate with M1-M8 evidence.",
+            "new_affordance": "Convert a domain request into an isolated install-or-block candidate with M1-M9 evidence.",
             "immediate_domain": slug,
             "transferable_domains": ["future generated labs"],
             "affected_surfaces": [
@@ -857,7 +943,7 @@ baseline/null and UI lens.
                 "tests",
             ],
             "required_checks": [
-                "strict M1-M8 validator",
+                "strict M1-M9 validator",
                 "smoke tool output",
                 "cycle-to-UI check before public use",
             ],
@@ -924,6 +1010,7 @@ baseline/null and UI lens.
         "exclusions": exclusions,
     }
 
+    ui_language = _ui_language_contract(kind)
     ui_contract = {
         "schema": "ui_contract.v1",
         "domain": slug,
@@ -958,6 +1045,8 @@ baseline/null and UI lens.
             }
         ],
         "domain_boundary": boundary,
+        "tab_strategy": _ui_tab_strategy(slug, kind, intent, ui_language),
+        "value_artifact_contract": _value_artifact_contract(slug),
         "admin_actions": [
             {"action": "run_cycle", "allowed": True, "boundary": "Run from current seed; no direction override without review."}
         ],
@@ -967,7 +1056,7 @@ baseline/null and UI lens.
             {"check": "runtime_awareness_visible", "expectation": "Trace and falsifier visible before promotion."},
         ],
     }
-    ui_contract.update(_ui_language_contract(kind))
+    ui_contract.update(ui_language)
 
     onboarding_contract = {
         "schema": "dndlab.onboarding_contract.v1",
@@ -1066,7 +1155,7 @@ baseline/null and UI lens.
 
 Generated candidate from `domain_request`.
 
-Status: reference candidate only. Run strict M1-M8 before install.
+Status: reference candidate only. Run strict M1-M9 before install.
 
 Intent:
 

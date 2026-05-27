@@ -58,6 +58,64 @@
     },
     "en": {}
   },
+  "tab_strategy": {
+    "primary_tab": "campo",
+    "tabs": [
+      {
+        "id": "campo",
+        "label_it": "Campo",
+        "label_en": "Field",
+        "purpose": "Primary domain state: what is alive, blocked, stale or ready.",
+        "data_sources": ["data/<domain>/lab_data.json", "data/<domain>/value/*.json"],
+        "use_when": "Always present. It is the first read for the domain."
+      },
+      {
+        "id": "grafo",
+        "label_it": "Grafo",
+        "label_en": "Graph",
+        "purpose": "Relations between hypotheses, sources, nulls, tools and constraints.",
+        "data_sources": ["data/<domain>/lab_graph.json", "data/<domain>/cycle_trace_*.json"],
+        "use_when": "Enable when relations or dependency chains are central to the domain."
+      },
+      {
+        "id": "agente",
+        "label_it": "Agente",
+        "label_en": "Agent",
+        "purpose": "Latest report, falsifier, trajectory, health and runtime readback.",
+        "data_sources": ["data/<domain>/reports/", "data/<domain>/falsifier/", "data/<domain>/trajectory_state.json"],
+        "use_when": "Enable when the operator must inspect why the last cycle moved."
+      },
+      {
+        "id": "prodotti",
+        "label_it": "Prodotti",
+        "label_en": "Products",
+        "purpose": "Findings, claim-cards, packages, value artifacts and maturity gates.",
+        "data_sources": ["data/<domain>/value/*.json", "data/<domain>/published/", "data/<domain>/promotions/"],
+        "use_when": "Enable only when the domain has value-facing artifacts or promotion gates."
+      }
+    ],
+    "selection_rule": "Choose tabs from domain intent and required observables. Do not expose generic tabs that have no domain-native data source.",
+    "anti_duplication_rule": "Prefer adapting an existing tab id over creating a synonym. Add a new tab only when its data source, decision use and operator question are distinct."
+  },
+  "value_artifact_contract": {
+    "required": true,
+    "directory": "data/<domain>/value/",
+    "latest_endpoint": "/api/domains/<domain>/latest_value_artifacts",
+    "minimum_card_shape": {
+      "schema": "dndlab.<domain>.<artifact>.v1",
+      "summary": {},
+      "cards": [
+        {
+          "claim_id": "<stable-id>",
+          "title": "<operator readable title>",
+          "decision": "observe|watch|test|reject|redesign",
+          "evidence": "<compact evidence>",
+          "boundary": "<what this artifact does not authorize>"
+        }
+      ]
+    },
+    "reason": "New Labs should expose small machine-readable readback artifacts before relying on report prose."
+  },
   "tooltips": {
     "it": {
       "<sidebar-key>": {

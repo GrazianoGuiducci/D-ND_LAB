@@ -59,12 +59,12 @@
       "ui_contract": "ui_contract.json with left/center/right dashboard contract",
       "mml": "mml.json layered skill manifest",
       "skill_intent_map": "intent -> movement_class -> use_dynamics -> skill/meta-prompt/artifact/UI mapping",
-      "validation_report": "M1-M8 falsifier meta verdict"
+      "validation_report": "M1-M9 falsifier meta verdict"
     }
   },
   "_notes": {
     "level": "meta — operates on system structure, not on a domain material",
     "first_test": "regenerate physics from internal corpus and validate diff vs original",
-    "falsifier": "M1-M8 (vedi context.md). Domains failing 1+ go to cimitero come not-of-leverage."
+    "falsifier": "M1-M9 (vedi context.md). Domains failing 1+ go to cimitero come not-of-leverage."
   }
 }

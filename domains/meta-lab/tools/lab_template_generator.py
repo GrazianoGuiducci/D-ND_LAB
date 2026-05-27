@@ -18,6 +18,8 @@ Lo specs contiene:
   "assertions_py": "<full python source of assertions.py>",
   "transduction_md": "<full markdown with invariants, exclusions, baselines, UI and skill_intent_map>",
   "ui_contract_json": <dict matching docs/templates/ui_contract.v1.json>,
+  "ui_contract_json.tab_strategy": <dict choosing domain-native tabs from intent>,
+  "ui_contract_json.value_artifact_contract": <dict describing dashboard-readable value cards>,
   "skill_intent_map_json": <dict: intent -> movement_class -> skill/meta-prompt/artifact/UI mapping>,
   "archive_retrieval_json": <optional list/dict: cognitive archive capsules/body read plan>,
   "onboarding_contract_json": <optional dict: information intake channels and gates>,
@@ -198,6 +200,7 @@ def validate_specs(specs: dict[str, Any]) -> list[str]:
             errors.append("ui_contract_json.schema deve essere ui_contract.v1")
         if not all(k in frame for k in ("left", "center", "right")):
             errors.append("ui_contract_json.frame deve contenere left, center, right")
+        errors.extend(_ui_contract_strategy_errors(ui_contract))
     skill_intent_map = specs.get("skill_intent_map_json", {})
     if not isinstance(skill_intent_map, dict):
         errors.append("skill_intent_map_json deve essere dict")
@@ -294,6 +297,52 @@ def validate_specs(specs: dict[str, Any]) -> list[str]:
     return errors
 
 
+def _ui_contract_strategy_errors(ui_contract: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    strategy = ui_contract.get("tab_strategy")
+    if not isinstance(strategy, dict):
+        return ["ui_contract_json.tab_strategy deve essere dict"]
+    tabs = strategy.get("tabs")
+    if not isinstance(tabs, list) or len(tabs) < 2:
+        errors.append("ui_contract_json.tab_strategy.tabs deve avere almeno 2 tab")
+        tabs = []
+    primary = str(strategy.get("primary_tab") or "").strip()
+    tab_ids: list[str] = []
+    for idx, tab in enumerate(tabs):
+        if not isinstance(tab, dict):
+            errors.append(f"ui_contract_json.tab_strategy.tabs[{idx}] deve essere dict")
+            continue
+        tab_id = str(tab.get("id") or "").strip()
+        if not tab_id:
+            errors.append(f"ui_contract_json.tab_strategy.tabs[{idx}].id mancante")
+        else:
+            tab_ids.append(tab_id)
+        for field in ("purpose", "use_when"):
+            if not str(tab.get(field) or "").strip():
+                errors.append(f"ui_contract_json.tab_strategy.tabs[{idx}].{field} mancante")
+        data_sources = tab.get("data_sources")
+        if not isinstance(data_sources, list) or not data_sources:
+            errors.append(f"ui_contract_json.tab_strategy.tabs[{idx}].data_sources deve essere lista non vuota")
+    if primary and primary not in tab_ids:
+        errors.append(f"ui_contract_json.tab_strategy.primary_tab '{primary}' non presente in tabs")
+    if len(tab_ids) != len(set(tab_ids)):
+        errors.append("ui_contract_json.tab_strategy.tabs contiene id duplicati")
+    for field in ("selection_rule", "anti_duplication_rule"):
+        if not str(strategy.get(field) or "").strip():
+            errors.append(f"ui_contract_json.tab_strategy.{field} mancante")
+
+    value_contract = ui_contract.get("value_artifact_contract")
+    if not isinstance(value_contract, dict):
+        errors.append("ui_contract_json.value_artifact_contract deve essere dict")
+    else:
+        if value_contract.get("required") is not True:
+            errors.append("ui_contract_json.value_artifact_contract.required deve essere true")
+        for field in ("directory", "latest_endpoint", "reason"):
+            if not str(value_contract.get(field) or "").strip():
+                errors.append(f"ui_contract_json.value_artifact_contract.{field} mancante")
+    return errors
+
+
 def _tools_custom_surface_errors(specs: dict[str, Any]) -> list[str]:
     """Ensure custom tools are visible to the future agent as an invocation
     contract. MML/filesystem presence alone is not enough for autonomous use.
@@ -382,6 +431,113 @@ def _ensure_archive_retrieval_in_transduction(
         + "\n```\n"
     )
     return transduction_md.rstrip() + block, True
+
+
+def _default_tab_strategy(ui_contract: dict[str, Any]) -> dict[str, Any]:
+    nav = ui_contract.get("nav") if isinstance(ui_contract.get("nav"), dict) else {}
+    nav_it = nav.get("it") if isinstance(nav.get("it"), dict) else {}
+    tabs: list[dict[str, Any]] = [
+        {
+            "id": "campo",
+            "label_it": "Campo",
+            "label_en": "Field",
+            "purpose": nav_it.get("campo") or "Stato primario del dominio e superficie accettata.",
+            "data_sources": ["data/<domain>/lab_data.json", "data/<domain>/value/*.json"],
+            "use_when": "Sempre presente: e' la prima lettura del dominio.",
+        },
+        {
+            "id": "agente",
+            "label_it": "Agente",
+            "label_en": "Agent",
+            "purpose": nav_it.get("agente") or "Report, falsifier, trajectory, health e runtime readback.",
+            "data_sources": ["data/<domain>/reports/", "data/<domain>/falsifier/", "data/<domain>/trajectory_state.json"],
+            "use_when": "Presente quando serve capire perche' l'ultimo ciclo si e' mosso.",
+        },
+        {
+            "id": "prodotti",
+            "label_it": "Prodotti",
+            "label_en": "Products",
+            "purpose": nav_it.get("prodotti") or "Finding, value artifacts, candidate e promotion gates.",
+            "data_sources": ["data/<domain>/value/*.json", "data/<domain>/published/", "data/<domain>/promotions/"],
+            "use_when": "Presente solo se il dominio produce artefatti value-facing o gate di promozione.",
+        },
+    ]
+    if nav_it.get("grafo"):
+        tabs.insert(1, {
+            "id": "grafo",
+            "label_it": "Grafo",
+            "label_en": "Graph",
+            "purpose": nav_it["grafo"],
+            "data_sources": ["data/<domain>/lab_graph.json", "data/<domain>/cycle_trace_*.json"],
+            "use_when": "Presente quando relazioni, dipendenze o catene di evidenza sono centrali.",
+        })
+    return {
+        "primary_tab": "campo",
+        "tabs": tabs,
+        "selection_rule": (
+            "Scegli le tab dall'intento e dagli osservabili richiesti. Non esporre "
+            "tab generiche prive di sorgente dati domain-native."
+        ),
+        "anti_duplication_rule": (
+            "Adatta un id tab esistente prima di crearne uno nuovo. Una nuova tab "
+            "serve solo se sorgente dati, domanda operatore e decisione d'uso sono distinte."
+        ),
+    }
+
+
+def _default_value_artifact_contract() -> dict[str, Any]:
+    return {
+        "required": True,
+        "directory": "data/<domain>/value/",
+        "latest_endpoint": "/api/domains/<domain>/latest_value_artifacts",
+        "minimum_card_shape": {
+            "schema": "dndlab.<domain>.<artifact>.v1",
+            "summary": {},
+            "cards": [
+                {
+                    "claim_id": "<stable-id>",
+                    "title": "<operator readable title>",
+                    "decision": "observe|watch|test|reject|redesign",
+                    "evidence": "<compact evidence>",
+                    "boundary": "<what this artifact does not authorize>",
+                }
+            ],
+        },
+        "reason": (
+            "Il Lab figlio deve esporre piccoli artefatti macchina leggibili "
+            "dalla dashboard prima di dipendere dalla prosa del report."
+        ),
+    }
+
+
+def _normalize_ui_contract(ui_contract: dict[str, Any]) -> tuple[dict[str, Any], dict[str, bool]]:
+    normalized = dict(ui_contract)
+    tab_strategy_added = False
+    value_contract_added = False
+    if not isinstance(normalized.get("tab_strategy"), dict):
+        normalized["tab_strategy"] = _default_tab_strategy(normalized)
+        tab_strategy_added = True
+    if not isinstance(normalized.get("value_artifact_contract"), dict):
+        normalized["value_artifact_contract"] = _default_value_artifact_contract()
+        value_contract_added = True
+    return normalized, {
+        "tab_strategy_added": tab_strategy_added,
+        "value_artifact_contract_added": value_contract_added,
+    }
+
+
+def _normalize_specs(specs: dict[str, Any]) -> tuple[dict[str, Any], dict[str, bool]]:
+    normalized = dict(specs)
+    helpers = {
+        "tab_strategy_added": False,
+        "value_artifact_contract_added": False,
+    }
+    ui_contract = normalized.get("ui_contract_json")
+    if isinstance(ui_contract, dict):
+        normalized_ui, ui_helpers = _normalize_ui_contract(ui_contract)
+        normalized["ui_contract_json"] = normalized_ui
+        helpers.update(ui_helpers)
+    return normalized, helpers
 
 
 def _ensure_quick_reference_in_context(
@@ -505,6 +661,7 @@ def _build_config(specs: dict[str, Any]) -> dict[str, Any]:
 
 def write_template(specs: dict[str, Any], dry_run: bool = False, force: bool = False) -> dict[str, Any]:
     """Scrive il filesystem tree del nuovo dominio. Ritorna report."""
+    specs, normalization_helpers = _normalize_specs(specs)
     errors = validate_specs(specs)
     if errors:
         return {"status": "FAIL", "errors": errors, "files_written": []}
@@ -573,6 +730,7 @@ def write_template(specs: dict[str, Any], dry_run: bool = False, force: bool = F
                 "quick_reference_appended": qr_appended,
                 "skill_intent_map_appended": skill_map_appended,
                 "archive_retrieval_appended": archive_retrieval_appended,
+                **normalization_helpers,
             },
         }
 
@@ -590,6 +748,7 @@ def write_template(specs: dict[str, Any], dry_run: bool = False, force: bool = F
             "quick_reference_appended": qr_appended,
             "skill_intent_map_appended": skill_map_appended,
             "archive_retrieval_appended": archive_retrieval_appended,
+            **normalization_helpers,
         },
     }
 
