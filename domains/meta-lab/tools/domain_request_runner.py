@@ -134,7 +134,8 @@ def _boundary_summary(boundary: dict[str, Any] | None) -> str:
     return (
         f"`{boundary.get('metric')}` >= `{boundary.get('score_min')}`; "
         f"selected positives `{selected}`; selected controls `{controls}`; "
-        f"null families `{nulls}`; `public_claim=false`; `trading_signal=false`."
+        f"null families `{nulls}`; diagnostic boundary `public_claim=false`; "
+        "`trading_signal=false` until an autonomy contract opens a simulated stage."
     )
 
 
@@ -393,6 +394,74 @@ def _value_artifact_contract(slug: str) -> dict[str, Any]:
     }
 
 
+def _autonomous_value_contract(slug: str, kind: str, intent: str) -> dict[str, Any] | None:
+    text = f"{kind} {intent}".lower()
+    triggers = (
+        "autonom",
+        "trading",
+        "trade",
+        "execute",
+        "execution",
+        "azione",
+        "azioni",
+        "automated",
+        "automatic",
+        "produrre valore",
+        "work product",
+    )
+    if not any(token in text for token in triggers):
+        return None
+    target = "autonomous_trading" if kind == "finance" or "trading" in text else "autonomous_value"
+    return {
+        "schema": "dndlab.autonomous_value_contract.v1",
+        "domain": slug,
+        "target": target,
+        "stages": [
+            {
+                "id": "diagnostic_only",
+                "allows": ["observe", "test", "reject_or_watch", "write_value_artifacts"],
+                "blocks": ["simulated_action", "external_execution", "real_world_execution"],
+                "promotion_gate": "Domain-native baseline/null/falsifier and provenance pass.",
+            },
+            {
+                "id": "simulated_action",
+                "allows": ["internal_decision", "simulated_ledger", "cost_or_failure_accounting"],
+                "blocks": ["external_execution", "real_world_execution"],
+                "promotion_gate": "Simulated ledger remains useful across recurrence/out-of-sample checks.",
+            },
+            {
+                "id": "sandbox_execution",
+                "allows": ["sandbox_adapter_call", "adapter_health_check", "kill_switch_test"],
+                "blocks": ["real_world_execution"],
+                "promotion_gate": "Adapter, audit log, limits, rollback and reconciliation pass sandbox E2E.",
+            },
+            {
+                "id": "real_world_execution",
+                "allows": ["reviewed_real_action"],
+                "blocks": ["unreviewed_action", "unbounded_action", "public_claim_without_contract"],
+                "promotion_gate": "Explicit operator-reviewed execution contract, risk/impact limits and monitoring.",
+            },
+        ],
+        "dashboard_readback": {
+            "module": "AutonomousValueBoundary",
+            "observables": [
+                "current_stage",
+                "simulated_action_allowed",
+                "sandbox_execution_allowed",
+                "real_execution_allowed",
+                "blocked_by",
+                "next_gate",
+            ],
+        },
+        "execution_boundary": {
+            "secrets_rule": "No secrets in chat, Git or value artifacts.",
+            "audit_log_required": True,
+            "kill_switch_required": True,
+            "human_review_required_before_real_execution": True,
+        },
+    }
+
+
 def _preset_summary_md(preset: dict[str, Any] | None) -> str:
     if not preset:
         return ""
@@ -459,7 +528,7 @@ def _build_assertions_py(slug: str, boundary: dict[str, Any] | None = None) -> s
             and BOUNDARY.get("trading_signal") is False
             and BOUNDARY.get("public_claim") is False
         ) else "FAIL",
-        "detail": "finance reference candidate carries score_min=0.55, 19/36, 0/108, iid/block5/block21 nulls and no trading signal",
+        "detail": "finance reference candidate carries score_min=0.55, 19/36, 0/108, iid/block5/block21 nulls and diagnostic-only trading boundary",
         "metric": BOUNDARY.get("score_min"),
     })
 '''
@@ -600,7 +669,7 @@ def _build_spec(request: dict[str, Any]) -> dict[str, Any]:
                 "claim": (
                     "Finance reference install requires matched_filter_score_at_candidate_split >= 0.55, "
                     "19/36 positives selected, 0/108 controls selected, exact nulls iid_shuffle, "
-                    "circular_block_5, circular_block_21, and trading_signal=false."
+                    "circular_block_5, circular_block_21, and diagnostic-only boundary before autonomy promotion."
                 ),
                 "intensita": 0.95,
                 "porta": "falsifier",
@@ -686,9 +755,9 @@ il tool puo' essere invocato dalla candidate dir generata:
 python3 <candidate_dir>/tools/exp_request_smoke.py --json
 ```
 
-Output atteso: JSON con `schema`, `verdict`, `baseline`, `null`, `boundary`,
-`public_claim=false` e `trading_signal=false`. Se il tool non e' eseguibile o
-non espone baseline/null, il candidato resta non installabile.
+Output atteso: JSON con `schema`, `verdict`, `baseline`, `null`, `boundary` e
+confine diagnostico. Se il tool non e' eseguibile o non espone baseline/null,
+il candidato resta non installabile.
 """
 
     about_it = f"""# {title}
@@ -741,8 +810,9 @@ promotion. The smoke tool only verifies executable structure.
 This candidate must preserve the exact reviewed finance boundary before it can
 be installed: {boundary_text}
 
-The boundary blocks premature transfer. It is not a trading signal, not a
-market forecast and not public evidence.
+The boundary blocks premature transfer. It is not public advice, not a market
+forecast and not real execution. Internal simulated action requires an
+autonomy-stage contract.
 """
     transduction_md += """
 
@@ -1011,6 +1081,7 @@ baseline/null and UI lens.
     }
 
     ui_language = _ui_language_contract(kind)
+    autonomous_value_contract = _autonomous_value_contract(slug, kind, intent)
     ui_contract = {
         "schema": "ui_contract.v1",
         "domain": slug,
@@ -1056,6 +1127,8 @@ baseline/null and UI lens.
             {"check": "runtime_awareness_visible", "expectation": "Trace and falsifier visible before promotion."},
         ],
     }
+    if autonomous_value_contract:
+        ui_contract["autonomous_value_contract"] = autonomous_value_contract
     ui_contract.update(ui_language)
 
     onboarding_contract = {

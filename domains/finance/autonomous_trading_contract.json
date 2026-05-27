@@ -1,0 +1,74 @@
+{
+  "schema": "dndlab.finance.autonomous_trading_contract.v1",
+  "domain": "finance",
+  "target": "autonomous_trading",
+  "intent": "Rendere il Finance Lab capace di produrre decisioni di trading autonome solo quando il valore e' misurato, ripetibile, auditabile e confinato dallo stadio operativo corretto.",
+  "principle": "Il trading autonomo e' il target. L'esecuzione reale non e' implicita: viene dopo paper/live-sim, sandbox broker, risk contract, audit log e revisione esplicita dell'operatore.",
+  "stages": [
+    {
+      "id": "diagnostic_only",
+      "label": "Diagnostica",
+      "allows": ["read_market_data", "run_nulls", "reject_or_watch_hypotheses", "write_value_artifacts"],
+      "blocks": ["paper_trade_decision", "broker_order", "real_capital_order", "public_advice"],
+      "promotion_gate": "Transfer/recurrence must produce a candidate that survives predeclared nulls, data cards, cost/slippage model and no REVIEW_REQUIRED rows."
+    },
+    {
+      "id": "paper_live_sim",
+      "label": "Paper/live simulation",
+      "allows": ["internal_buy_sell_hold_decisions", "simulated_position_ledger", "cost_slippage_accounting", "walk_forward_score"],
+      "blocks": ["broker_order", "real_capital_order", "public_advice"],
+      "promotion_gate": "Paper ledger must remain positive after costs across predeclared windows, with max drawdown and false-positive budget inside the risk contract."
+    },
+    {
+      "id": "broker_sandbox",
+      "label": "Broker sandbox",
+      "allows": ["sandbox_orders", "adapter_health_checks", "kill_switch_tests", "position_sizing_tests"],
+      "blocks": ["real_capital_order", "public_advice"],
+      "promotion_gate": "Broker adapter, secrets handling, order audit log, kill switch, max position, max loss and reconciliation must pass sandbox E2E."
+    },
+    {
+      "id": "real_capital_execution",
+      "label": "Capitale reale",
+      "allows": ["real_orders_with_operator_reviewed_contract"],
+      "blocks": ["unreviewed_order", "unbounded_position", "public_advice"],
+      "promotion_gate": "Requires explicit operator-reviewed execution contract, account setup, compliance boundary, risk limits, monitoring and rollback."
+    }
+  ],
+  "required_artifacts": [
+    "data/finance/diagnostics/finance_transfer_diagnostic_*.json",
+    "data/finance/diagnostics/finance_recurrence_diagnostic_*.json",
+    "data/finance/value/finance_operational_health_latest.json",
+    "data/finance/value/finance_autonomous_trading_contract_latest.json"
+  ],
+  "risk_contract_minimum": {
+    "required_before": "broker_sandbox",
+    "fields": [
+      "max_position_notional",
+      "max_daily_loss",
+      "max_drawdown",
+      "allowed_symbols",
+      "allowed_order_types",
+      "cost_slippage_model",
+      "kill_switch",
+      "audit_log_path",
+      "secrets_source"
+    ],
+    "secrets_rule": "Credentials live in environment or service secret store only; never in chat, Git or value artifacts."
+  },
+  "public_boundary": {
+    "public_advice": false,
+    "guaranteed_profit_claim": false,
+    "unreviewed_real_execution": false,
+    "note": "Internal paper/live-sim decisions may use buy/sell/hold language after gates. Public advice and real-capital execution remain separate reviewed contracts."
+  },
+  "metalab_transfer": {
+    "generic_name": "autonomous_value_contract",
+    "transfer_rule": "Any domain that wants to produce value independently must declare diagnostic, simulated action, sandbox execution and real execution stages before promotion.",
+    "domain_examples": {
+      "finance": "trading decisions and execution",
+      "bitcoin-regime": "paper policy decisions before external execution",
+      "ops": "automated operational action after sandbox",
+      "research": "autonomous experiment queue before publication"
+    }
+  }
+}

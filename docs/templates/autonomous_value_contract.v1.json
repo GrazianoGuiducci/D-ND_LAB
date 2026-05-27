@@ -1,0 +1,53 @@
+{
+  "schema": "dndlab.autonomous_value_contract.v1",
+  "domain": "<domain-slug>",
+  "target": "<autonomous value/action target>",
+  "intent": "Declare how this Lab can produce value independently without confusing diagnostics, simulated action, sandbox execution and real execution.",
+  "stages": [
+    {
+      "id": "diagnostic_only",
+      "allows": ["observe", "test", "reject_or_watch", "write_value_artifacts"],
+      "blocks": ["simulated_action", "external_execution", "real_world_execution"],
+      "promotion_gate": "Predeclared baseline/null/falsifier and data provenance pass."
+    },
+    {
+      "id": "simulated_action",
+      "allows": ["internal_decision", "simulated_ledger", "cost_or_failure_accounting"],
+      "blocks": ["external_execution", "real_world_execution"],
+      "promotion_gate": "Simulated ledger remains useful across recurrence/out-of-sample checks."
+    },
+    {
+      "id": "sandbox_execution",
+      "allows": ["sandbox_adapter_call", "adapter_health_check", "kill_switch_test"],
+      "blocks": ["real_world_execution"],
+      "promotion_gate": "Adapter, audit log, limits, rollback and reconciliation pass sandbox E2E."
+    },
+    {
+      "id": "real_world_execution",
+      "allows": ["reviewed_real_action"],
+      "blocks": ["unreviewed_action", "unbounded_action", "public_claim_without_contract"],
+      "promotion_gate": "Requires explicit operator-reviewed execution contract, risk/impact limits and monitoring."
+    }
+  ],
+  "required_artifacts": [
+    "data/<domain>/value/<domain>_operational_health_latest.json",
+    "data/<domain>/value/<domain>_autonomous_value_contract_latest.json"
+  ],
+  "execution_boundary": {
+    "secrets_rule": "No secrets in chat, Git or value artifacts.",
+    "audit_log_required": true,
+    "kill_switch_required": true,
+    "human_review_required_before_real_execution": true
+  },
+  "dashboard_readback": {
+    "module": "AutonomousValueBoundary",
+    "observables": [
+      "current_stage",
+      "simulated_action_allowed",
+      "sandbox_execution_allowed",
+      "real_execution_allowed",
+      "blocked_by",
+      "next_gate"
+    ]
+  }
+}

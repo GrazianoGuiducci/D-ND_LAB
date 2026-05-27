@@ -174,6 +174,12 @@ Il lab figlio acquisisce anche:
   da `/api/domains/<domain>/latest_value_artifacts`. Ogni Lab nuovo deve poter
   mostrare health/readback/diagnostic compatti prima di affidarsi alla prosa
   del report.
+- `autonomous_value_contract`: dentro `ui_contract.json` quando il Lab deve
+  produrre valore o azioni in modo indipendente. Dichiara gli stadi
+  `diagnostic_only`, `simulated_action`, `sandbox_execution`,
+  `real_world_execution`, il readback dashboard e i blocchi. Nel Finance Lab
+  questo diventa trading autonomo a stadi: diagnostica, paper/live-sim, broker
+  sandbox, capitale reale.
 - `onboarding_contract.json` opzionale ma raccomandato: contratto macchina
   per i canali informativi del Lab, basato su
   `docs/templates/onboarding_contract.v1.json`.
@@ -310,6 +316,9 @@ Il lab figlio acquisisce anche:
      `data_sources`, `selection_rule` e `anti_duplication_rule`;
    - `value_artifact_contract`: directory `data/<domain>/value/`, endpoint
      `latest_value_artifacts` e forma minima di card leggibile dalla dashboard;
+   - `autonomous_value_contract`: se l'intento parla di autonomia, trading,
+     azioni, automazione o lavoro prodotto indipendente, includi lo schema a
+     stadi e non saltare direttamente da diagnostica a esecuzione reale;
    - `common_modules`: moduli comuni usati;
    - `domain_modules`: moduli specifici con osservabili e baseline/null;
    - `admin_actions`: azioni consentite e confini;

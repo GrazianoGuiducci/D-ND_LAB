@@ -278,13 +278,42 @@ superficie `latest_value_artifacts` senza nuovo endpoint. Deve passare quando:
 
 - il transfer diagnostic reale piu' recente e' presente e ha data-card per le
   righe valutabili;
-- il confine resta `operational=false`, `public_claim=false`,
-  `trading_signal=false`;
+- il confine diagnostico resta `operational=false`, `public_claim=false`,
+  `trading_signal=false`, che oggi significa stadio `diagnostic_only`;
 - la precondizione `matched_filter_score_at_candidate_split >= 0.55` e'
   cristallizzata;
 - assertions finance sono 5/5 PASS;
 - il trajectory pending low-confidence viene trattato come warning, non come
   autorita' forte.
+
+### finance_autonomous_trading_contract
+
+Descrizione: legge gli artefatti finance correnti e dichiara lo stadio
+autonomo ammesso per il trading: `diagnostic_only`, `paper_live_sim`,
+`broker_sandbox` o `real_capital_execution`. Non fetch-a dati, non lancia cicli
+e non puo' piazzare ordini. Serve a trasformare il vecchio confine "non
+trading" in un confine di stadio.
+
+Comando:
+
+```bash
+python3 /opt/D-ND_LAB/domains/finance/tools/finance_autonomous_trading_contract.py --json
+python3 /opt/D-ND_LAB/domains/finance/tools/finance_autonomous_trading_contract.py --write --json
+```
+
+Trigger: invocalo dopo `finance_operational_health`, dopo nuovi transfer /
+recurrence diagnostic, prima di disegnare una ledger paper/live-sim e prima di
+qualunque idea di broker adapter.
+
+Output: JSON `dndlab.finance.autonomous_trading_contract.value.v1` con
+`current_stage`, `paper_live_sim_allowed`, `broker_sandbox_allowed`,
+`real_execution_allowed`, `blocked_by`, `next_gate` e card leggibili dalla
+dashboard in `data/finance/value/finance_autonomous_trading_contract_latest.json`.
+
+Regola: il trading autonomo e' il target. Paper/live-sim e' un oggetto interno
+legittimo quando i gate passano. Broker sandbox e capitale reale richiedono
+contratti separati, risk limits, audit log, kill switch e gestione segreti fuori
+da Git/chat.
 
 ### finance_transfer_diagnostic
 
@@ -426,7 +455,10 @@ Contratto operativo per il transfer reale:
   locale;
 - se la finestra corrente passa e le finestre adiacenti rifiutano, classifica
   `local_robust`, non `operational`;
-- nessun output finance e' trading signal, forecast, alpha, buy/sell o profit.
+- nessun output finance e' public advice, forecast pubblico, profit garantito
+  o ordine reale finche' `finance_autonomous_trading_contract` non apre lo
+  stadio corretto; buy/sell/hold interni sono ammessi solo come paper/live-sim
+  ledger dopo i gate.
 
 Artifact corrente del ramo 4A:
 
@@ -434,7 +466,8 @@ Artifact corrente del ramo 4A:
 data/finance/diagnostics/finance_recurrence_diagnostic_20260517_134619.json
 ```
 
-Esito: `current_iid_partial`, `public_claim=false`, `trading_signal=false`.
+Esito: `current_iid_partial`, `public_claim=false`, `trading_signal=false`;
+nel contratto autonomo questo resta `diagnostic_only`.
 La finestra corrente SPY passa iid/block5 ma collassa su block21; le tre
 finestre SPY precedenti rifiutano. Il ciclo successivo deve sospendere la
 promozione cluster/recurrence e decidere se cristallizzare un limite del

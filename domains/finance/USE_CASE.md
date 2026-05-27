@@ -2,27 +2,34 @@
 
 > Status: alpha contract, 2026-05-17.
 > Purpose: make the finance Lab usable as a pragmatic, self-evolving system
-> without turning it into trading advice or narrative prediction.
+> that can move toward autonomous trading through explicit stage contracts.
 
 ## Intent
 
-The Finance Lab does not predict prices and does not produce buy/sell signals.
+The Finance Lab target is autonomous trading capability, not public financial
+advice. Internal buy/sell/hold decisions are admissible only inside the
+paper/live-sim stage after the autonomy contract says the gates are open.
+Broker sandbox and real-capital execution require separate reviewed contracts.
 
 Its intent is:
 
 ```text
-detect when a market-regime hypothesis fails before it becomes an exposure
-decision.
+detect when a market-regime hypothesis fails, and promote only the candidates
+that can survive into a measured simulated decision process.
 ```
 
-The useful output is not "the market will go up/down". It is a falsifiable
-decision constraint:
+The useful output starts as a falsifiable decision constraint:
 
 - this regime hypothesis is not admissible;
 - this detector has no recoverable power yet;
 - this baseline/null defeated the claim;
 - this precondition must be measured before another cycle;
-- this candidate survived enough controls to become a research object.
+- this candidate survived enough controls to become a paper/live-sim object.
+
+When the staged contract permits it, the output can become an internal
+simulated trading decision with ledger, costs, slippage and risk limits. It is
+not public advice and it is not a real order until the broker/risk contract is
+explicitly in force.
 
 ## Practical User Value
 
@@ -61,12 +68,14 @@ portfolio, research or product decisions.
    Current detector: `tools/exp_regime_shift.py`.
    Reference audit before cycle: `tools/finance_reference_audit.py`.
 
-5. Read the verdict as a constraint, not as a trade.
+5. Read the verdict as a stage-specific object.
 
    - `NO_DELTA`: do not treat the hypothesis as regime evidence.
    - `DND_DELTA`: candidate structural delta; replicate before promotion.
    - `REVIEW_REQUIRED`: data, null or precondition missing.
    - `NON_ADMISSIBLE`: the claim must not be promoted.
+   - `PAPER_READY`: internal simulated decision allowed by contract.
+   - `SANDBOX_READY`: broker sandbox adapter may be tested, not real capital.
 
 6. Let the failure update the next question.
 
@@ -158,10 +167,23 @@ docs/FINANCE_REFERENCE_E2E_20260517.md
 
 The first value-facing real-market E2E ended as a useful constraint:
 `current_iid_partial`, `operational=false`, `public_claim=false`,
-`trading_signal=false`. The same SPY current-window transfer/recurrence premise
-is exhausted. A future cycle may not relaunch it silently; it must either
-declare a materially new object/mechanism and falsifier before testing, or use
-this reference as the comparison target for the meta-lab.
+`trading_signal=false`. In the new staged language this means
+`diagnostic_only`: no paper/live-sim, no broker sandbox and no real execution
+are open yet. The same SPY current-window transfer/recurrence premise is
+exhausted. A future cycle may not relaunch it silently; it must either declare
+a materially new object/mechanism and falsifier before testing, or use this
+reference as the comparison target for the meta-lab.
+
+Current autonomy contract:
+
+```bash
+python3 domains/finance/tools/finance_autonomous_trading_contract.py --write --json
+```
+
+This writes `data/finance/value/finance_autonomous_trading_contract_latest.json`
+for dashboard readback. It declares the target as autonomous trading and the
+current stage from live artifacts: diagnostic, paper/live-sim, broker sandbox or
+real-capital execution.
 
 ## UI Implications
 
@@ -170,7 +192,8 @@ The finance dashboard should make these surfaces visible before any narrative:
 - Regime Gate: current verdict and admissibility;
 - Baseline / Null: what defeated or supported the claim;
 - Data-card: source, window and leakage boundary;
-- Non ammissibile: what the user must not infer;
+- Autonomy Boundary: current stage, next gate and blocked execution surfaces;
+- Non ammissibile: what the user must not infer or execute yet;
 - Promotion Boundary: score threshold, admitted/rejected counts and below-gate
   survivors;
 - Cycle trace: how the Lab reached the result;

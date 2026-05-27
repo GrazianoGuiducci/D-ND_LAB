@@ -204,7 +204,11 @@ def build_health(*, run_assertions: bool = True) -> dict[str, Any]:
             "trajectory_confidence": trajectory.get("confidence"),
             "assertions_checked": run_assertions,
         },
-        "boundary": "Operational health only: no market claim, no trading signal, no advice, no real order execution, no cognitive cycle.",
+        "boundary": (
+            "Operational health only: diagnostic-stage readback, no public advice, "
+            "no real order execution and no cognitive cycle. Internal trading "
+            "decisions require the autonomous trading stage contract."
+        ),
     }
 
 
@@ -251,10 +255,10 @@ def build_value_artifact(payload: dict[str, Any]) -> dict[str, Any]:
         "verdict": f"FINANCE_HEALTH_{status.upper()}",
         "evidence": f"{checks} checks; {failure_count} failures; {warning_count} warnings; latest transfer label {latest_label}.",
         "baseline": "Required files, MML movements, precondition contract, latest diagnostics, recurrence diagnostic and assertions are checked before a new cycle.",
-        "null": "A pass does not promote a finance claim: it only says the operational surface is coherent enough to continue.",
+        "null": "A pass does not promote a trade: it only says the operational surface is coherent enough to continue.",
         "falsifier": "Any missing required file, disabled required movement, broken no-advice boundary, invalid latest diagnostic or assertion failure returns fail.",
         "boundary": payload.get("boundary"),
-        "next_test": "Run a supervised finance transfer diagnostic only if the next object/mechanism is materially new and predeclared.",
+        "next_test": "Run a supervised finance transfer diagnostic or autonomy-stage readback only if the next object/mechanism is materially new and predeclared.",
     }
     return {
         "schema": "dndlab.finance.operational_health.value.v1",

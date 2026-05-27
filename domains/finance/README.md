@@ -42,7 +42,10 @@ python3 domains/finance/assertions.py
 # 5. Operational health — readiness del fronte finance
 python3 domains/finance/tools/finance_operational_health.py --json
 
-# 6. Transfer diagnostic con design pre-dichiarato
+# 6. Autonomous trading contract — stadio, blocchi e prossimo gate
+python3 domains/finance/tools/finance_autonomous_trading_contract.py --json
+
+# 7. Transfer diagnostic con design pre-dichiarato
 python3 domains/finance/tools/finance_transfer_diagnostic.py \
   --object "non-SPY control basket freshness" \
   --mechanism "test whether no-transfer constraint survives without SPY" \
@@ -50,10 +53,10 @@ python3 domains/finance/tools/finance_transfer_diagnostic.py \
   --stop-rule "do not promote; inspect classification only" \
   --json
 
-# 7. Falsifier meta — template valido?
+# 8. Falsifier meta — template valido?
 python3 domains/meta-lab/tools/lab_template_validator.py --strict-m7 domains/finance
 
-# 8. Cycle agent autonomo (~5-15 min)
+# 9. Cycle agent autonomo (~5-15 min)
 bash tools/dnd-cycle.sh finance
 ```
 
@@ -73,6 +76,8 @@ domains/finance/
 ├── mml.json                    Metamasterlab — 16 skill su 8 layer
 ├── transduction.md             M7/M8 — passaggio sorgente -> finance + skill_intent_map
 ├── ui_contract.json            M7 — dashboard cognitiva domain-native
+├── autonomous_trading_contract.json
+│                               staged autonomy / execution boundary
 └── tools/
     ├── finance_reference_audit.py
     │                           pre-cycle audit reference readiness
@@ -83,6 +88,8 @@ domains/finance/
     ├── finance_operational_health.py
     │                           guard read-only per transfer diagnostic, boundary,
     │                           precondition, assertions e trajectory
+    ├── finance_autonomous_trading_contract.py
+    │                           value artifact per stadio trading autonomo
     └── finance_diagnostic_report.py
                                 report interno value-facing, no claim operativo
 ```
@@ -157,16 +164,22 @@ Health guard operativo:
 ```bash
 python3 domains/finance/tools/finance_operational_health.py --json
 python3 domains/finance/tools/finance_operational_health.py --write --json
+python3 domains/finance/tools/finance_autonomous_trading_contract.py --write --json
 ```
 
 Il guard non lancia ciclo e non produce claim di mercato. Controlla che il
 transfer diagnostic reale piu' recente sia leggibile, con data-card e confine
-`operational=false/public_claim=false/trading_signal=false`; verifica la
+diagnostico `operational=false/public_claim=false/trading_signal=false`; verifica la
 precondizione `score_min=0.55`, assertions 5/5, MML/config e trajectory. Un
 `no_transfer_delta` resta una constraint negativa utile, non un errore.
 Con `--write` salva la health completa in `data/finance/health/` e una card
 compatta in `data/finance/value/finance_operational_health_latest.json`, cosi'
 la dashboard puo' leggerla dal canale value gia' esistente.
+
+`finance_autonomous_trading_contract.py` rilegge gli stessi fronti e dichiara
+lo stadio autonomo ammesso. Il target e' trading autonomo, ma oggi la decisione
+puo' restare `diagnostic_only` finche' mancano candidato robusto, ledger
+paper/live-sim, cost/slippage, risk contract e adapter sandbox.
 
 ## Architettura cognitiva (MML)
 

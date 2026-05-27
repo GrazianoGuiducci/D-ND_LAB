@@ -1,7 +1,7 @@
 {
   "schema": "ui_contract.v1",
   "domain": "finance",
-  "intent_movement": "Rendere visibile quando un'ipotesi operativa smette di reggere rispetto a baseline/null, prima che diventi decisione di esposizione.",
+  "intent_movement": "Rendere visibile quando un'ipotesi operativa puo' evolvere da diagnostica a trading autonomo misurato, o deve restare bloccata da baseline/null/risk contract.",
   "frame": {
     "left": [
       {
@@ -34,7 +34,11 @@
       },
       {
         "module": "DecisionBounds",
-        "purpose": "Dichiara cosa non e' ammissibile con l'evidenza corrente."
+        "purpose": "Dichiara cosa non e' ammissibile con l'evidenza corrente e quale stadio autonomo resta chiuso."
+      },
+      {
+        "module": "AutonomousTradingBoundary",
+        "purpose": "Mostra stadio corrente, paper/live-sim, sandbox broker, esecuzione reale, blocchi e prossimo gate."
       },
       {
         "module": "RuntimeDynamics",
@@ -78,7 +82,7 @@
   },
   "nav": {
     "it": {
-      "campo": "Regime, evidenza recente e decisione non-operativa.",
+      "campo": "Regime, evidenza recente, stadio autonomo e confine esecutivo.",
       "grafo": "Relazioni tra ipotesi, baseline, null e vincoli.",
       "bicono": "Poli delle ipotesi estratti dai report.",
       "agente": "Evidenza, verdict, veto e trace.",
@@ -86,7 +90,7 @@
       "prodotti": "Scoperte, candidate e verifiche mature."
     },
     "en": {
-      "campo": "Regime, recent evidence and non-operational decision.",
+      "campo": "Regime, recent evidence, autonomy stage and execution boundary.",
       "grafo": "Relations across hypotheses, baselines, nulls and constraints.",
       "bicono": "Hypothesis poles extracted from reports.",
       "agente": "Evidence, verdicts, vetoes and traces.",
@@ -157,8 +161,25 @@
         "below_gate_survivors"
       ],
       "baseline_or_null": ["double_replication", "slippage_baseline"],
-      "shows": "Cosa non e' ammesso fare con l'evidenza corrente.",
-      "blocks": "Label buy/sell/forecast/profit/alpha prima di prodotto maturo e revisione."
+      "shows": "Cosa non e' ammesso fare con l'evidenza corrente e quale stadio resta chiuso.",
+      "blocks": "Public advice, real orders or profit claims before maturity, risk contract and review."
+    },
+    {
+      "module": "AutonomousTradingBoundary",
+      "placement": "right",
+      "observables": [
+        "current_stage",
+        "paper_live_sim_allowed",
+        "broker_sandbox_allowed",
+        "real_execution_allowed",
+        "blocked_by",
+        "next_gate",
+        "risk_contract_minimum",
+        "kill_switch"
+      ],
+      "baseline_or_null": ["autonomous_trading_contract", "paper_ledger", "sandbox_e2e"],
+      "shows": "Se il Finance Lab e' solo diagnostico, pronto per paper/live-sim, pronto per sandbox o autorizzato da contratto reale.",
+      "blocks": "Ordini reali impliciti, broker adapter senza sandbox, segreti in Git/chat e trading non auditato."
     },
     {
       "module": "PromotionBoundary",
@@ -195,16 +216,26 @@
     {
       "action": "publish_signal",
       "allowed": false,
-      "boundary": "Finance Lab non produce segnali operativi di trading."
+      "boundary": "Vietato pubblicare advice o claim buy/sell pubblici. I segnali interni possono vivere solo come paper/live-sim quando il contratto autonomo apre lo stadio."
+    },
+    {
+      "action": "run_paper_live_sim",
+      "allowed": false,
+      "boundary": "Abilitabile solo se finance_autonomous_trading_contract.summary.paper_live_sim_allowed=true; scrive ledger simulata, non broker orders."
+    },
+    {
+      "action": "run_broker_sandbox",
+      "allowed": false,
+      "boundary": "Richiede adapter sandbox, risk contract, audit log, kill switch e nessun segreto in Git/chat."
     }
   ],
   "forbidden_labels": [
-    "buy",
-    "sell",
-    "forecast",
-    "profit",
-    "alpha signal",
-    "trading signal"
+    "public buy/sell advice",
+    "guaranteed profit",
+    "unreviewed real order",
+    "broker order without sandbox contract",
+    "secret in Git/chat",
+    "alpha claim without ledger"
   ],
   "e2e": [
     {
@@ -222,6 +253,10 @@
     {
       "check": "promotion_boundary_visible",
       "expectation": "La vista finance mostra la soglia 0.55 come promotion threshold provvisoria, distinguendo admitted/rejected e rendendo visibili i survivor sotto soglia."
+    },
+    {
+      "check": "autonomous_trading_boundary_visible",
+      "expectation": "La vista finance mostra current_stage, paper/live-sim, sandbox, real execution, blocked_by e next_gate dal value artifact autonomo."
     },
     {
       "check": "admin_run_bridge",

@@ -116,6 +116,21 @@
     },
     "reason": "New Labs should expose small machine-readable readback artifacts before relying on report prose."
   },
+  "autonomous_value_contract": {
+    "required_when": "The Lab is expected to produce value or actions independently.",
+    "template": "docs/templates/autonomous_value_contract.v1.json",
+    "stages": ["diagnostic_only", "simulated_action", "sandbox_execution", "real_world_execution"],
+    "dashboard_module": "AutonomousValueBoundary",
+    "minimum_readback": {
+      "current_stage": "<diagnostic_only|simulated_action|sandbox_execution|real_world_execution>",
+      "simulated_action_allowed": false,
+      "sandbox_execution_allowed": false,
+      "real_execution_allowed": false,
+      "blocked_by": [],
+      "next_gate": "<next measurable promotion gate>"
+    },
+    "reason": "A value-producing Lab must expose its autonomy stage before an operator or another Lab treats its output as work product."
+  },
   "tooltips": {
     "it": {
       "<sidebar-key>": {
