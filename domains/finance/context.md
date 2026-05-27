@@ -453,6 +453,23 @@ SLV,USO,UUP,FXE,FXY,BTC-USD,ETH-USD`) e finestre `45,90,180` giorni. Il tool
 non produce trading signal: seleziona solo dove spendere validazione
 cross-provider/recurrence.
 
+### finance_recurrence_validation_cycle
+
+Descrizione: ciclo che prende i candidati selezionati dallo scout e li testa su
+finestre rolling prima di qualunque paper-ledger design.
+
+Comando:
+
+```bash
+python3 /opt/D-ND_LAB/domains/finance/tools/finance_recurrence_validation_cycle.py --write --json
+```
+
+Default: usa `finance_window_universe_scout_latest.json`, massimo 4 candidati,
+5 finestre rolling con step 45 giorni. Classifica `recurrence_candidate_found`,
+`local_candidate_not_recurring`, `recurrence_review_required` o
+`no_recurrence_candidate`. Anche se trova ricorrenza, non apre trading: abilita
+solo il prossimo design di ledger paper inattiva.
+
 ### finance_transfer_diagnostic
 
 Descrizione: genera un artefatto macchina per il transfer real-market su una

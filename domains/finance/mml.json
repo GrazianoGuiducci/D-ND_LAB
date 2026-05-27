@@ -318,6 +318,12 @@
       "path": "tools/finance_window_universe_scout.py",
       "description": "Scans low-cost symbol/window pairs before spending cross-provider validation budget.",
       "executable_inline": true
+    },
+    {
+      "name": "finance_recurrence_validation_cycle",
+      "path": "tools/finance_recurrence_validation_cycle.py",
+      "description": "Validates scout-nominated candidates across rolling windows before paper-ledger design.",
+      "executable_inline": true
     }
   ],
   "external_apis": [

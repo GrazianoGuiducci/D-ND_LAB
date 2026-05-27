@@ -75,18 +75,21 @@ def build_opportunities() -> dict[str, Any]:
     recurrence_path = latest("finance_recurrence_diagnostic_*.json", DIAGNOSTIC_DIR)
     crypto_path = VALUE_DIR / "finance_crypto_candidate_diagnostic_latest.json"
     window_scout_path = VALUE_DIR / "finance_window_universe_scout_latest.json"
+    recurrence_validation_path = VALUE_DIR / "finance_recurrence_validation_cycle_latest.json"
     autonomy = load_json(autonomy_path) or {}
     health = load_json(health_path) or {}
     transfer = load_json(transfer_path) or {}
     recurrence = load_json(recurrence_path) or {}
     crypto = load_json(crypto_path) or {}
     window_scout = load_json(window_scout_path) or {}
+    recurrence_validation = load_json(recurrence_validation_path) or {}
 
     summary = autonomy.get("summary") if isinstance(autonomy.get("summary"), dict) else {}
     transfer_class = transfer.get("classification") if isinstance(transfer.get("classification"), dict) else {}
     recurrence_class = recurrence.get("classification") if isinstance(recurrence.get("classification"), dict) else {}
     crypto_summary = crypto.get("summary") if isinstance(crypto.get("summary"), dict) else {}
     window_scout_summary = window_scout.get("summary") if isinstance(window_scout.get("summary"), dict) else {}
+    recurrence_validation_summary = recurrence_validation.get("summary") if isinstance(recurrence_validation.get("summary"), dict) else {}
 
     stage = summary.get("current_stage") or "unknown"
     latest_transfer_label = summary.get("latest_transfer_label") or transfer_class.get("label") or "unknown"
@@ -184,6 +187,8 @@ def build_opportunities() -> dict[str, Any]:
         "latest_transfer_label": latest_transfer_label,
         "recurrence_label": recurrence_label,
         "crypto_label": crypto_label,
+        "recurrence_validation_label": recurrence_validation_summary.get("label") or "unknown",
+        "recurrence_validation_decision": recurrence_validation_summary.get("decision") or "unknown",
         "crypto_robust_all_null_symbols": crypto_robust,
         "robust_all_null_symbols": robust_symbols,
         "selected_opportunity": selected["id"],
@@ -211,8 +216,10 @@ def build_opportunities() -> dict[str, Any]:
             "recurrence_diagnostic": rel(recurrence_path),
             "crypto_candidate_diagnostic": rel(crypto_path if crypto_path.exists() else None),
             "window_universe_scout": rel(window_scout_path if window_scout_path.exists() else None),
+            "recurrence_validation_cycle": rel(recurrence_validation_path if recurrence_validation_path.exists() else None),
         },
         "latest_window_scout": window_scout_summary,
+        "latest_recurrence_validation": recurrence_validation_summary,
         "opportunities": ranked,
         "selected": selected,
         "cycle_continuum": {
