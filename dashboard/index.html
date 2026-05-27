@@ -1658,6 +1658,7 @@
                 <span class="text-sm text-slate-300 truncate" x-text="d.title || d.id"></span>
                 <span class="text-[10px] font-mono" :class="domainStateTextClass(d)" x-text="domainStateLabel(d)"></span>
               </div>
+              <div class="mt-1 text-xs text-slate-300 line-clamp-2" x-text="domainKeepReason(d)"></div>
               <div class="mt-1 text-[11px] text-slate-500 line-clamp-2" x-text="domainStateDetail(d)"></div>
             </button>
           </template>
@@ -7276,6 +7277,30 @@
         return this.lang === 'en'
           ? (op.detail_en || domain?.error || '')
           : (op.detail_it || domain?.error || '');
+      },
+
+      domainKeepReason(domain) {
+        const id = domain?.id || '';
+        const copy = {
+          'bio-rhythms': {
+            it: 'Serve a testare il metodo D-ND su biosegnali cardiaci/circadiani; resta solo se ripariamo l acquisizione PhysioNet.',
+            en: 'Tests the D-ND method on cardiac/circadian biosignals; keep only if PhysioNet acquisition is repaired.',
+          },
+          editorial: {
+            it: 'Distingue fonte, eco e materiale pubblicabile; utile se diventa filtro editoriale verificabile.',
+            en: 'Separates source, echo and publishable material; useful if it becomes a verifiable editorial filter.',
+          },
+          'meta-lab': {
+            it: 'Genera nuovi Lab e template installabili; va riparato prima di rigenerare altri domini.',
+            en: 'Generates new Labs and installable templates; must be repaired before regenerating domains.',
+          },
+          'ops-decisions': {
+            it: 'Governance dei Lab: controlla intenti, incidenti e deriva; da rifare se resta solo tautologico.',
+            en: 'Lab governance: checks intent, incidents and drift; regenerate if it remains only tautological.',
+          },
+        }[id];
+        if (copy) return this.lang === 'en' ? copy.en : copy.it;
+        return this.localizedDomainDescription(domain) || (this.lang === 'en' ? 'No retained purpose declared.' : 'Nessuna funzione residua dichiarata.');
       },
 
       domainCycleLabel(domain) {
