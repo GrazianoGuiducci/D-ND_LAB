@@ -1644,14 +1644,14 @@
       </template>
     </div>
     <template x-if="systemDomains().length">
-      <div class="mt-6 border border-slate-800 rounded-lg p-4 bg-slate-950/45">
-        <div class="flex items-baseline justify-between gap-3">
+      <section class="mt-7">
+        <div class="flex flex-wrap items-baseline justify-between gap-2 border-t border-slate-800 pt-4">
           <h3 class="text-xs uppercase tracking-wider text-slate-400" x-text="lang === 'en' ? 'System Labs' : 'Lab di sistema'"></h3>
-          <span class="text-[11px] text-slate-500" x-text="lang === 'en' ? 'working tools for generating, governing or maintaining Labs' : 'strumenti attivi per generare, governare o mantenere i Lab'"></span>
+          <span class="text-[11px] text-slate-500" x-text="lang === 'en' ? 'tools that generate or maintain other Labs' : 'strumenti che generano o mantengono altri Lab'"></span>
         </div>
-        <div class="mt-3 grid md:grid-cols-2 gap-2">
+        <div class="mt-3 grid md:grid-cols-2 lg:grid-cols-3 gap-3">
           <template x-for="d in systemDomains()" :key="d.id">
-            <button type="button" class="text-left rounded border border-slate-800 bg-black/20 px-3 py-2 hover:border-slate-600 transition"
+            <button type="button" class="text-left rounded border border-cyan-700/60 bg-slate-950/70 px-4 py-3 hover:border-cyan-400 transition"
                     :class="d.operational?.can_enter ? 'cursor-pointer' : 'cursor-not-allowed opacity-70'"
                     @click="d.operational?.can_enter && enterDomain(d.id)">
               <div class="flex items-center justify-between gap-3">
@@ -1663,17 +1663,17 @@
             </button>
           </template>
         </div>
-      </div>
+      </section>
     </template>
     <template x-if="draftDomains().length">
-      <div class="mt-6 border border-slate-800 rounded-lg p-4 bg-slate-950/45">
-        <div class="flex items-baseline justify-between gap-3">
+      <section class="mt-7">
+        <div class="flex flex-wrap items-baseline justify-between gap-2 border-t border-slate-800 pt-4">
           <h3 class="text-xs uppercase tracking-wider text-slate-400" x-text="lang === 'en' ? 'Drafts / repair' : 'Bozze / da sistemare'"></h3>
-          <span class="text-[11px] text-slate-500" x-text="lang === 'en' ? 'kept apart until they are useful enough to show as active Labs' : 'separati finche non sono abbastanza utili da mostrare come Lab attivi'"></span>
+          <span class="text-[11px] text-slate-500" x-text="lang === 'en' ? 'not shown as active until they become useful' : 'non mostrati come attivi finche non diventano utili'"></span>
         </div>
-        <div class="mt-3 grid md:grid-cols-2 gap-2">
+        <div class="mt-3 grid md:grid-cols-2 lg:grid-cols-3 gap-3">
           <template x-for="d in draftDomains()" :key="d.id">
-            <button type="button" class="text-left rounded border border-slate-800 bg-black/20 px-3 py-2 hover:border-slate-600 transition"
+            <button type="button" class="text-left rounded border border-amber-700/50 bg-slate-950/55 px-4 py-3 hover:border-amber-400 transition"
                     :class="d.operational?.can_enter ? 'cursor-pointer' : 'cursor-not-allowed opacity-70'"
                     @click="d.operational?.can_enter && enterDomain(d.id)">
               <div class="flex items-center justify-between gap-3">
@@ -1685,9 +1685,9 @@
             </button>
           </template>
         </div>
-      </div>
+      </section>
     </template>
-    <p class="text-xs text-slate-400 italic mt-3" x-text="lang === 'en' ? 'The page separates active Labs, system tools and drafts. Nothing is removed from here automatically.' : 'La pagina separa Lab attivi, strumenti di sistema e bozze. Qui non viene cancellato nulla automaticamente.'"></p>
+    <p class="text-xs text-slate-500 italic mt-4" x-text="lang === 'en' ? 'Nothing is removed automatically from this page.' : 'Da questa pagina non viene rimosso nulla automaticamente.'"></p>
   </main>
 
   <!-- DOMAIN: 3-col layout full-page (tab bar ora inline nel header sopra) -->
