@@ -324,6 +324,12 @@
       "path": "tools/finance_recurrence_validation_cycle.py",
       "description": "Validates scout-nominated candidates across rolling windows before paper-ledger design.",
       "executable_inline": true
+    },
+    {
+      "name": "finance_profit_readiness",
+      "path": "tools/finance_profit_readiness.py",
+      "description": "Aggregates Finance artifacts into a plain profit-readiness state, blocking reasons and next autonomous move.",
+      "executable_inline": true
     }
   ],
   "external_apis": [

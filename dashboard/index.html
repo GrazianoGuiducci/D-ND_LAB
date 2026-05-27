@@ -1889,6 +1889,39 @@
                   <span class="text-[10px] font-mono px-2 py-1 rounded border border-cyan-900/70 text-cyan-200"
                         x-text="financeWindowCounts().label"></span>
                 </div>
+                <template x-if="financeProfitReadiness().available">
+                  <div class="mb-4 border rounded-md p-3 bg-slate-950/50"
+                       :class="financeProfitReadiness().borderClass">
+                    <div class="flex items-start justify-between gap-3 flex-wrap">
+                      <div>
+                        <div class="text-[10px] uppercase tracking-wider text-cyan-300" x-text="lang === 'en' ? 'Operational state' : 'Stato operativo'"></div>
+                        <h4 class="text-base font-semibold text-slate-100 mt-1" x-text="lang === 'en' ? 'Finance profit readiness' : 'Prontezza profitto Finance'"></h4>
+                        <p class="text-sm text-slate-200 mt-2 max-w-3xl" x-text="financeProfitReadiness().headline"></p>
+                      </div>
+                      <button @click="selectFinanceProfitReadiness()"
+                              class="text-[10px] font-mono px-2 py-1 rounded border hover:border-cyan-500 transition"
+                              :class="financeProfitReadiness().badgeClass"
+                              x-text="financeProfitReadiness().badge"></button>
+                    </div>
+                    <div class="grid md:grid-cols-3 gap-2 mt-3">
+                      <button @click="selectFinanceProfitReadiness()"
+                              class="text-left border border-slate-800 rounded p-3 bg-slate-950/45 hover:border-cyan-700 transition">
+                        <div class="text-[10px] uppercase tracking-wider text-slate-400" x-text="lang === 'en' ? 'Candidates' : 'Candidati'"></div>
+                        <div class="text-sm text-slate-100 mt-1" x-text="financeProfitReadiness().candidates"></div>
+                      </button>
+                      <button @click="selectFinanceProfitReadiness()"
+                              class="text-left border border-amber-900/50 rounded p-3 bg-amber-950/10 hover:border-amber-600 transition">
+                        <div class="text-[10px] uppercase tracking-wider text-slate-400" x-text="lang === 'en' ? 'Main block' : 'Blocco principale'"></div>
+                        <div class="text-sm text-amber-200 mt-1" x-text="financeProfitReadiness().block"></div>
+                      </button>
+                      <button @click="selectFinanceProfitReadiness()"
+                              class="text-left border border-slate-800 rounded p-3 bg-slate-950/45 hover:border-cyan-700 transition">
+                        <div class="text-[10px] uppercase tracking-wider text-slate-400" x-text="lang === 'en' ? 'Next move' : 'Prossima mossa'"></div>
+                        <div class="text-sm text-slate-100 mt-1" x-text="financeProfitReadiness().next"></div>
+                      </button>
+                    </div>
+                  </div>
+                </template>
                 <template x-if="financePipelineReadback().available">
                   <div class="mb-4 border border-slate-800 rounded-md p-3 bg-slate-950/40">
                     <div class="flex items-start justify-between gap-3 flex-wrap mb-3">
@@ -6086,6 +6119,7 @@
           'dndlab.finance.candidate_discovery_cycle.value.v1': 'Finance candidate discovery',
           'dndlab.finance.recurrence_validation_cycle.value.v1': 'Finance recurrence validation',
           'dndlab.finance.autonomous_trading_contract.value.v1': 'Finance autonomy contract',
+          'dndlab.finance.profit_readiness.value.v1': 'Finance profit readiness',
           'dndlab.finance.autonomy_opportunity_scout.value.v1': 'Finance next inquiry',
           'dndlab.finance.data_intake_audit.value.v1': 'Finance data intake',
           'dndlab.finance.provider_crosscheck.value.v1': 'Finance provider cross-check',
@@ -6135,8 +6169,13 @@
         return this.valueArtifactBySchema(schema);
       },
 
+      financeArtifactPayload(schema) {
+        const artifact = this.financeValueArtifact(schema);
+        return artifact?.payload || artifact || {};
+      },
+
       financeArtifactSummary(schema) {
-        return this.financeValueArtifact(schema)?.summary || {};
+        return this.financeArtifactPayload(schema)?.summary || {};
       },
 
       financeListText(items, fallback) {
@@ -6144,19 +6183,72 @@
         return fallback;
       },
 
+      financeProfitReadiness() {
+        const isEn = this.lang === 'en';
+        const payload = this.financeArtifactPayload('dndlab.finance.profit_readiness.value.v1');
+        const summary = payload.summary || {};
+        const blocks = Array.isArray(payload.blocks) ? payload.blocks : [];
+        const candidates = Array.isArray(summary.candidates) ? summary.candidates : [];
+        const status = summary.status || 'missing';
+        const ready = summary.can_start_paper === true || summary.can_start_sandbox === true || summary.can_trade_real === true;
+        const firstBlock = blocks[0] || {};
+        const blockText = firstBlock[isEn ? 'label_en' : 'label_it']
+          || (isEn ? 'No explicit block available' : 'Nessun blocco esplicito disponibile');
+        const next = summary[isEn ? 'next_action_plain_en' : 'next_action_plain_it'] || summary.next_action || 'n/a';
+        return {
+          available: !!Object.keys(summary).length,
+          headline: summary[isEn ? 'plain_status_en' : 'plain_status_it'] || (isEn ? 'Profit readiness unavailable.' : 'Prontezza profitto non disponibile.'),
+          badge: ready ? (isEn ? 'PAPER READY' : 'PAPER PRONTO') : (isEn ? 'NOT READY' : 'NON PRONTO'),
+          badgeClass: ready ? 'border-emerald-800 text-emerald-200' : 'border-amber-800 text-amber-200',
+          borderClass: ready ? 'border-emerald-900/60' : 'border-amber-900/60',
+          candidates: candidates.length ? `${candidates.join(', ')}${summary.recurring_symbols?.length ? '' : (isEn ? ' local' : ' locali')}` : (isEn ? 'none' : 'nessuno'),
+          block: blockText,
+          next,
+          status,
+          stage: summary.stage || 'n/a',
+          evidence: `status=${status}; stage=${summary.stage || 'n/a'}; recurrence=${summary.recurrence_label || 'n/a'}; provider=${summary.provider_status || 'n/a'}; data=${summary.data_status || 'n/a'}`,
+          boundary: isEn
+            ? `paper=${!!summary.can_start_paper}; sandbox=${!!summary.can_start_sandbox}; real=${!!summary.can_trade_real}`
+            : `paper=${!!summary.can_start_paper}; sandbox=${!!summary.can_start_sandbox}; reale=${!!summary.can_trade_real}`,
+          blocks,
+        };
+      },
+
+      selectFinanceProfitReadiness() {
+        const ready = this.financeProfitReadiness();
+        const blockLines = ready.blocks
+          .slice(0, 4)
+          .map((b) => `- ${b[this.lang === 'en' ? 'label_en' : 'label_it'] || b.id}: ${b[this.lang === 'en' ? 'detail_en' : 'detail_it'] || ''}`)
+          .join('\n');
+        this.selectedNode = null;
+        this.selectedScopertaSsp = null;
+        this.selectedProdottoSsp = null;
+        this.selectedCampoLens = {
+          kind: 'finance',
+          title: this.lang === 'en' ? 'Finance profit readiness' : 'Prontezza profitto Finance',
+          body: ready.headline,
+          evidence: `${ready.evidence}${blockLines ? `\n${blockLines}` : ''}`,
+          boundary: ready.boundary,
+        };
+      },
+
       financePipelineReadback() {
         const isEn = this.lang === 'en';
+        const readiness = this.financeProfitReadiness();
         const recurrence = this.financeArtifactSummary('dndlab.finance.recurrence_validation_cycle.value.v1');
         const autonomy = this.financeArtifactSummary('dndlab.finance.autonomous_trading_contract.value.v1');
         const scout = this.financeArtifactSummary('dndlab.finance.window_universe_scout.value.v1');
         const candidate = this.financeArtifactSummary('dndlab.finance.candidate_discovery_cycle.value.v1');
-        const available = !!(Object.keys(recurrence).length || Object.keys(autonomy).length || Object.keys(scout).length || Object.keys(candidate).length);
+        const available = readiness.available || !!(Object.keys(recurrence).length || Object.keys(autonomy).length || Object.keys(scout).length || Object.keys(candidate).length);
         const label = recurrence.label || 'unknown';
         const stage = autonomy.current_stage || 'unknown';
         const paper = autonomy.paper_live_sim_allowed === true || recurrence.paper_live_sim_allowed === true;
         let headline;
         let next;
-        if (label === 'local_candidate_not_recurring') {
+        if (readiness.available) {
+          headline = readiness.headline;
+          next = readiness.next;
+        } else if (label === 'local_candidate_not_recurring') {
           headline = isEn
             ? 'Local candidates found, but recurrence failed.'
             : 'Candidati locali trovati, ma la ricorrenza non regge.';
@@ -6195,7 +6287,12 @@
         const candidate = this.financeArtifactSummary('dndlab.finance.candidate_discovery_cycle.value.v1');
         const recurrence = this.financeArtifactSummary('dndlab.finance.recurrence_validation_cycle.value.v1');
         const autonomy = this.financeArtifactSummary('dndlab.finance.autonomous_trading_contract.value.v1');
-        const selected = scout.selected_for_crosscheck || [];
+        const selected = Array.isArray(scout.selected_for_crosscheck) ? scout.selected_for_crosscheck : [];
+        const selectedSummary = selected.map((r) => {
+          const symbol = r?.symbol || 'n/a';
+          const windowDays = r?.window_days ? `${r.window_days}d` : 'window n/a';
+          return `${symbol} ${windowDays}`;
+        });
         const robust = candidate.robust_all_null_symbols || [];
         const recurring = recurrence.recurring_symbols || [];
         const single = recurrence.single_window_symbols || [];
@@ -6221,7 +6318,7 @@
             body: isEn
               ? `Selected ${this.financeListText(selected.map(r => r.symbol), 'none')}.`
               : `Selezionati ${this.financeListText(selected.map(r => r.symbol), 'nessuno')}.`,
-            evidence: `rows=${scout.rows ?? 'n/a'}; robust=${scout.robust_rows ?? 'n/a'}; selected=${JSON.stringify(selected)}`,
+            evidence: `rows=${scout.rows ?? 'n/a'}; robust=${scout.robust_rows ?? 'n/a'}; selected=${this.financeListText(selectedSummary, 'none')}`,
             boundary: isEn ? 'Scout only decides where to spend validation.' : 'Lo scout decide solo dove spendere validazione.',
             tone: selected.length ? 'text-emerald-300' : 'text-slate-400',
             borderClass: selected.length ? 'border-emerald-900/60' : 'border-slate-800',

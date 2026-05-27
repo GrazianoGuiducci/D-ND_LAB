@@ -199,6 +199,7 @@ python3 domains/finance/tools/market_data.py --provider coinbase --symbol BTC-US
 python3 domains/finance/tools/finance_crypto_candidate_diagnostic.py --json
 python3 domains/finance/tools/finance_window_universe_scout.py --write --json
 python3 domains/finance/tools/finance_recurrence_validation_cycle.py --write --json
+python3 domains/finance/tools/finance_profit_readiness.py --write --json
 ```
 
 Il guard non lancia ciclo e non produce claim di mercato. Controlla che il
@@ -262,6 +263,12 @@ Twelve Data/EODHD o recurrence. Non promuove claim, paper trade o ordini.
 `finance_recurrence_validation_cycle.py` prende i candidati selezionati dallo
 scout e li testa su finestre rolling. E' il gate tra candidato locale e design
 paper-ledger inattivo: senza `recurring_symbols` non si prepara paper/live-sim.
+
+`finance_profit_readiness.py` aggrega gli artefatti correnti in una lettura
+operativa unica: pronto/non pronto per profit test, blocchi concreti,
+prossima mossa autonoma e confini paper/sandbox/reale. Non fetch-a dati e non
+piazza ordini; serve alla dashboard e al MetaLab per non confondere candidati
+locali con avvio profit.
 
 ## Architettura cognitiva (MML)
 

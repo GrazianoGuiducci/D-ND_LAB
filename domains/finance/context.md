@@ -470,6 +470,23 @@ Default: usa `finance_window_universe_scout_latest.json`, massimo 4 candidati,
 `no_recurrence_candidate`. Anche se trova ricorrenza, non apre trading: abilita
 solo il prossimo design di ledger paper inattiva.
 
+### finance_profit_readiness
+
+Descrizione: aggregatore leggibile per capire se il Lab Finance puo' iniziare
+un profit test interno o resta diagnostico. Legge gli ultimi artefatti value
+gia' prodotti, non fetch-a dati e non puo' piazzare ordini.
+
+Comando:
+
+```bash
+python3 /opt/D-ND_LAB/domains/finance/tools/finance_profit_readiness.py --write --json
+```
+
+Output: JSON `dndlab.finance.profit_readiness.value.v1` con `status`, stage
+paper/sandbox/reale ammessi, candidati, blocchi, requisiti di profit-readiness
+e prossima mossa autonoma. La dashboard deve preferire questo readback per
+l'utente non esperto, lasciando gli artefatti granulari come dettaglio.
+
 ### finance_transfer_diagnostic
 
 Descrizione: genera un artefatto macchina per il transfer real-market su una
