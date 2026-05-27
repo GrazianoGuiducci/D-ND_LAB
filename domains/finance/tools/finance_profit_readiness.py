@@ -68,6 +68,12 @@ def build_payload() -> dict[str, Any]:
     lag_review = summary("finance_lag_memory_candidate_review_latest.json")
     pair_review = summary("finance_pair_object_review_latest.json")
     volatility_macro_review = summary("finance_volatility_macro_object_review_latest.json")
+    external_macro_payload = load_json(VALUE_DIR / "finance_external_macro_probe_latest.json") or {}
+    external_macro_probe = (
+        external_macro_payload.get("classification")
+        if isinstance(external_macro_payload.get("classification"), dict)
+        else {}
+    )
 
     selected_rows = scout.get("selected_for_crosscheck")
     selected_symbols = [
@@ -94,6 +100,7 @@ def build_payload() -> dict[str, Any]:
     lag_label = str(lag_review.get("label") or "missing")
     pair_label = str(pair_review.get("label") or "missing")
     volatility_macro_label = str(volatility_macro_review.get("label") or "missing")
+    external_macro_label = str(external_macro_probe.get("label") or "missing")
 
     blocks: list[dict[str, str]] = []
     if data_status not in {"pass", "warn"}:
@@ -208,6 +215,22 @@ def build_payload() -> dict[str, Any]:
             "detail_it": f"{local_object_label} appare solo in una finestra: indizio utile, non candidato paper.",
             "detail_en": f"{local_object_label} appears in one window only: useful clue, not a paper candidate.",
         })
+    if external_macro_label == "external_macro_provider_review_required":
+        blocks.append({
+            "id": "external_macro_provider_review_required",
+            "label_it": "Provider macro da riparare",
+            "label_en": "Macro provider needs repair",
+            "detail_it": "Il probe macro esterno non ha raggiunto i null test: acquisizione dati in REVIEW_REQUIRED.",
+            "detail_en": "The external macro probe did not reach null tests: data acquisition is REVIEW_REQUIRED.",
+        })
+    if external_macro_label == "no_external_macro_delta":
+        blocks.append({
+            "id": "external_macro_no_delta",
+            "label_it": "Macro esterno senza delta",
+            "label_en": "External macro no delta",
+            "detail_it": "FRED DGS10/DGS2/T10Y2Y/DFF/VIXCLS non produce delta robusti o parziali nel probe corrente.",
+            "detail_en": "FRED DGS10/DGS2/T10Y2Y/DFF/VIXCLS produced no robust or partial deltas in the current probe.",
+        })
 
     if real_allowed:
         status = "real_execution_ready"
@@ -222,7 +245,19 @@ def build_payload() -> dict[str, Any]:
         status = "not_ready"
         stage = "diagnostic_only"
 
-    if status == "not_ready" and volatility_macro_label == "volatility_macro_local_only":
+    if status == "not_ready" and external_macro_label == "external_macro_provider_review_required":
+        plain_it = "Non pronto per profitto: il ramo price-derived e' esaurito e il provider macro esterno va riparato prima di interpretare nuovi oggetti."
+        plain_en = "Not ready for profit: the price-derived branch is exhausted and the external macro provider must be repaired before interpreting new objects."
+        next_action = "repair_or_replace_external_macro_provider"
+        next_it = "Riparare FRED/DNS/cache o scegliere un altro provider esterno; non rilanciare gli scan price-derived."
+        next_en = "Repair FRED/DNS/cache or choose another external provider; do not relaunch price-derived scans."
+    elif status == "not_ready" and external_macro_label == "no_external_macro_delta":
+        plain_it = "Non pronto per profitto: anche il primo probe macro esterno non produce delta ricorrenti; dichiarare no-current-edge o aggiungere una fonte/oggetto davvero nuovo."
+        plain_en = "Not ready for profit: the first external macro probe also produced no recurring deltas; declare no-current-edge or add a genuinely new source/object."
+        next_action = "no_current_edge_or_new_external_provider"
+        next_it = "Cristallizzare no-current-edge per il deposito corrente oppure introdurre un provider/oggetto esterno diverso con data-card e falsifier."
+        next_en = "Crystallize no-current-edge for the current deposit or introduce a different external provider/object with data-card and falsifier."
+    elif status == "not_ready" and volatility_macro_label == "volatility_macro_local_only":
         plain_it = "Non pronto per profitto: la famiglia volatilita'/macro ha trovato solo un indizio locale, non una ricorrenza; niente paper."
         plain_en = "Not ready for profit: the volatility/macro family found only a local clue, not recurrence; no paper."
         next_action = "redesign_volatility_macro_object"
@@ -298,6 +333,7 @@ def build_payload() -> dict[str, Any]:
         "lag_memory_review_label": lag_label,
         "pair_object_review_label": pair_label,
         "volatility_macro_review_label": volatility_macro_label,
+        "external_macro_probe_label": external_macro_label,
         "operational_health": health_status,
     }
     payload = {
@@ -318,6 +354,7 @@ def build_payload() -> dict[str, Any]:
             "lag_memory_candidate_review": rel(VALUE_DIR / "finance_lag_memory_candidate_review_latest.json"),
             "pair_object_review": rel(VALUE_DIR / "finance_pair_object_review_latest.json"),
             "volatility_macro_object_review": rel(VALUE_DIR / "finance_volatility_macro_object_review_latest.json"),
+            "external_macro_probe": rel(VALUE_DIR / "finance_external_macro_probe_latest.json"),
         },
         "boundary": {
             "public_advice": False,

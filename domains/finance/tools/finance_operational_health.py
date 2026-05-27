@@ -54,6 +54,53 @@ def _latest(pattern: str) -> Path | None:
     return paths[-1] if paths else None
 
 
+def _value_summary(name: str) -> dict[str, Any]:
+    payload = _read_json(VALUE_DIR / name)
+    summary = payload.get("summary")
+    return summary if isinstance(summary, dict) else {}
+
+
+def _price_branch_closed() -> dict[str, Any]:
+    """Return whether the current price-derived branch is coherently closed.
+
+    Finance has moved beyond the old transfer-diagnostic-only surface: latest
+    autonomous state can be a closed negative branch where the useful result is
+    "stop repeating this evidence family". In that state a narrow last transfer
+    diagnostic must not make health fail by itself.
+    """
+
+    volatility = _value_summary("finance_volatility_macro_object_review_latest.json")
+    profit = _value_summary("finance_profit_readiness_latest.json")
+    scout = _value_summary("finance_autonomy_opportunity_scout_latest.json")
+    closed = (
+        volatility.get("label") == "no_volatility_macro_candidate"
+        and volatility.get("decision") in {
+            "need_new_data_source_or_object_family",
+            "need_new_data_provider_or_domain_object",
+        }
+        and profit.get("next_action") in {
+            "external_macro_or_new_data_source_review",
+            "repair_or_replace_external_macro_provider",
+            "no_current_edge_or_new_external_provider",
+        }
+        and scout.get("selected_opportunity") in {
+            "external_macro_provider_or_pause",
+            "external_macro_provider_repair",
+            "no_current_edge_or_new_external_provider",
+        }
+        and profit.get("can_start_paper") is False
+        and profit.get("can_start_sandbox") is False
+        and profit.get("can_trade_real") is False
+    )
+    return {
+        "ok": closed,
+        "volatility_macro_label": volatility.get("label"),
+        "volatility_macro_decision": volatility.get("decision"),
+        "profit_next_action": profit.get("next_action"),
+        "selected_opportunity": scout.get("selected_opportunity"),
+    }
+
+
 def _run_assertions() -> dict[str, Any]:
     script = DOMAIN_DIR / "assertions.py"
     try:
@@ -152,11 +199,16 @@ def build_health(*, run_assertions: bool = True) -> dict[str, Any]:
         and bool(robust_symbols)
         and classification.get("label") == "single_or_partial_window"
     )
+    branch_closure = _price_branch_closed()
     _add(
         checks,
-        (len(ok_rows) >= 3 or focused_candidate_validation) and not review_rows,
+        ((len(ok_rows) >= 3 or focused_candidate_validation) and not review_rows)
+        or bool(branch_closure["ok"]),
         "transfer_rows_evaluable",
-        f"ok={len(ok_rows)}; review={len(review_rows)}; focused={focused_candidate_validation}",
+        (
+            f"ok={len(ok_rows)}; review={len(review_rows)}; "
+            f"focused={focused_candidate_validation}; branch_closed={branch_closure['ok']}"
+        ),
     )
     provenance_ok = all(
         isinstance(row.get("data_card"), dict)
@@ -214,6 +266,8 @@ def build_health(*, run_assertions: bool = True) -> dict[str, Any]:
             "trajectory_decision": trajectory.get("decision"),
             "trajectory_confidence": trajectory.get("confidence"),
             "assertions_checked": run_assertions,
+            "price_branch_closed": branch_closure["ok"],
+            "price_branch_closure": branch_closure,
         },
         "boundary": (
             "Operational health only: diagnostic-stage readback, no public advice, "

@@ -204,6 +204,8 @@ python3 domains/finance/tools/finance_window_universe_redesign.py --execute-scou
 python3 domains/finance/tools/finance_lag_memory_candidate_review.py --write --json
 python3 domains/finance/tools/finance_pair_object_review.py --write --json
 python3 domains/finance/tools/finance_volatility_macro_object_review.py --write --json
+python3 domains/finance/tools/finance_external_macro_probe.py --write --json
+python3 domains/finance/tools/finance_e2e_smoke.py --json
 ```
 
 Il guard non lancia ciclo e non produce claim di mercato. Controlla che il
@@ -294,6 +296,18 @@ realized-volatility e spread di volatilita' su finestre rolling. Se anche
 questa famiglia fallisce, il ciclo non deve rilanciare lo stesso deposito
 price-derived: serve un dataset/fonte esterna nuova oppure una dichiarazione
 esplicita di no-current-edge.
+
+`finance_external_macro_probe.py` e' il primo gate su fonte esterna non
+price-derived: FRED graph CSV (`DGS10`, `DGS2`, `T10Y2Y`, `DFF`, `VIXCLS`) con
+data-card e null iid/block5/block21. Se ritorna `no_external_macro_delta`, il
+deposito corrente va cristallizzato come `no_current_edge` o sostituito con
+un provider/oggetto esterno davvero nuovo. Un errore provider resta
+`REVIEW_REQUIRED`, non diventa `NO_DELTA`.
+
+`pre_cycle_value_refresh.sh` aggiorna automaticamente health, contratto
+autonomia, scout, readiness e data-intake prima di `dnd-cycle.sh finance`.
+`finance_e2e_smoke.py` verifica end-to-end lo stato autonomo senza fetch nuovi,
+paper/live-sim o ordini.
 
 ## Architettura cognitiva (MML)
 

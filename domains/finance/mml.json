@@ -354,6 +354,18 @@
       "path": "tools/finance_volatility_macro_object_review.py",
       "description": "Tests realized-volatility and macro-volatility objects after single, lag and pair objects fail.",
       "executable_inline": true
+    },
+    {
+      "name": "finance_external_macro_probe",
+      "path": "tools/finance_external_macro_probe.py",
+      "description": "Probes external FRED macro series after price-derived object families fail, preserving provider/data-card and null-test boundaries.",
+      "executable_inline": true
+    },
+    {
+      "name": "finance_e2e_smoke",
+      "path": "tools/finance_e2e_smoke.py",
+      "description": "Read-only end-to-end smoke for Finance autonomy state, execution boundaries and non-repeating next step.",
+      "executable_inline": true
     }
   ],
   "external_apis": [

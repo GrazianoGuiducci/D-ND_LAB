@@ -556,6 +556,35 @@ Output: JSON `dndlab.finance.volatility_macro_object_review.value.v1`. Se
 falsificato per questa linea: il prossimo passo deve essere nuova fonte dati,
 nuovo oggetto non derivato dagli stessi prezzi o dichiarazione no-current-edge.
 
+### finance_external_macro_probe
+
+Descrizione: probe su serie macro esterne FRED (`DGS10`, `DGS2`, `T10Y2Y`,
+`DFF`, `VIXCLS`) dopo la chiusura del ramo price-derived. Scarica CSV pubblico
+con data-card, trasforma livelli in cambi giornalieri e testa iid/block5/block21.
+
+Comando:
+
+```bash
+python3 /opt/D-ND_LAB/domains/finance/tools/finance_external_macro_probe.py --write --json
+```
+
+Output: JSON `dndlab.finance.external_macro_probe.v1`. Se
+`label=no_external_macro_delta`, il prossimo passo non e' rilanciare ETF o
+prezzi gia' falsificati: dichiarare `no_current_edge` per il deposito corrente
+o introdurre un provider/oggetto esterno davvero nuovo. Se il provider fallisce,
+resta `external_macro_provider_review_required`, non `NO_DELTA`.
+
+### finance_e2e_smoke
+
+Descrizione: smoke E2E read-only per verificare health, readiness, scout,
+confini paper/sandbox/reale e ramo macro corrente.
+
+Comando:
+
+```bash
+python3 /opt/D-ND_LAB/domains/finance/tools/finance_e2e_smoke.py --json
+```
+
 ### finance_transfer_diagnostic
 
 Descrizione: genera un artefatto macchina per il transfer real-market su una
