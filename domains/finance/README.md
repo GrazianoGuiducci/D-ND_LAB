@@ -45,7 +45,10 @@ python3 domains/finance/tools/finance_operational_health.py --json
 # 6. Autonomous trading contract — stadio, blocchi e prossimo gate
 python3 domains/finance/tools/finance_autonomous_trading_contract.py --json
 
-# 7. Transfer diagnostic con design pre-dichiarato
+# 7. Opportunity scout — prossimo ciclo d'indagine verso autonomia
+python3 domains/finance/tools/finance_autonomy_opportunity_scout.py --json
+
+# 8. Transfer diagnostic con design pre-dichiarato
 python3 domains/finance/tools/finance_transfer_diagnostic.py \
   --object "non-SPY control basket freshness" \
   --mechanism "test whether no-transfer constraint survives without SPY" \
@@ -53,10 +56,10 @@ python3 domains/finance/tools/finance_transfer_diagnostic.py \
   --stop-rule "do not promote; inspect classification only" \
   --json
 
-# 8. Falsifier meta — template valido?
+# 9. Falsifier meta — template valido?
 python3 domains/meta-lab/tools/lab_template_validator.py --strict-m7 domains/finance
 
-# 9. Cycle agent autonomo (~5-15 min)
+# 10. Cycle agent autonomo (~5-15 min)
 bash tools/dnd-cycle.sh finance
 ```
 
@@ -78,6 +81,10 @@ domains/finance/
 ├── ui_contract.json            M7 — dashboard cognitiva domain-native
 ├── autonomous_trading_contract.json
 │                               staged autonomy / execution boundary
+├── paper_live_sim_contract.json
+│                               inactive simulated trading ledger contract
+├── risk_contract_skeleton.json
+│                               risk controls required before sandbox/real execution
 └── tools/
     ├── finance_reference_audit.py
     │                           pre-cycle audit reference readiness
@@ -90,6 +97,8 @@ domains/finance/
     │                           precondition, assertions e trajectory
     ├── finance_autonomous_trading_contract.py
     │                           value artifact per stadio trading autonomo
+    ├── finance_autonomy_opportunity_scout.py
+    │                           sceglie il prossimo ciclo d'indagine autonoma
     └── finance_diagnostic_report.py
                                 report interno value-facing, no claim operativo
 ```
@@ -165,6 +174,7 @@ Health guard operativo:
 python3 domains/finance/tools/finance_operational_health.py --json
 python3 domains/finance/tools/finance_operational_health.py --write --json
 python3 domains/finance/tools/finance_autonomous_trading_contract.py --write --json
+python3 domains/finance/tools/finance_autonomy_opportunity_scout.py --write --json
 ```
 
 Il guard non lancia ciclo e non produce claim di mercato. Controlla che il
@@ -180,6 +190,13 @@ la dashboard puo' leggerla dal canale value gia' esistente.
 lo stadio autonomo ammesso. Il target e' trading autonomo, ma oggi la decisione
 puo' restare `diagnostic_only` finche' mancano candidato robusto, ledger
 paper/live-sim, cost/slippage, risk contract e adapter sandbox.
+
+`finance_autonomy_opportunity_scout.py` e' lo strato di autocoscienza
+operativa: non sceglie un trade, sceglie il prossimo ciclo d'indagine. Se non
+esiste ancora un candidato robusto, deve preferire discovery di candidati
+cross-asset o multi-window rispetto a rilanciare la stessa premessa SPY
+esaurita. La ledger paper/live-sim e il risk skeleton restano inattivi finche'
+il contratto autonomo non apre lo stadio.
 
 ## Architettura cognitiva (MML)
 

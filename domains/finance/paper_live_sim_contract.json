@@ -1,0 +1,60 @@
+{
+  "schema": "dndlab.finance.paper_live_sim_contract.v1",
+  "domain": "finance",
+  "status": "inactive_until_candidate",
+  "intent": "Define the minimum ledger needed before Finance can treat buy/sell/hold as internal simulated trading decisions.",
+  "activation_gate": {
+    "requires_autonomy_stage": "paper_live_sim",
+    "requires": [
+      "finance_autonomous_trading_contract.summary.paper_live_sim_allowed=true",
+      "predeclared_candidate_object",
+      "robust transfer or recurrence candidate",
+      "no REVIEW_REQUIRED rows in the evidence surface",
+      "cost_slippage_model",
+      "risk_contract_skeleton reviewed for paper stage"
+    ],
+    "blocks": [
+      "broker_order",
+      "real_capital_order",
+      "public_advice",
+      "unlogged_signal"
+    ]
+  },
+  "ledger_row_minimum": {
+    "cycle_ts": "<cycle timestamp>",
+    "candidate_id": "<stable candidate id>",
+    "symbol": "<asset symbol>",
+    "decision_time": "<ISO timestamp or market date>",
+    "decision": "buy|sell|hold|flat|reject",
+    "entry_basis": "<close|next_open|event_close|other declared basis>",
+    "exit_basis": "<fixed_horizon|invalidation|next_signal|other declared basis>",
+    "horizon_bars": "<integer or null>",
+    "position_notional": "<simulated notional>",
+    "cost_bps": "<round-trip cost in basis points>",
+    "slippage_bps": "<round-trip slippage in basis points>",
+    "gross_return": "<decimal return>",
+    "net_return": "<decimal return after cost/slippage>",
+    "max_adverse_excursion": "<decimal drawdown or null>",
+    "baseline_return": "<matched baseline return>",
+    "null_family": "<matched null/control>",
+    "beats_baseline": "<boolean>",
+    "invalidated": "<boolean>",
+    "invalidation_reason": "<text or null>",
+    "source_artifacts": ["<diagnostic/value artifact paths>"]
+  },
+  "promotion_metrics": {
+    "minimum_rows": 30,
+    "minimum_independent_windows": 3,
+    "minimum_symbols": 2,
+    "required_after_cost_positive_rate": 0.55,
+    "required_median_net_edge_over_baseline": 0.0,
+    "max_drawdown_budget_required": true,
+    "false_positive_budget_required": true
+  },
+  "write_boundary": {
+    "directory": "data/finance/paper/",
+    "value_readback": "data/finance/value/finance_paper_live_sim_latest.json",
+    "audit_log_required": true,
+    "note": "This contract defines simulated decisions only. It cannot place broker or real-capital orders."
+  }
+}

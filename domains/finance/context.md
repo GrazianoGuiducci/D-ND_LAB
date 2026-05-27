@@ -315,6 +315,36 @@ legittimo quando i gate passano. Broker sandbox e capitale reale richiedono
 contratti separati, risk limits, audit log, kill switch e gestione segreti fuori
 da Git/chat.
 
+### finance_autonomy_opportunity_scout
+
+Descrizione: strato di autocoscienza operativa per scegliere il prossimo ciclo
+d'indagine verso trading autonomo. Legge health, autonomy contract, transfer e
+recurrence diagnostic; non fetch-a dati e non produce trade.
+
+Comando:
+
+```bash
+python3 /opt/D-ND_LAB/domains/finance/tools/finance_autonomy_opportunity_scout.py --json
+python3 /opt/D-ND_LAB/domains/finance/tools/finance_autonomy_opportunity_scout.py --write --json
+```
+
+Output: JSON `dndlab.finance.autonomy_opportunity_scout.value.v1` in
+`data/finance/value/finance_autonomy_opportunity_scout_latest.json` con
+`selected_opportunity`, `next_cycle_type`, `cycle_continuum` e blocchi.
+
+Regola: se `current_stage=diagnostic_only` e non esistono simboli robusti,
+lo scout deve scegliere un ciclo d'indagine sulla possibilita' di candidato,
+non una ledger di trading. Se `paper_live_sim_allowed=true`, puo' scegliere la
+ledger paper/live-sim come prossimo ciclo. In entrambi i casi la scelta e'
+un'indagine, non esecuzione.
+
+Contratti correlati:
+
+- `domains/finance/paper_live_sim_contract.json`: ledger minima per buy/sell/
+  hold simulati, inattiva finche' non esiste candidato.
+- `domains/finance/risk_contract_skeleton.json`: campi minimi per paper,
+  broker sandbox e real execution; non e' autorita' di esecuzione.
+
 ### finance_transfer_diagnostic
 
 Descrizione: genera un artefatto macchina per il transfer real-market su una

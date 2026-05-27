@@ -276,6 +276,18 @@
       "path": "tools/finance_reference_audit.py",
       "description": "Pre-cycle audit for finance reference readiness, skill-reading matrix, MML roles and next-cycle policy.",
       "executable_inline": true
+    },
+    {
+      "name": "finance_autonomous_trading_contract",
+      "path": "tools/finance_autonomous_trading_contract.py",
+      "description": "Reads Finance value/diagnostic artifacts and declares the current autonomous trading stage.",
+      "executable_inline": true
+    },
+    {
+      "name": "finance_autonomy_opportunity_scout",
+      "path": "tools/finance_autonomy_opportunity_scout.py",
+      "description": "Selects the next investigation cycle toward autonomous trading from current evidence and contracts.",
+      "executable_inline": true
     }
   ],
   "external_apis": [

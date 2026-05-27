@@ -1,0 +1,41 @@
+{
+  "schema": "dndlab.finance.risk_contract_skeleton.v1",
+  "domain": "finance",
+  "status": "skeleton_not_execution_authority",
+  "intent": "Declare the controls required before simulated trading can become broker sandbox or real execution.",
+  "paper_stage_required_fields": {
+    "max_simulated_position_notional": null,
+    "max_daily_simulated_loss": null,
+    "max_simulated_drawdown": null,
+    "allowed_symbols": [],
+    "allowed_decisions": ["buy", "sell", "hold", "flat", "reject"],
+    "cost_slippage_model": null,
+    "false_positive_budget": null,
+    "ledger_path": "data/finance/paper/",
+    "audit_log_path": "data/finance/paper/audit_log.jsonl"
+  },
+  "broker_sandbox_required_fields": {
+    "broker_adapter": null,
+    "sandbox_account": null,
+    "allowed_order_types": [],
+    "max_order_notional": null,
+    "kill_switch": null,
+    "reconciliation_procedure": null,
+    "secrets_source": "environment_or_secret_store_only"
+  },
+  "real_execution_required_fields": {
+    "operator_reviewed_execution_contract": null,
+    "compliance_boundary": null,
+    "account_setup": null,
+    "monitoring": null,
+    "rollback": null,
+    "capital_at_risk": null
+  },
+  "hard_blocks": [
+    "No secrets in chat, Git or value artifacts.",
+    "No broker order before sandbox adapter passes E2E.",
+    "No real order before explicit operator-reviewed execution contract.",
+    "No unbounded position sizing.",
+    "No public advice or guaranteed-profit claim."
+  ]
+}

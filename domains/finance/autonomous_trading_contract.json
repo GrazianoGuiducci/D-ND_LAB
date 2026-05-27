@@ -38,7 +38,10 @@
     "data/finance/diagnostics/finance_transfer_diagnostic_*.json",
     "data/finance/diagnostics/finance_recurrence_diagnostic_*.json",
     "data/finance/value/finance_operational_health_latest.json",
-    "data/finance/value/finance_autonomous_trading_contract_latest.json"
+    "data/finance/value/finance_autonomous_trading_contract_latest.json",
+    "data/finance/value/finance_autonomy_opportunity_scout_latest.json",
+    "domains/finance/paper_live_sim_contract.json",
+    "domains/finance/risk_contract_skeleton.json"
   ],
   "risk_contract_minimum": {
     "required_before": "broker_sandbox",

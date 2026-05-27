@@ -41,6 +41,10 @@
         "purpose": "Mostra stadio corrente, paper/live-sim, sandbox broker, esecuzione reale, blocchi e prossimo gate."
       },
       {
+        "module": "AutonomyOpportunityScout",
+        "purpose": "Mostra quale ciclo d'indagine il Lab sceglie per cercare la prossima possibilita' di trading."
+      },
+      {
         "module": "RuntimeDynamics",
         "purpose": "Spiega strumenti invocati, finestre scartate, sospensioni e superficie accettata."
       },
@@ -182,6 +186,21 @@
       "blocks": "Ordini reali impliciti, broker adapter senza sandbox, segreti in Git/chat e trading non auditato."
     },
     {
+      "module": "AutonomyOpportunityScout",
+      "placement": "center",
+      "observables": [
+        "selected_opportunity",
+        "selected_decision",
+        "next_cycle_type",
+        "cycle_continuum",
+        "opportunity_score",
+        "blocked_relaunches"
+      ],
+      "baseline_or_null": ["latest_transfer_diagnostic", "latest_recurrence_diagnostic", "autonomous_trading_contract"],
+      "shows": "Dove il Lab deve indagare la possibilita' di trading prima di aprire paper/live-sim.",
+      "blocks": "Scelta manuale o casuale di asset/strategia senza leggere i fallimenti e le capacita' correnti."
+    },
+    {
       "module": "PromotionBoundary",
       "placement": "center",
       "observables": [
@@ -257,6 +276,10 @@
     {
       "check": "autonomous_trading_boundary_visible",
       "expectation": "La vista finance mostra current_stage, paper/live-sim, sandbox, real execution, blocked_by e next_gate dal value artifact autonomo."
+    },
+    {
+      "check": "autonomy_opportunity_scout_visible",
+      "expectation": "La vista finance mostra il prossimo ciclo d'indagine scelto dal Lab e il perche' non e' ancora un trade."
     },
     {
       "check": "admin_run_bridge",
