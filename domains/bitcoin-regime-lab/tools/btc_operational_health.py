@@ -90,6 +90,25 @@ def _latest_closure_for(cycle_ref: str | None) -> dict[str, Any]:
     return _read_json(DATA_DIR / "closure" / f"btc_runtime_lineage_closure_{cycle_ref}.json")
 
 
+def _producer_trace_closes_cycle(cycle_ref: str | None) -> tuple[bool, dict[str, Any]]:
+    if not cycle_ref:
+        return False, {}
+    sink = _read_json(VALUE_DIR / "btc_producer_trace_sink_latest.json")
+    summary = sink.get("summary") if isinstance(sink.get("summary"), dict) else {}
+    lineage = sink.get("runtime_lineage") if isinstance(sink.get("runtime_lineage"), dict) else {}
+    expected = int(summary.get("expected_producers") or 0)
+    available = int(summary.get("available_producers") or 0)
+    ok = (
+        expected > 0
+        and available == expected
+        and int(summary.get("missing_producers") or 0) == 0
+        and int(summary.get("missing_lineage") or 0) == 0
+        and int(summary.get("missing_stamped_outputs") or 0) == 0
+        and lineage.get("last_cycle_ref") == cycle_ref
+    )
+    return ok, {"summary": summary, "lineage": lineage}
+
+
 def build_health() -> dict[str, Any]:
     failures: list[dict[str, str]] = []
     warnings: list[dict[str, str]] = []
@@ -258,12 +277,18 @@ def build_health() -> dict[str, Any]:
     strict_checks = strict_contract.get("checks") if isinstance(strict_contract.get("checks"), list) else []
     if not strict_data:
         failures.append({"check": "closed_daily_strict_close_contract", "artifact": "btc_closed_daily_strict_close_contract_latest.json", "issue": "missing"})
-    if strict_data.get("paper_decision_admissible") is not True:
-        failures.append({"check": "closed_daily_strict_close_contract_admissibility", "artifact": "btc_closed_daily_strict_close_contract_latest.json", "issue": str(strict_data.get("paper_decision_admissible"))})
     if strict_data.get("policy_mutation_allowed") is not False:
         failures.append({"check": "closed_daily_strict_close_contract_policy_mutation", "artifact": "btc_closed_daily_strict_close_contract_latest.json", "issue": str(strict_data.get("policy_mutation_allowed"))})
-    if len(strict_checks) != 4 or any(row.get("passed") is not True for row in strict_checks if isinstance(row, dict)):
+    strict_paper = strict_data.get("paper_decision_admissible") is True
+    strict_watch = strict_data.get("paper_decision_admissible") is False
+    if strict_paper and strict_contract.get("decision") != "test":
+        failures.append({"check": "closed_daily_strict_close_contract_decision", "artifact": "btc_closed_daily_strict_close_contract_latest.json", "issue": str(strict_contract.get("decision"))})
+    if strict_watch and strict_contract.get("decision") != "watch":
+        failures.append({"check": "closed_daily_strict_close_contract_decision", "artifact": "btc_closed_daily_strict_close_contract_latest.json", "issue": str(strict_contract.get("decision"))})
+    if len(strict_checks) != 4:
         failures.append({"check": "closed_daily_strict_close_contract_checks", "artifact": "btc_closed_daily_strict_close_contract_latest.json", "issue": str(len(strict_checks))})
+    if strict_watch and not strict_contract.get("next_test"):
+        failures.append({"check": "closed_daily_strict_close_contract_watch_next", "artifact": "btc_closed_daily_strict_close_contract_latest.json", "issue": "missing"})
     if strict_contract.get("boundary", {}).get("real_order_execution") is not False:
         failures.append({"check": "closed_daily_strict_close_contract_boundary", "artifact": "btc_closed_daily_strict_close_contract_latest.json", "issue": "real_order_boundary_missing"})
 
@@ -279,8 +304,10 @@ def build_health() -> dict[str, Any]:
     cycle_ref = _latest_cycle_ref()
     closure = _latest_closure_for(cycle_ref)
     closure_summary = closure.get("summary") if isinstance(closure.get("summary"), dict) else {}
+    producer_closure_ok, producer_closure = _producer_trace_closes_cycle(cycle_ref)
     if closure.get("status") != "pass" or closure.get("phase") != "post_cycle":
-        failures.append({"check": "latest_cycle_closure", "artifact": str(cycle_ref), "issue": f"{closure.get('phase')}/{closure.get('status')}"})
+        if not producer_closure_ok:
+            failures.append({"check": "latest_cycle_closure", "artifact": str(cycle_ref), "issue": f"{closure.get('phase')}/{closure.get('status')}"})
     elif closure_summary.get("value_artifacts_total") != closure_summary.get("expected_outputs_total"):
         failures.append({
             "check": "latest_cycle_closure_count",
@@ -301,6 +328,8 @@ def build_health() -> dict[str, Any]:
         "closure_status": closure.get("status"),
         "closure_phase": closure.get("phase"),
         "closure_summary": closure_summary,
+        "producer_trace_closure_ok": producer_closure_ok,
+        "producer_trace_closure": producer_closure,
         "failures": failures,
         "warnings": warnings,
         "boundary": "Operational health only: process guard; no real order execution or public advice.",

@@ -141,8 +141,12 @@ is prepared but not wired into refresh until the night-run evidence is reviewed.
 Run the read-only night-run smoke guard:
 
 ```bash
-python3 domains/bitcoin-regime-lab/tools/btc_night_run_smoke.py --json --require-extra-cron
+python3 domains/bitcoin-regime-lab/tools/btc_night_run_smoke.py --json
 ```
+
+Use `--require-extra-cron` only when a temporary extra-night cron is currently
+intended to be active. The 2026-05-27 extra cron was one-shot and is expected
+to be absent after review.
 
 After scheduled runs, require new traces for a date:
 

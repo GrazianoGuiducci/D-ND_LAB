@@ -405,8 +405,12 @@ outputs.
 Night-run smoke guard:
 
 ```bash
-python3 domains/bitcoin-regime-lab/tools/btc_night_run_smoke.py --json --require-extra-cron
+python3 domains/bitcoin-regime-lab/tools/btc_night_run_smoke.py --json
 ```
+
+Usa `--require-extra-cron` solo quando un cron temporaneo extra-notte deve
+essere attivo. Il cron extra del 2026-05-27 era one-shot e dopo review deve
+risultare assente.
 
 For the 2026-05-27 review after the canonical and temporary extra runs:
 
