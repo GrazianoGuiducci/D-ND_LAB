@@ -393,6 +393,28 @@ configurazione locale `/opt/.env`. Le chiavi non vanno mai in output, Git,
 packet o chat. EODHD ha budget gratuito basso: usarlo come controllo spot, non
 come scan.
 
+### finance_candidate_discovery_cycle
+
+Descrizione: ciclo diagnostico che usa il nuovo ingresso dati. Prima esegue il
+cross-check provider daily su equity/ETF, poi lancia il transfer diagnostic
+solo se i provider concordano. Non produce paper trade.
+
+Comando:
+
+```bash
+python3 /opt/D-ND_LAB/domains/finance/tools/finance_candidate_discovery_cycle.py --json
+```
+
+Default: `SPY,QQQ,IWM,EFA,TLT,GLD`, finestra `2026-02-26..2026-05-27`,
+yfinance + Twelve Data, EODHD escluso salvo `--include-eodhd`.
+
+Output: JSON `dndlab.finance.candidate_discovery_cycle.value.v1` in
+`data/finance/value/finance_candidate_discovery_cycle_latest.json`, piu'
+diagnostica transfer in `data/finance/diagnostics/`.
+
+Regola: se non emergono `robust_all_null_symbols`, il Lab resta
+`diagnostic_only`. Se emergono, il prossimo gate e' recurrence, non trading.
+
 ### finance_transfer_diagnostic
 
 Descrizione: genera un artefatto macchina per il transfer real-market su una

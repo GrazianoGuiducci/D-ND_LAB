@@ -300,6 +300,12 @@
       "path": "tools/finance_provider_crosscheck.py",
       "description": "Cross-checks yfinance and Twelve Data daily bars before data can support autonomy stages.",
       "executable_inline": true
+    },
+    {
+      "name": "finance_candidate_discovery_cycle",
+      "path": "tools/finance_candidate_discovery_cycle.py",
+      "description": "Runs cross-provider data gate and exact-window transfer diagnostic to discover autonomy candidates.",
+      "executable_inline": true
     }
   ],
   "external_apis": [

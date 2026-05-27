@@ -41,6 +41,10 @@
         "purpose": "Mostra accordo yfinance/Twelve Data prima di usare barre daily come substrato autonomo."
       },
       {
+        "module": "CandidateDiscoveryCycle",
+        "purpose": "Mostra il risultato del ciclo dati che cerca candidati robusti prima della recurrence."
+      },
+      {
         "module": "DecisionBounds",
         "purpose": "Dichiara cosa non e' ammissibile con l'evidenza corrente e quale stadio autonomo resta chiuso."
       },
@@ -192,6 +196,20 @@
       "blocks": "Promuovere dati di un solo provider verso paper/live-sim."
     },
     {
+      "module": "CandidateDiscoveryCycle",
+      "placement": "center",
+      "observables": [
+        "provider_crosscheck_status",
+        "transfer_label",
+        "robust_all_null_symbols",
+        "iid_dnd_symbols",
+        "next_gate"
+      ],
+      "baseline_or_null": ["provider_crosscheck", "iid_shuffle", "block_permutation_5", "block_permutation_21"],
+      "shows": "Quali simboli, se presenti, meritano recurrence dopo cross-provider gate.",
+      "blocks": "Aprire paper/live-sim senza candidato robusto e senza recurrence."
+    },
+    {
       "module": "DecisionBounds",
       "placement": "right",
       "observables": [
@@ -326,6 +344,10 @@
     {
       "check": "provider_crosscheck_visible",
       "expectation": "La vista finance mostra accordo/disaccordo yfinance/Twelve Data prima di usare il dato come substrato autonomo."
+    },
+    {
+      "check": "candidate_discovery_cycle_visible",
+      "expectation": "La vista finance mostra il ciclo candidate discovery e blocca paper/live-sim se robust_all_null_symbols e' vuoto."
     },
     {
       "check": "admin_run_bridge",
