@@ -73,19 +73,24 @@ def build_opportunities() -> dict[str, Any]:
     health_path = VALUE_DIR / "finance_operational_health_latest.json"
     transfer_path = latest("finance_transfer_diagnostic_*.json", DIAGNOSTIC_DIR)
     recurrence_path = latest("finance_recurrence_diagnostic_*.json", DIAGNOSTIC_DIR)
+    crypto_path = VALUE_DIR / "finance_crypto_candidate_diagnostic_latest.json"
     autonomy = load_json(autonomy_path) or {}
     health = load_json(health_path) or {}
     transfer = load_json(transfer_path) or {}
     recurrence = load_json(recurrence_path) or {}
+    crypto = load_json(crypto_path) or {}
 
     summary = autonomy.get("summary") if isinstance(autonomy.get("summary"), dict) else {}
     transfer_class = transfer.get("classification") if isinstance(transfer.get("classification"), dict) else {}
     recurrence_class = recurrence.get("classification") if isinstance(recurrence.get("classification"), dict) else {}
+    crypto_summary = crypto.get("summary") if isinstance(crypto.get("summary"), dict) else {}
 
     stage = summary.get("current_stage") or "unknown"
     latest_transfer_label = summary.get("latest_transfer_label") or transfer_class.get("label") or "unknown"
     robust_symbols = summary.get("robust_all_null_symbols") or transfer_class.get("robust_all_null_symbols") or []
     recurrence_label = recurrence_class.get("label") or "unknown"
+    crypto_label = crypto_summary.get("crypto_label") or "unknown"
+    crypto_robust = crypto_summary.get("robust_all_null_symbols") or []
     health_status = summary.get("operational_health") or (health.get("summary") or {}).get("status") or "unknown"
 
     opportunities = [
@@ -102,6 +107,19 @@ def build_opportunities() -> dict[str, Any]:
                 "send survivors to recurrence diagnostic"
             ],
             "blocks": ["paper_live_sim", "broker_sandbox", "real_execution"],
+        },
+        {
+            "id": "crypto_asset_class_window_redesign",
+            "decision": "watch" if crypto_label == "no_crypto_delta" else "investigate",
+            "score": 0.5 if crypto_robust else 0.42,
+            "object": "treat crypto as a Finance asset class without duplicating Bitcoin Regime Lab logic",
+            "why": "Coinbase OHLCV makes BTC/ETH usable as Finance data, but the current window did not produce a robust candidate.",
+            "cycle_shape": [
+                "keep BTC-specific regime interpretation inside Bitcoin Regime Lab",
+                "use crypto here only for allocation/risk/autonomy data checks",
+                "redesign window or widen asset universe before rerunning"
+            ],
+            "blocks": ["finance_crypto_lab_fork", "paper_live_sim", "real_execution"],
         },
         {
             "id": "paper_live_sim_schema_preparation",
@@ -148,6 +166,8 @@ def build_opportunities() -> dict[str, Any]:
         "health_status": health_status,
         "latest_transfer_label": latest_transfer_label,
         "recurrence_label": recurrence_label,
+        "crypto_label": crypto_label,
+        "crypto_robust_all_null_symbols": crypto_robust,
         "robust_all_null_symbols": robust_symbols,
         "selected_opportunity": selected["id"],
         "selected_decision": selected["decision"],
@@ -172,6 +192,7 @@ def build_opportunities() -> dict[str, Any]:
             "operational_health": rel(health_path if health_path.exists() else None),
             "transfer_diagnostic": rel(transfer_path),
             "recurrence_diagnostic": rel(recurrence_path),
+            "crypto_candidate_diagnostic": rel(crypto_path if crypto_path.exists() else None),
         },
         "opportunities": ranked,
         "selected": selected,

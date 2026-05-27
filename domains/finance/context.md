@@ -420,6 +420,22 @@ diagnostica transfer in `data/finance/diagnostics/`.
 Regola: se non emergono `robust_all_null_symbols`, il Lab resta
 `diagnostic_only`. Se emergono, il prossimo gate e' recurrence, non trading.
 
+### finance_crypto_candidate_diagnostic
+
+Descrizione: diagnostica BTC-USD/ETH-USD come asset class Finance usando
+Coinbase OHLCV. Non sostituisce il Bitcoin Regime Lab: BTC Lab conserva la
+logica fine crypto/regime, Finance usa crypto solo per rischio, allocazione,
+ingresso dati e autonomia multi-asset.
+
+Comando:
+
+```bash
+python3 /opt/D-ND_LAB/domains/finance/tools/finance_crypto_candidate_diagnostic.py --json
+```
+
+L'output e' `diagnostic_only`. Puo' inviare simboli a recurrence se sopravvivono
+a `iid`, `block5` e `block21`, ma non autorizza paper/live-sim o trading.
+
 ### finance_transfer_diagnostic
 
 Descrizione: genera un artefatto macchina per il transfer real-market su una

@@ -306,6 +306,12 @@
       "path": "tools/finance_candidate_discovery_cycle.py",
       "description": "Runs cross-provider data gate and exact-window transfer diagnostic to discover autonomy candidates.",
       "executable_inline": true
+    },
+    {
+      "name": "finance_crypto_candidate_diagnostic",
+      "path": "tools/finance_crypto_candidate_diagnostic.py",
+      "description": "Runs Coinbase BTC/ETH OHLCV exact-window null diagnostics as Finance asset-class input, without replacing Bitcoin Regime Lab logic.",
+      "executable_inline": true
     }
   ],
   "external_apis": [

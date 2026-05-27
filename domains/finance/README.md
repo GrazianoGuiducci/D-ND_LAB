@@ -196,6 +196,7 @@ python3 domains/finance/tools/finance_data_intake_audit.py --write --json
 python3 domains/finance/tools/finance_provider_crosscheck.py --write --json
 python3 domains/finance/tools/finance_candidate_discovery_cycle.py --json
 python3 domains/finance/tools/market_data.py --provider coinbase --symbol BTC-USD --start 2026-02-26 --end 2026-05-27
+python3 domains/finance/tools/finance_crypto_candidate_diagnostic.py --json
 ```
 
 Il guard non lancia ciclo e non produce claim di mercato. Controlla che il
@@ -242,6 +243,14 @@ Per crypto, `market_data.py --provider coinbase` usa le candele pubbliche
 Coinbase Exchange: OHLCV reale, no-key, daily, max 300 bucket per richiesta.
 CoinLore e' stato verificato il 2026-05-27 ma non promosso: l'endpoint OHLCV
 ha restituito BTC/ETH storici vecchi, non una finestra corrente utile al lab.
+
+`finance_crypto_candidate_diagnostic.py` usa quel feed Coinbase per BTC-USD e
+ETH-USD come asset class Finance, non come duplicazione del Bitcoin Regime Lab.
+Il Lab BTC resta proprietario della logica fine crypto/regime; Finance usa
+crypto solo per rischio, allocazione, dati e autonomia multi-asset. Il tool
+applica gli stessi null `iid`, `block5`, `block21` del transfer diagnostic.
+L'output puo' nominare candidati da mandare a recurrence, ma resta
+`diagnostic_only`: niente paper/live-sim, broker sandbox o esecuzione reale.
 
 ## Architettura cognitiva (MML)
 
