@@ -99,20 +99,6 @@ UTC). Each cycle picks up where the last left off — the seed evolves,
 the cimitero accumulates, the trajectory evaluator decides whether to
 keep going or surface a stop.
 
-## Try the editorial domain
-
-```bash
-# 1. Edit ~/.d-nd-lab/.env  →  LAB_DOMAIN=editorial
-# 2. Add some markdown notes to ~/.d-nd-lab/domains/editorial/corpus/
-# 3. Run a cycle
-docker compose run --rm lab
-```
-
-The editorial lab reads your archive, identifies convergences (where
-multiple entries point at the same unstated thing), and produces a
-draft. See [Editorial](domains/editorial.md) for what to put in the
-corpus.
-
 ## When something goes wrong
 
 ```bash

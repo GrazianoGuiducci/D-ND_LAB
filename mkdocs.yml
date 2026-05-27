@@ -64,7 +64,6 @@ nav:
   - Domains:
     - Overview: domains/index.md
     - Physics: domains/physics.md
-    - Editorial: domains/editorial.md
     - Extending: domains/extending.md
   - Configuration: config.md
   - Roadmap: roadmap.md

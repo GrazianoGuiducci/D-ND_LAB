@@ -20,7 +20,7 @@ le proprie regole emergenti e l'operatore le promuove con consapevolezza.
 
 Comportamento opt-in: lab di funzione (ops-decisions, lab futuri di
 funzione) hanno enabled=true di default nel template generator. Lab di
-dominio (physics, editorial — producono finding scientifici, non
+dominio (physics, finance e simili — producono finding di dominio, non
 regole sistemiche) hanno enabled=false di default.
 
 Eligibility check (whitelist conservativa):

@@ -2,7 +2,7 @@
 # night_run.sh — esecuzione sequenziale dei lab D-ND in cascata.
 #
 # Pattern (operatore 05/05 sera):
-# - finance → 10 min → bio-rhythms → 10 min → ops-decisions → 10 min → editorial
+# - finance only after stale draft Labs were removed from the runnable fleet.
 # - meta-lab ESCLUSO (è prototipatore, non lab — vedi
 #   memory/cristallo_meta_lab_is_prototyper_2026-05-05.md)
 # - Telegram notify dopo ogni cycle (operatore vede progresso)
@@ -16,7 +16,7 @@ LOCK_FILE="/tmp/dnd_lab_night_run.lock"
 LAB_DATA_DIR="/opt/D-ND_LAB/data"
 RUN_TS="$(date +%Y%m%d_%H%M%S)"
 PAUSE_BETWEEN_CYCLES=600   # 10 minuti, "un po'" come da operatore
-LABS=(finance bio-rhythms ops-decisions editorial)
+LABS=(finance)
 
 # Lock
 if [ -f "$LOCK_FILE" ]; then

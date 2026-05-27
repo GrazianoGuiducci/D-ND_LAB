@@ -10,11 +10,6 @@ The lab ships several domains:
   Studies primes, zeta function, GUE, dynamical systems, theory
   crossing TQGE+R. Origin of the codebase.
 
-- **[Editorial](editorial.md)** — the operator's archive. Discriminates
-  source from echo, surfaces convergences not yet written, drafts
-  publishable copy through the bicono filter and non-dual-copy gate.
-  Test that the abstract template works on non-numeric content.
-
 - **[Research Radar](research-radar.md)** — monitors emerging research and
   technology claims. Turns claims into source cards, baseline/null checks,
   falsifier status and evidence roadmaps.
@@ -29,8 +24,8 @@ The lab ships several domains:
   resultant aligned so exponentiality prevails over noise and sterile symmetry.
   The runtime slug remains `ops-decisions` for compatibility.
 
-Other generated domains, such as finance and bio-rhythms, live under
-`domains/` and may still be in active demo/prototype hardening.
+Generated domains such as finance live under `domains/` and must declare a
+minimum autonomous operating state before they stay visible in the active fleet.
 
 To write your own, see [Extending](extending.md).
 

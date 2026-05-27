@@ -76,9 +76,9 @@ cycle start. Sections that pay off:
 Keep it dense. The whole file gets injected into the prompt at every
 cycle, so every line costs tokens. Prune ruthlessly.
 
-The physics context.md and editorial context.md are the references —
-study both before writing yours, they show how the same skeleton
-adapts to numeric vs semantic content.
+The physics and finance `context.md` files are practical references:
+study both before writing yours to see how the same skeleton adapts to
+theory-heavy and data-bound domains.
 
 ## Step 3 — seed_tensions.json
 
@@ -204,11 +204,11 @@ cycle's quality — the lab improves across cycles, not within one.
 
 ## Reference
 
-Both shipped domains are the canonical reference:
+Current shipped domains provide the canonical reference:
 
 - `domains/physics/` — numerical, theory-driven, tools heavy on
   computation
-- `domains/editorial/` — semantic, corpus-driven, tools heavy on
-  text analysis
+- `domains/finance/` — data-bound, baseline/null-driven, tools heavy on
+  provider and recurrence checks
 
 Read both, copy whichever is closer to your domain, adapt.

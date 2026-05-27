@@ -108,7 +108,7 @@ else
 
     say ""
     say "${C_BOLD}Domain${C_RESET}"
-    say "${C_DIM}Available: physics, meta-lab, editorial, finance, ops-decisions, bio-rhythms${C_RESET}"
+    say "${C_DIM}Available: physics, meta-lab, finance, ops-decisions, research-radar, bitcoin-regime-lab${C_RESET}"
     read -r -p "  LAB_DOMAIN [physics]: " domain
     domain="${domain:-physics}"
 

@@ -26,7 +26,7 @@ lab keeps the thread:
 - **Memory of decisions** in the seed
 - **Memory of failures** in the cimitero
 - **Memory of structure** in the bicono of each finding
-- **Memory of the operator's voice** via the corpus (in the editorial domain)
+- **Memory of domain decisions** via seeds, reports and promotion boundaries
 
 What you get back is not a chat reply. It's a structured artifact that
 compounds across cycles.
@@ -38,7 +38,7 @@ compounds across cycles.
 - Building a new lab? → [Meta-lab Capability Stack](META_LAB_CAPABILITY_STACK.md)
 - Exploring the next public domain? →
   [Bitcoin Regime Lab Seed](BITCOIN_REGIME_LAB_SEED_20260518.md)
-- Want to use the physics or editorial domain? → [Domains](domains/index.md)
+- Want to use a shipped domain? → [Domains](domains/index.md)
 - Want to write your own domain? → [Extending](domains/extending.md)
 
 ## Built on D-ND

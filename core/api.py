@@ -1409,7 +1409,7 @@ _N_I18N: dict[str, dict[str, str]] = {
         "footer_link_dashboard": "Dashboard",
         # Master index /n/
         "master_meta_title": "Cycle dei lab · Lab D-ND",
-        "master_meta_desc": "Stati e cycle narrati dei domini D-ND: physics è il master verificato, finance e bio-rhythms sono in collaudo.",
+        "master_meta_desc": "Stati e cycle narrati dei domini D-ND: physics è il master verificato, finance è in collaudo operativo.",
         "master_og_title": "Cycle dei lab D-ND",
         "master_og_desc": "Stati pubblici dei domini D-ND, con cycle narrati e verdetto strutturale.",
         "master_ctx_where": "Cycle dei lab D-ND",
@@ -1417,7 +1417,7 @@ _N_I18N: dict[str, dict[str, str]] = {
         "master_ctx_cta": "Lab simile sul tuo dominio? Inizia →",
         "master_eyebrow": "Cycle dei lab",
         "master_h1": "Cosa fanno i lab quando girano.",
-        "master_lead": "Ogni cycle è un'iterazione di ricerca: il lab sceglie una domanda, prova una risposta, la mette sotto critica strutturale. Qui leggi cosa ha trovato e cosa non ha ancora diritto di diventare evidenza: physics è il master verificato, finance e bio-rhythms sono domini in collaudo.",
+        "master_lead": "Ogni cycle è un'iterazione di ricerca: il lab sceglie una domanda, prova una risposta, la mette sotto critica strutturale. Qui leggi cosa ha trovato e cosa non ha ancora diritto di diventare evidenza: physics è il master verificato, finance è in collaudo operativo.",
         "physics_master_label": "master · d-nd.com",
         "physics_master_h2": "physics",
         "physics_master_desc": "Master lab della fisica: dove il modello D-ND viene sviluppato e validato.",
@@ -1450,7 +1450,6 @@ _N_I18N: dict[str, dict[str, str]] = {
         "narr_tech_report_post": " con dati, falsifier flags e bicono resta consultabile.",
         "narr_default_title_fmt": "Cycle {cycle_ts} · {domain}",
         "narr_evidence_note_finance": "Stato corrente: questa è una narrativa storica del cycle. Il dominio finance resta in collaudo; nessun risultato è promosso come segnale di mercato finché non supera i gate su dati reali con controlli robusti.",
-        "narr_evidence_note_bio-rhythms": "Stato corrente: questa è una narrativa storica del cycle. Il dominio bio-rhythms resta in collaudo; nessun risultato conta come evidenza biologica o clinica finché l'origine reale del dato non è verificata.",
         # Verdict labels (da _verdict_label)
         "verdict_falsificazione": "Falsificazione",
         "verdict_redesign": "Il sistema chiede di riprogettare",
@@ -1459,10 +1458,8 @@ _N_I18N: dict[str, dict[str, str]] = {
         "verdict_scarto": "Bassa qualità",
         "verdict_default": "Cycle completato",
         # Domain leads (descrizione brevi)
-        "lead_bio-rhythms": "Bio-rhythms in collaudo: pipeline sintetica HRV validata, dati reali e claim clinici fuori perimetro finché il gate PhysioNet non regge.",
         "lead_finance": "Finance in collaudo: regime detection su mercati FX, crypto, equity; ultimo synthetic realistic in NO_DELTA, dati reali al gate successivo.",
         "lead_ops-decisions": "Friction operativa trasformata in regole strutturali.",
-        "lead_editorial": "Distillazione dei contenuti che reggono il peso.",
         "lead_meta-lab": "Il lab che genera lab — produce semi cognitivi.",
         # Lang toggle
         "lang_toggle_en": "EN",
@@ -1489,7 +1486,7 @@ _N_I18N: dict[str, dict[str, str]] = {
         "footer_link_dashboard": "Dashboard",
         # Master index /n/
         "master_meta_title": "Lab cycles · Lab D-ND",
-        "master_meta_desc": "States and narrated cycles of D-ND domains: physics is the verified master, finance and bio-rhythms are under validation.",
+        "master_meta_desc": "States and narrated cycles of D-ND domains: physics is the verified master, finance is under operational validation.",
         "master_og_title": "D-ND lab cycles",
         "master_og_desc": "Public states of D-ND domains, with narrated cycles and structural verdicts.",
         "master_ctx_where": "D-ND lab cycles",
@@ -1497,7 +1494,7 @@ _N_I18N: dict[str, dict[str, str]] = {
         "master_ctx_cta": "Similar lab on your domain? Start →",
         "master_eyebrow": "Lab cycles",
         "master_h1": "What labs do when they run.",
-        "master_lead": "Every cycle is a research iteration: the lab picks a question, tries an answer, runs it through structural critique. Here you read what it found and what is not yet allowed to become evidence: physics is the verified master, finance and bio-rhythms are domains under validation.",
+        "master_lead": "Every cycle is a research iteration: the lab picks a question, tries an answer, runs it through structural critique. Here you read what it found and what is not yet allowed to become evidence: physics is the verified master, finance is under operational validation.",
         "physics_master_label": "master · d-nd.com",
         "physics_master_h2": "physics",
         "physics_master_desc": "Physics master lab: where the D-ND model is developed and validated.",
@@ -1530,7 +1527,6 @@ _N_I18N: dict[str, dict[str, str]] = {
         "narr_tech_report_post": " with data, falsifier flags and bicono remains available.",
         "narr_default_title_fmt": "Cycle {cycle_ts} · {domain}",
         "narr_evidence_note_finance": "Current state: this is a historical cycle narrative. The finance domain remains under validation; no result is promoted as a market signal until it passes real-data gates with robust controls.",
-        "narr_evidence_note_bio-rhythms": "Current state: this is a historical cycle narrative. The bio-rhythms domain remains under validation; no result counts as biological or clinical evidence until the real origin of the data is verified.",
         # Verdict labels
         "verdict_falsificazione": "Falsified",
         "verdict_redesign": "System asks to redesign",
@@ -1539,10 +1535,8 @@ _N_I18N: dict[str, dict[str, str]] = {
         "verdict_scarto": "Low quality",
         "verdict_default": "Cycle completed",
         # Domain leads
-        "lead_bio-rhythms": "Bio-rhythms under validation: synthetic HRV pipeline validated, real data and clinical claims out of scope until the PhysioNet gate holds.",
         "lead_finance": "Finance under validation: regime detection on FX, crypto and equity markets; latest realistic synthetic run returned NO_DELTA, real data is the next gate.",
         "lead_ops-decisions": "Operational friction turned into structural rules.",
-        "lead_editorial": "Distillation of content that holds weight.",
         "lead_meta-lab": "The lab that generates labs — produces cognitive seeds.",
         # Lang toggle
         "lang_toggle_en": "EN",

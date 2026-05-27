@@ -58,7 +58,7 @@ if ! [[ "$SLUG" =~ ^[a-z][a-z0-9_-]*$ ]]; then
     echo "Invalid slug '$SLUG' — must match ^[a-z][a-z0-9_-]*$" >&2
     exit 1
 fi
-RESERVED=("meta-lab" "physics" "editorial" "ops-decisions")
+RESERVED=("meta-lab" "physics" "ops-decisions")
 for r in "${RESERVED[@]}"; do
     if [ "$SLUG" = "$r" ]; then
         echo "Slug '$SLUG' is reserved (existing lab). Use different name." >&2

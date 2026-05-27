@@ -7282,14 +7282,6 @@
       domainKeepReason(domain) {
         const id = domain?.id || '';
         const copy = {
-          'bio-rhythms': {
-            it: 'Serve a testare il metodo D-ND su biosegnali cardiaci/circadiani; resta solo se ripariamo l acquisizione PhysioNet.',
-            en: 'Tests the D-ND method on cardiac/circadian biosignals; keep only if PhysioNet acquisition is repaired.',
-          },
-          editorial: {
-            it: 'Distingue fonte, eco e materiale pubblicabile; utile se diventa filtro editoriale verificabile.',
-            en: 'Separates source, echo and publishable material; useful if it becomes a verifiable editorial filter.',
-          },
           'meta-lab': {
             it: 'Genera nuovi Lab e template installabili; va riparato prima di rigenerare altri domini.',
             en: 'Generates new Labs and installable templates; must be repaired before regenerating domains.',
@@ -7384,14 +7376,11 @@
       localizedDomainDescription(domain) {
         const d = domain || {};
         const en = {
-          'bio-rhythms': 'Domain Lab for cardiac and circadian biosignal regime detection: normal/arrhythmia or wake/sleep dipoles checked against shuffle surrogates.',
           finance: 'Domain Lab for regime shifts in FX, crypto and equity markets: generative bull/bear dipoles checked against random-walk surrogates.',
           'ops-decisions': 'System Lab that governs the evolution of live D-ND Labs: keeps intent, seed, reports, falsifier and resultant aligned so exponentiality prevails over noise and sterile symmetry.',
         };
         const it = {
-          'bio-rhythms': 'Lab di dominio per regime detection in biosegnali cardiaci e circadiani: dipolo normale/aritmia o veglia/sonno generativo contro shuffle surrogato.',
           'bitcoin-regime-lab': 'Lab candidato generato da richiesta dominio bitcoin-regime-lab: osserva ipotesi BTC e blocca interpretazioni operative deboli prima che diventino claim.',
-          editorial: 'Lab editoriale: legge archivi e bozze pubblicate, distingue fonte verificabile da insight ricevuto e prepara materiale controllabile.',
           finance: 'Lab di dominio per regime shift nei mercati FX, crypto ed equity: dipolo bull/bear generativo contro random walk surrogato.',
           'meta-lab': 'Lab a livello di sistema: genera e valuta nuovi Lab, seed cognitivi e template installabili.',
           'ops-decisions': 'Lab di sistema che governa l\'evoluzione dei Lab D-ND: mantiene allineati intento, seme, report, falsifier e risultante affinche l\'esponenzialita prevalga su rumore e simmetria sterile.',
@@ -7407,14 +7396,6 @@
         if (this.lang === 'en' && d.direzione_en) return d.direzione_en;
         const raw = d.direzione || d.direzione_en || '';
         const localized = {
-          'bio-rhythms': {
-            en: 'PhysioNet nsr001 still resolves to a synthetic fallback; repair acquisition/versioning before biological validation resumes.',
-            it: 'PhysioNet nsr001 risolve ancora su fallback sintetico: riparare acquisizione/versioning prima di riprendere la validazione biologica.',
-          },
-          editorial: {
-            en: 'Most published content is echo of received insight rather than source; first task: discriminate source from echo.',
-            it: 'Gran parte dei contenuti pubblicati e eco di insight ricevuti piu che fonte; primo compito: discriminare.',
-          },
           finance: {
             en: 'SPY current-window orientation is partial locality, not recurring evidence.',
             it: 'L orientamento SPY sulla finestra corrente e localita parziale, non evidenza ricorrente.',
@@ -10188,14 +10169,6 @@
           push("Quale claim e testabile?");
           push("Cosa manca per promuoverlo?");
           push("Spiega semplice il rischio");
-        } else if (this.activeDomain === 'bio-rhythms') {
-          push("Il dato e reale o sintetico?");
-          push("Quale controllo serve?");
-          push("Prossimo passo sul dataset");
-        } else if (this.activeDomain === 'editorial') {
-          push("Cosa abbiamo di utile?");
-          push("Fonte o eco?");
-          push("Prossimo passo editoriale");
         } else if (this.activeDomain === 'finance') {
           push("Cosa e segnale e cosa no?");
           push("Quale baseline manca?");
@@ -10243,10 +10216,6 @@
           push("Cosa c'è nel cimitero?");
           push("Quale tensione è prioritaria?");
           push("Quali ponti tra teorie esistono?");
-        }
-        if (this.activeDomain === 'editorial') {
-          push("Quali pezzi sono pronti?");
-          push("Quale direzione editoriale?");
         }
         push(this.chatCopy("Ci aiuti a migliorare questo Lab?", "Help us improve this Lab?"));
         return actions.slice(0, 4);

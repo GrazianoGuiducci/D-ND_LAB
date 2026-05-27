@@ -12,7 +12,6 @@ docs/
 ├── architecture.md     # the 13 movements + the modus
 ├── domains/
 │   ├── physics.md
-│   ├── editorial.md
 │   └── extending.md    # how to write your own domain
 ├── config.md           # config.schema.json walkthrough
 ├── tools/              # built-in + MCP tool reference

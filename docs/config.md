@@ -84,7 +84,7 @@ must have:
 - `movements` — per-movement enabled/params
 
 See `config.schema.json` for the full schema and
-`domains/physics/config.json` / `domains/editorial/config.json` for
+`domains/physics/config.json` / `domains/finance/config.json` for
 working examples.
 
 ### Per-movement params

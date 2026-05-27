@@ -178,8 +178,8 @@ def _check_m3_tools_runnable(template_dir: Path) -> dict[str, Any]:
     """
     tools_dir = template_dir / "tools"
     if not tools_dir.exists():
-        # editorial pattern: tools/ non sempre presente nel template iniziale
-        return {"id": "M3", "status": "SKIP", "detail": "tools/ assente (template editorial-style?)",
+        # Some domain families start without custom executable tools.
+        return {"id": "M3", "status": "SKIP", "detail": "tools/ assente nel template iniziale",
                 "metric": 0}
     exp_files = list(tools_dir.glob("exp_*.py"))
     if not exp_files:
@@ -346,7 +346,7 @@ def _check_m6_mml_coherence(template_dir: Path) -> dict[str, Any]:
                       "autologica-operativa", "eval"}
     missing_core = core_invariant - set(skills)
     # Per il meta-lab stesso e i lab pre-existing, alcune mancanze sono OK
-    if template_dir.name in ("meta-lab", "physics", "editorial") and len(missing_core) <= 3:
+    if template_dir.name in ("meta-lab", "physics") and len(missing_core) <= 3:
         pass  # tollerato per lab esistenti
     elif missing_core:
         issues.append(f"core invariante mancante: {sorted(missing_core)}")
@@ -412,7 +412,7 @@ def _check_m7_transduction_integrity(template_dir: Path) -> dict[str, Any]:
     strict = os.environ.get("META_LAB_STRICT_M7", "").lower() in {"1", "true", "yes"}
 
     if not transduction_file.exists():
-        legacy_names = {"physics", "editorial", "meta-lab", "finance", "bio-rhythms", "ops-decisions"}
+        legacy_names = {"physics", "meta-lab", "finance", "ops-decisions"}
         if template_dir.name in legacy_names and not strict:
             return {
                 "id": "M7",
@@ -499,7 +499,7 @@ def _check_m8_skill_archive_retrieval(template_dir: Path) -> dict[str, Any]:
     anche `archive_retrieval`: path/capsula, read_depth, pattern e limiti.
     """
     strict = os.environ.get("META_LAB_STRICT_M7", "").lower() in {"1", "true", "yes"}
-    legacy_names = {"physics", "editorial", "meta-lab", "finance", "bio-rhythms", "ops-decisions"}
+    legacy_names = {"physics", "meta-lab", "finance", "ops-decisions"}
 
     text_parts = []
     for name in ("transduction.md", "context.md", "README.md"):
@@ -619,7 +619,7 @@ def _check_m9_ui_tab_strategy(template_dir: Path) -> dict[str, Any]:
     I domini legacy restano SKIP: M9 e' un gate per nuova generazione
     Meta-lab, non un retrofit automatico su lab gia' installati.
     """
-    legacy_names = {"physics", "editorial", "meta-lab", "finance", "bio-rhythms", "ops-decisions", "bitcoin-regime-lab"}
+    legacy_names = {"physics", "meta-lab", "finance", "ops-decisions", "bitcoin-regime-lab"}
     ui_file = template_dir / "ui_contract.json"
     if not ui_file.exists():
         if template_dir.name in legacy_names:

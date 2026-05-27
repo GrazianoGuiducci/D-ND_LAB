@@ -19,7 +19,7 @@
     },
     "lab": {
       "type": "string",
-      "description": "Slug del lab (corrisponde a domains/<slug>/). Esempi: physics, editorial, meta-lab.",
+      "description": "Slug del lab (corrisponde a domains/<slug>/). Esempi: physics, finance, meta-lab.",
       "pattern": "^[a-z][a-z0-9-_]*$"
     },
     "version": {

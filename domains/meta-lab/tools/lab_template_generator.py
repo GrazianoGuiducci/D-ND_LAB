@@ -1,8 +1,8 @@
 """lab_template_generator.py — Scaffolding writer del meta-lab.
 
 Trasforma uno **specs JSON** (output cognitivo dell'agent meta-lab) nel
-file system tree completo di un lab di dominio nuovo, parallelo a
-domains/physics/ e domains/editorial/.
+file system tree completo di un lab di dominio nuovo, parallelo ai
+domini attivi.
 
 Lo specs contiene:
 {
@@ -85,7 +85,7 @@ def validate_specs(specs: dict[str, Any]) -> list[str]:
     slug = specs.get("domain_slug", "")
     if slug and not slug.replace("_", "").replace("-", "").isalnum():
         errors.append(f"invalid domain_slug '{slug}' (alphanumeric + _ - only)")
-    if slug in ("meta-lab", "physics", "editorial"):
+    if slug in ("meta-lab", "physics"):
         errors.append(f"domain '{slug}' è riservato/esistente")
     # seed_tensions deve avere almeno 3 tensioni iniziali
     seed = specs.get("seed_tensions_json", {})
