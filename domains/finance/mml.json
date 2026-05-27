@@ -336,6 +336,18 @@
       "path": "tools/finance_window_universe_redesign.py",
       "description": "Builds and optionally executes a materially changed scout plan after recurrence failure.",
       "executable_inline": true
+    },
+    {
+      "name": "finance_lag_memory_candidate_review",
+      "path": "tools/finance_lag_memory_candidate_review.py",
+      "description": "Reviews scout partial rows with lag-memory null families across rolling windows before more redesign.",
+      "executable_inline": true
+    },
+    {
+      "name": "finance_pair_object_review",
+      "path": "tools/finance_pair_object_review.py",
+      "description": "Tests relative-strength pair objects after single-asset mechanisms fail.",
+      "executable_inline": true
     }
   ],
   "external_apis": [

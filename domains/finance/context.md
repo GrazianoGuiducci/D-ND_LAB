@@ -505,6 +505,39 @@ Output: JSON `dndlab.finance.window_universe_redesign.value.v1` e, se
 eseguito, un nuovo `finance_window_universe_scout_latest.json`. Regola:
 redesign cambia solo l'indagine diagnostica; non apre paper/live-sim o ordini.
 
+### finance_lag_memory_candidate_review
+
+Descrizione: review alternativa sui parziali dello scout. Usa la famiglia
+lag-memory gia' calibrata nel dominio e la applica a finestre rolling per
+stabilire se i parziali orientation contengono un oggetto ricorrente diverso.
+
+Comando:
+
+```bash
+python3 /opt/D-ND_LAB/domains/finance/tools/finance_lag_memory_candidate_review.py --write --json
+```
+
+Output: JSON `dndlab.finance.lag_memory_candidate_review.value.v1`.
+Se `label=no_lag_memory_candidate`, il ramo parziali e' chiuso: il prossimo
+ciclo deve cambiare oggetto/meccanismo di mercato, non rilanciare recurrence
+sugli stessi parziali.
+
+### finance_pair_object_review
+
+Descrizione: review su oggetti pair/relative strength dopo il fallimento degli
+asset singoli. Costruisce ritorni allineati di spread log-ratio (`A/B`) e li
+testa su finestre rolling con la famiglia iid/block5/block21.
+
+Comando:
+
+```bash
+python3 /opt/D-ND_LAB/domains/finance/tools/finance_pair_object_review.py --write --json
+```
+
+Output: JSON `dndlab.finance.pair_object_review.value.v1`. Se
+`label=no_pair_candidate`, il prossimo ciclo non deve rilanciare singoli asset
+o pair simili: va definito un oggetto volatilita' o macro-relative.
+
 ### finance_transfer_diagnostic
 
 Descrizione: genera un artefatto macchina per il transfer real-market su una

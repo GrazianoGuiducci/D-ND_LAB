@@ -201,6 +201,8 @@ python3 domains/finance/tools/finance_window_universe_scout.py --write --json
 python3 domains/finance/tools/finance_recurrence_validation_cycle.py --write --json
 python3 domains/finance/tools/finance_profit_readiness.py --write --json
 python3 domains/finance/tools/finance_window_universe_redesign.py --execute-scout --write --json
+python3 domains/finance/tools/finance_lag_memory_candidate_review.py --write --json
+python3 domains/finance/tools/finance_pair_object_review.py --write --json
 ```
 
 Il guard non lancia ciclo e non produce claim di mercato. Controlla che il
@@ -275,6 +277,16 @@ locali con avvio profit.
 costruisce una nuova griglia scout materialmente diversa. Con `--execute-scout`
 rilancia direttamente `finance_window_universe_scout.py` usando la nuova
 griglia. Serve a evitare il loop su USO/EFA locali; resta diagnostico.
+
+`finance_lag_memory_candidate_review.py` prende i parziali dello scout e li
+testa con la famiglia lag-memory gia' calibrata nel lab, su finestre rolling.
+Se fallisce, il prossimo ciclo deve cambiare oggetto/meccanismo di mercato,
+non continuare a spendere ricorrenza su parziali.
+
+`finance_pair_object_review.py` cambia oggetto di mercato: invece di singoli
+asset testa spread/relative strength come `XLK/SPY`, `GLD/SPY`, `HYG/LQD` su
+finestre rolling. Se anche questo fallisce, il prossimo oggetto deve essere
+volatilita' o relazione macro, non un altro scan di ETF.
 
 ## Architettura cognitiva (MML)
 

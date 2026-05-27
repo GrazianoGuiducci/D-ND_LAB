@@ -65,6 +65,8 @@ def build_payload() -> dict[str, Any]:
     candidate = summary("finance_candidate_discovery_cycle_latest.json")
     data = summary("finance_data_intake_audit_latest.json")
     health = summary("finance_operational_health_latest.json")
+    lag_review = summary("finance_lag_memory_candidate_review_latest.json")
+    pair_review = summary("finance_pair_object_review_latest.json")
 
     selected_rows = scout.get("selected_for_crosscheck")
     selected_symbols = [
@@ -88,6 +90,8 @@ def build_payload() -> dict[str, Any]:
     health_status = str(health.get("status") or autonomy.get("operational_health") or "missing")
     data_status = str(data.get("status") or "missing")
     provider_status = str(candidate.get("provider_crosscheck_status") or "missing")
+    lag_label = str(lag_review.get("label") or "missing")
+    pair_label = str(pair_review.get("label") or "missing")
 
     blocks: list[dict[str, str]] = []
     if data_status not in {"pass", "warn"}:
@@ -168,6 +172,22 @@ def build_payload() -> dict[str, Any]:
             "detail_it": "Sufficiente per diagnostica, non per esecuzione fine.",
             "detail_en": "Enough for diagnostics, not fine execution.",
         })
+    if lag_label == "no_lag_memory_candidate":
+        blocks.append({
+            "id": "alternate_null_family_rejected_partials",
+            "label_it": "Parziali respinti",
+            "label_en": "Partials rejected",
+            "detail_it": "Anche la review lag-memory non ha trovato candidati ricorrenti.",
+            "detail_en": "Lag-memory review also found no recurring candidates.",
+        })
+    if pair_label == "no_pair_candidate":
+        blocks.append({
+            "id": "pair_object_rejected",
+            "label_it": "Pair respinti",
+            "label_en": "Pairs rejected",
+            "detail_it": "Anche le relazioni/pair testate non hanno prodotto candidati ricorrenti.",
+            "detail_en": "The tested pair/relative-strength objects also produced no recurring candidates.",
+        })
 
     if real_allowed:
         status = "real_execution_ready"
@@ -182,7 +202,19 @@ def build_payload() -> dict[str, Any]:
         status = "not_ready"
         stage = "diagnostic_only"
 
-    if status == "not_ready" and recurrence_label == "local_candidate_not_recurring":
+    if status == "not_ready" and pair_label == "no_pair_candidate":
+        plain_it = "Non pronto per profitto: singoli asset, lag-memory e pair/relative strength non producono candidati ricorrenti; prossimo oggetto: volatilita' o macro-relazione."
+        plain_en = "Not ready for profit: single assets, lag-memory and pair/relative strength produce no recurring candidates; next object: volatility or macro relation."
+        next_action = "volatility_macro_object_review"
+        next_it = "Definire e testare un oggetto volatilita' o macro-relative con null e ricorrenza."
+        next_en = "Define and test a volatility or macro-relative object with nulls and recurrence."
+    elif status == "not_ready" and lag_label == "no_lag_memory_candidate":
+        plain_it = "Non pronto per profitto: orientation e lag-memory non producono candidati ricorrenti; serve cambiare oggetto o meccanismo di mercato."
+        plain_en = "Not ready for profit: orientation and lag-memory produce no recurring candidates; the market object or mechanism must change."
+        next_action = "change_market_object_or_mechanism"
+        next_it = "Definire un nuovo oggetto: spread, pair, relative strength, volatilita' o relazione cross-asset."
+        next_en = "Define a new object: spread, pair, relative strength, volatility or cross-asset relation."
+    elif status == "not_ready" and recurrence_label == "local_candidate_not_recurring":
         plain_it = f"Non pronto per profitto: {local_phrase_it}, i provider concordano, ma la ricorrenza non regge; niente paper."
         plain_en = f"Not ready for profit: {local_phrase_en}, providers agree, but recurrence fails; no paper."
         next_action = "auto_redesign_window_universe"
@@ -231,6 +263,8 @@ def build_payload() -> dict[str, Any]:
         "data_status": data_status,
         "provider_status": provider_status,
         "recurrence_label": recurrence_label,
+        "lag_memory_review_label": lag_label,
+        "pair_object_review_label": pair_label,
         "operational_health": health_status,
     }
     payload = {
