@@ -1646,8 +1646,8 @@
     <template x-if="internalDomains().length">
       <div class="mt-6 border border-slate-800 rounded-lg p-4 bg-slate-950/45">
         <div class="flex items-baseline justify-between gap-3">
-          <h3 class="text-xs uppercase tracking-wider text-slate-400" x-text="lang === 'en' ? 'Not published / to evaluate' : 'Non pubblicati / da valutare'"></h3>
-          <span class="text-[11px] text-slate-500" x-text="lang === 'en' ? 'hidden from active domains until repaired or regenerated' : 'nascosti dai domini attivi finche non sono riparati o rigenerati'"></span>
+          <h3 class="text-xs uppercase tracking-wider text-slate-400" x-text="lang === 'en' ? 'Internal / to evaluate' : 'Interni / da valutare'"></h3>
+          <span class="text-[11px] text-slate-500" x-text="lang === 'en' ? 'system Labs and drafts kept outside the public active set' : 'Lab di sistema e bozze fuori dai domini pubblici attivi'"></span>
         </div>
         <div class="mt-3 grid md:grid-cols-2 gap-2">
           <template x-for="d in internalDomains()" :key="d.id">
@@ -7283,8 +7283,12 @@
         const id = domain?.id || '';
         const copy = {
           'meta-lab': {
-            it: 'Genera nuovi Lab e template installabili; va riparato prima di rigenerare altri domini.',
-            en: 'Generates new Labs and installable templates; must be repaired before regenerating domains.',
+            it: domain?.state === 'manual_healthy'
+              ? 'Genera nuovi Lab e template installabili; operativo come Lab interno manuale.'
+              : 'Genera nuovi Lab e template installabili; va riparato prima di rigenerare altri domini.',
+            en: domain?.state === 'manual_healthy'
+              ? 'Generates new Labs and installable templates; operational as an internal manual Lab.'
+              : 'Generates new Labs and installable templates; must be repaired before regenerating domains.',
           },
           'ops-decisions': {
             it: 'Governance dei Lab: controlla intenti, incidenti e deriva; da rifare se resta solo tautologico.',
