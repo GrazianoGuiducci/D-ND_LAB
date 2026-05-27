@@ -671,6 +671,7 @@ async def list_domains_endpoint(request: Request) -> list[dict[str, Any]]:
         try:
             config = cfg.load_domain_config(d)
             seed = _read_json_safe(paths.seed_path(d), {})
+            operational = _domain_operational_state(d, config, seed)
             out.append({
                 "id": d,
                 "title": config.get("title", d),
@@ -681,10 +682,43 @@ async def list_domains_endpoint(request: Request) -> list[dict[str, Any]]:
                 "n_reports": _count_reports(d),
                 "direzione": (seed.get("direzione", "") or "")[:200],
                 "direzione_en": (seed.get("direzione_en", "") or "")[:200],
+                "operational": operational,
+                "visibility": operational.get("visibility"),
+                "state": operational.get("state"),
             })
         except cfg.ConfigError as e:
-            out.append({"id": d, "error": str(e)})
+            out.append({
+                "id": d,
+                "error": str(e),
+                "visibility": "internal",
+                "state": "repair_required",
+                "operational": {
+                    "state": "repair_required",
+                    "visibility": "internal",
+                    "label_it": "Da riparare",
+                    "label_en": "Needs repair",
+                    "detail_it": str(e),
+                    "detail_en": str(e),
+                    "can_enter": False,
+                },
+            })
     return out
+
+
+@app.get("/api/lab_fleet_health")
+async def lab_fleet_health(request: Request) -> dict[str, Any]:
+    await _check_auth(request)
+    domains = await list_domains_endpoint(request)
+    counts: dict[str, int] = {}
+    for item in domains:
+        state = str(item.get("state") or "unknown")
+        counts[state] = counts.get(state, 0) + 1
+    return {
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "counts": counts,
+        "domains": domains,
+        "boundary": "Read-only fleet health. Visibility marks dashboard exposure; it does not delete or archive domain files.",
+    }
 
 
 @app.get("/api/domains/{domain}/seed")
@@ -5213,10 +5247,130 @@ def _crontab_lab_flags(domain: str) -> dict[str, bool]:
     except (OSError, subprocess.SubprocessError):
         return flags
     text = proc.stdout or ""
+    cron_dir = Path("/etc/cron.d")
+    if cron_dir.exists():
+        for path in cron_dir.iterdir():
+            if not path.is_file():
+                continue
+            try:
+                text += "\n" + path.read_text(encoding="utf-8", errors="replace")
+            except OSError:
+                continue
     flags["cycle_installed"] = f"dnd-cycle.sh {domain}" in text
     if domain == "bitcoin-regime-lab":
         flags["value_refresh_installed"] = "bitcoin-refresh-value.sh" in text
     return flags
+
+
+def _latest_cycle_state(domain: str) -> dict[str, Any]:
+    domain_dir = paths.domain_data_dir(domain)
+    trace_path, trace = _latest_json_file(domain_dir, "cycle_trace_*.json")
+    trajectory = _read_json_safe(domain_dir / "trajectory_state.json", {})
+    if not isinstance(trajectory, dict):
+        trajectory = {}
+    trace = trace or {}
+    movements = trace.get("movements") if isinstance(trace.get("movements"), list) else []
+    failed = [
+        str(row.get("name") or "unknown")
+        for row in movements
+        if isinstance(row, dict) and row.get("status") == "error"
+    ]
+    return {
+        "trace": trace_path.name if trace_path else None,
+        "cycle_ts": trace.get("cycle_ts") or trajectory.get("cycle_ts") or trajectory.get("entry_cycle_ref"),
+        "n_errors": trace.get("n_errors"),
+        "failed_movements": failed,
+        "trajectory_decision": trajectory.get("decision"),
+        "trajectory_confidence": trajectory.get("confidence"),
+    }
+
+
+def _domain_operational_state(domain: str, config: dict[str, Any], seed: dict[str, Any]) -> dict[str, Any]:
+    cycle = _latest_cycle_state(domain)
+    cron = _crontab_lab_flags(domain)
+    domain_dir = paths.domain_dir(domain)
+    pre_hook = domain_dir / "tools" / "pre_cycle_value_refresh.sh"
+    post_hook = domain_dir / "tools" / "post_cycle_closure.sh"
+    has_trace = bool(cycle.get("trace"))
+    n_errors = cycle.get("n_errors")
+    ok_trace = has_trace and (n_errors == 0)
+    piano = seed.get("piano") if isinstance(seed, dict) else None
+
+    state = "draft"
+    visibility = "internal"
+    can_enter = False
+    label_it = "Bozza"
+    label_en = "Draft"
+    detail_it = "Lab generato o fermo: non viene mostrato tra i domini attivi finche non ha un ciclo utile recente."
+    detail_en = "Generated or stale Lab: hidden from active domains until it has a useful recent cycle."
+
+    if has_trace and n_errors not in (0, None):
+        state = "repair_required"
+        visibility = "internal"
+        label_it = "Da riparare"
+        label_en = "Needs repair"
+        detail_it = f"Ultimo ciclo con {n_errors} errori; movimenti falliti: {', '.join(cycle.get('failed_movements') or []) or 'n/a'}."
+        detail_en = f"Latest cycle has {n_errors} errors; failed movements: {', '.join(cycle.get('failed_movements') or []) or 'n/a'}."
+    elif ok_trace and cron.get("cycle_installed") and pre_hook.exists():
+        state = "autonomous_scheduled"
+        visibility = "active"
+        can_enter = True
+        label_it = "Autonomo schedulato"
+        label_en = "Scheduled autonomous"
+        detail_it = "Ha ciclo verificato, hook di refresh e cron attivo."
+        detail_en = "Verified cycle, refresh hook and active cron."
+    elif ok_trace and pre_hook.exists():
+        state = "autonomous_ready"
+        visibility = "active"
+        can_enter = True
+        label_it = "Autonomo manuale"
+        label_en = "Manual autonomous"
+        detail_it = "Ha ciclo verificato e hook di refresh; manca solo una schedulazione cron."
+        detail_en = "Verified cycle and refresh hook; only cron scheduling is missing."
+    elif domain == "physics" and ok_trace:
+        state = "mature_manual"
+        visibility = "active"
+        can_enter = True
+        label_it = "Maturo manuale"
+        label_en = "Mature manual"
+        detail_it = "Lab storico maturo: ciclo sano, ma non schedulato da questa dashboard."
+        detail_en = "Mature historical Lab: healthy cycle, not scheduled from this dashboard."
+    elif domain == "research-radar" and ok_trace and cycle.get("trajectory_confidence") == "high":
+        state = "manual_healthy"
+        visibility = "active"
+        can_enter = True
+        label_it = "Manuale sano"
+        label_en = "Healthy manual"
+        detail_it = "Ultimo ciclo sano e traiettoria leggibile; non ancora automiglioramento schedulato."
+        detail_en = "Latest cycle is healthy with readable trajectory; not scheduled for self-improvement yet."
+    elif ok_trace:
+        state = "stale_manual"
+        visibility = "internal"
+        can_enter = True
+        label_it = "Fermo / da valutare"
+        label_en = "Stale / review"
+        detail_it = "Ha un ciclo senza errori, ma e fermo o generato prima delle regole di autonomia attuali."
+        detail_en = "Has an error-free cycle, but is stale or generated before current autonomy rules."
+
+    return {
+        "state": state,
+        "visibility": visibility,
+        "can_enter": can_enter,
+        "label_it": label_it,
+        "label_en": label_en,
+        "detail_it": detail_it,
+        "detail_en": detail_en,
+        "cycle_ts": cycle.get("cycle_ts"),
+        "cycle_trace": cycle.get("trace"),
+        "n_errors": n_errors,
+        "failed_movements": cycle.get("failed_movements") or [],
+        "trajectory_decision": cycle.get("trajectory_decision"),
+        "trajectory_confidence": cycle.get("trajectory_confidence"),
+        "cron_cycle": bool(cron.get("cycle_installed")),
+        "pre_cycle_hook": pre_hook.exists(),
+        "post_cycle_hook": post_hook.exists(),
+        "piano": piano,
+    }
 
 
 def _build_miniboot_status(domain: str, *, lang: str = "it") -> dict[str, Any]:

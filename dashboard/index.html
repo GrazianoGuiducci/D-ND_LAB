@@ -1575,14 +1575,14 @@
 
     <!-- Sezione domini -->
     <div class="mb-3 flex items-baseline justify-between">
-      <h2 class="text-sm uppercase tracking-wider text-slate-300" data-i18n="dash.section.dominiAttivi">Domini attivi</h2>
-      <span class="text-xs text-slate-400" data-i18n="dash.section.dominiSubtitle">scegli un dominio per entrare nel campo vivo</span>
+      <h2 class="text-sm uppercase tracking-wider text-slate-300" x-text="lang === 'en' ? 'Operational domains' : 'Domini operativi'"></h2>
+      <span class="text-xs text-slate-400" x-text="lang === 'en' ? 'only Labs with a verified operating state are shown here' : 'qui compaiono solo Lab con stato operativo verificato'"></span>
     </div>
 
     <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-      <template x-for="d in domains" :key="d.id">
+      <template x-for="d in visibleDomains()" :key="d.id">
         <div class="domain-card bg-slate-900 border border-slate-800 hover:border-purple-700 rounded-lg p-5 transition cursor-pointer"
-             :class="{'system-lab': d.id === 'ops-decisions', 'genesis-lab': d.id === 'meta-lab'}"
+             :class="[domainCardClass(d), {'system-lab': d.id === 'ops-decisions', 'genesis-lab': d.id === 'meta-lab'}]"
              @click="enterDomain(d.id)">
           <div class="flex items-center justify-between mb-3">
             <div class="min-w-0">
@@ -1597,6 +1597,14 @@
               <h2 class="text-xl font-medium" x-text="d.title"></h2>
             </div>
             <span class="text-xs text-slate-300 font-mono" x-text="d.version"></span>
+          </div>
+          <div class="mb-3 flex flex-wrap items-center gap-2">
+            <span class="inline-flex items-center gap-1.5 rounded border px-2 py-0.5 text-[10px] font-mono uppercase tracking-wider"
+                  :class="domainStateBadgeClass(d)">
+              <span class="h-1.5 w-1.5 rounded-full" :class="domainStateDotClass(d)"></span>
+              <span x-text="domainStateLabel(d)"></span>
+            </span>
+            <span class="text-[10px] text-slate-400 font-mono" x-text="domainCycleLabel(d)"></span>
           </div>
           <p class="text-sm text-slate-400 mb-4 line-clamp-2" x-text="localizedDomainDescription(d)"></p>
           <div class="flex justify-between text-xs text-slate-300 font-mono pt-3 border-t border-slate-800">
@@ -1614,32 +1622,49 @@
                @click.stop>
             <div>
               <div class="text-slate-400 uppercase tracking-wider mb-1" data-i18n="dash.dom.stato">Stato</div>
-              <!-- Toggle Attivo/Disattivo (placeholder, sempre 'attivo' per ora). -->
+              <!-- Stato operativo reale derivato da ciclo, hook e cron. -->
               <button class="flex items-center gap-2 cursor-not-allowed opacity-70" disabled
-                      data-tip="Gestione stato dominio · UI placeholder">
-                <span class="relative inline-block w-7 h-3.5 rounded-full bg-green-700/60">
-                  <span class="absolute right-0.5 top-0.5 w-2.5 h-2.5 rounded-full bg-green-300"></span>
+                      :data-tip="domainStateDetail(d)">
+                <span class="relative inline-block w-7 h-3.5 rounded-full" :class="domainStateSwitchClass(d)">
+                  <span class="absolute top-0.5 w-2.5 h-2.5 rounded-full" :class="domainStateKnobClass(d)"></span>
                 </span>
-                <span class="text-green-400 font-mono" data-i18n="dash.dom.attivo">Attivo</span>
+                <span class="font-mono" :class="domainStateTextClass(d)" x-text="domainStateLabel(d)"></span>
               </button>
             </div>
             <div>
               <div class="text-slate-400 uppercase tracking-wider mb-1">Cron cycle</div>
-              <!-- Selettore CRON (placeholder, disabled). Per physics mostra 'real-time'. -->
               <select class="dnd-select w-full bg-slate-950 border border-slate-700 rounded px-1.5 py-1 text-[10px] text-slate-400 cursor-not-allowed"
                       disabled
-                      data-tip="Schedule del cycle automatico · UI placeholder">
-                <option x-text="d.id === 'physics' ? '03:30 UTC · attivo' : 'disabilitato'"></option>
+                      :data-tip="domainStateDetail(d)">
+                <option x-text="domainCronLabel(d)"></option>
               </select>
             </div>
           </div>
         </div>
       </template>
     </div>
-    <p class="text-xs text-slate-400 italic mt-3">
-      Toggle stato + cron sono UI placeholder — la gestione live arriva con il pannello admin
-      (controllo per dominio: attivazione, override schedule, run on-demand).
-    </p>
+    <template x-if="internalDomains().length">
+      <div class="mt-6 border border-slate-800 rounded-lg p-4 bg-slate-950/45">
+        <div class="flex items-baseline justify-between gap-3">
+          <h3 class="text-xs uppercase tracking-wider text-slate-400" x-text="lang === 'en' ? 'Not published / to evaluate' : 'Non pubblicati / da valutare'"></h3>
+          <span class="text-[11px] text-slate-500" x-text="lang === 'en' ? 'hidden from active domains until repaired or regenerated' : 'nascosti dai domini attivi finche non sono riparati o rigenerati'"></span>
+        </div>
+        <div class="mt-3 grid md:grid-cols-2 gap-2">
+          <template x-for="d in internalDomains()" :key="d.id">
+            <button type="button" class="text-left rounded border border-slate-800 bg-black/20 px-3 py-2 hover:border-slate-600 transition"
+                    :class="d.operational?.can_enter ? 'cursor-pointer' : 'cursor-not-allowed opacity-70'"
+                    @click="d.operational?.can_enter && enterDomain(d.id)">
+              <div class="flex items-center justify-between gap-3">
+                <span class="text-sm text-slate-300 truncate" x-text="d.title || d.id"></span>
+                <span class="text-[10px] font-mono" :class="domainStateTextClass(d)" x-text="domainStateLabel(d)"></span>
+              </div>
+              <div class="mt-1 text-[11px] text-slate-500 line-clamp-2" x-text="domainStateDetail(d)"></div>
+            </button>
+          </template>
+        </div>
+      </div>
+    </template>
+    <p class="text-xs text-slate-400 italic mt-3" x-text="lang === 'en' ? 'State is read from cycle traces, hooks and cron. No domain is deleted from this page.' : 'Lo stato e letto da cycle trace, hook e cron. Nessun dominio viene cancellato da questa pagina.'"></p>
   </main>
 
   <!-- DOMAIN: 3-col layout full-page (tab bar ora inline nel header sopra) -->
@@ -7229,6 +7254,106 @@
           return this.lang === 'en' ? 'Boundary not declared.' : raw;
         }
         return raw;
+      },
+
+      visibleDomains() {
+        return (this.domains || []).filter((d) => (d.visibility || d.operational?.visibility) === 'active');
+      },
+
+      internalDomains() {
+        return (this.domains || []).filter((d) => (d.visibility || d.operational?.visibility) !== 'active');
+      },
+
+      domainStateLabel(domain) {
+        const op = domain?.operational || {};
+        return this.lang === 'en'
+          ? (op.label_en || 'Unknown')
+          : (op.label_it || 'Sconosciuto');
+      },
+
+      domainStateDetail(domain) {
+        const op = domain?.operational || {};
+        return this.lang === 'en'
+          ? (op.detail_en || domain?.error || '')
+          : (op.detail_it || domain?.error || '');
+      },
+
+      domainCycleLabel(domain) {
+        const op = domain?.operational || {};
+        const cycle = op.cycle_ts || 'n/a';
+        const decision = op.trajectory_decision || 'n/a';
+        return `cycle ${cycle} · ${decision}`;
+      },
+
+      domainCronLabel(domain) {
+        const op = domain?.operational || {};
+        if (op.cron_cycle) return this.lang === 'en' ? 'scheduled' : 'schedulato';
+        if (op.pre_cycle_hook) return this.lang === 'en' ? 'manual + hook' : 'manuale + hook';
+        return this.lang === 'en' ? 'not scheduled' : 'non schedulato';
+      },
+
+      domainStateTone(domain) {
+        const state = domain?.state || domain?.operational?.state || 'unknown';
+        if (state === 'autonomous_scheduled') return 'green';
+        if (state === 'autonomous_ready') return 'cyan';
+        if (state === 'mature_manual' || state === 'manual_healthy') return 'purple';
+        if (state === 'repair_required') return 'red';
+        return 'amber';
+      },
+
+      domainCardClass(domain) {
+        const tone = this.domainStateTone(domain);
+        return {
+          green: 'border-green-500/45 hover:border-green-400',
+          cyan: 'border-cyan-500/45 hover:border-cyan-300',
+          purple: 'border-purple-500/45 hover:border-purple-300',
+          amber: 'border-amber-500/35 hover:border-amber-300',
+          red: 'border-rose-500/45 hover:border-rose-300',
+        }[tone] || 'border-slate-800';
+      },
+
+      domainStateBadgeClass(domain) {
+        const tone = this.domainStateTone(domain);
+        return {
+          green: 'border-green-500/40 bg-green-500/10 text-green-300',
+          cyan: 'border-cyan-500/40 bg-cyan-500/10 text-cyan-300',
+          purple: 'border-purple-500/40 bg-purple-500/10 text-purple-300',
+          amber: 'border-amber-500/40 bg-amber-500/10 text-amber-300',
+          red: 'border-rose-500/40 bg-rose-500/10 text-rose-300',
+        }[tone] || 'border-slate-700 text-slate-300';
+      },
+
+      domainStateDotClass(domain) {
+        const tone = this.domainStateTone(domain);
+        return {
+          green: 'bg-green-300',
+          cyan: 'bg-cyan-300',
+          purple: 'bg-purple-300',
+          amber: 'bg-amber-300',
+          red: 'bg-rose-300',
+        }[tone] || 'bg-slate-400';
+      },
+
+      domainStateTextClass(domain) {
+        const tone = this.domainStateTone(domain);
+        return {
+          green: 'text-green-400',
+          cyan: 'text-cyan-300',
+          purple: 'text-purple-300',
+          amber: 'text-amber-300',
+          red: 'text-rose-300',
+        }[tone] || 'text-slate-300';
+      },
+
+      domainStateSwitchClass(domain) {
+        return this.domainStateTone(domain) === 'red' || this.domainStateTone(domain) === 'amber'
+          ? 'bg-amber-900/50'
+          : 'bg-green-700/60';
+      },
+
+      domainStateKnobClass(domain) {
+        const active = ['green', 'cyan', 'purple'].includes(this.domainStateTone(domain));
+        return active ? 'right-0.5 bg-green-300' : 'left-0.5 bg-amber-300';
       },
 
       localizedDomainDescription(domain) {
