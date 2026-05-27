@@ -345,6 +345,29 @@ Contratti correlati:
 - `domains/finance/risk_contract_skeleton.json`: campi minimi per paper,
   broker sandbox e real execution; non e' autorita' di esecuzione.
 
+### finance_data_intake_audit
+
+Descrizione: audit read-only dell'ingresso dati Finance. Legge cache, provider,
+data-card, diagnostiche e value artifact correnti; non fetch-a nuovi dati e non
+produce segnali. Serve a distinguere dati sufficienti per discovery diagnostica
+da dati sufficienti per paper/live-sim o broker sandbox.
+
+Comando:
+
+```bash
+python3 /opt/D-ND_LAB/domains/finance/tools/finance_data_intake_audit.py --json
+python3 /opt/D-ND_LAB/domains/finance/tools/finance_data_intake_audit.py --write --json
+```
+
+Output: JSON `dndlab.finance.data_intake_audit.value.v1` in
+`data/finance/value/finance_data_intake_audit_latest.json` con `stage_fit`,
+provider, intervalli, simboli, warnings/failures e miglioramenti prioritari.
+
+Regola: daily OHLCV yfinance + cache + data-card e' sufficiente per cercare
+candidati diagnostici; non e' sufficiente per trading autonomo paper/live-sim.
+Prima di paper/live-sim servono freshness manifest, cross-check multi-provider,
+cost/slippage, calendar/gap guard e feed piu' forte per asset candidati.
+
 ### finance_transfer_diagnostic
 
 Descrizione: genera un artefatto macchina per il transfer real-market su una

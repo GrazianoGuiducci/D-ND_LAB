@@ -48,7 +48,10 @@ python3 domains/finance/tools/finance_autonomous_trading_contract.py --json
 # 7. Opportunity scout — prossimo ciclo d'indagine verso autonomia
 python3 domains/finance/tools/finance_autonomy_opportunity_scout.py --json
 
-# 8. Transfer diagnostic con design pre-dichiarato
+# 8. Data intake audit — efficienza dati per lo stadio corrente
+python3 domains/finance/tools/finance_data_intake_audit.py --json
+
+# 9. Transfer diagnostic con design pre-dichiarato
 python3 domains/finance/tools/finance_transfer_diagnostic.py \
   --object "non-SPY control basket freshness" \
   --mechanism "test whether no-transfer constraint survives without SPY" \
@@ -56,10 +59,10 @@ python3 domains/finance/tools/finance_transfer_diagnostic.py \
   --stop-rule "do not promote; inspect classification only" \
   --json
 
-# 9. Falsifier meta — template valido?
+# 10. Falsifier meta — template valido?
 python3 domains/meta-lab/tools/lab_template_validator.py --strict-m7 domains/finance
 
-# 10. Cycle agent autonomo (~5-15 min)
+# 11. Cycle agent autonomo (~5-15 min)
 bash tools/dnd-cycle.sh finance
 ```
 
@@ -99,6 +102,8 @@ domains/finance/
     │                           value artifact per stadio trading autonomo
     ├── finance_autonomy_opportunity_scout.py
     │                           sceglie il prossimo ciclo d'indagine autonoma
+    ├── finance_data_intake_audit.py
+    │                           audit dati/cache/provider per stadio autonomia
     └── finance_diagnostic_report.py
                                 report interno value-facing, no claim operativo
 ```
@@ -175,6 +180,7 @@ python3 domains/finance/tools/finance_operational_health.py --json
 python3 domains/finance/tools/finance_operational_health.py --write --json
 python3 domains/finance/tools/finance_autonomous_trading_contract.py --write --json
 python3 domains/finance/tools/finance_autonomy_opportunity_scout.py --write --json
+python3 domains/finance/tools/finance_data_intake_audit.py --write --json
 ```
 
 Il guard non lancia ciclo e non produce claim di mercato. Controlla che il
@@ -197,6 +203,13 @@ esiste ancora un candidato robusto, deve preferire discovery di candidati
 cross-asset o multi-window rispetto a rilanciare la stessa premessa SPY
 esaurita. La ledger paper/live-sim e il risk skeleton restano inattivi finche'
 il contratto autonomo non apre lo stadio.
+
+`finance_data_intake_audit.py` legge cache, provider, data-card, diagnostiche
+e artifact di autonomia per dire se l'ingresso dati e' sufficiente allo stadio
+corrente. Oggi il canale e' adeguato per discovery diagnostica daily, ma non
+ancora per paper/live-sim autonomo: servono almeno freshness manifest,
+cross-check multi-provider, contesto cost/slippage e feed/adapter piu' forte
+prima di simulare decisioni operative.
 
 ## Architettura cognitiva (MML)
 

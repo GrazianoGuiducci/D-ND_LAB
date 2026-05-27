@@ -288,6 +288,12 @@
       "path": "tools/finance_autonomy_opportunity_scout.py",
       "description": "Selects the next investigation cycle toward autonomous trading from current evidence and contracts.",
       "executable_inline": true
+    },
+    {
+      "name": "finance_data_intake_audit",
+      "path": "tools/finance_data_intake_audit.py",
+      "description": "Audits market-data cache/provider/data-card readiness for the current autonomy stage.",
+      "executable_inline": true
     }
   ],
   "external_apis": [
