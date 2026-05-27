@@ -1643,45 +1643,26 @@
         </div>
       </template>
     </div>
-    <template x-if="systemDomains().length">
-      <section class="mt-7">
-        <div class="flex flex-wrap items-baseline justify-between gap-2 border-t border-slate-800 pt-4">
-          <h3 class="text-xs uppercase tracking-wider text-slate-400" x-text="lang === 'en' ? 'System Labs' : 'Lab di sistema'"></h3>
-          <span class="text-[11px] text-slate-500" x-text="lang === 'en' ? 'tools that generate or maintain other Labs' : 'strumenti che generano o mantengono altri Lab'"></span>
+    <template x-if="maintenanceDomains().length">
+      <section class="mt-8 border-t border-slate-800 pt-5">
+        <div class="max-w-3xl">
+          <h3 class="text-xs uppercase tracking-wider text-slate-400" x-text="lang === 'en' ? 'System and maintenance' : 'Sistema e manutenzione'"></h3>
+          <p class="mt-1 text-xs text-slate-500" x-text="lang === 'en' ? 'These Labs support the field: some are active tools, others stay here until they are useful enough to return to the active set.' : 'Questi Lab sostengono il campo: alcuni sono strumenti attivi, altri restano qui finche non sono abbastanza utili da tornare tra gli attivi.'"></p>
         </div>
-        <div class="mt-3 grid md:grid-cols-2 lg:grid-cols-3 gap-3">
-          <template x-for="d in systemDomains()" :key="d.id">
-            <button type="button" class="text-left rounded border border-cyan-700/60 bg-slate-950/70 px-4 py-3 hover:border-cyan-400 transition"
-                    :class="d.operational?.can_enter ? 'cursor-pointer' : 'cursor-not-allowed opacity-70'"
+        <div class="mt-4 grid md:grid-cols-2 gap-4">
+          <template x-for="d in maintenanceDomains()" :key="d.id">
+            <button type="button" class="text-left rounded-lg border bg-slate-950/65 px-5 py-4 transition"
+                    :class="[domainCardClass(d), d.operational?.can_enter ? 'cursor-pointer' : 'cursor-not-allowed opacity-70']"
                     @click="d.operational?.can_enter && enterDomain(d.id)">
-              <div class="flex items-center justify-between gap-3">
-                <span class="text-sm text-slate-300 truncate" x-text="d.title || d.id"></span>
-                <span class="text-[10px] font-mono" :class="domainStateTextClass(d)" x-text="domainStateLabel(d)"></span>
+              <div class="flex items-start justify-between gap-3">
+                <div class="min-w-0">
+                  <span class="text-[10px] uppercase tracking-wider text-slate-500" x-text="domainMaintenanceRole(d)"></span>
+                  <div class="mt-1 text-base text-slate-200 truncate" x-text="d.title || d.id"></div>
+                </div>
+                <span class="shrink-0 text-[10px] font-mono" :class="domainStateTextClass(d)" x-text="domainStateLabel(d)"></span>
               </div>
-              <div class="mt-1 text-xs text-slate-300 line-clamp-2" x-text="domainKeepReason(d)"></div>
-              <div class="mt-1 text-[11px] text-slate-500 line-clamp-2" x-text="domainStateDetail(d)"></div>
-            </button>
-          </template>
-        </div>
-      </section>
-    </template>
-    <template x-if="draftDomains().length">
-      <section class="mt-7">
-        <div class="flex flex-wrap items-baseline justify-between gap-2 border-t border-slate-800 pt-4">
-          <h3 class="text-xs uppercase tracking-wider text-slate-400" x-text="lang === 'en' ? 'Drafts / repair' : 'Bozze / da sistemare'"></h3>
-          <span class="text-[11px] text-slate-500" x-text="lang === 'en' ? 'not shown as active until they become useful' : 'non mostrati come attivi finche non diventano utili'"></span>
-        </div>
-        <div class="mt-3 grid md:grid-cols-2 lg:grid-cols-3 gap-3">
-          <template x-for="d in draftDomains()" :key="d.id">
-            <button type="button" class="text-left rounded border border-amber-700/50 bg-slate-950/55 px-4 py-3 hover:border-amber-400 transition"
-                    :class="d.operational?.can_enter ? 'cursor-pointer' : 'cursor-not-allowed opacity-70'"
-                    @click="d.operational?.can_enter && enterDomain(d.id)">
-              <div class="flex items-center justify-between gap-3">
-                <span class="text-sm text-slate-300 truncate" x-text="d.title || d.id"></span>
-                <span class="text-[10px] font-mono" :class="domainStateTextClass(d)" x-text="domainStateLabel(d)"></span>
-              </div>
-              <div class="mt-1 text-xs text-slate-300 line-clamp-2" x-text="domainKeepReason(d)"></div>
-              <div class="mt-1 text-[11px] text-slate-500 line-clamp-2" x-text="domainStateDetail(d)"></div>
+              <div class="mt-3 text-xs text-slate-300 line-clamp-2" x-text="domainKeepReason(d)"></div>
+              <div class="mt-2 text-[11px] text-slate-500 line-clamp-2" x-text="domainStateDetail(d)"></div>
             </button>
           </template>
         </div>
@@ -7287,6 +7268,10 @@
         return (this.domains || []).filter((d) => (d.visibility || d.operational?.visibility) !== 'active');
       },
 
+      maintenanceDomains() {
+        return this.internalDomains();
+      },
+
       systemDomains() {
         return this.internalDomains().filter((d) => this.isSystemDomain(d));
       },
@@ -7299,6 +7284,13 @@
         const id = domain?.id || '';
         const state = domain?.state || domain?.operational?.state || '';
         return id === 'meta-lab' || state === 'manual_healthy';
+      },
+
+      domainMaintenanceRole(domain) {
+        if (this.isSystemDomain(domain)) {
+          return this.lang === 'en' ? 'system tool' : 'strumento di sistema';
+        }
+        return this.lang === 'en' ? 'draft / repair' : 'bozza / manutenzione';
       },
 
       domainStateLabel(domain) {
