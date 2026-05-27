@@ -1889,6 +1889,33 @@
                   <span class="text-[10px] font-mono px-2 py-1 rounded border border-cyan-900/70 text-cyan-200"
                         x-text="financeWindowCounts().label"></span>
                 </div>
+                <template x-if="financePipelineReadback().available">
+                  <div class="mb-4 border border-slate-800 rounded-md p-3 bg-slate-950/40">
+                    <div class="flex items-start justify-between gap-3 flex-wrap mb-3">
+                      <div>
+                        <div class="text-[10px] uppercase tracking-wider text-cyan-300" x-text="lang === 'en' ? 'Current pipeline' : 'Pipeline attuale'"></div>
+                        <div class="text-sm text-slate-100 mt-1" x-text="financePipelineReadback().headline"></div>
+                      </div>
+                      <span class="text-[10px] font-mono px-2 py-1 rounded border"
+                            :class="financePipelineReadback().badgeClass"
+                            x-text="financePipelineReadback().badge"></span>
+                    </div>
+                    <div class="grid md:grid-cols-5 gap-2">
+                      <template x-for="step in financePipelineSteps()" :key="step.id">
+                        <button @click="selectFinancePipelineStep(step)"
+                                class="text-left border rounded p-3 bg-slate-950/45 hover:border-cyan-700 transition min-h-[108px]"
+                                :class="step.borderClass">
+                          <div class="flex items-center justify-between gap-2">
+                            <div class="text-[10px] uppercase tracking-wider text-slate-400" x-text="step.label"></div>
+                            <span class="text-[10px] font-mono" :class="step.tone" x-text="step.status"></span>
+                          </div>
+                          <div class="mt-2 text-sm text-slate-100 leading-snug" x-text="step.body"></div>
+                        </button>
+                      </template>
+                    </div>
+                    <div class="mt-3 text-xs text-amber-200 border border-amber-900/50 rounded p-2 bg-amber-950/10" x-text="financePipelineReadback().next"></div>
+                  </div>
+                </template>
                 <div class="grid md:grid-cols-4 gap-3">
                   <button @click="selectFinanceLens('regime')" class="text-left border border-slate-800 rounded p-3 bg-slate-950/50 hover:border-cyan-700 transition">
                     <div class="text-[10px] uppercase tracking-wider text-slate-400">Regime gate</div>
@@ -6027,6 +6054,13 @@
         return this.latestValueArtifacts?.latest || null;
       },
 
+      valueArtifactBySchema(schema) {
+        const all = [];
+        if (this.latestValueArtifacts?.latest) all.push(this.latestValueArtifacts.latest);
+        if (Array.isArray(this.latestValueArtifacts?.artifacts)) all.push(...this.latestValueArtifacts.artifacts);
+        return all.find(a => a?.schema === schema || a?.payload?.schema === schema) || null;
+      },
+
       valueArtifactSchemaLabel(artifact) {
         const schema = artifact?.schema || artifact?.payload?.schema || '';
         const map = {
@@ -6048,11 +6082,20 @@
           'dndlab.bitcoin.policy_mutation_contract.v1': 'BTC policy mutation contract',
           'dndlab.bitcoin.retention_regime_selector.v1': 'BTC retention regime selector',
           'dndlab.bitcoin.daily_method_pressure_test.v1': 'BTC daily method pressure test',
+          'dndlab.finance.window_universe_scout.value.v1': 'Finance window/universe scout',
+          'dndlab.finance.candidate_discovery_cycle.value.v1': 'Finance candidate discovery',
+          'dndlab.finance.recurrence_validation_cycle.value.v1': 'Finance recurrence validation',
+          'dndlab.finance.autonomous_trading_contract.value.v1': 'Finance autonomy contract',
+          'dndlab.finance.autonomy_opportunity_scout.value.v1': 'Finance next inquiry',
+          'dndlab.finance.data_intake_audit.value.v1': 'Finance data intake',
+          'dndlab.finance.provider_crosscheck.value.v1': 'Finance provider cross-check',
+          'dndlab.finance.crypto_candidate_diagnostic.value.v1': 'Finance crypto asset-class diagnostic',
         };
         if (map[schema]) return map[schema];
         if (!schema) return 'n/a';
         return schema
           .replace(/^dndlab\.bitcoin\./, '')
+          .replace(/^dndlab\.finance\./, '')
           .replace(/\.v\d+$/, '')
           .split(/[._-]+/)
           .filter(Boolean)
@@ -6086,6 +6129,154 @@
           rows.push({ label: 'summary', value: 'n/a', tone: 'text-slate-300' });
         }
         return rows;
+      },
+
+      financeValueArtifact(schema) {
+        return this.valueArtifactBySchema(schema);
+      },
+
+      financeArtifactSummary(schema) {
+        return this.financeValueArtifact(schema)?.summary || {};
+      },
+
+      financeListText(items, fallback) {
+        if (Array.isArray(items) && items.length) return items.join(', ');
+        return fallback;
+      },
+
+      financePipelineReadback() {
+        const isEn = this.lang === 'en';
+        const recurrence = this.financeArtifactSummary('dndlab.finance.recurrence_validation_cycle.value.v1');
+        const autonomy = this.financeArtifactSummary('dndlab.finance.autonomous_trading_contract.value.v1');
+        const scout = this.financeArtifactSummary('dndlab.finance.window_universe_scout.value.v1');
+        const candidate = this.financeArtifactSummary('dndlab.finance.candidate_discovery_cycle.value.v1');
+        const available = !!(Object.keys(recurrence).length || Object.keys(autonomy).length || Object.keys(scout).length || Object.keys(candidate).length);
+        const label = recurrence.label || 'unknown';
+        const stage = autonomy.current_stage || 'unknown';
+        const paper = autonomy.paper_live_sim_allowed === true || recurrence.paper_live_sim_allowed === true;
+        let headline;
+        let next;
+        if (label === 'local_candidate_not_recurring') {
+          headline = isEn
+            ? 'Local candidates found, but recurrence failed.'
+            : 'Candidati locali trovati, ma la ricorrenza non regge.';
+          next = isEn
+            ? 'No paper simulation: redesign the window or universe before testing again.'
+            : 'Niente simulazione paper: ridisegnare finestra o universo prima di riprovare.';
+        } else if (label === 'recurrence_candidate_found') {
+          headline = isEn
+            ? 'A recurring candidate exists; only inactive paper-ledger design can be prepared.'
+            : 'Esiste un candidato ricorrente; si può preparare solo il design della ledger paper inattiva.';
+          next = isEn
+            ? 'Prepare cost/slippage/risk contracts before any paper run.'
+            : 'Preparare costi/slippage/risk contract prima di qualunque run paper.';
+        } else {
+          headline = isEn
+            ? 'Finance is still in diagnostic mode.'
+            : 'Finance resta in modalità diagnostica.';
+          next = isEn
+            ? 'Run scout and recurrence gates before paper simulation.'
+            : 'Eseguire scout e gate di ricorrenza prima della simulazione paper.';
+        }
+        return {
+          available,
+          headline,
+          next,
+          stage,
+          badge: paper ? (isEn ? 'paper gate open' : 'paper aperto') : (stage === 'diagnostic_only' ? 'diagnostic only' : stage),
+          badgeClass: paper ? 'border-emerald-800 text-emerald-200' : 'border-amber-900/70 text-amber-200',
+        };
+      },
+
+      financePipelineSteps() {
+        const isEn = this.lang === 'en';
+        const data = this.financeArtifactSummary('dndlab.finance.data_intake_audit.value.v1');
+        const scout = this.financeArtifactSummary('dndlab.finance.window_universe_scout.value.v1');
+        const candidate = this.financeArtifactSummary('dndlab.finance.candidate_discovery_cycle.value.v1');
+        const recurrence = this.financeArtifactSummary('dndlab.finance.recurrence_validation_cycle.value.v1');
+        const autonomy = this.financeArtifactSummary('dndlab.finance.autonomous_trading_contract.value.v1');
+        const selected = scout.selected_for_crosscheck || [];
+        const robust = candidate.robust_all_null_symbols || [];
+        const recurring = recurrence.recurring_symbols || [];
+        const single = recurrence.single_window_symbols || [];
+        const providers = data.providers || [];
+        const paper = autonomy.paper_live_sim_allowed === true;
+        return [
+          {
+            id: 'data',
+            label: isEn ? 'Data' : 'Dati',
+            status: (data.status || 'n/a').toUpperCase(),
+            body: isEn
+              ? `${providers.length || 0} providers; ${data.failures ?? 0} failures.`
+              : `${providers.length || 0} provider; ${data.failures ?? 0} fallimenti.`,
+            evidence: `providers=${this.financeListText(providers, 'n/a')}; warnings=${data.warnings ?? 'n/a'}; failures=${data.failures ?? 'n/a'}`,
+            boundary: isEn ? 'Daily data is enough for diagnostics, not execution.' : 'Dati daily sufficienti per diagnostica, non per esecuzione.',
+            tone: data.failures ? 'text-red-300' : 'text-cyan-300',
+            borderClass: data.failures ? 'border-red-900/60' : 'border-slate-800',
+          },
+          {
+            id: 'scout',
+            label: 'Scout',
+            status: String(scout.decision || 'n/a').replaceAll('_', ' '),
+            body: isEn
+              ? `Selected ${this.financeListText(selected.map(r => r.symbol), 'none')}.`
+              : `Selezionati ${this.financeListText(selected.map(r => r.symbol), 'nessuno')}.`,
+            evidence: `rows=${scout.rows ?? 'n/a'}; robust=${scout.robust_rows ?? 'n/a'}; selected=${JSON.stringify(selected)}`,
+            boundary: isEn ? 'Scout only decides where to spend validation.' : 'Lo scout decide solo dove spendere validazione.',
+            tone: selected.length ? 'text-emerald-300' : 'text-slate-400',
+            borderClass: selected.length ? 'border-emerald-900/60' : 'border-slate-800',
+          },
+          {
+            id: 'provider',
+            label: isEn ? 'Providers' : 'Provider',
+            status: String(candidate.provider_crosscheck_status || 'n/a').toUpperCase(),
+            body: isEn
+              ? `Validated ${this.financeListText(robust, 'no robust symbols')}.`
+              : `Validati ${this.financeListText(robust, 'nessun simbolo robusto')}.`,
+            evidence: `crosscheck=${candidate.provider_crosscheck_status || 'n/a'}; transfer=${candidate.transfer_label || 'n/a'}; robust=${this.financeListText(robust, 'none')}`,
+            boundary: isEn ? 'Provider agreement is not recurrence.' : 'Accordo provider non significa ricorrenza.',
+            tone: candidate.provider_crosscheck_status === 'pass' ? 'text-emerald-300' : 'text-amber-300',
+            borderClass: candidate.provider_crosscheck_status === 'pass' ? 'border-emerald-900/60' : 'border-slate-800',
+          },
+          {
+            id: 'recurrence',
+            label: isEn ? 'Recurrence' : 'Ricorrenza',
+            status: String(recurrence.label || 'n/a').replaceAll('_', ' '),
+            body: recurrence.label === 'local_candidate_not_recurring'
+              ? (isEn ? `${this.financeListText(single, 'Candidates')} only local.` : `${this.financeListText(single, 'Candidati')} solo locali.`)
+              : (isEn ? `Recurring: ${this.financeListText(recurring, 'none')}.` : `Ricorrenti: ${this.financeListText(recurring, 'nessuno')}.`),
+            evidence: `label=${recurrence.label || 'n/a'}; recurring=${this.financeListText(recurring, 'none')}; single=${this.financeListText(single, 'none')}`,
+            boundary: isEn ? 'Without recurrence, paper stays closed.' : 'Senza ricorrenza, il paper resta chiuso.',
+            tone: recurring.length ? 'text-emerald-300' : 'text-amber-300',
+            borderClass: recurring.length ? 'border-emerald-900/60' : 'border-amber-900/50',
+          },
+          {
+            id: 'paper',
+            label: 'Paper',
+            status: paper ? 'OPEN' : 'CLOSED',
+            body: paper
+              ? (isEn ? 'Inactive paper ledger can be designed.' : 'Si può progettare la ledger paper inattiva.')
+              : (isEn ? 'No paper simulation now.' : 'Nessuna simulazione paper ora.'),
+            evidence: `stage=${autonomy.current_stage || 'n/a'}; paper=${!!paper}; next=${autonomy.next_gate || recurrence.next_gate || 'n/a'}`,
+            boundary: isEn ? 'Real orders remain forbidden.' : 'Ordini reali ancora vietati.',
+            tone: paper ? 'text-emerald-300' : 'text-amber-300',
+            borderClass: paper ? 'border-emerald-900/60' : 'border-amber-900/50',
+          },
+        ];
+      },
+
+      selectFinancePipelineStep(step) {
+        if (!step) return;
+        this.selectedNode = null;
+        this.selectedScopertaSsp = null;
+        this.selectedProdottoSsp = null;
+        this.selectedCampoLens = {
+          kind: 'finance',
+          title: step.label,
+          body: step.body,
+          evidence: step.evidence,
+          boundary: step.boundary,
+        };
       },
 
       bitcoinOhlcvArtifact() {
