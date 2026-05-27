@@ -74,16 +74,19 @@ def build_opportunities() -> dict[str, Any]:
     transfer_path = latest("finance_transfer_diagnostic_*.json", DIAGNOSTIC_DIR)
     recurrence_path = latest("finance_recurrence_diagnostic_*.json", DIAGNOSTIC_DIR)
     crypto_path = VALUE_DIR / "finance_crypto_candidate_diagnostic_latest.json"
+    window_scout_path = VALUE_DIR / "finance_window_universe_scout_latest.json"
     autonomy = load_json(autonomy_path) or {}
     health = load_json(health_path) or {}
     transfer = load_json(transfer_path) or {}
     recurrence = load_json(recurrence_path) or {}
     crypto = load_json(crypto_path) or {}
+    window_scout = load_json(window_scout_path) or {}
 
     summary = autonomy.get("summary") if isinstance(autonomy.get("summary"), dict) else {}
     transfer_class = transfer.get("classification") if isinstance(transfer.get("classification"), dict) else {}
     recurrence_class = recurrence.get("classification") if isinstance(recurrence.get("classification"), dict) else {}
     crypto_summary = crypto.get("summary") if isinstance(crypto.get("summary"), dict) else {}
+    window_scout_summary = window_scout.get("summary") if isinstance(window_scout.get("summary"), dict) else {}
 
     stage = summary.get("current_stage") or "unknown"
     latest_transfer_label = summary.get("latest_transfer_label") or transfer_class.get("label") or "unknown"
@@ -94,6 +97,20 @@ def build_opportunities() -> dict[str, Any]:
     health_status = summary.get("operational_health") or (health.get("summary") or {}).get("status") or "unknown"
 
     opportunities = [
+        {
+            "id": "recurrence_window_validation",
+            "decision": "investigate" if robust_symbols and recurrence_label != "recurring_candidate" else "watch",
+            "score": 0.9 if robust_symbols and recurrence_label != "recurring_candidate" else 0.45,
+            "object": "test robust scout/transfer candidates across adjacent windows before any paper ledger work",
+            "why": "Robust local candidates exist, but recurrence is not established; paper/live-sim must wait.",
+            "cycle_shape": [
+                "use latest scout-selected rows as candidate source",
+                "run recurrence on candidate windows and adjacent windows",
+                "require at least two robust exact windows before paper/live-sim design",
+                "if recurrence fails, redesign window or universe"
+            ],
+            "blocks": ["paper_live_sim", "broker_sandbox", "real_execution"],
+        },
         {
             "id": "cross_asset_candidate_discovery",
             "decision": "investigate",
@@ -171,11 +188,11 @@ def build_opportunities() -> dict[str, Any]:
         "robust_all_null_symbols": robust_symbols,
         "selected_opportunity": selected["id"],
         "selected_decision": selected["decision"],
-        "next_cycle_type": (
-            "candidate_discovery_cycle"
-            if selected["id"] == "cross_asset_candidate_discovery"
-            else "paper_live_sim_design_cycle"
-        ),
+        "next_cycle_type": {
+            "cross_asset_candidate_discovery": "candidate_discovery_cycle",
+            "recurrence_window_validation": "recurrence_validation_cycle",
+            "paper_live_sim_schema_preparation": "paper_live_sim_design_cycle",
+        }.get(selected["id"], "candidate_discovery_cycle"),
         "paper_live_sim_allowed": bool(summary.get("paper_live_sim_allowed")),
         "broker_sandbox_allowed": bool(summary.get("broker_sandbox_allowed")),
         "real_execution_allowed": bool(summary.get("real_execution_allowed")),
@@ -193,7 +210,9 @@ def build_opportunities() -> dict[str, Any]:
             "transfer_diagnostic": rel(transfer_path),
             "recurrence_diagnostic": rel(recurrence_path),
             "crypto_candidate_diagnostic": rel(crypto_path if crypto_path.exists() else None),
+            "window_universe_scout": rel(window_scout_path if window_scout_path.exists() else None),
         },
+        "latest_window_scout": window_scout_summary,
         "opportunities": ranked,
         "selected": selected,
         "cycle_continuum": {

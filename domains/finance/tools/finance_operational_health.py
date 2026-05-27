@@ -146,7 +146,18 @@ def build_health(*, run_assertions: bool = True) -> dict[str, Any]:
             f"trading_signal={classification.get('trading_signal')}"
         ),
     )
-    _add(checks, len(ok_rows) >= 3 and not review_rows, "transfer_rows_evaluable", f"ok={len(ok_rows)}; review={len(review_rows)}")
+    robust_symbols = classification.get("robust_all_null_symbols") or []
+    focused_candidate_validation = (
+        len(ok_rows) >= 2
+        and bool(robust_symbols)
+        and classification.get("label") == "single_or_partial_window"
+    )
+    _add(
+        checks,
+        (len(ok_rows) >= 3 or focused_candidate_validation) and not review_rows,
+        "transfer_rows_evaluable",
+        f"ok={len(ok_rows)}; review={len(review_rows)}; focused={focused_candidate_validation}",
+    )
     provenance_ok = all(
         isinstance(row.get("data_card"), dict)
         and row["data_card"].get("source_url")

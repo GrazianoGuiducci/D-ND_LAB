@@ -312,6 +312,12 @@
       "path": "tools/finance_crypto_candidate_diagnostic.py",
       "description": "Runs Coinbase BTC/ETH OHLCV exact-window null diagnostics as Finance asset-class input, without replacing Bitcoin Regime Lab logic.",
       "executable_inline": true
+    },
+    {
+      "name": "finance_window_universe_scout",
+      "path": "tools/finance_window_universe_scout.py",
+      "description": "Scans low-cost symbol/window pairs before spending cross-provider validation budget.",
+      "executable_inline": true
     }
   ],
   "external_apis": [

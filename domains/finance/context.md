@@ -436,6 +436,23 @@ python3 /opt/D-ND_LAB/domains/finance/tools/finance_crypto_candidate_diagnostic.
 L'output e' `diagnostic_only`. Puo' inviare simboli a recurrence se sopravvivono
 a `iid`, `block5` e `block21`, ma non autorizza paper/live-sim o trading.
 
+### finance_window_universe_scout
+
+Descrizione: scout a basso costo prima del cross-provider. Usa yfinance per
+ETF/equity proxy e Coinbase per BTC/ETH, su piu' finestre, per nominare
+eventuali coppie simbolo/finestra da validare con provider piu' costosi.
+
+Comando:
+
+```bash
+python3 /opt/D-ND_LAB/domains/finance/tools/finance_window_universe_scout.py --write --json
+```
+
+Default: universe ETF/asset-class ampio (`SPY,QQQ,IWM,DIA,EFA,EEM,TLT,IEF,GLD,
+SLV,USO,UUP,FXE,FXY,BTC-USD,ETH-USD`) e finestre `45,90,180` giorni. Il tool
+non produce trading signal: seleziona solo dove spendere validazione
+cross-provider/recurrence.
+
 ### finance_transfer_diagnostic
 
 Descrizione: genera un artefatto macchina per il transfer real-market su una

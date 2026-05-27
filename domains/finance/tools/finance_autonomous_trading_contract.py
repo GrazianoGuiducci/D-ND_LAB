@@ -83,7 +83,7 @@ def stage_readiness() -> dict[str, Any]:
         blocked_by.append("review_required_symbols_present")
     if not recurrence:
         blocked_by.append("missing_recurrence_diagnostic")
-    elif recurrence_label in {None, "current_iid_partial", "no_recurrence_delta", "review"}:
+    elif recurrence_label != "recurring_candidate":
         blocked_by.append(f"recurrence_not_promotable:{recurrence_label or 'unknown'}")
     if health_status != "pass":
         blocked_by.append(f"operational_health_not_pass:{health_status or 'missing'}")
@@ -123,6 +123,7 @@ def stage_readiness() -> dict[str, Any]:
         "broker_sandbox_allowed": sandbox_allowed,
         "real_execution_allowed": real_allowed,
         "latest_transfer_label": transfer_label,
+        "latest_recurrence_label": recurrence_label or "missing",
         "robust_all_null_symbols": robust_symbols,
         "operational_health": health_status or "missing",
         "next_gate": next_gate,

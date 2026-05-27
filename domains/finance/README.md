@@ -197,6 +197,7 @@ python3 domains/finance/tools/finance_provider_crosscheck.py --write --json
 python3 domains/finance/tools/finance_candidate_discovery_cycle.py --json
 python3 domains/finance/tools/market_data.py --provider coinbase --symbol BTC-USD --start 2026-02-26 --end 2026-05-27
 python3 domains/finance/tools/finance_crypto_candidate_diagnostic.py --json
+python3 domains/finance/tools/finance_window_universe_scout.py --write --json
 ```
 
 Il guard non lancia ciclo e non produce claim di mercato. Controlla che il
@@ -251,6 +252,11 @@ crypto solo per rischio, allocazione, dati e autonomia multi-asset. Il tool
 applica gli stessi null `iid`, `block5`, `block21` del transfer diagnostic.
 L'output puo' nominare candidati da mandare a recurrence, ma resta
 `diagnostic_only`: niente paper/live-sim, broker sandbox o esecuzione reale.
+
+`finance_window_universe_scout.py` e' il filtro prima del cross-provider:
+scansiona asset/window con provider no/low-auth, cerca solo indizi
+preliminari su `iid`, `block5`, `block21`, e decide dove vale la pena spendere
+Twelve Data/EODHD o recurrence. Non promuove claim, paper trade o ordini.
 
 ## Architettura cognitiva (MML)
 
