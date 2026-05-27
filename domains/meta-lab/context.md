@@ -126,6 +126,45 @@ integrato. Il meta-lab di default genera Style 1 — se un dominio
 richiede Style 2, dichiararlo esplicitamente nel report del cycle e
 includere `def build(domain)` nei tool.
 
+**Tool custom del meta-lab**
+
+I tool dichiarati in `mml.json` devono essere invocabili dal cycle come
+contratti agent-facing, non solo come file presenti nel repository.
+
+- `lab_template_generator`
+  - path: `tools/lab_template_generator.py`
+  - uso: scrive il filesystem tree del lab figlio da uno specs JSON gia'
+    prodotto dall'agent.
+  - comando: `python3 domains/meta-lab/tools/lab_template_generator.py <specs.json>`
+  - output contract: stdout/testo operativo e file del candidato; il ciclo
+    deve poi validare con il falsifier meta.
+
+- `lab_template_validator`
+  - path: `tools/lab_template_validator.py`
+  - uso: applica il falsifier meta M1-M9 a un template candidato o al
+    meta-lab stesso.
+  - comando: `python3 domains/meta-lab/tools/lab_template_validator.py <template_dir> --json`
+  - output contract: JSON con `verdict`, `summary` e `lenses`; un `FAIL`
+    blocca installazione/promozione finche' non e' spiegato o corretto.
+
+- `exp_regenerate_physics`
+  - path: `tools/exp_regenerate_physics.py`
+  - uso: smoke cognitivo per rigenerare una spec physics da ground truth,
+    senza installare un dominio reale.
+  - comando: `python3 domains/meta-lab/tools/exp_regenerate_physics.py --json`
+  - output contract: JSON/stdout con signature e confronto atteso; serve a
+    verificare continuita' del Meta-lab, non a sostituire il Physics Lab.
+
+Sul VPS il cycle operativo del Meta-lab va lanciato con il wrapper:
+
+```bash
+bash tools/dnd-cycle.sh meta-lab
+```
+
+Il wrapper usa `codex-cli` tramite account Codex dell'operatore. Non richiede
+`LLM_API_KEY` e non deve essere sostituito da un lancio diretto
+`python -m core.cli run --domain meta-lab` nel workflow VPS.
+
 **M4 — Naive baseline esistente**
 Lo Stage 4 PoC runner ha bisogno di naive vs informed-by-finding per A/B.
 Il dominio deve avere un metodo standard contro cui il modus D-ND può

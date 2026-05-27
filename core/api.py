@@ -5279,6 +5279,70 @@ def _latest_cycle_state(domain: str) -> dict[str, Any]:
     }
 
 
+def _meta_lab_validator_state() -> dict[str, Any]:
+    """Read-only Meta-lab structural health.
+
+    Meta-lab can be blocked by an old cycle trace launched through a legacy
+    runtime path. Its current installability health is better represented by
+    the local M1-M9 validator, which does not call an LLM and does not mutate
+    runtime state.
+    """
+    repo_root = paths._repo_root()
+    validator = repo_root / "domains" / "meta-lab" / "tools" / "lab_template_validator.py"
+    target = repo_root / "domains" / "meta-lab"
+    if not validator.exists():
+        return {"ok": False, "detail_it": "Validator Meta-lab non trovato.", "detail_en": "Meta-lab validator not found."}
+    try:
+        proc = subprocess.run(
+            ["python3", str(validator), str(target), "--json"],
+            cwd=str(repo_root),
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+        if proc.returncode != 0:
+            err = (proc.stderr or proc.stdout or "").strip()[:240]
+            return {
+                "ok": False,
+                "detail_it": f"Validator Meta-lab fallito: {err or 'errore sconosciuto'}.",
+                "detail_en": f"Meta-lab validator failed: {err or 'unknown error'}.",
+            }
+        payload = json.loads(proc.stdout or "{}")
+    except (OSError, subprocess.SubprocessError, json.JSONDecodeError) as exc:
+        return {
+            "ok": False,
+            "detail_it": f"Validator Meta-lab non leggibile: {exc}.",
+            "detail_en": f"Meta-lab validator unreadable: {exc}.",
+        }
+    summary = payload.get("summary") if isinstance(payload.get("summary"), dict) else {}
+    n_fail = int(summary.get("fail") or 0)
+    n_pass = int(summary.get("pass") or 0)
+    verdict = payload.get("verdict") or "n/a"
+    if n_fail == 0:
+        return {
+            "ok": True,
+            "verdict": verdict,
+            "n_pass": n_pass,
+            "n_fail": n_fail,
+            "detail_it": f"Validator M1-M9 passa ({n_pass} pass, 0 fail); usare dnd-cycle.sh per runtime Codex.",
+            "detail_en": f"M1-M9 validator passes ({n_pass} pass, 0 fail); use dnd-cycle.sh for Codex runtime.",
+        }
+    failing = []
+    for lens in payload.get("lenses", []) or []:
+        if isinstance(lens, dict) and lens.get("status") == "FAIL":
+            failing.append(str(lens.get("id") or "?"))
+    failed = ", ".join(failing) or "n/a"
+    return {
+        "ok": False,
+        "verdict": verdict,
+        "n_pass": n_pass,
+        "n_fail": n_fail,
+        "detail_it": f"Validator M1-M9 con {n_fail} fail: {failed}.",
+        "detail_en": f"M1-M9 validator has {n_fail} failures: {failed}.",
+    }
+
+
 def _domain_operational_state(domain: str, config: dict[str, Any], seed: dict[str, Any]) -> dict[str, Any]:
     cycle = _latest_cycle_state(domain)
     cron = _crontab_lab_flags(domain)
@@ -5298,7 +5362,24 @@ def _domain_operational_state(domain: str, config: dict[str, Any], seed: dict[st
     detail_it = "Lab generato o fermo: non viene mostrato tra i domini attivi finche non ha un ciclo utile recente."
     detail_en = "Generated or stale Lab: hidden from active domains until it has a useful recent cycle."
 
-    if has_trace and n_errors not in (0, None):
+    if domain == "meta-lab":
+        meta_state = _meta_lab_validator_state()
+        can_enter = True
+        if meta_state.get("ok"):
+            state = "manual_healthy"
+            visibility = "internal"
+            label_it = "Operativo manuale"
+            label_en = "Manual operational"
+            detail_it = str(meta_state.get("detail_it") or "Validator Meta-lab passa; ciclo runtime via wrapper Codex.")
+            detail_en = str(meta_state.get("detail_en") or "Meta-lab validator passes; runtime cycle via Codex wrapper.")
+        else:
+            state = "repair_required"
+            visibility = "internal"
+            label_it = "Da riparare"
+            label_en = "Needs repair"
+            detail_it = str(meta_state.get("detail_it") or "Validator Meta-lab non passa.")
+            detail_en = str(meta_state.get("detail_en") or "Meta-lab validator does not pass.")
+    elif has_trace and n_errors not in (0, None):
         state = "repair_required"
         visibility = "internal"
         label_it = "Da riparare"

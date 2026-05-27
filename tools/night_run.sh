@@ -59,8 +59,9 @@ for i in "${!LABS[@]}"; do
     echo "[$CYCLE_START] [$((i+1))/${#LABS[@]}] Starting cycle: $LAB"
     notify_telegram "🔵 Lab $LAB · cycle in corso ($((i+1))/${#LABS[@]})"
 
-    # Run cycle (blocking)
-    /opt/D-ND_LAB/.venv/bin/python3 -m core.cli run --domain "$LAB" \
+    # Run cycle (blocking) through the canonical wrapper so Codex-account
+    # provider chain, pre/post hooks and per-domain flock stay coherent.
+    /opt/D-ND_LAB/tools/dnd-cycle.sh "$LAB" \
         > "$LAB_LOG" 2>&1
     EXIT_CODE=$?
     CYCLE_END="$(date +%H:%M:%S)"
