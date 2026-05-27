@@ -4,8 +4,9 @@
 Provider abstraction (intent OpenBB): un singolo schema, N fonti dietro.
 Stocks via yfinance (Yahoo Finance, no auth, gestisce crumb internamente).
 Twelve Data e' disponibile come secondo provider con API key esterna.
-Crypto via CoinGecko (free tier, no auth, JSON market_chart). Aggiungere un
-provider non tocca il consumer (exp_regime_shift, agent, falsifier).
+Crypto via CoinGecko (free tier, no auth, JSON market_chart) and Coinbase
+Exchange candles (no auth, OHLCV). Aggiungere un provider non tocca il consumer
+(exp_regime_shift, agent, falsifier).
 
 Storico decisione: la prima implementazione usava Stooq direct CSV (no
 auth, no deps). 2026-05-05: Stooq ha introdotto requirement apikey →
@@ -43,6 +44,7 @@ across asset/anno.
 CLI:
     python market_data.py --symbol SPY --provider stooq --period 1y
     python market_data.py --symbol bitcoin --provider coingecko --days 365
+    python market_data.py --symbol BTC-USD --provider coinbase --start 2026-02-26 --end 2026-05-27
 """
 from __future__ import annotations
 
@@ -70,6 +72,7 @@ DEFAULT_TTL_SEC = 86_400  # 1 day
 COINGECKO_BASE = "https://api.coingecko.com/api/v3"
 TWELVE_DATA_BASE = "https://api.twelvedata.com"
 EODHD_BASE = "https://eodhd.com/api"
+COINBASE_EXCHANGE_BASE = "https://api.exchange.coinbase.com"
 
 UA = "D-ND-Lab/1.0 (research; +https://lab.d-nd.com)"
 
@@ -547,6 +550,107 @@ def fetch_eodhd(symbol: str, period: str = "1y", interval: str = "1d",
     return _arrayify(payload)
 
 
+# ---------- provider: Coinbase Exchange (crypto spot OHLCV, no auth) ----------
+
+def _coinbase_product(symbol: str) -> str:
+    """Map common local crypto symbols to Coinbase Exchange product ids."""
+    sym = symbol.upper().replace("_", "-")
+    aliases = {
+        "BTC": "BTC-USD",
+        "BITCOIN": "BTC-USD",
+        "ETH": "ETH-USD",
+        "ETHEREUM": "ETH-USD",
+    }
+    return aliases.get(sym, sym)
+
+
+def fetch_coinbase(symbol: str, period: str = "1y", interval: str = "1d",
+                   ttl_sec: int = DEFAULT_TTL_SEC,
+                   start: str | None = None,
+                   end: str | None = None) -> dict[str, Any]:
+    """Fetch crypto OHLCV through Coinbase Exchange public candles.
+
+    Coinbase Exchange caps a single candle request at 300 buckets. Daily
+    discovery windows are therefore fine; broader history should be chunked by
+    a future manifest rather than hidden inside this adapter.
+    """
+    if interval not in {"1d", "d"}:
+        raise ValueError("Coinbase provider currently supports daily interval only")
+    if (start is None) ^ (end is None):
+        raise ValueError("Coinbase explicit window requires both start and end")
+
+    product = _coinbase_product(symbol)
+    cache_start = start or period
+    cache_end = end or "now"
+    cache_p = _cache_path("coinbase", product, cache_start, cache_end, "1d")
+    cached = _cache_load(cache_p, ttl_sec)
+    if cached is not None:
+        return _arrayify(cached)
+
+    if not start or not end:
+        days_by_period = {
+            "1mo": 31,
+            "3mo": 92,
+            "6mo": 184,
+            "1y": 365,
+        }
+        days = days_by_period.get(period, 92)
+        if days > 300:
+            raise ValueError("Coinbase single-request daily window must be <= 300 candles; pass --start/--end")
+        end_dt = datetime.now(timezone.utc).date()
+        start_dt = end_dt - timedelta(days=days)
+        start = start_dt.isoformat()
+        end = end_dt.isoformat()
+
+    start_date = datetime.fromisoformat(start).date()
+    end_date = datetime.fromisoformat(end).date()
+    if (end_date - start_date).days > 300:
+        raise ValueError("Coinbase single-request daily window must be <= 300 candles")
+
+    url = f"{COINBASE_EXCHANGE_BASE}/products/{product}/candles"
+    params = {"start": start, "end": end, "granularity": 86_400}
+    with httpx.Client(timeout=30.0, headers={"User-Agent": UA}) as client:
+        r = client.get(url, params=params)
+        r.raise_for_status()
+        data = r.json()
+    if not isinstance(data, list) or not data:
+        raise RuntimeError(f"Coinbase empty result for {product}")
+
+    rows = sorted(data, key=lambda row: int(row[0]))
+    dates = [datetime.fromtimestamp(int(row[0]), tz=timezone.utc).strftime("%Y-%m-%d") for row in rows]
+    low = [float(row[1]) for row in rows]
+    high = [float(row[2]) for row in rows]
+    open_ = [float(row[3]) for row in rows]
+    close = [float(row[4]) for row in rows]
+    volume = [float(row[5]) for row in rows] if any(len(row) > 5 for row in rows) else None
+
+    payload = {
+        "symbol": product,
+        "provider": "coinbase",
+        "interval": "1d",
+        "dates": dates,
+        "open": open_,
+        "high": high,
+        "low": low,
+        "close": close,
+        "volume": volume,
+        "data_card": _data_card(
+            provider="coinbase",
+            symbol=product,
+            source_url=f"{url}?start={start}&end={end}&granularity=86400",
+            license_str="Coinbase Exchange API terms; public candles; verify redistribution rights",
+            dates=dates,
+            frequency="daily",
+        ),
+    }
+    payload["data_card"]["exchange"] = "Coinbase Exchange"
+    payload["data_card"]["bucket_limit"] = "Single request limited to 300 candles by provider contract."
+    payload["data_card"]["incompleteness_note"] = "Provider notes historical rates may be incomplete when no ticks exist."
+
+    _cache_store(cache_p, payload)
+    return _arrayify(payload)
+
+
 # ---------- normalization (return numpy arrays + add returns) ----------
 
 def _arrayify(payload: dict[str, Any]) -> dict[str, Any]:
@@ -591,7 +695,14 @@ def fetch(provider: str, symbol: str, **kwargs: Any) -> dict[str, Any]:
         start = kwargs.get("start")
         end = kwargs.get("end")
         return fetch_eodhd(symbol, period, interval, ttl, start=start, end=end)
-    raise ValueError(f"Unknown provider: {provider}. Supported: yfinance, coingecko, twelvedata, eodhd")
+    if provider == "coinbase":
+        period = kwargs.get("period", "3mo")
+        interval = kwargs.get("interval", "1d")
+        ttl = int(kwargs.get("ttl_sec", DEFAULT_TTL_SEC))
+        start = kwargs.get("start")
+        end = kwargs.get("end")
+        return fetch_coinbase(symbol, period, interval, ttl, start=start, end=end)
+    raise ValueError(f"Unknown provider: {provider}. Supported: yfinance, coingecko, twelvedata, eodhd, coinbase")
 
 
 # ---------- CLI ----------
@@ -616,9 +727,9 @@ def _summarize(d: dict[str, Any]) -> dict[str, Any]:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("--provider", choices=["yfinance", "coingecko", "twelvedata", "eodhd"], required=True)
+    ap.add_argument("--provider", choices=["yfinance", "coingecko", "twelvedata", "eodhd", "coinbase"], required=True)
     ap.add_argument("--symbol", required=True,
-                    help="SPY/QQQ/^GSPC for yfinance/twelvedata/eodhd; bitcoin/ethereum for coingecko")
+                    help="SPY/QQQ/^GSPC for equity providers; bitcoin/ethereum for coingecko; BTC-USD/ETH-USD for coinbase")
     ap.add_argument("--period", default="1y",
                     help="yfinance period: 1mo/3mo/6mo/1y/2y/5y/10y/max (yfinance only)")
     ap.add_argument("--start", help="yfinance explicit start date YYYY-MM-DD")
@@ -632,7 +743,7 @@ def main() -> int:
     args = ap.parse_args()
 
     kwargs: dict[str, Any] = {"ttl_sec": args.ttl}
-    if args.provider in {"yfinance", "twelvedata", "eodhd"}:
+    if args.provider in {"yfinance", "twelvedata", "eodhd", "coinbase"}:
         kwargs["period"] = args.period
         kwargs["interval"] = args.interval
         if args.outputsize:

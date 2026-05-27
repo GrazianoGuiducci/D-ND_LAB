@@ -127,6 +127,7 @@ operative per cycle successivi quando l'agent ne ha bisogno:
 - **yfinance**: OHLCV equity/FX
 - **FRED**: macro indicators (Treasury yield, CPI, ...)
 - **CoinGecko**: crypto prices
+- **Coinbase Exchange**: crypto spot OHLCV daily (BTC-USD/ETH-USD)
 - **World Bank**: country macro (annuale)
 
 Vedi `context.md` sezione "Quick Reference — External APIs" per i
@@ -194,6 +195,7 @@ python3 domains/finance/tools/finance_autonomy_opportunity_scout.py --write --js
 python3 domains/finance/tools/finance_data_intake_audit.py --write --json
 python3 domains/finance/tools/finance_provider_crosscheck.py --write --json
 python3 domains/finance/tools/finance_candidate_discovery_cycle.py --json
+python3 domains/finance/tools/market_data.py --provider coinbase --symbol BTC-USD --start 2026-02-26 --end 2026-05-27
 ```
 
 Il guard non lancia ciclo e non produce claim di mercato. Controlla che il
@@ -235,6 +237,11 @@ chiavi. Il cross-check misura prontezza dati, non produce trade.
 richiede accordo yfinance/Twelve Data sulle barre daily e poi lancia il transfer
 diagnostic con design pre-dichiarato. Se non emergono simboli robusti, resta
 `diagnostic_only` e propone redesign; se emergono, manda i simboli a recurrence.
+
+Per crypto, `market_data.py --provider coinbase` usa le candele pubbliche
+Coinbase Exchange: OHLCV reale, no-key, daily, max 300 bucket per richiesta.
+CoinLore e' stato verificato il 2026-05-27 ma non promosso: l'endpoint OHLCV
+ha restituito BTC/ETH storici vecchi, non una finestra corrente utile al lab.
 
 ## Architettura cognitiva (MML)
 

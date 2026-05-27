@@ -341,8 +341,22 @@
       "name": "CoinGecko public API",
       "base_url": "https://api.coingecko.com/api/v3/",
       "auth_required": false,
-      "purpose": "Fetch crypto market chart data for BTC/ETH regime tests.",
+      "purpose": "Fetch broad crypto market chart data for BTC/ETH regime tests; market_chart is close-only in the lab adapter.",
       "rate_limit_notes": "Free public tier has variable rate limits; cache or fallback synthetic."
+    },
+    {
+      "name": "Coinbase Exchange candles API",
+      "base_url": "https://api.exchange.coinbase.com/products/",
+      "auth_required": false,
+      "purpose": "Fetch current crypto spot OHLCV daily bars for BTC-USD/ETH-USD candidate diagnostics.",
+      "rate_limit_notes": "Public endpoint; max 300 buckets per request; historical rates may be incomplete when no ticks exist."
+    },
+    {
+      "name": "CoinLore OHLCV API",
+      "base_url": "https://api.coinlore.net/api/coin/ohlcv/",
+      "auth_required": false,
+      "purpose": "Rejected probe for current crypto OHLCV on 2026-05-27 because live BTC/ETH responses were stale historical windows.",
+      "rate_limit_notes": "Do not promote without a fresh-window recheck."
     },
     {
       "name": "World Bank Indicators API",

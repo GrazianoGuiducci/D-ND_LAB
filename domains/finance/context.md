@@ -198,7 +198,8 @@ Output: JSON su stdout con metriche `ordered`, `shuffle_mean`,
 
 Descrizione: acquisizione OHLCV con caching su disco e data card di
 provenienza. Schema universale (numpy + dict, niente pandas esposto).
-Provider: `yfinance` (stocks/ETF/indices) e `coingecko` (crypto free tier).
+Provider: `yfinance` (stocks/ETF/indices), `coingecko` (crypto broad
+reference close-only) e `coinbase` (crypto spot OHLCV daily no-key).
 
 Comando standalone (utile per ispezione):
 
@@ -210,6 +211,10 @@ python3 /opt/D-ND_LAB/domains/finance/tools/market_data.py \
 # Payload completo (open/high/low/close/volume/returns)
 python3 /opt/D-ND_LAB/domains/finance/tools/market_data.py \
     --provider coingecko --symbol bitcoin --days 365 --json
+
+# BTC-USD OHLCV reale, finestra daily <= 300 candele
+python3 /opt/D-ND_LAB/domains/finance/tools/market_data.py \
+    --provider coinbase --symbol BTC-USD --start 2026-02-26 --end 2026-05-27
 ```
 
 Output cache: `data/finance/market_cache/<provider>_<symbol>_..._<hash>.json`
@@ -584,14 +589,17 @@ limits. Tabella sotto solo come reference se devi diagnosticare.
 | Task | Provider del lab | Endpoint sottostante | Auth | Status (verifica 05/05) |
 |------|------------------|----------------------|------|-------------------------|
 | OHLCV stocks/ETF | `market_data --provider yfinance` | `query1.finance.yahoo.com/v8/...` | no (crumb gestito) | ✓ funziona end-to-end (verificato SPY 1y, 252 obs) |
-| Crypto prices | `market_data --provider coingecko` | `api.coingecko.com/api/v3/coins/.../market_chart` | no | ✓ funziona end-to-end (verificato BTC 365d, 366 obs) |
+| Crypto prices | `market_data --provider coingecko` | `api.coingecko.com/api/v3/coins/.../market_chart` | no | ✓ funziona end-to-end (verificato BTC 365d, 366 obs; close-only proxy) |
+| Crypto spot OHLCV | `market_data --provider coinbase` | `api.exchange.coinbase.com/products/.../candles` | no | ✓ funziona end-to-end (verificato BTC-USD 2026-02-26..2026-05-27, 91 obs) |
+| Crypto OHLCV CoinLore | non promosso | `api.coinlore.net/api/coin/ohlcv/?coin=90` | no | ✗ endpoint vivo verificato 2026-05-27 restituisce BTC 2013-04-28..2014-04-27 |
 | Stocks via Stooq CSV | ~~deprecato~~ | `stooq.com/q/d/l/...` | sì (apikey, da 2026) | ✗ non più free senza key |
 | Macro risk via FRED | non implementato | `fred.stlouisfed.org/graph/fredgraph.csv` | no (CSV) | ⚠ timeout intermittente; non usare in cycle critico |
 | Country macro World Bank | non implementato | `api.worldbank.org/v2/country/...` | no | ⚠ timeout intermittente; non rilevante per regime intraday |
 
 Decisione di design: stocks via lib `yfinance` (gestisce crumb Yahoo);
-crypto via httpx diretto su CoinGecko (un endpoint, JSON pulito).
-Stooq era prima opzione (CSV no-auth) ma 2026-05-05 richiede apikey.
+crypto broad reference via httpx diretto su CoinGecko, crypto OHLCV corrente
+via Coinbase Exchange candles. Stooq era prima opzione (CSV no-auth) ma
+2026-05-05 richiede apikey.
 
 ## Cycle 1 verdict — apprendimento per cycle 2+
 

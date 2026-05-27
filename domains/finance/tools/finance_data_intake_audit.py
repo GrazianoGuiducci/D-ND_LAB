@@ -167,9 +167,22 @@ def build_payload() -> dict[str, Any]:
           f"review_required={diagnostics['latest_transfer_review_required']}",
           diagnostics["latest_transfer_review_required"])
     crypto_proxy = any(row.get("ohl_proxy") for row in inventory["rows"])
-    check("DATA_08_CRYPTO_OHLC", "WARN" if crypto_proxy else "PASS",
-          "CoinGecko cache uses close-as-OHL proxy" if crypto_proxy else "no close-as-OHL proxy detected",
-          crypto_proxy)
+    real_crypto_ohlc = any(
+        row.get("provider") == "coinbase"
+        and str(row.get("symbol", "")).upper() in {"BTC-USD", "ETH-USD"}
+        and row.get("n_obs", 0) >= 30
+        for row in inventory["rows"]
+    )
+    crypto_status = "PASS" if real_crypto_ohlc else "WARN" if crypto_proxy else "PASS"
+    crypto_detail = (
+        "Coinbase crypto OHLCV present"
+        if real_crypto_ohlc
+        else "CoinGecko cache uses close-as-OHL proxy"
+        if crypto_proxy
+        else "no close-as-OHL proxy detected"
+    )
+    check("DATA_08_CRYPTO_OHLC", crypto_status, crypto_detail,
+          {"close_as_ohl_proxy": crypto_proxy, "real_crypto_ohlc": real_crypto_ohlc})
     check("DATA_09_AUTONOMY_STAGE_MATCH", "PASS" if autonomy_summary.get("current_stage") == "diagnostic_only" else "WARN",
           f"stage={autonomy_summary.get('current_stage')}", autonomy_summary.get("current_stage"))
     check("DATA_10_SCOUT_HAS_NEXT_INQUIRY", "PASS" if scout_summary.get("selected_opportunity") else "WARN",
@@ -200,9 +213,13 @@ def build_payload() -> dict[str, Any]:
         },
         {
             "id": "crypto_real_ohlc",
-            "priority": "medium",
+            "priority": "medium" if not real_crypto_ohlc else "low",
             "why": "CoinGecko market_chart close-only data is not enough for OHLC-sensitive trading rules.",
-            "proposal": "Use exchange OHLCV via a reviewed adapter for crypto candidates; keep CoinGecko as broad reference.",
+            "proposal": (
+                "Use Coinbase Exchange OHLCV for crypto candidates and keep CoinGecko as broad reference."
+                if real_crypto_ohlc
+                else "Use exchange OHLCV via a reviewed adapter for crypto candidates; keep CoinGecko as broad reference."
+            ),
         },
         {
             "id": "corporate_action_and_calendar_guard",
