@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """lab_lifecycle_manager.py — safe inventory and cleanup planning for Labs.
 
-This tool is intentionally non-destructive in its first version. It maps every
-filesystem surface that belongs to a Lab slug and can emit a cleanup manifest
-for generated MetaLab candidates. Hard delete/archive can be added only after
-the manifest contract is proven in E2E.
+This tool is archive-first. It maps every filesystem surface that belongs to a
+Lab slug, emits manifests before mutation, and only moves files into the
+Meta-lab archive after an explicit confirmation token. It does not edit
+dashboard/docs references automatically: those are reported as active
+references so the operator can review the public surface consciously.
 """
 
 from __future__ import annotations
@@ -13,6 +14,7 @@ import argparse
 import hashlib
 import json
 import shutil
+import subprocess
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -29,6 +31,10 @@ def _meta_generated_root() -> Path:
 
 def _archive_root() -> Path:
     return _repo_root() / "data" / "meta-lab" / "archive"
+
+
+def _lifecycle_reports_root() -> Path:
+    return _repo_root() / "data" / "meta-lab" / "lifecycle_reports"
 
 
 def _safe_slug(slug: str) -> str:
@@ -64,6 +70,12 @@ def _assert_inside_archive(path: Path) -> None:
         raise ValueError(f"path escapes archive root: {path}")
 
 
+def _assert_no_running_lock(slug: str) -> None:
+    lock_path = _repo_root() / "data" / slug / "locks" / "cycle.lock"
+    if lock_path.exists():
+        raise ValueError(f"refusing to retire {slug!r}: cycle lock exists at {_rel(lock_path)}")
+
+
 def _sha256_file(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as handle:
@@ -90,6 +102,73 @@ def _path_stats(path: Path) -> dict[str, Any]:
         except OSError:
             continue
     return {"exists": True, "files": files, "dirs": dirs, "bytes": total}
+
+
+def _active_reference_files() -> list[Path]:
+    repo = _repo_root()
+    candidates = [
+        repo / "README.md",
+        repo / "install.sh",
+        repo / "mkdocs.yml",
+        repo / "pyproject.toml",
+        repo / "mml.schema.json",
+        repo / "dashboard" / "index.html",
+        repo / "core" / "api.py",
+        repo / "tools" / "night_run.sh",
+        repo / "tools" / "dnd-init.sh",
+        repo / "docs" / "README.md",
+        repo / "docs" / "index.md",
+        repo / "docs" / "quickstart.md",
+        repo / "docs" / "config.md",
+        repo / "docs" / "domains" / "index.md",
+        repo / "docs" / "domains" / "extending.md",
+        repo / "docs" / "INSTALL_PROCEDURE.md",
+        repo / "domains" / "meta-lab",
+    ]
+    return [p for p in candidates if p.exists()]
+
+
+def active_references(slug: str) -> list[dict[str, Any]]:
+    """Return active repo references outside the Lab's own domain/data roots.
+
+    Historical docs outside the active surfaces can still mention a retired Lab.
+    This scan is deliberately narrow: it protects surfaces that can make a Lab
+    appear selectable, runnable or canonical after it has been retired.
+    """
+    slug = _safe_slug(slug)
+    terms = [slug]
+    # Common display label used by generated Labs; harmless if it finds nothing.
+    terms.append(slug.replace("-", " "))
+    args = ["rg", "-n", "--fixed-strings"]
+    for term in terms:
+        args.extend(["-e", term])
+    args.extend(_rel(p) for p in _active_reference_files())
+    try:
+        proc = subprocess.run(
+            args,
+            cwd=_repo_root(),
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+        )
+    except FileNotFoundError:
+        return [{"path": "rg", "line": 0, "text": "ripgrep unavailable; active reference scan not run"}]
+    refs: list[dict[str, Any]] = []
+    for line in proc.stdout.splitlines():
+        path, sep, rest = line.partition(":")
+        if not sep:
+            continue
+        line_no, sep, text = rest.partition(":")
+        try:
+            n = int(line_no)
+        except ValueError:
+            n = 0
+            text = rest
+        if path.startswith(f"domains/{slug}/") or path.startswith(f"data/{slug}/"):
+            continue
+        refs.append({"path": path, "line": n, "text": text.strip()[:240]})
+    return refs
 
 
 @dataclass(frozen=True)
@@ -177,7 +256,7 @@ def inventory(slug: str) -> dict[str, Any]:
         "safety": {
             "hard_delete_supported": False,
             "default_action": "inventory_only",
-            "notes": "This version does not delete or archive files.",
+            "notes": "Use retire-installed-lab for archive-first installed Lab retirement.",
         },
     }
 
@@ -258,6 +337,57 @@ def _candidate_archive_plan(slug: str, stamp: str | None = None) -> dict[str, An
     }
 
 
+def _installed_archive_plan(slug: str, stamp: str | None = None) -> dict[str, Any]:
+    inv = inventory(slug)
+    stamp = stamp or _utc_stamp()
+    archive_base = _archive_root() / "installed_labs" / inv["slug"] / stamp
+    top_level_surfaces = {"domain_template", "domain_runtime_data"}
+    refs = active_references(inv["slug"])
+    moves = []
+    for item in inv["existing"]:
+        if item["surface"] not in top_level_surfaces:
+            continue
+        src = _repo_root() / item["path"]
+        _assert_inside_repo(src)
+        dst = archive_base / item["path"]
+        _assert_inside_archive(dst)
+        moves.append({
+            "surface": item["surface"],
+            "role": item["role"],
+            "from": item["path"],
+            "to": _rel(dst),
+            "files": item["files"],
+            "dirs": item["dirs"],
+            "bytes": item["bytes"],
+        })
+    return {
+        "schema": "dndlab.lab_lifecycle_installed_retire_manifest.v1",
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "slug": inv["slug"],
+        "archive_id": f"installed_labs/{inv['slug']}/{stamp}",
+        "mode": "dry_run",
+        "scope": "installed_lab",
+        "archive_base": _rel(archive_base),
+        "moves": moves,
+        "active_references": refs,
+        "summary": {
+            "surfaces": len(moves),
+            "files": sum(item["files"] for item in moves),
+            "dirs": sum(item["dirs"] for item in moves),
+            "bytes": sum(item["bytes"] for item in moves),
+            "active_references": len(refs),
+        },
+        "safety": {
+            "archive_first": True,
+            "requires_execute": True,
+            "required_confirm": f"RETIRE:{inv['slug']}",
+            "hard_delete_supported": False,
+            "blocks_on_active_references": True,
+            "blocks_on_cycle_lock": True,
+        },
+    }
+
+
 def archive_generated_tests(slug: str, *, execute: bool, confirm: str | None) -> dict[str, Any]:
     slug = _safe_slug(slug)
     plan = _candidate_archive_plan(slug)
@@ -310,6 +440,71 @@ def archive_generated_tests(slug: str, *, execute: bool, confirm: str | None) ->
     return plan
 
 
+def retire_installed_lab(
+    slug: str,
+    *,
+    execute: bool,
+    confirm: str | None,
+    allow_active_refs: bool = False,
+) -> dict[str, Any]:
+    slug = _safe_slug(slug)
+    plan = _installed_archive_plan(slug)
+    if not plan["moves"]:
+        plan["safety"]["status"] = "nothing_to_retire"
+        return plan
+    required = plan["safety"]["required_confirm"]
+    if not execute:
+        return plan
+    if confirm != required:
+        raise ValueError(f"retire requires --confirm {required!r}")
+    if plan["active_references"] and not allow_active_refs:
+        raise ValueError(
+            f"refusing to retire {slug!r}: {len(plan['active_references'])} active references remain; "
+            "clean them first or pass --allow-active-refs after review"
+        )
+    _assert_no_running_lock(slug)
+    for move in plan["moves"]:
+        src = _repo_root() / move["from"]
+        dst = _repo_root() / move["to"]
+        _assert_inside_repo(src)
+        _assert_inside_archive(dst)
+        if not src.exists():
+            raise FileNotFoundError(move["from"])
+        if dst.exists():
+            raise FileExistsError(move["to"])
+    archive_base = _repo_root() / plan["archive_base"]
+    archive_base.mkdir(parents=True, exist_ok=True)
+    pre_manifest = write_manifest({**plan, "mode": "execute_preflight"})
+    for move in plan["moves"]:
+        src = _repo_root() / move["from"]
+        dst = _repo_root() / move["to"]
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        shutil.move(str(src), str(dst))
+    tombstone = archive_base / "TOMBSTONE.json"
+    tombstone.write_text(
+        json.dumps(
+            {
+                "schema": "dndlab.lab_lifecycle_tombstone.v1",
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "slug": slug,
+                "archive_id": plan["archive_id"],
+                "preflight_manifest": _rel(pre_manifest),
+                "source_scope": plan["scope"],
+                "delete_boundary": "archive_first_no_hard_delete",
+                "active_references_reviewed": bool(allow_active_refs),
+            },
+            indent=2,
+            ensure_ascii=False,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    plan["mode"] = "executed_retire_archive_move"
+    plan["manifest_path"] = _rel(pre_manifest)
+    plan["tombstone_path"] = _rel(tombstone)
+    return plan
+
+
 def purge_archive_manifest(archive_id: str, *, execute: bool, confirm: str | None) -> dict[str, Any]:
     cleaned = archive_id.strip().strip("/")
     if not cleaned or ".." in Path(cleaned).parts:
@@ -348,9 +543,10 @@ def purge_archive_manifest(archive_id: str, *, execute: bool, confirm: str | Non
 
 
 def write_manifest(payload: dict[str, Any], output_dir: Path | None = None) -> Path:
-    out_dir = output_dir or (_repo_root() / "data" / "meta-lab" / "lifecycle_reports")
+    out_dir = output_dir or _lifecycle_reports_root()
     out_dir.mkdir(parents=True, exist_ok=True)
-    path = out_dir / f"{payload['slug']}_{payload['schema'].split('.')[-2]}_{_utc_stamp()}.json"
+    subject = payload.get("slug") or payload.get("archive_id", "lifecycle").replace("/", "_")
+    path = out_dir / f"{subject}_{payload['schema'].split('.')[-2]}_{_utc_stamp()}.json"
     path.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     return path
 
@@ -376,6 +572,14 @@ def main() -> int:
     archive.add_argument("--execute", action="store_true", help="Move candidate files into data/meta-lab/archive.")
     archive.add_argument("--confirm", help="Required confirmation token for --execute.")
 
+    retire = sub.add_parser("retire-installed-lab", help="Archive an installed Lab domain/data root; dry-run unless --execute is set.")
+    retire.add_argument("slug")
+    retire.add_argument("--json", action="store_true", help="Print full JSON payload.")
+    retire.add_argument("--write-manifest", action="store_true", help="Write JSON report under data/meta-lab/lifecycle_reports.")
+    retire.add_argument("--execute", action="store_true", help="Move installed Lab roots into data/meta-lab/archive.")
+    retire.add_argument("--confirm", help="Required confirmation token for --execute.")
+    retire.add_argument("--allow-active-refs", action="store_true", help="Allow retirement even if active references remain after explicit review.")
+
     purge = sub.add_parser("purge-archive", help="Delete an archived lifecycle bundle; dry-run unless --execute is set.")
     purge.add_argument("archive_id")
     purge.add_argument("--json", action="store_true", help="Print full JSON payload.")
@@ -391,6 +595,13 @@ def main() -> int:
             payload = candidate_cleanup_manifest(args.slug)
         elif args.command == "archive-generated-tests":
             payload = archive_generated_tests(args.slug, execute=args.execute, confirm=args.confirm)
+        elif args.command == "retire-installed-lab":
+            payload = retire_installed_lab(
+                args.slug,
+                execute=args.execute,
+                confirm=args.confirm,
+                allow_active_refs=args.allow_active_refs,
+            )
         elif args.command == "purge-archive":
             payload = purge_archive_manifest(args.archive_id, execute=args.execute, confirm=args.confirm)
         else:

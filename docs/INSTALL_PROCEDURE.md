@@ -347,7 +347,53 @@ Pattern di osservabilità per l'operatore:
 
 ## 8. Roll-back / decommissioning
 
-Se un lab non serve più o ha problemi strutturali:
+Se un lab installato non serve più o ha problemi strutturali, non cancellarlo a
+mano. Prima genera il manifest di ritiro:
+
+```bash
+python3 domains/meta-lab/tools/lab_lifecycle_manager.py retire-installed-lab <slug> --json
+```
+
+Il manifest mostra:
+
+- superfici che verrebbero archiviate (`domains/<slug>`, `data/<slug>`);
+- riferimenti attivi rimasti in dashboard, docs, installer, script o meta-lab;
+- token di conferma richiesto (`RETIRE:<slug>`);
+- eventuale lock di ciclo che blocca il ritiro.
+
+Dopo aver rimosso o revisionato i riferimenti attivi, esegui il ritiro
+archive-first:
+
+```bash
+python3 domains/meta-lab/tools/lab_lifecycle_manager.py retire-installed-lab <slug> \
+  --execute \
+  --confirm RETIRE:<slug>
+```
+
+Il comando non fa hard-delete: sposta le radici installate in
+`data/meta-lab/archive/installed_labs/<slug>/<timestamp>/`, scrive manifest
+preflight e `TOMBSTONE.json`, e lascia a Git la cancellazione tracciabile dei
+file in `domains/<slug>`.
+
+Se restano riferimenti attivi e sono stati revisionati consapevolmente:
+
+```bash
+python3 domains/meta-lab/tools/lab_lifecycle_manager.py retire-installed-lab <slug> \
+  --execute \
+  --confirm RETIRE:<slug> \
+  --allow-active-refs
+```
+
+Solo per archivi già prodotti e non più necessari, il purge resta confinato
+all'archive root e richiede conferma separata:
+
+```bash
+python3 domains/meta-lab/tools/lab_lifecycle_manager.py purge-archive installed_labs/<slug>/<timestamp> \
+  --execute \
+  --confirm PURGE:installed_labs/<slug>/<timestamp>
+```
+
+Per servizi esterni al repo, completa anche:
 
 - `systemctl disable --now lab-<slug>.service`
 - crontab rimossa
