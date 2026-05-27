@@ -69,6 +69,7 @@ DEFAULT_TTL_SEC = 86_400  # 1 day
 
 COINGECKO_BASE = "https://api.coingecko.com/api/v3"
 TWELVE_DATA_BASE = "https://api.twelvedata.com"
+EODHD_BASE = "https://eodhd.com/api"
 
 UA = "D-ND-Lab/1.0 (research; +https://lab.d-nd.com)"
 
@@ -88,7 +89,18 @@ def _read_opt_env_key(*names: str) -> str | None:
     if not env_path.exists():
         return None
     first_plain: str | None = None
-    previous_mentions_twelve = False
+    previous_mentions_provider = False
+    provider_markers = {
+        "TWELVE_DATA_API_KEY": ("twelve", "twelvedata"),
+        "TWELVEDATA_API_KEY": ("twelve", "twelvedata"),
+        "EODHD_API_TOKEN": ("eod", "eodhd", "eodhistoricaldata"),
+        "EODHD_API_KEY": ("eod", "eodhd", "eodhistoricaldata"),
+    }
+    markers = tuple(
+        marker
+        for name in names
+        for marker in provider_markers.get(name, ())
+    )
     for raw in env_path.read_text(errors="replace").splitlines():
         line = raw.strip()
         if not line or line.startswith("#"):
@@ -99,11 +111,18 @@ def _read_opt_env_key(*names: str) -> str | None:
                 return value.strip().strip('"').strip("'")
         elif first_plain is None:
             first_plain = line
-            previous_mentions_twelve = "twelve" in line.lower() or "twelvedata" in line.lower()
-        elif previous_mentions_twelve and line.replace("_", "").replace("-", "").isalnum() and len(line) >= 16:
-            if "TWELVE_DATA_API_KEY" in names or "TWELVEDATA_API_KEY" in names:
+            previous_mentions_provider = any(marker in line.lower() for marker in markers)
+        elif previous_mentions_provider and line.replace("_", "").replace("-", "").replace(".", "").isalnum() and len(line) >= 12:
+            if markers:
                 return line.strip().strip('"').strip("'")
-    if "TWELVE_DATA_API_KEY" in names or "TWELVEDATA_API_KEY" in names:
+            previous_mentions_provider = False
+        else:
+            previous_mentions_provider = previous_mentions_provider or any(marker in line.lower() for marker in markers)
+    if (
+        ("TWELVE_DATA_API_KEY" in names or "TWELVEDATA_API_KEY" in names)
+        and first_plain
+        and any(marker in first_plain.lower() for marker in markers)
+    ):
         return first_plain
     return None
 
@@ -435,6 +454,99 @@ def fetch_twelvedata(symbol: str, period: str = "1y", interval: str = "1d",
     return _arrayify(payload)
 
 
+# ---------- provider: EODHD (end-of-day historical, API token) ----------
+
+def _eodhd_symbol(symbol: str) -> str:
+    """Map local symbol notation to EODHD notation.
+
+    EODHD generally expects exchange suffixes, e.g. SPY.US. If a suffix is
+    already present, preserve it.
+    """
+    sym = symbol.upper()
+    if "." in sym:
+        return sym
+    if sym.endswith("=X"):
+        return sym
+    return f"{sym}.US"
+
+
+def fetch_eodhd(symbol: str, period: str = "1y", interval: str = "1d",
+                ttl_sec: int = DEFAULT_TTL_SEC,
+                start: str | None = None,
+                end: str | None = None) -> dict[str, Any]:
+    """Fetch EOD historical OHLCV through EODHD.
+
+    Free plan is limited, so this provider is intended for spot cross-checks
+    rather than broad scans.
+    """
+    api_token = _read_opt_env_key("EODHD_API_TOKEN", "EODHD_API_KEY")
+    if not api_token:
+        raise RuntimeError("EODHD API token not found in env or /opt/.env")
+    if interval not in {"1d", "d"}:
+        raise ValueError("EODHD provider currently supports daily interval only")
+
+    eod_symbol = _eodhd_symbol(symbol)
+    cache_start = start or period
+    cache_end = end or "now"
+    cache_p = _cache_path("eodhd", eod_symbol, cache_start, cache_end, "1d")
+    cached = _cache_load(cache_p, ttl_sec)
+    if cached is not None:
+        return _arrayify(cached)
+
+    params: dict[str, Any] = {
+        "api_token": api_token,
+        "fmt": "json",
+        "period": "d",
+    }
+    if start:
+        params["from"] = start
+    if end:
+        params["to"] = end
+
+    url = f"{EODHD_BASE}/eod/{eod_symbol}"
+    with httpx.Client(timeout=30.0, headers={"User-Agent": UA}) as client:
+        r = client.get(url, params=params)
+        r.raise_for_status()
+        data = r.json()
+    if isinstance(data, dict) and data.get("message"):
+        raise RuntimeError(f"EODHD error for {eod_symbol}: {data.get('message')}")
+    if not isinstance(data, list) or not data:
+        raise RuntimeError(f"EODHD empty result for {eod_symbol}")
+
+    rows = sorted(data, key=lambda row: str(row.get("date", "")))
+    dates = [str(row["date"])[:10] for row in rows]
+    open_ = [float(row["open"]) for row in rows]
+    high = [float(row["high"]) for row in rows]
+    low = [float(row["low"]) for row in rows]
+    close = [float(row.get("adjusted_close") or row["close"]) for row in rows]
+    volume = [float(row.get("volume") or 0.0) for row in rows]
+
+    payload = {
+        "symbol": symbol.upper(),
+        "provider": "eodhd",
+        "interval": "1d",
+        "dates": dates,
+        "open": open_,
+        "high": high,
+        "low": low,
+        "close": close,
+        "volume": volume,
+        "data_card": _data_card(
+            provider="eodhd",
+            symbol=eod_symbol,
+            source_url=f"{url}?from={start or ''}&to={end or ''}&period=d&fmt=json",
+            license_str="EODHD API terms; token external; free plan limited; verify redistribution rights",
+            dates=dates,
+            frequency="daily",
+        ),
+    }
+    payload["data_card"]["adjustments"] = "close uses adjusted_close when present"
+    payload["data_card"]["free_plan_note"] = "Free tier is limited; use for spot checks, not broad scans."
+
+    _cache_store(cache_p, payload)
+    return _arrayify(payload)
+
+
 # ---------- normalization (return numpy arrays + add returns) ----------
 
 def _arrayify(payload: dict[str, Any]) -> dict[str, Any]:
@@ -472,7 +584,14 @@ def fetch(provider: str, symbol: str, **kwargs: Any) -> dict[str, Any]:
         end = kwargs.get("end")
         outputsize = kwargs.get("outputsize")
         return fetch_twelvedata(symbol, period, interval, ttl, start=start, end=end, outputsize=outputsize)
-    raise ValueError(f"Unknown provider: {provider}. Supported: yfinance, coingecko, twelvedata")
+    if provider == "eodhd":
+        period = kwargs.get("period", "1y")
+        interval = kwargs.get("interval", "1d")
+        ttl = int(kwargs.get("ttl_sec", DEFAULT_TTL_SEC))
+        start = kwargs.get("start")
+        end = kwargs.get("end")
+        return fetch_eodhd(symbol, period, interval, ttl, start=start, end=end)
+    raise ValueError(f"Unknown provider: {provider}. Supported: yfinance, coingecko, twelvedata, eodhd")
 
 
 # ---------- CLI ----------
@@ -497,9 +616,9 @@ def _summarize(d: dict[str, Any]) -> dict[str, Any]:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("--provider", choices=["yfinance", "coingecko", "twelvedata"], required=True)
+    ap.add_argument("--provider", choices=["yfinance", "coingecko", "twelvedata", "eodhd"], required=True)
     ap.add_argument("--symbol", required=True,
-                    help="SPY/QQQ/^GSPC for yfinance/twelvedata; bitcoin/ethereum for coingecko")
+                    help="SPY/QQQ/^GSPC for yfinance/twelvedata/eodhd; bitcoin/ethereum for coingecko")
     ap.add_argument("--period", default="1y",
                     help="yfinance period: 1mo/3mo/6mo/1y/2y/5y/10y/max (yfinance only)")
     ap.add_argument("--start", help="yfinance explicit start date YYYY-MM-DD")
@@ -513,7 +632,7 @@ def main() -> int:
     args = ap.parse_args()
 
     kwargs: dict[str, Any] = {"ttl_sec": args.ttl}
-    if args.provider in {"yfinance", "twelvedata"}:
+    if args.provider in {"yfinance", "twelvedata", "eodhd"}:
         kwargs["period"] = args.period
         kwargs["interval"] = args.interval
         if args.outputsize:

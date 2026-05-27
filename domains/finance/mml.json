@@ -318,6 +318,13 @@
       "rate_limit_notes": "Requires API key in environment or /opt/.env; cache results and use lightly."
     },
     {
+      "name": "EODHD EOD API",
+      "base_url": "https://eodhd.com/api/eod/",
+      "auth_required": true,
+      "purpose": "Third spot-check provider for daily equity/ETF EOD bars.",
+      "rate_limit_notes": "Free plan is low budget, around 20 calls/day; use only for spot checks and cache results."
+    },
+    {
       "name": "FRED graph CSV",
       "base_url": "https://fred.stlouisfed.org/graph/fredgraph.csv",
       "auth_required": false,

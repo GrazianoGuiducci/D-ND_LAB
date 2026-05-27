@@ -53,6 +53,7 @@ python3 domains/finance/tools/finance_data_intake_audit.py --json
 
 # 9. Provider cross-check — yfinance vs Twelve Data
 python3 domains/finance/tools/finance_provider_crosscheck.py --symbols SPY,QQQ --json
+python3 domains/finance/tools/finance_provider_crosscheck.py --symbols SPY --include-eodhd --json
 
 # 10. Transfer diagnostic con design pre-dichiarato
 python3 domains/finance/tools/finance_transfer_diagnostic.py \
@@ -218,9 +219,11 @@ cross-check multi-provider, contesto cost/slippage e feed/adapter piu' forte
 prima di simulare decisioni operative.
 
 `finance_provider_crosscheck.py` confronta yfinance e Twelve Data sulle stesse
-date daily. Usa `TWELVE_DATA_API_KEY`/`TWELVEDATA_API_KEY` se disponibili, o la
-configurazione locale `/opt/.env`; non stampa mai la chiave. Il cross-check
-misura prontezza dati, non produce trade.
+date daily. Con `--include-eodhd` aggiunge EODHD come terzo provider spot; non
+usarlo su scan ampi perche' il piano gratuito e' circa 20 chiamate/giorno. Usa
+`TWELVE_DATA_API_KEY`/`TWELVEDATA_API_KEY` e `EODHD_API_TOKEN`/`EODHD_API_KEY`
+se disponibili, o la configurazione locale `/opt/.env`; non stampa mai le
+chiavi. Il cross-check misura prontezza dati, non produce trade.
 
 ## Architettura cognitiva (MML)
 

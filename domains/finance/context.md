@@ -379,6 +379,7 @@ Comando:
 
 ```bash
 python3 /opt/D-ND_LAB/domains/finance/tools/finance_provider_crosscheck.py --symbols SPY,QQQ --json
+python3 /opt/D-ND_LAB/domains/finance/tools/finance_provider_crosscheck.py --symbols SPY --include-eodhd --json
 python3 /opt/D-ND_LAB/domains/finance/tools/finance_provider_crosscheck.py --write --json
 ```
 
@@ -386,9 +387,11 @@ Output: JSON `dndlab.finance.provider_crosscheck.value.v1` in
 `data/finance/value/finance_provider_crosscheck_latest.json` e copia audit in
 `data/finance/provider_crosscheck/`.
 
-Segreti: il provider Twelve Data legge `TWELVE_DATA_API_KEY` o
-`TWELVEDATA_API_KEY` da ambiente/`/opt/.env`. La chiave non va mai in output,
-Git, packet o chat.
+Segreti: Twelve Data legge `TWELVE_DATA_API_KEY` o `TWELVEDATA_API_KEY`;
+EODHD legge `EODHD_API_TOKEN` o `EODHD_API_KEY`. Entrambi possono usare la
+configurazione locale `/opt/.env`. Le chiavi non vanno mai in output, Git,
+packet o chat. EODHD ha budget gratuito basso: usarlo come controllo spot, non
+come scan.
 
 ### finance_transfer_diagnostic
 
