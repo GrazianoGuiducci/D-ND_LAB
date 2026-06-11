@@ -51,6 +51,10 @@ STALE_COGNITIVE_PHRASES = (
     "mnemos/kairos/coherence are still implicit or partial",
     "Next implementation should make retention, regime selection and policy mutation first-class artifacts.",
 )
+SESSION_AUTHORITY_CLASS = {
+    "btc_value_refresh": "refresh_context",
+    "btc_cycle_pre_refresh": "current_cycle_binding",
+}
 
 
 def _read_json(path: Path) -> dict[str, Any]:
@@ -96,6 +100,7 @@ def _producer_trace_closes_cycle(cycle_ref: str | None) -> tuple[bool, dict[str,
     sink = _read_json(VALUE_DIR / "btc_producer_trace_sink_latest.json")
     summary = sink.get("summary") if isinstance(sink.get("summary"), dict) else {}
     lineage = sink.get("runtime_lineage") if isinstance(sink.get("runtime_lineage"), dict) else {}
+    cycle_refs = summary.get("cycle_refs") if isinstance(summary.get("cycle_refs"), list) else []
     expected = int(summary.get("expected_producers") or 0)
     available = int(summary.get("available_producers") or 0)
     ok = (
@@ -104,7 +109,7 @@ def _producer_trace_closes_cycle(cycle_ref: str | None) -> tuple[bool, dict[str,
         and int(summary.get("missing_producers") or 0) == 0
         and int(summary.get("missing_lineage") or 0) == 0
         and int(summary.get("missing_stamped_outputs") or 0) == 0
-        and lineage.get("last_cycle_ref") == cycle_ref
+        and (lineage.get("last_cycle_ref") == cycle_ref or cycle_ref in cycle_refs)
     )
     return ok, {"summary": summary, "lineage": lineage}
 
@@ -112,6 +117,7 @@ def _producer_trace_closes_cycle(cycle_ref: str | None) -> tuple[bool, dict[str,
 def build_health() -> dict[str, Any]:
     failures: list[dict[str, str]] = []
     warnings: list[dict[str, str]] = []
+    cycle_ref = _latest_cycle_ref()
 
     latest_files = {path.name for path in VALUE_DIR.glob("btc_*_latest.json")}
     missing_latest = sorted(EXPECTED_LATEST - latest_files)
@@ -123,6 +129,8 @@ def build_health() -> dict[str, Any]:
 
     refresh_ts_values: set[str] = set()
     last_cycle_refs: set[str] = set()
+    current_cycle_refs: set[str] = set()
+    authority_class_counts: dict[str, int] = {}
     for name in sorted(EXPECTED_LATEST & latest_files):
         path = VALUE_DIR / name
         payload = _read_json(path)
@@ -130,15 +138,30 @@ def build_health() -> dict[str, Any]:
         if not isinstance(lineage, dict):
             failures.append({"check": "runtime_lineage", "artifact": name, "issue": "missing"})
             continue
-        if lineage.get("session") != "btc_value_refresh":
-            failures.append({"check": "lineage_session", "artifact": name, "issue": str(lineage.get("session"))})
-        if lineage.get("cycle_ts") is not None:
-            failures.append({"check": "value_refresh_cycle_ts_null", "artifact": name, "issue": str(lineage.get("cycle_ts"))})
-        refresh_ts = lineage.get("refresh_ts")
-        if not isinstance(refresh_ts, str) or not refresh_ts:
-            failures.append({"check": "refresh_ts", "artifact": name, "issue": "missing"})
+        session = str(lineage.get("session"))
+        authority_class = SESSION_AUTHORITY_CLASS.get(session)
+        if not authority_class:
+            failures.append({"check": "lineage_session", "artifact": name, "issue": session})
         else:
-            refresh_ts_values.add(refresh_ts)
+            authority_class_counts[authority_class] = authority_class_counts.get(authority_class, 0) + 1
+
+        refresh_ts = lineage.get("refresh_ts")
+        artifact_cycle_ts = lineage.get("cycle_ts")
+        if authority_class == "refresh_context":
+            if artifact_cycle_ts is not None:
+                failures.append({"check": "refresh_context_cycle_ts_null", "artifact": name, "issue": str(artifact_cycle_ts)})
+            if not isinstance(refresh_ts, str) or not refresh_ts:
+                failures.append({"check": "refresh_context_refresh_ts", "artifact": name, "issue": "missing"})
+            else:
+                refresh_ts_values.add(refresh_ts)
+        elif authority_class == "current_cycle_binding":
+            if artifact_cycle_ts != cycle_ref:
+                failures.append({"check": "current_cycle_binding_cycle_ts", "artifact": name, "issue": str(artifact_cycle_ts)})
+            else:
+                current_cycle_refs.add(str(artifact_cycle_ts))
+            if refresh_ts is not None:
+                failures.append({"check": "current_cycle_binding_refresh_ts_null", "artifact": name, "issue": str(refresh_ts)})
+
         last_cycle_ref = lineage.get("last_cycle_ref")
         if isinstance(last_cycle_ref, str) and last_cycle_ref:
             last_cycle_refs.add(last_cycle_ref)
@@ -151,6 +174,8 @@ def build_health() -> dict[str, Any]:
 
     if len(refresh_ts_values) > 1:
         warnings.append({"check": "refresh_ts_consistency", "artifact": "latest_set", "issue": ",".join(sorted(refresh_ts_values))})
+    if len(current_cycle_refs) > 1:
+        failures.append({"check": "current_cycle_ref_consistency", "artifact": "latest_set", "issue": ",".join(sorted(current_cycle_refs))})
 
     cognitive = _read_json(VALUE_DIR / "btc_cognitive_state_latest.json")
     cognitive_text = json.dumps(cognitive, ensure_ascii=False)
@@ -301,7 +326,6 @@ def build_health() -> dict[str, Any]:
     if trace_summary.get("missing_stamped_outputs") != 0:
         failures.append({"check": "producer_trace_sink_missing_stamped", "artifact": "btc_producer_trace_sink_latest.json", "issue": str(trace_summary.get("missing_stamped_outputs"))})
 
-    cycle_ref = _latest_cycle_ref()
     closure = _latest_closure_for(cycle_ref)
     closure_summary = closure.get("summary") if isinstance(closure.get("summary"), dict) else {}
     producer_closure_ok, producer_closure = _producer_trace_closes_cycle(cycle_ref)
@@ -324,6 +348,8 @@ def build_health() -> dict[str, Any]:
         "expected_latest_total": len(EXPECTED_LATEST),
         "refresh_ts_values": sorted(refresh_ts_values),
         "last_cycle_refs": sorted(last_cycle_refs),
+        "current_cycle_refs": sorted(current_cycle_refs),
+        "latest_authority_classes": authority_class_counts,
         "latest_cycle_ref": cycle_ref,
         "closure_status": closure.get("status"),
         "closure_phase": closure.get("phase"),
