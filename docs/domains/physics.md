@@ -1,89 +1,58 @@
-# Physics Domain
+# Physics domain in the installable D-ND_LAB engine
 
-The original D-ND research lab. Studies mathematical physics through
-the model: f(x) = 1 + 1/x, M = [[1,1],[1,0]], det(M) = -1, the spiral,
-the third included as formal operator. The fixed point is φ.
+This domain preserves the earlier D-ND mathematical-physics research line in
+an installable domain contract. It is separate from the current regenerative
+MM-DND Lab at [d-nd.com/ai-lab](https://d-nd.com/ai-lab).
+The [public companion](https://github.com/GrazianoGuiducci/dnd-lab-physics)
+explains the current Lab and provides offline corpus tools.
 
-## What it studies
+## Shipped domain and historical research
 
-- **Primes** — gap distributions, residue cosets, GUE-like spectral statistics
-- **Zeta** — non-trivial zeros, signature of the zero, phi-crossings
-- **Dynamical systems** — convergence, attractor classification, null baselines
-- **Theory crossing TQGE+R** — Thermodynamics × Quantum × Gravity ×
-  Electromagnetism + Relativity, with 10 fundamental questions
-  ("how do A and B coexist?") and one void (Q×G — continuous vs discrete)
+`domains/physics/` contains configuration, context, seed tensions, category
+mapping, assertions, experiment tools and a dated May 2026 bootstrap.
+Historical subjects include prime gaps, zeta and spectral statistics,
+dynamical systems and theory-crossing questions. Claims and vocabulary in
+the preserved context belong to those historical sources; they are not a
+new blanket validation of their mathematical or physical interpretation.
 
-The condensate (in `domains/physics/context.md`) tracks what has been
-verified vs falsified. The cimitero registers claims that fell.
+The earlier guide described this as a minimal placeholder and listed tools
+that were not yet ported. At the inspected source, `tools/dnd_autoricerca.py`
+and many experiment scripts are shipped. The directory itself is the
+authoritative inventory. Historical plan language does not describe the
+current package's file coverage.
 
 ## Configuration
 
-`domains/physics/config.json` enables most movements with default
-parameters. Notable settings:
+`domains/physics/config.json` names this engine domain and its input files.
+At the 30 October 2026 reconciliation:
 
-- `movements.structural_check.params.inject_meta_tensions: true` —
-  detected anti-patterns become META tensions in the seed
-- `movements.trajectory_evaluator.params.execute: false, log_only: true` —
-  trajectory decisions logged but not executed (operator review default)
-- `movements.sync.enabled: false` — sync is wired off in the public
-  template; the original lab syncs to `/opt/THIA/data/` (THIA-specific)
-- `movements.verify_assertions.assertions_module` — *not set*; the
-  original lab has a rich set of assertions in MM_D-ND/tools/dipartimento.py
-  that haven't been ported to the portable template yet
+- `sync` and `verify_endpoints` are disabled;
+- structural checking is configured to inject META tensions;
+- the trajectory evaluator is configured with `execute: false, log_only: true`;
+- `verify_assertions` is enabled without an explicit `assertions_module`
+  parameter in this domain config.
 
-## Seed tensions
+These are configuration facts, not evidence of an executed provider cycle or
+of the current MM-DND regenerative implementation. Changes to engine execution
+must follow the engine's own code and installation contracts.
 
-Eight starting tensions in `domains/physics/seed_tensions.json`,
-ported from the production lab's seme.json (excluding transient
-STRUCTURAL_CHECK_* entries). Top three by intensity:
+## Bootstrap and installation
 
-- **TRASCENDENZA_LIMITE** (0.9) — the transcendence and the current
-  limit of the model. Relational fixed points may reveal the rule
-  beyond convergence to phi.
-- **DUALITA_DIPOLARE_VS_ILLUSORIA** (0.9) — dipolar duality
-  (generative, det=-1) vs illusory duality (dispersive, det=+1).
-- **METRIC_TENSOR** (0.9) — the metric tensor of primes is g=(p/2)².
-  In log time, it is de Sitter 1+1D. z-statistics: -8.8 curvature vs
-  +22.5 ratio.
+The tracked `bootstrap_20260516/` snapshot contains evidence from five dated
+historical cycles. The [repository README](../../README.md) and
+[installation procedure](../INSTALL_PROCEDURE.md) describe restoration and
+engine setup. Preserve those records as historical evidence; do not overwrite
+an existing operational domain to compare it with another distribution.
 
-## tension_to_category
+The engine expects `domains/<domain>/config.json`. Its own shipped physics
+domain meets that layout. A clone of the standalone dnd-lab-physics repository
+has a nested `domain/config.json` and is not a drop-in replacement at the
+clone root. See [reconciliation](../PHYSICS_LAB_RECONCILIATION.md).
 
-Maps 21 physics tensions to TQGE+R categories. Crossings with ≥2
-categories produce annotations on theory pairs in
-`conoscenza_teorie.json`. Examples:
+## Scientific and operational scope
 
-- `BOUNDARY` → `[G]` (geometric boundary)
-- `DUALITA_DIPOLARE_VS_ILLUSORIA` → `[Q, T]` (quantum + thermal)
-- `M_tensore_metrico_primi_L0` → `[G, Q]`
-- `TWO_CHANNEL_DECOMPOSITION` → `[Q, T]`
-
-## What's NOT in the portable template (yet)
-
-The production lab in `/opt/MM_D-ND/` includes domain-specific tools
-that haven't been ported — `dnd_scenario.py` (projector P¹),
-`dnd_autoricerca.py` (domain exploration with null baseline),
-`m_spectro.py` (M-matrix spectroscopy), `dnd_incrocio.py` (theory
-crossing), and a richer `verify_assertions` set.
-
-Phase 4 of the lab refactor decided to ship the **template** first
-and let the physics domain remain a "minimal viable physics" until
-needed. Adding any of the above is straightforward: drop the file
-into `domains/physics/tools/` and reference it in `config.json`.
-
-## First cycle
-
-Once the install completes:
-
-```bash
-docker compose run --rm lab
-```
-
-Expect ~5–15 minutes of compute, 5–25 LLM turns. The agent picks one
-tension by discriminating power, runs an experiment with code
-execution + null baseline, writes a structured report including the
-**bicono della scoperta** (radii · singular · invariant · field), and
-updates the seed.
-
-A clean cycle output looks like the [example archived in the
-production lab](https://lab.d-nd.com/data/lab/reports/) — that's
-the same orchestrator doing its work nightly.
+A domain installation, schema check or script PASS does not establish a
+physical law. Independent reproduction requires the actual input, method,
+controls, scope and invalidators. The current regenerative Lab's field,
+occurrence and memory contracts have a different source owner and are not
+activated by running this engine.

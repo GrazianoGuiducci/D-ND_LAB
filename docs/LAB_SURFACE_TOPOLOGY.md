@@ -6,12 +6,19 @@ The word `Lab` is overloaded across the ecosystem. These surfaces share
 genealogy, model language and sometimes THIA context, but they are not the same
 operational object.
 
+The [30 October 2026 physics reconciliation](PHYSICS_LAB_RECONCILIATION.md)
+updates the original physics lineage: the current regenerative Lab is developed
+in MM-DND independently of this engine. `dnd-lab-physics` supplies its public
+companion and corpus reader. The physics domain shipped here remains a separate
+installable implementation with dated bootstrap evidence.
+
 ## Four Different Objects
 
 ### 1. Physics Lab on the main site
 
 The physics Lab surfaced on `d-nd.com` / `d-nd.com/ai-lab` is a public-facing
-site experience around the original physics/mathematics research line.
+site experience of the current regenerative MM-DND Physics Lab. Its occurrence,
+memory and public-projection contracts are distinct from this engine's cycle.
 
 It owns:
 
